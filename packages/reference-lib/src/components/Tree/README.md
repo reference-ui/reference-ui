@@ -18,19 +18,10 @@ controlled ids name no item, and shared holds the development channel that
 reports them. Pure decisions carry colocated unit tests; browser behavior
 proves out in CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`parts/`](./parts) | Item row, Group container, Expander chevron |
-| [`hooks/`](./hooks) | Session, expansion, selection, focus, keyboard, item wiring |
-| [`expansion/`](./expansion) | Deterministic emission reducer |
-| [`siblings/`](./siblings) | Sibling-set metadata refresh |
-| [`typeahead/`](./typeahead) | Row search-label extraction |
-| [`navigation/`](./navigation) | Shadow-crossing direction resolution |
-| [`diagnostics/`](./diagnostics) | Unmatched-id decision for controlled values and expansion |
-| [`shared/`](./shared) | Development diagnostic channel |
-
 `context.ts` scopes the private item subtree (the Law 3 allowance):
 items read selection, expansion, focus, and keyboard commands from the
 root scope, groups and expanders read identity from the item scope, and
 groups bump the level scope — while Combobox nesting is read from the
 Combobox context directly.
+
+Up: [Components](../components.md).

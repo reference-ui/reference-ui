@@ -1,3 +1,9 @@
+/**
+ * Sibling-part coordination hook: wraps the coordinator ledger in refs so
+ * Overlay's Backdrop and Content report together. Registers while closed,
+ * reports on exit completion, and releases the overlay once every part
+ * has reported.
+ */
 import * as React from 'react'
 import type { PresenceCoordinatorContextValue } from '../types'
 import { CoordinatorLedger } from '../coordination/ledger'

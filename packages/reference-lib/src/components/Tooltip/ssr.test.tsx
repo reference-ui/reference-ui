@@ -1,3 +1,7 @@
+/**
+ * Proof for Tooltip server rendering. Pins a closed Trigger with no
+ * tooltip Content on the server.
+ */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'

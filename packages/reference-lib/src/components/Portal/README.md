@@ -25,3 +25,5 @@ configure against. There is no `parts/` folder because Portal renders no
 parts — children-only output is the contract — and no `context.ts`
 because Portal creates no context of its own; it only resets the layer
 scope owned by `@reference-ui/react`.
+
+Up: [Components](../components.md).

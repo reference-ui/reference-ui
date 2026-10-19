@@ -1,3 +1,8 @@
+/**
+ * Reference prototype fixture: the stress-case type surface. Declares
+ * themes, sizes, variants, icons, and spacing for the browser to render,
+ * pinning unions, aliases, and indexed shapes in one scene.
+ */
 import { Reference } from '../index'
 
 export const docsReferenceTheme = {

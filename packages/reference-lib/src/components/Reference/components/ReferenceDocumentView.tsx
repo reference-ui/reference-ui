@@ -1,3 +1,8 @@
+/**
+ * Reference document view: the framed presentation of one indexed
+ * document. Takes the document payload and composes the frame with the
+ * kind-specific document renderer inside it.
+ */
 import * as React from 'react'
 import type { ReferenceDocument } from '@reference-ui/types'
 import { Div } from '@reference-ui/react'

@@ -1,3 +1,8 @@
+/**
+ * Toast Book gallery: named scenes for interactive visual review.
+ * Maps story names to renderable toasters so authors can browse stacking,
+ * themes, and variants in the Book harness without mounting the CT suite.
+ */
 import * as React from 'react'
 import { Div, Button } from '@reference-ui/react'
 import { Toast, toast } from './index'

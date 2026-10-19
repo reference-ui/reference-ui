@@ -1,3 +1,10 @@
+/**
+ * Portal composition gates and browser proofs. Pins body placement for
+ * omitted and null containers, relocation into resolved destinations
+ * (including late refs, swaps, ShadowRoots, and iframes), logical context
+ * and event bubbling, theme re-anchoring at the destination, and catalog
+ * coverage for mixed, keyed, and empty children.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('Portal Composition Gates & Browser Proofs', () => {

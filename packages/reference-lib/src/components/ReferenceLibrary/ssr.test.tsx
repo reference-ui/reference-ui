@@ -1,3 +1,7 @@
+/**
+ * Proof for ReferenceLibrary server rendering. Pins children-only output
+ * with no runtime hosts across repeated requests (RL-ENV-04).
+ */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'

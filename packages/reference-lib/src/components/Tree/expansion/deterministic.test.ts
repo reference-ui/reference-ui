@@ -1,3 +1,8 @@
+/**
+ * Proof for the deterministic expansion reducer. Pins document-ordered
+ * emission with unknown values trailing, collapse by removal, dedupe of
+ * unknowns, and batch sibling sets folded into one ordered payload.
+ */
 import { describe, expect, it } from 'vitest'
 import { getBatchExpanded, getDeterministicExpanded } from './deterministic'
 

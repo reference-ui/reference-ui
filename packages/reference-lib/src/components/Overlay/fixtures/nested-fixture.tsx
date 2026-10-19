@@ -1,3 +1,8 @@
+/**
+ * Nested fixture: parent/child dialogs and sibling layers for cascade
+ * proofs. Serves nested dismissal, ordering, and teardown checks in the
+ * main and exotica suites.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 import { OutOfOrderExitFixture } from './out-of-order-exit-fixture'

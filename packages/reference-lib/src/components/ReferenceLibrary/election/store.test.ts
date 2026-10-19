@@ -1,3 +1,8 @@
+/**
+ * Proof for the document host election. Pins first-live-mount wins with
+ * later mounts on standby, failover to the earliest remaining mount,
+ * per-document independence, and remounted former hosts staying standby.
+ */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getLibraryStore, registerHost, subscribeHost, unregisterHost } from './store'
 

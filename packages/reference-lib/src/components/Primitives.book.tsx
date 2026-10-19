@@ -1,3 +1,9 @@
+/**
+ * Primitives Book gallery: the theme-primitive sections for visual review
+ * and CT mounting. Installs focus-visible tracking, then maps section
+ * names — forms, buttons, selection, tables, typography, code, inline,
+ * lists, disclosure — to renderable scenes, with an All overview.
+ */
 import * as React from 'react'
 import { setupFocusVisible } from '../core/theme/primitives/forms/focus-visible'
 

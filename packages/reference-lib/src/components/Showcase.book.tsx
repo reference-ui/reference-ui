@@ -1,3 +1,8 @@
+/**
+ * Showcase Book gallery: the full-suite composition fixture. Mounts the
+ * public components together in one renderable scene — including the
+ * five-tier overlay cascade — for visual review and the Showcase CT suite.
+ */
 import * as React from 'react'
 import {
   Div,

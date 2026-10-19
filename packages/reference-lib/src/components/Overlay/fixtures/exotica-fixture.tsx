@@ -1,3 +1,8 @@
+/**
+ * Exotica fixture: independent mini-root overlays with a legacy-render
+ * fallback for the React 17 runtime. Serves cross-root ordering, routing,
+ * and reparenting proofs in the exotica pass.
+ */
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { createPortal } from 'react-dom'

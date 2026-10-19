@@ -1,3 +1,8 @@
+/**
+ * Proof for Tree typeahead label extraction. Pins explicit textValue
+ * first, decoration stripped with digits kept, and trimmed row text as
+ * the fallback search label.
+ */
 import { describe, expect, it } from 'vitest'
 import { extractTypeaheadText } from './labels'
 

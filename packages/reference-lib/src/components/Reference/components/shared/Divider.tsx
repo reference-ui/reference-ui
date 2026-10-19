@@ -1,3 +1,7 @@
+/**
+ * Reference divider: the hairline between document sections. Takes Div
+ * props and layers authored css over the base rule.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 

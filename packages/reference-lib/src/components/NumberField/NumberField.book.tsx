@@ -1,3 +1,8 @@
+/**
+ * NumberField Book gallery: named scenes for interactive visual review.
+ * Maps story names to renderable fields so authors can browse every shape
+ * in the Book harness without mounting the CT suite.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { NumberField } from './index'

@@ -1,3 +1,8 @@
+/**
+ * Scroll fixture: a 300vh page with offset openers for lock and viewport
+ * proofs. Serves scroll preservation, lock, and position checks in the
+ * main suite.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 

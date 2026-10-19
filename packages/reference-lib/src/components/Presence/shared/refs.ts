@@ -1,3 +1,8 @@
+/**
+ * Ref assignment under the React 19 cleanup contract: object refs take
+ * the node, callback refs run with their cleanup returned, undefined
+ * refs are ignored. Shared by the kernel and the composed-ref hook.
+ */
 import type * as React from 'react'
 
 /**

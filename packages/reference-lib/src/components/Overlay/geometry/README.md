@@ -1,11 +1,9 @@
 # geometry
 
-Unbound writes no coordinates. Anchored uses Trigger only when isolation focus is off. `edge` binds to a viewport side. `start`/`end` follow RTL; physical `left`/`right` edges do not.
-
-- `reference` — resolve the floating reference
-- `floating` — computePosition, RTL start/end
-- `auto-update` — living position: event-driven default, opt-in sleeping rAF
-- `observe-move` — IntersectionObserver layout-shift (Floating UI `observeMove`)
-- `clipping` — hide flags from overflow ancestors, including ShadowRoot hosts
-- `edge` — sheet insets and `--reference-overlay-index`
-- `use-position` — Content layout effect
+Positioning for anchored Content and edge sheets; unbound Content writes
+no coordinates. Anchors resolve through the trigger (or a virtual point)
+into Floating UI placements with RTL-aware start/end alignment, edge
+sheets bind to a viewport side with stacked insets, and the living
+position stays fresh through event-driven auto-updates plus an
+IntersectionObserver layout-shift detector, with clipping ancestors
+(including ShadowRoot hosts) driving hide flags.

@@ -1,3 +1,8 @@
+/**
+ * Type-extends fixture: proves the browser merges extended StyleProps
+ * through type-alias intersection. Declares layered aliases plus a custom
+ * extension and renders the extended document.
+ */
 import { Reference } from '../index'
 import type { StyleProps } from '@reference-ui/react'
 

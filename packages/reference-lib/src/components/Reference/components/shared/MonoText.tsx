@@ -1,3 +1,8 @@
+/**
+ * Reference monospace text: inline code with the highlight color and a
+ * code-element reset. Takes children, an optional color, and style props
+ * for names and snippets inside notices and rows.
+ */
 import * as React from 'react'
 import { Code } from '@reference-ui/react'
 import type { StyleProps } from '@reference-ui/react'

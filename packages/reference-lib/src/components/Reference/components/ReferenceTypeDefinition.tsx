@@ -1,3 +1,8 @@
+/**
+ * Reference type definition: renders the raw definition string for
+ * aliases and memberless types. Takes the nullable definition; renders
+ * nothing when there is no definition to show.
+ */
 import * as React from 'react'
 import { Div, Small } from '@reference-ui/react'
 import { SummarySnippet } from './shared/SummarySnippet'

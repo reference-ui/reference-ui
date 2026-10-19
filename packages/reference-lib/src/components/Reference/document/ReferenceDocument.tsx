@@ -1,3 +1,8 @@
+/**
+ * Reference document dispatcher: renders one indexed document through its
+ * kind-specific renderer. Takes the document payload; header, interface,
+ * and type shapes each get their own presentation below.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type { ReferenceDocument as ReferenceDocumentData } from '@reference-ui/types'

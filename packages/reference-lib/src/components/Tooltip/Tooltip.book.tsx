@@ -1,3 +1,8 @@
+/**
+ * Tooltip Book gallery: named scenes for interactive visual review.
+ * Maps story names to renderable tips so authors can browse hover, focus,
+ * and group shapes in the Book harness without mounting the CT suite.
+ */
 import * as React from 'react'
 import { Div, Button } from '@reference-ui/react'
 import { Tooltip } from './index'

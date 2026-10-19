@@ -1,3 +1,8 @@
+/**
+ * Proof for sibling-set position bookkeeping. Pins direct treeitem
+ * children numbered with posinset and setsize, and null containers
+ * tolerated.
+ */
 import { describe, expect, it } from 'vitest'
 import { updateContainerTreeitemPositions } from './positions'
 

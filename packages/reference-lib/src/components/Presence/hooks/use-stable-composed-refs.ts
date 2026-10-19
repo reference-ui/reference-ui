@@ -1,3 +1,8 @@
+/**
+ * Stable composed refs: fans the observer ref and the consumer ref out to
+ * the Presence child through one never-changing callback. Keeps observer
+ * resubscription and consumer identity independent of render churn.
+ */
 import * as React from 'react'
 import { setRef, type PossibleRef } from '../shared/refs'
 

@@ -1,3 +1,8 @@
+/**
+ * Proof for the pure step advance behind increment and decrement. Pins
+ * directional lattice stepping, null stepping to the in-range value
+ * nearest zero, and exact-endpoint clamps with noops at the value.
+ */
 import { describe, expect, it } from 'vitest'
 import { nextStepValue, type AdvanceInput } from './advance'
 

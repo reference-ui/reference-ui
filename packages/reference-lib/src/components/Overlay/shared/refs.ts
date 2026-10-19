@@ -1,3 +1,8 @@
+/**
+ * Overlay ref plumbing: node assignment to ref objects and callbacks plus
+ * a stable composed ref that never changes identity. Shared by Content,
+ * Trigger, and every consumer that fans one node to many owners.
+ */
 import * as React from 'react'
 
 /** Assign a node to a ref object or callback. */

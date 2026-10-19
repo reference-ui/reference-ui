@@ -1,3 +1,8 @@
+/**
+ * Proof for the Slider numeric model. Pins config rejection, min-anchored
+ * snap and clamp, off-grid adjacent moves, decimal precision, and page-step
+ * derivation across the SD-MATH cases.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   validateSliderConfig,

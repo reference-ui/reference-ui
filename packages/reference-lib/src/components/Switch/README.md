@@ -16,3 +16,5 @@ whether a thumb was authored, seeded statically and repaired structurally;
 state to every thumb without prop drilling; `shared/` holds the nameless
 ref and effect plumbing all of them ask. Pure decisions carry colocated
 unit tests; browser behavior proves out in CT.
+
+Up: [Components](../components.md).

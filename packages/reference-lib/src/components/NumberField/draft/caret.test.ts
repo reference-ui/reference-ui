@@ -1,3 +1,8 @@
+/**
+ * Proof for the logical caret model: digit counting across numbering
+ * systems and caret mapping across formatting replacements. Pins ASCII and
+ * active-system glyphs as digits plus preceding-digit replay.
+ */
 import { describe, expect, it } from 'vitest'
 import { isLogicalDigitChar, offsetAfterLogicalDigits } from './caret'
 

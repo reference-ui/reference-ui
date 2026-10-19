@@ -1,3 +1,8 @@
+/**
+ * Exit-completion watcher: subscribes every completion signal — animation
+ * and transition events, Web Animations, GSAP — while the unmount hangs.
+ * Takes the node and a settle callback; the guard picks the single winner.
+ */
 import { finiteGsapTweens } from '../../../motion/gsap'
 import { isWaitableAnimation } from './animations'
 

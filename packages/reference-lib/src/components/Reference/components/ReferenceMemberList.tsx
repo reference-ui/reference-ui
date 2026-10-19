@@ -1,3 +1,8 @@
+/**
+ * Reference member list: renders every member row with collapsing for
+ * long inherited sections. Takes the member documents; past the threshold
+ * the inherited tail folds behind an expander.
+ */
 import * as React from 'react'
 import { useState, type ComponentProps, type CSSProperties } from 'react'
 import { Div, Small } from '@reference-ui/react'

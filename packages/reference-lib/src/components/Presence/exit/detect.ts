@@ -1,3 +1,8 @@
+/**
+ * Exit-effect detection: reads the closing frame — computed CSS animations
+ * and transitions, Web Animations, finite GSAP tweens — and reduces them
+ * to one instant-or-suspend verdict with the effects worth waiting for.
+ */
 import { finiteGsapTweens } from '../../../motion/gsap'
 import {
   hasFiniteExitAnimation,

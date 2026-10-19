@@ -1,3 +1,7 @@
+/**
+ * JSDoc param chip: the small tag label marking params and returns.
+ * Takes the tag label plus an optional className; pure inline chrome.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import { AtSignIcon } from './AtSignIcon'

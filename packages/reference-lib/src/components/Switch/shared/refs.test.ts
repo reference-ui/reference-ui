@@ -1,3 +1,8 @@
+/**
+ * Proof for Switch ref composition. Pins object-ref assignment plus
+ * callback-ref invocation, callback cleanups collected into one returned
+ * cleanup, and no cleanup when none is handed back.
+ */
 import * as React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { composeRefs } from './refs'

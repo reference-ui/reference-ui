@@ -1,3 +1,8 @@
+/**
+ * Focus fixture: initial-focus selection, focus containment, nested pause
+ * and resume, and the restore matrix (OV-FOCUS, OV-RESTORE). Serves the
+ * focus-lock integration suite.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 

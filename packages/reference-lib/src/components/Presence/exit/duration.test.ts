@@ -1,3 +1,8 @@
+/**
+ * Proof for the CSS duration parser. Pins millisecond tokens as-is,
+ * second conversion, blank and unparseable tokens as zero, and
+ * surrounding-whitespace tolerance.
+ */
 import { describe, expect, it } from 'vitest'
 import { parseDuration } from './duration'
 

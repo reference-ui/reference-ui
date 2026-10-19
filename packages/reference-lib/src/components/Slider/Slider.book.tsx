@@ -1,3 +1,8 @@
+/**
+ * Slider Book gallery: named scenes for interactive visual review.
+ * Maps story names to renderable sliders so authors can browse single,
+ * range, and constrained shapes in the Book harness without mounting CT.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Slider } from './index'

@@ -1,3 +1,8 @@
+/**
+ * Overlay CT fixtures: one scene per suite. Re-exports the dialog, nested,
+ * outside, scroll, edge, inert, theme, focus, anchor, exotica, frame, and
+ * accounting fixtures the main, exotica, and focus-lock specs mount.
+ */
 import * as React from 'react'
 import { DialogFixture } from './fixtures/dialog-fixture'
 import { NestedFixture } from './fixtures/nested-fixture'

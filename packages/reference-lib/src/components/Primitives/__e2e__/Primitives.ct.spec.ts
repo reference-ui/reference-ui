@@ -1,3 +1,9 @@
+/**
+ * Primitives lib-smoke suite: the harness boots, the fixture root renders,
+ * the React version reports valid, and form controls, button states, and
+ * disclosure interactions behave. Case metadata lives in `case.json`;
+ * this spec is the execution behind LIB-PRIMITIVES-001 through 004.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('Primitives Suite (Lib Smoke)', () => {

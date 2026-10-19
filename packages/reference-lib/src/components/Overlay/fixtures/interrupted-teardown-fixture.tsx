@@ -1,3 +1,8 @@
+/**
+ * Interrupted-teardown fixture: a slow-closing overlay toggled mid-exit.
+ * Serves the OV-SCROLL-10 proof that scroll state survives teardown
+ * races.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 

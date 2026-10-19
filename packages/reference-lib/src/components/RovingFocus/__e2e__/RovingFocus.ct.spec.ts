@@ -1,3 +1,9 @@
+/**
+ * RovingFocus composition gates and browser proofs. Pins the single tab
+ * stop and Tab travel, arrow movement with disabled skipping and looping,
+ * Home/End endpoints, press-without-focus currentness, typeahead matching,
+ * and the Space guard that keeps presses out of the search buffer.
+ */
 import { test, expect, snap, pressTab, isWebKit } from '../../../../playwright/ct'
 
 test.describe('RovingFocus Composition Gates & Browser Proofs', () => {

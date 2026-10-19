@@ -1,10 +1,3 @@
-import * as React from 'react'
-import type { PresenceProps } from './types'
-import { PresenceContext } from './context'
-import { usePresence } from './hooks/use-presence'
-import { useStableComposedRefs } from './hooks/use-stable-composed-refs'
-import { getElementRef } from './shared/element-ref'
-
 /**
  * Transparent exit-lifecycle wrapper: renders the authored child untouched
  * while `present`, and keeps it mounted through its closing effects once
@@ -14,6 +7,12 @@ import { getElementRef } from './shared/element-ref'
  * state machine lives in `hooks/use-presence`, effect detection in `exit/`,
  * nesting in `nesting/`, and sibling coordination in `coordination/`.
  */
+import * as React from 'react'
+import type { PresenceProps } from './types'
+import { PresenceContext } from './context'
+import { usePresence } from './hooks/use-presence'
+import { useStableComposedRefs } from './hooks/use-stable-composed-refs'
+import { getElementRef } from './shared/element-ref'
 
 export { usePresence } from './hooks/use-presence'
 

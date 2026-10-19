@@ -1,3 +1,8 @@
+/**
+ * Proof for the finite-animation exit hold. Pins holding for running
+ * finite animations with duration (delay counting toward the total) and
+ * releasing finished, infinite, timeless, and timing-less ones.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   hasActiveFiniteAnimations,

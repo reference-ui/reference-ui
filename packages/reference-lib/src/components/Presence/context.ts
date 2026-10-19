@@ -1,3 +1,8 @@
+/**
+ * Presence subtree scoping: the lifecycle context nested instances read
+ * plus the coordinator context Overlay's sibling parts share. Carries
+ * data only; the hooks own every decision behind the values.
+ */
 import * as React from 'react'
 import type {
   PresenceContextValue,

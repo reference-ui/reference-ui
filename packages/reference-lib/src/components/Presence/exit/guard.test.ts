@@ -1,3 +1,8 @@
+/**
+ * Proof for the exit guard's exactly-once completion. Pins one completion
+ * per epoch, silence before an exit begins, cancel voiding the live
+ * epoch, and a fresh claimable epoch after reopen and reclose.
+ */
 import { describe, expect, it } from 'vitest'
 import { ExitGuard } from './guard'
 

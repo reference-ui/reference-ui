@@ -1,3 +1,9 @@
+/**
+ * Popover composition gates and browser proofs. Toggles open state and
+ * ARIA wiring, anchors Content below the Trigger, light-dismisses on
+ * outside press and Escape, and pins flip, shift, and arrow-centering
+ * geometry in a real browser.
+ */
 import { test, expect, snap, pressTab, isWebKit } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Locator } from '@playwright/test'

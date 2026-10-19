@@ -1,3 +1,8 @@
+/**
+ * Simple-type fixture: proves aliasing stays a public boundary. Declares
+ * a union plus a pinned alias target and renders the union's document,
+ * verifying direct aliases never auto-expand to members.
+ */
 import { Reference } from '../index'
 
 /**

@@ -1,3 +1,8 @@
+/**
+ * Scroll isolation: per-document scroll lock with RTL gutter math and
+ * pinch-zoom allowance, pinning `body` to `position: fixed` for iOS edge
+ * sheets. Ships the acquiring pair plus the enabling hook.
+ */
 import * as React from 'react'
 import { overlayStackStore, layerDocument } from '../stack'
 import { eventPath, isNodeInside } from '../shared/events'

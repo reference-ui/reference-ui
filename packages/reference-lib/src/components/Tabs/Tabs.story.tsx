@@ -1,3 +1,9 @@
+/**
+ * Tabs CT fixtures: one tabset scene per behavior. Covers orientations,
+ * manual mode, RTL, nesting, Shadow DOM, focus rescue and handoff, the
+ * MyTabs variant demo, pill styling, keepMounted panels, and the
+ * selection log the main and hardening specs mount.
+ */
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { Div, Span, Button, css } from '@reference-ui/react'

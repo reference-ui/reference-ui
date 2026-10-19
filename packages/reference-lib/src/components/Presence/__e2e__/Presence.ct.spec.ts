@@ -1,3 +1,9 @@
+/**
+ * Presence browser proof: exit lifecycles end to end. Renders the story
+ * fixtures to pin instant removal, CSS transition and animation retention,
+ * reopen races, nested coordination (including born-closed and mid-exit
+ * children), and coordinated multi-part completion.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('Presence', () => {

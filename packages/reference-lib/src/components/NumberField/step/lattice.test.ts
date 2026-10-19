@@ -1,3 +1,8 @@
+/**
+ * Proof for the zero-anchored step lattice. Pins nearest-point snapping
+ * with away-from-zero ties, exact-bound endpoints, float-drift cleaning,
+ * membership tests, and strictly in-direction stepping.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   cleanFloat,

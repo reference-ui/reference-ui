@@ -1,3 +1,9 @@
+/**
+ * Inside/outside verdict for dismissal: Content, Trigger, Field bezels,
+ * ignore markers, and descendant layers all count as inside. Reads the
+ * event's composed path against the live layer registry; the listeners
+ * bind, this module judges.
+ */
 import { overlayStackStore, type Layer } from '../stack'
 import { closestFromEvent, isEventInside } from '../shared/events'
 

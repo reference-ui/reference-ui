@@ -1,3 +1,8 @@
+/**
+ * RovingFocus instance-lifetime hardening. Sibling roots with repeated
+ * item identities keep focus stops and typeahead buffers independent,
+ * and remounting one root resets only its own search and current item.
+ */
 import { test, expect } from '../../../../playwright/ct'
 
 test.describe('RovingFocus instance lifetime', () => {

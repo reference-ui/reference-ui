@@ -1,3 +1,9 @@
+/**
+ * Splitter CT fixtures: one layout scene per behavior. Covers basic and
+ * constrained groups, collapsible panels, nesting, sidebars with RTL and
+ * direction toggles, rejected requests, key passthrough, and malformed
+ * layouts for the browser suite to mount.
+ */
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'

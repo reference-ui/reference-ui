@@ -1,3 +1,8 @@
+/**
+ * Reference member row: one member's name, type, JSDoc, and description
+ * composed from the member chrome. Takes the member document; the list
+ * owns order and collapsing, this owns the row.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type { ReferenceMemberDocument } from '@reference-ui/types'

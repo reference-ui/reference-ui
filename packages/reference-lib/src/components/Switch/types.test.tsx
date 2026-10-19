@@ -1,3 +1,7 @@
+/**
+ * Proof for the Switch type contract. Pins behavior-prop types preserved
+ * when StyleProps are also supplied, so styling never erases behavior.
+ */
 import * as React from 'react'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { Switch, type SwitchProps, type SwitchThumbProps } from './Switch'

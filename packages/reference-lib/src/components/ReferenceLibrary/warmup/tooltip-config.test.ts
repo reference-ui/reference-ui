@@ -1,3 +1,8 @@
+/**
+ * Proof for the tooltip warm-group config write. Pins configured skip
+ * delays written into the document store, omission keeping the 300ms
+ * default, zero honored as a real policy, and per-document independence.
+ */
 import { describe, expect, it } from 'vitest'
 import { getTooltipGroupStore } from '../../Tooltip/tooltipGroup'
 import { applyTooltipSkipDelay } from './tooltip-config'

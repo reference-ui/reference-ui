@@ -1,3 +1,8 @@
+/**
+ * Proof for the toaster prop mapping. Pins the global-hotkey fallback when
+ * config or hotkey is omitted, explicit-false preservation, and
+ * configured (including falsey) defaults passed through untouched.
+ */
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_TOAST_HOTKEY } from '../../Toast/toastQueue'
 import { resolveToastHostProps } from './toast-props'

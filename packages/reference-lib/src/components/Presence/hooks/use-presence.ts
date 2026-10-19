@@ -1,3 +1,9 @@
+/**
+ * Presence exit-lifecycle kernel: the mounted/suspended/unmounted state
+ * machine with exit-start verdicts and completion wiring. Delegates every
+ * decidable piece to the exit, nesting, and coordination domains; returns
+ * data, handlers, and refs, never JSX.
+ */
 import * as React from 'react'
 import type {
   PresenceContextValue,

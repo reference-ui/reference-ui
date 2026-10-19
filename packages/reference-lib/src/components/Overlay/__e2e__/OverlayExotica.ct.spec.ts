@@ -1,3 +1,9 @@
+/**
+ * Overlay exotica pass: cross-cutting edge cases beyond the main suite.
+ * Covers document-scoped dismissal routing, sibling-root layer ordering,
+ * deferred pointer sequences, restore-focus timing, branch reparenting,
+ * and ShadowRoot isolation against the exotica fixtures.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('Overlay Exotica Pass', () => {

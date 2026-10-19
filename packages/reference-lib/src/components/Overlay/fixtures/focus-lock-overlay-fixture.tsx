@@ -1,3 +1,8 @@
+/**
+ * FocusLock-overlay fixture: the FocusLock primitive composed with Overlay
+ * Content, including exit-transition scenes. Serves trapping, pausing,
+ * and shard proofs in the focus-lock suite.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 

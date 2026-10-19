@@ -1,3 +1,8 @@
+/**
+ * Proof for the draft alphabet derived from Intl probes. Pins western and
+ * locale separators, en-IN grouping, ten positional digits per numbering
+ * system, and refusal of unstable systems and foreign digits.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   draftDigits,

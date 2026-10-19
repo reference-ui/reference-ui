@@ -1,3 +1,9 @@
+/**
+ * Overlay deep spec and production verification suite. Proves DOM anatomy,
+ * controlled-open purity, Portal container contracts, edge/anchor
+ * diagnostics, dismissal routing, isolation, and positioning against the
+ * story fixtures in a real browser.
+ */
 import { test, expect, snap, pressTab, isWebKit } from '../../../../playwright/ct'
 import type { Locator } from '@playwright/test'
 

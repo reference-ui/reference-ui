@@ -1,3 +1,8 @@
+/**
+ * Document dismissal binding: one Escape/outside listener pair per
+ * document, synced against the live layer stack. Click listens on bubble
+ * so extension overlays can abort a deferred sequence before it commits.
+ */
 import {
   overlayStackStore,
   getTopLiveLayer,

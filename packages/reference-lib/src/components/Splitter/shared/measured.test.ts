@@ -1,3 +1,8 @@
+/**
+ * Proof for the solver constraint table. Pins live numbers kept with
+ * defaults for the unresolved, invalid sanitized to default bounds,
+ * string-bound resolution through the measured table, and table equality.
+ */
 import { describe, expect, it } from 'vitest'
 import type { RegisteredPanel } from '../context'
 import { measuredEntriesEqual, toSolverConstraints } from './measured'

@@ -1,3 +1,9 @@
+/**
+ * Presence CT fixtures: one exit scene per lifecycle. Covers instant,
+ * transition, animation, and GSAP exits, reopen races, nested and
+ * born-closed coordination, sibling completion, and exit-complete
+ * reporting for the browser suite to mount.
+ */
 import * as React from 'react'
 import { Presence } from './Presence'
 

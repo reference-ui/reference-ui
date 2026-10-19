@@ -1,3 +1,8 @@
+/**
+ * Tooltip CT fixtures: one intent scene per behavior. Covers hover and
+ * keyboard opening, slotted content, warm-group handoffs, nested
+ * overlays, and scroll handling for the main spec to mount.
+ */
 import * as React from 'react'
 import { Div, Button, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'

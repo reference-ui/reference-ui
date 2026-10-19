@@ -1,3 +1,8 @@
+/**
+ * Proof for the grammar-derived inputMode hint. Pins the full keyboard for
+ * validate mode and scientific grammars, and fraction keys only from
+ * authored precision or a fractional step.
+ */
 import { describe, expect, it } from 'vitest'
 import { deriveInputMode } from './input-mode'
 

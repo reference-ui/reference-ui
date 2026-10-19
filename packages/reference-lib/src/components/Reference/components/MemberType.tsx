@@ -1,3 +1,7 @@
+/**
+ * Member type label: renders one member's type string beside its name.
+ * Takes the preformatted label; formatting happens upstream.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import { MonoText } from './shared/MonoText'

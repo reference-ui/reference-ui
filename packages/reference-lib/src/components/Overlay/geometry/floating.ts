@@ -1,3 +1,9 @@
+/**
+ * Floating-position core: placements, sides, and alignment vocabulary over
+ * computePosition with RTL start/end resolution. Re-exports the
+ * overflow-ancestor and auto-update helpers so one module serves every
+ * anchored consumer.
+ */
 import { hiddenByClipping } from './clipping'
 
 export { getOverflowAncestors } from './clipping'

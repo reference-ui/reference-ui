@@ -16,3 +16,5 @@ imports that path directly — moving it would break an importer outside
 this folder. The nested-trigger guard lives in `shared/` where every
 layer can ask it. Pure decisions carry colocated unit tests; hover,
 focus, and group timing prove out in CT.
+
+Up: [Components](../components.md).

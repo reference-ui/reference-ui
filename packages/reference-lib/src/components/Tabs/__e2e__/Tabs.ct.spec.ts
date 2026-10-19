@@ -1,3 +1,10 @@
+/**
+ * Tabs composition gates and browser proofs. Pins tablist/tab/panel
+ * rendering with ARIA linkage, automatic and manual selection, RTL arrow
+ * reversal, nested isolation, focus rescue and handoff, dynamic disable
+ * and removal, the MyTabs system-variant demo, ShadowRoot locality,
+ * keepMounted panels, and real-gesture selection semantics.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 

@@ -1,3 +1,10 @@
+/**
+ * NumberField browser proof: anatomy, keys, editing, commit, and forms.
+ * Mounts the story fixtures to pin the single-root DOM shape, stepping
+ * and coarse deltas, native-preserving edits (caret, paste, composition,
+ * IME), commit policies, locale parsing and formatting, form submit and
+ * reset, Shadow DOM scoping, and an axe-clean scan.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'

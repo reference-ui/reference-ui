@@ -1,3 +1,9 @@
+/**
+ * Living position for anchored Content: event-driven repositioning with
+ * an opt-in sleeping rAF, layout-property dirtiness, and move observation.
+ * Takes the anchor pair and a reposition callback; tears everything down
+ * on cleanup.
+ */
 import { getOverflowAncestors } from './clipping'
 import { isEditableTarget } from '../shared/events'
 import { observeMove } from './observe-move'

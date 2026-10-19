@@ -1,3 +1,9 @@
+/**
+ * Outside-hiding isolation: `inert` on every sibling outside the overlay,
+ * reference-counted per element so nested layers compose. Skips authored
+ * hidden ancestors, drops duplicate ownership on reparent, and walks open
+ * ShadowRoots; ships the raw applier plus the enabling hook.
+ */
 import * as React from 'react'
 import { isNodeInside } from '../shared/events'
 import { overlayStackStore, layerDocument } from '../stack'

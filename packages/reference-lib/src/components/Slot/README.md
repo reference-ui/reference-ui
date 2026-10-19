@@ -32,3 +32,5 @@ host helpers, live container, ids, hooks — and the `__e2e__` browser
 gates prove the composed compound: regions render, content refreshes
 in place without remount, prefix selection reacts, and visibility
 toggles without unregistering.
+
+Up: [Components](../components.md).

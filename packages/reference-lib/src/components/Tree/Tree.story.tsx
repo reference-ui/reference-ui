@@ -1,3 +1,9 @@
+/**
+ * Tree CT fixtures: one hierarchy scene per behavior. Covers basic and
+ * multi-level trees, the parity matrix, Shadow DOM, Combobox nesting
+ * (valid and invalid), and dynamic hierarchy edits for the browser
+ * suite to mount.
+ */
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'

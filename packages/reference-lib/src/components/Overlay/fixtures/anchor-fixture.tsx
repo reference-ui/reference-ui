@@ -1,3 +1,8 @@
+/**
+ * Anchor fixture: the placement laboratory, from frozen defaults through
+ * flip and shift, explicit offsets, arrow participation, virtual anchors,
+ * and published geometry variables (OV-POS-02..06).
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 

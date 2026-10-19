@@ -1,3 +1,8 @@
+/**
+ * Proof for the descendant-exit registry. Pins pending tracking until
+ * each descendant settles, unconditional settlement so interrupted or
+ * removed exits release the parent, and single registration per descendant.
+ */
 import { describe, expect, it, vi } from 'vitest'
 import { createDescendantRegistry } from './registry'
 

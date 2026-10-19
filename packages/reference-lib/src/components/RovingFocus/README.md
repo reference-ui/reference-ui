@@ -37,3 +37,5 @@ typeahead, direction, context — so deep importers see no change.
 Each isolated submodule proves itself in a colocated unit test with no
 browser and no mount; the component suite keeps the SSR, anatomy, and merge
 integration cases, and the browser suite proves the full matrix.
+
+Up: [Components](../components.md).

@@ -1,3 +1,8 @@
+/**
+ * Pointer-event isolation: `body { pointer-events: none }` while a modal
+ * layer is present, reference-counted so nested modals compose. Ships the
+ * document-scoped acquire/release pair plus the enabling hook.
+ */
 import * as React from 'react'
 
 type PointerLockState = {

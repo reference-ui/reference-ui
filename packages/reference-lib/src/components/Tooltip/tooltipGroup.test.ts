@@ -1,3 +1,8 @@
+/**
+ * Proof for the tooltip warm-group skip-delay store. Pins cold until an
+ * instance is active or the skip window is live, and zero skipDelay never
+ * entering an instant phase.
+ */
 import { describe, expect, it } from 'vitest'
 import { isGroupWarmed, type TooltipGroupState } from './tooltipGroup'
 

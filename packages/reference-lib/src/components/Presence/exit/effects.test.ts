@@ -1,3 +1,8 @@
+/**
+ * Proof for the finite-exit-animation verdict. Pins finite for newly
+ * named animations with positive duration or delay, and ignores
+ * preexisting names, `none`, zero-duration, and infinite iterations.
+ */
 import { describe, expect, it } from 'vitest'
 import { hasFiniteExitAnimation, hasFiniteExitTransition } from './effects'
 

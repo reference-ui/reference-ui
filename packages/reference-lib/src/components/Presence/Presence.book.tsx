@@ -1,3 +1,8 @@
+/**
+ * Presence Book gallery: named scenes for interactive visual review.
+ * Maps story names to renderable exit lifecycles so authors can watch
+ * every close path in the Book harness without mounting the CT suite.
+ */
 import * as React from 'react'
 import { Button, Div, Span } from '@reference-ui/react'
 import { Presence } from './Presence'

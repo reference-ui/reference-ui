@@ -1,3 +1,7 @@
+/**
+ * Member JSDoc block: renders tags, params, and returns for one member.
+ * Takes the parsed JSDoc payload; pure chrome over the member row.
+ */
 import * as React from 'react'
 import { Div, P, Small } from '@reference-ui/react'
 import type { ReferenceJsDoc, ReferenceParamDoc } from '@reference-ui/types'

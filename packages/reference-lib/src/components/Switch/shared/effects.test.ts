@@ -1,3 +1,7 @@
+/**
+ * Proof for the isomorphic layout-effect pick. Pins the plain effect
+ * selected where no document exists, so server renders stay warning-free.
+ */
 import * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import { useIsomorphicLayoutEffect } from './effects'

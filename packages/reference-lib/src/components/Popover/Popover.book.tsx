@@ -1,3 +1,8 @@
+/**
+ * Popover Book gallery: named scenes for interactive visual review.
+ * Maps story names to renderable popovers so authors can browse click,
+ * hover, and placement shapes in the Book harness without mounting CT.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Popover } from './index'

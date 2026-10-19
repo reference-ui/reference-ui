@@ -1,3 +1,10 @@
+/**
+ * Tree composition gates and browser proofs. Pins hierarchy rendering,
+ * controlled selection and expansion with deterministic emission, APG
+ * keyboard traversal with RTL mirroring, typeahead over the visible set,
+ * dynamic recovery, Combobox bridge commits and virtual focus, ShadowRoot
+ * traversal, and an accessibility-clean sweep.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
