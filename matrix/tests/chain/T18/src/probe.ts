@@ -1,8 +1,8 @@
 /**
  * T18 probe constants: the single source of truth shared by the render entry,
  * the token fragment, and the contract spec. Every probe gets its own novel
- * token, so the fan-out one probe triggers (one rule per composed system) can
- * never back another probe's class by coincidence.
+ * token, so the rules one probe triggers (one per system its renderer names)
+ * can never back another probe's class by coincidence.
  */
 
 /** Marker asserted by the colocated vitest unit test. */
@@ -22,6 +22,15 @@ export const T18_ICONS_PREFIX = 'reference-icons__'
  */
 export type ProbeStatus = 'external-today' | 'provenance'
 
+/**
+ * The package whose bundled runtime renders a probe. Its published streams
+ * are the only systems that may back the probe's stem (styling plan §3: lib
+ * renders through `reference-icons` and `reference-ui`, so a lib tag backs
+ * under both; the fixture and icons under their one system each). A rule
+ * under any other composed system, or the app's, is the spray S2 removed.
+ */
+export type ProbeRenderer = 'lib' | 'package' | 'icons'
+
 export interface ColorProbe {
   /** `data-testid` on the probed element. */
   testId: string
@@ -35,6 +44,8 @@ export interface ColorProbe {
   property: 'color' | 'padding'
   /** The prefix the rendering runtime mints, so the backing rule must carry it. */
   runtimePrefix: string
+  /** The package that renders it; the no-spray check reads its published streams. */
+  renderer: ProbeRenderer
   status: ProbeStatus
 }
 
@@ -46,6 +57,7 @@ export const T18_PROBES = {
     computed: 'rgb(161, 18, 92)',
     property: 'color',
     runtimePrefix: T18_LIB_PREFIX,
+    renderer: 'lib',
     status: 'external-today',
   },
   namespaceButton: {
@@ -55,6 +67,7 @@ export const T18_PROBES = {
     computed: 'rgb(18, 92, 161)',
     property: 'color',
     runtimePrefix: T18_PACKAGE_PREFIX,
+    renderer: 'package',
     status: 'external-today',
   },
   icon: {
@@ -64,6 +77,7 @@ export const T18_PROBES = {
     computed: 'rgb(92, 161, 18)',
     property: 'color',
     runtimePrefix: T18_ICONS_PREFIX,
+    renderer: 'icons',
     status: 'external-today',
   },
   acmeButton: {
@@ -73,6 +87,7 @@ export const T18_PROBES = {
     computed: 'rgb(140, 61, 7)',
     property: 'color',
     runtimePrefix: T18_PACKAGE_PREFIX,
+    renderer: 'package',
     status: 'provenance',
   },
   barrelButton: {
@@ -82,6 +97,7 @@ export const T18_PROBES = {
     computed: 'rgb(7, 140, 61)',
     property: 'color',
     runtimePrefix: T18_LIB_PREFIX,
+    renderer: 'lib',
     status: 'provenance',
   },
   wrapperButton: {
@@ -91,6 +107,7 @@ export const T18_PROBES = {
     computed: 'rgb(61, 7, 140)',
     property: 'color',
     runtimePrefix: T18_LIB_PREFIX,
+    renderer: 'lib',
     status: 'provenance',
   },
   tile: {
@@ -100,6 +117,7 @@ export const T18_PROBES = {
     computed: '17px',
     property: 'padding',
     runtimePrefix: T18_PACKAGE_PREFIX,
+    renderer: 'package',
     status: 'provenance',
   },
 } as const satisfies Record<string, ColorProbe>

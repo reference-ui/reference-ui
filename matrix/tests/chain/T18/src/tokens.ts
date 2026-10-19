@@ -3,8 +3,8 @@ import { tokens } from '@reference-ui/core'
 /**
  * T18 novel probe tokens, one per probe. They are consumer-local: lib, icons
  * and the fixture never compiled them, so a backing rule for any of them can
- * only come from this consumer's compile, and one probe's fan-out (a rule per
- * composed system) never backs another probe's class. The spec proves their
+ * only come from this consumer's compile, and one probe's rules (one per system
+ * its renderer names) never back another probe's class. The spec proves their
  * absence from every published sheet. Values mirror `T18_PROBES.computed`.
  */
 tokens({
