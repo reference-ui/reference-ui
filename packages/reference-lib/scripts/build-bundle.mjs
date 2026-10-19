@@ -1,13 +1,9 @@
-// Shared bundle step for @reference-ui/lib and the 8 matrix fixtures
-// raw esbuild, ESM-only, no dts/splitting.
-// It takes a package dir + entries and emits staged .mjs outputs, renaming
-// each into dist/ atomically so a rebuild during a live dev server never
-// 404s. Externals are computed from the consumer's own
-// package.json (dependencies + peerDependencies, bare and /* subpath forms)
-// plus explicit extras; devDependencies always bundle. Run from the package
-// dir: node scripts/build-bundle.mjs --entry index=src/index.ts
-// (--extra-external/--inline repeat; lib passes its react-dom, runtime, and
-// tasty edges plus --inline gsap).
+// Shared bundle step for @reference-ui/lib and the 9 matrix fixtures: raw esbuild,
+// ESM-only, no dts/splitting. It takes a package dir plus entries and emits staged .mjs
+// outputs, renaming each into dist/ atomically so a rebuild during a live dev server
+// never 404s. Externals come from the consumer's own manifest plus explicit extras
+// (devDependencies always bundle). Run from the package dir:
+// node scripts/build-bundle.mjs --entry index=src/index.ts [--extra-external x --inline y]...
 
 import { build } from 'esbuild'
 import { mkdir, readFile, readdir, rename, rm } from 'node:fs/promises'

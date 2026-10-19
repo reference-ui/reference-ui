@@ -1,4 +1,5 @@
-/* Book Root Reset — Shell and components are 100% styled via Reference UI primitives & tokens */
+/* Book root reset: full-height shell with zeroed margin, padding, and box sizing.
+   Shell and components are otherwise 100% styled via Reference UI primitives and tokens. */
 html,
 body,
 #root {

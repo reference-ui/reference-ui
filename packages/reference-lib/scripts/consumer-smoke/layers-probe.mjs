@@ -1,4 +1,4 @@
-// layers-probe.mjs — the paint half of the layered-override pass (run.mjs, step 7). Takes the scaffold's dev
+// layers-probe.mjs — the paint half of the layered-override pass (run.mjs layers step). Takes the scaffold's dev
 // server URL and the override hex pair as JSON. Opens three pages, each rendering a lib primitive Button in light
 // and dark: the extendSystem override sheet, the plain-layers control sheet, and lib's own prebuilt styles. Reads
 // each Button's computed background and its stamps, and fails on any page error or console error. Emits one

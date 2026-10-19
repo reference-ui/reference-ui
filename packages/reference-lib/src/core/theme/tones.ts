@@ -1,3 +1,5 @@
+// Tone tokens: named surface/line mix amounts for `color/intensity` pairs.
+// It takes nothing and emits the ghost/medium/firm/strong tone tree.
 import { tokens } from '@reference-ui/system'
 
 /**

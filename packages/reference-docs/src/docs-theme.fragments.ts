@@ -1,10 +1,10 @@
 // Docs-only semantic color tokens collected by ref sync.
 // It declares the grayscale ramp plus docsHighlight and the single docsAccent hue; dark
-// mode rides Panda dark keys. Imported for its side effects by main.tsx.
+// mode rides `dark` condition keys. Imported for its side effects by main.tsx.
 import { tokens } from '@reference-ui/system'
 
 /**
- * Docs-only semantic colors (dark mode via Panda `dark` keys).
+ * Docs-only semantic colors (dark mode via `dark` condition keys).
  * Collected by `ref sync` from ui.config `include` patterns.
  *
  * A single grayscale ramp — no tinted chrome. Surfaces, borders, and the

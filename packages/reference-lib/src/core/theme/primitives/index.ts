@@ -1,3 +1,6 @@
+// Primitives barrel: shared fragments plus every element style group.
+// It takes nothing and emits base, the shared recipes and sizes, the `ui` color tokens,
+// and the document, form, media, table, and typography style maps.
 export { base } from './base'
 export {
 	baseTypography,

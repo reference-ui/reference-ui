@@ -106,7 +106,7 @@ export default defineConfig({
 ## Bundle & code-splitting
 
 The package ships one JS entry (`dist/index.mjs`, ~3.6MB uncompressed at 0.0.46 —
-dominated by the ~3,857-icon barrel) plus the 255KB stylesheet and the 160KB
+dominated by the ~3,900-icon barrel) plus the 255KB stylesheet and the 160KB
 primitives runtime. There are no per-component subpaths; instead the package relies on
 standard ESM tree-shaking:
 

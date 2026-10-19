@@ -1,3 +1,6 @@
+// Switch primitive styles: monochrome track and thumb on the switch button.
+// It takes nothing and emits the globalCss map for [data-reference-switch] and its
+// thumb, off quiet and on at the checkbox checked fill.
 import { globalCss } from '@reference-ui/system'
 import { focusRingStyles } from '../shared'
 

@@ -1,3 +1,6 @@
+// CT runtime Vite overlay: merges the gallery config with the selected React major.
+// It takes the base config and emits it pointed at the major's host plus aliases, with
+// the shared react dedupe stripped so the pinned runtime wins.
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mergeConfig, searchForWorkspaceRoot, type Alias, type UserConfig } from 'vite'

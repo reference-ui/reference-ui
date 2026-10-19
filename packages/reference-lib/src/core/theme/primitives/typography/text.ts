@@ -1,3 +1,5 @@
+// Text primitive styles: paragraphs, blockquotes, and small print.
+// It takes nothing and emits the globalCss map for the block text elements.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography } from '../shared'
 

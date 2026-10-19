@@ -1,5 +1,5 @@
 // Vitest tests for MCP token loading over Core fragment evaluation.
-// They take temp project trees and assert flattened tokens with retired-core boundary semantics.
+// They take temp project trees and assert flattened tokens with the _private boundary.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'

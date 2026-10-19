@@ -1,3 +1,6 @@
+// Book stories for useMeasure: settled box and resize observation specimens.
+// They take nothing and emit interactive stories rendering the hook's rect and
+// isSettled state for visual inspection.
 import * as React from 'react'
 import { Button, Code, Div, Span } from '@reference-ui/react'
 import { useMeasure } from './use-measure'

@@ -1,3 +1,6 @@
+// Book story canvas: loads one manifest entry and renders the named story.
+// It takes the entry plus theme and viewport and emits the story in a sized frame,
+// resetting overlay and inert state when the story identity changes.
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import { BookDecorator } from '../decorator/BookDecorator'

@@ -1,3 +1,6 @@
+// Shared CT test fixture: story mounting plus engine-aware helpers.
+// It takes the base Playwright test and emits the extended `test` with a `mount` fixture
+// driving the gallery's window.mount, plus pressTab, snap, and isWebKit helpers.
 import {
   test as base,
   expect,

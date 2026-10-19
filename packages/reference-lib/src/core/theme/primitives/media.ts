@@ -1,3 +1,5 @@
+// Media primitive styles: figure, replaced elements, audio, embeds.
+// It takes nothing and emits the globalCss map for the media elements.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography } from './shared'
 

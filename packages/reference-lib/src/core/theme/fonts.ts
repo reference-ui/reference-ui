@@ -1,3 +1,5 @@
+// Font tokens: Inter sans/serif/mono stacks with variable @font-face sources.
+// It takes nothing and emits the `fonts` token tree plus the downloadable faces.
 import { font } from '@reference-ui/system'
 
 export const fonts = {

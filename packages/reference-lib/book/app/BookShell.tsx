@@ -1,3 +1,6 @@
+// Book application shell: navigation rail beside the story canvas.
+// It takes nothing and emits the search, category nav, viewport and theme controls,
+// and the canvas, driven by the `?book=` / `?story=` URL params.
 import * as React from 'react'
 import {
   Div,

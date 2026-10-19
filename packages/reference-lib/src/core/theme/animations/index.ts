@@ -1,3 +1,5 @@
+// Animations barrel: keyframe maps plus the paced animation tokens.
+// It takes nothing and emits every keyframes export with animationTokens.
 export { attentionKeyframes } from './attention'
 export { bounceKeyframes } from './bounce'
 export { fadeKeyframes } from './fade'

@@ -1,3 +1,5 @@
+// Book application entry.
+// It takes the #root node and emits the shell under StrictMode with the Book reset.
 import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import './app/book.css'

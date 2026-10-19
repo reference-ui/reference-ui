@@ -1,3 +1,5 @@
+// Checkbox primitive styles: appearance-none box with checked fill and tick.
+// It takes nothing and emits the globalCss map for checkbox inputs.
 import { globalCss } from '@reference-ui/system'
 import { focusRingStyles } from '../shared'
 

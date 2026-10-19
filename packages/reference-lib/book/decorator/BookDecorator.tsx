@@ -1,3 +1,6 @@
+// Book story decorator: providers and chrome every story renders inside.
+// It takes the story node plus theme and layout and emits it under ReferenceLibrary
+// with focus-visible tracking armed and the color mode applied.
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import '@reference-ui/react/styles.css'

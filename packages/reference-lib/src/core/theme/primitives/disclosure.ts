@@ -1,3 +1,5 @@
+// Disclosure primitive styles: details/summary chrome with marker normalization.
+// It takes nothing and emits the globalCss map for the disclosure elements.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography, blockText, focusRingStyles } from './shared'
 

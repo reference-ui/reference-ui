@@ -1,3 +1,6 @@
+// Height-collapse tween used by Collapsible (and Accordion through it).
+// It takes the element plus open/skip options and emits the gsap tween, or sets the end
+// state directly when motion is reduced. Presence observes the tween and holds the node.
 import { gsap, collapseDuration } from './gsap'
 
 export interface CollapseAnimationOptions {

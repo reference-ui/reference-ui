@@ -1,3 +1,6 @@
+// Vite plugin recording Book HMR and transform timings.
+// It takes the dev server lifecycle and emits JSONL perf records to
+// .reference-ui/book-perf.jsonl for report.mjs.
 import { appendFileSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

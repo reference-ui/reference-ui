@@ -1,3 +1,5 @@
+// Radii tokens: sm/md/lg steps plus the full pill radius.
+// It takes nothing and emits the `radii` token tree.
 import { tokens } from '@reference-ui/system'
 
 export const radii = {

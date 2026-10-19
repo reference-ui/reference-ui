@@ -1,3 +1,5 @@
+// Base primitive styles: icon-shell color inheritance, focus-visible, selection.
+// It takes nothing and emits the `base` globalCss map applied before every group.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography } from './shared'
 

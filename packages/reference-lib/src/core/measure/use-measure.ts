@@ -1,3 +1,6 @@
+// useMeasure: element rect plus a settled flag for geometry owners.
+// It takes a ref callback target plus pause/settle options and emits the live rect and
+// isSettled, observing with ResizeObserver and settling after a quiet window.
 import * as React from 'react'
 import { MEASUREMENT_SETTLE_TIMEOUT_MS } from './constants'
 import { observeElementResize, resizeObserverFor } from './observe'

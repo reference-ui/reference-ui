@@ -1,3 +1,6 @@
+// Playwright reporter decoding failed snapshot PNGs into drift telemetry.
+// It takes the expected/actual attachment triple and emits the differing-pixel bounding
+// box and channel deltas to the console, so a red snapshot names its region.
 import fs from 'node:fs'
 import zlib from 'node:zlib'
 import type { Reporter, TestCase, TestResult, TestStatus } from '@playwright/test/reporter'

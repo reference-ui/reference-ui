@@ -1,3 +1,5 @@
+// Root theme vars and body defaults: spacing root plus the base type surface.
+// It takes nothing and emits rootThemeVars for :root and bodyStyles for the page body.
 import { globalCss } from '@reference-ui/system'
 
 export const rootThemeVars = {

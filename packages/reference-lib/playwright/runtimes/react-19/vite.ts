@@ -1,3 +1,6 @@
+// React 19 CT runtime Vite wiring.
+// It takes the pinned react-19 install and emits the runtime record: host path, Vite
+// cache dir, and the react / react-dom aliases.
 import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

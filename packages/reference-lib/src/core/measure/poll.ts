@@ -1,3 +1,6 @@
+// Opt-in rAF dirty poll that sleeps after consecutive unchanged frames.
+// It takes a measure/onChange pair and emits the poll handle; wake restarts sampling
+// after sleep, and hidden targets skip sampling until visible.
 import { MAX_IDLE_FRAMES } from './constants'
 import { createFrameScheduler, type FrameClock } from './frame'
 import { RECT_JITTER_EPSILON, rectsDiffer, type RectLike } from './rects'

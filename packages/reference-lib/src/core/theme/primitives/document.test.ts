@@ -1,3 +1,6 @@
+// Vitest tests for the document primitive styles.
+// They take the style map and assert Span inherits color instead of pinning body text,
+// keeping it legible on dark surfaces.
 import { describe, it, expect } from 'vitest'
 import { documentPrimitiveStyles } from './document'
 

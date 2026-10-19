@@ -1,4 +1,7 @@
 // @ts-nocheck — CJS React 17 has no types at this pin path.
+// React 17 module re-export for the CT runtime aliases.
+// It takes the pinned CJS React plus the hook backfills and emits the unified React
+// module the gallery imports.
 import React from './node_modules/react/index.js'
 import { useId, useSyncExternalStore } from './hooks'
 

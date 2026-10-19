@@ -1,3 +1,6 @@
+// Playwright CT config: runs __e2e__ specs against the React-major gallery.
+// It takes CT_PORT / CT_WORKERS / CT_REACT and emits the defined config: :3101 gallery,
+// at most two workers, React-19-only snapshots with a 0.001 diff budget.
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, devices } from '@playwright/test'

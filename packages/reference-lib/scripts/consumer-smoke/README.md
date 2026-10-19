@@ -14,7 +14,7 @@ a temp dir (no workspace aliases, no tribal setup), and proves the artifact:
 4. `vite build` + warning scan — zero node-builtin/externalized warnings
    (B-35 regression).
 5. `vite dev` + Playwright probe — mounts every barrel component, runs the
-   six B-11 behavioral assertions against current `src`, asserts zero
+   B-11 behavioral assertions against current `src`, asserts zero
    unexpected console errors and zero `no compiled class` warnings.
 6. Layered override through a real `ref sync` (`layers-probe.mjs`). The
    scaffold's `ui.config.ts` layers `extendSystem(libBaseSystem, { tokens })`,

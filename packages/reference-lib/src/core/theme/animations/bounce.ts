@@ -1,3 +1,5 @@
+// Bounce keyframes: bounce, bounceIn, bounceOut.
+// They take nothing and emit the keyframes map animationTokens paces.
 import { keyframes } from '@reference-ui/system'
 
 export const bounceKeyframes = {

@@ -1,4 +1,7 @@
 // @vitest-environment happy-dom
+// Vitest tests for focus-visible and modality tracking.
+// They take synthetic pointer and keyboard events and assert [data-focus-visible] lands
+// only on true keyboard navigation, never on pointer focus or typing.
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
   setupFocusVisible,

@@ -1,46 +1,6 @@
 # Reference UI MCP Tools & Architecture Reference
 
-This document provides a complete technical rundown of the `@reference-ui/mcp` package structure, execution lifecycle, and tool specifications.
-
----
-
-## Architecture Overview
-
-```
-packages/reference-mcp/
-├── instructions.md                  # Contextual system prompt for connected AI agents
-├── tools.md                         # This reference specification
-├── README.md                        # Package overview & developer quickstart
-├── src/
-│   ├── index.ts                     # Public API barrel (server factory, types, tools)
-│   ├── cli/                         # CLI entry points (`ref-mcp` stdio/http transports)
-│   │   ├── command.ts
-│   │   └── index.ts
-│   ├── child-process/               # Isolated worker pool for AST parsing & model building
-│   │   ├── entry.ts                 # Worker script entry point (spawned by server)
-│   │   └── process.ts               # Spawn & IPC supervisor
-│   ├── pipeline/                    # Model indexing, joining, catalogs & queries
-│   │   ├── artifact.ts              # Reads & writes .reference-ui/mcp/model.json
-│   │   ├── build.ts                 # Enriches Atlas AST with tasty types & token maps
-│   │   ├── library-catalog.ts       # 24 @reference-ui/lib component specs & examples
-│   │   ├── icons-catalog.ts         # 3,800+ @reference-ui/icons search index
-│   │   ├── primitives.ts            # Built-in @reference-ui/react HTML primitives catalog
-│   │   ├── (Atlas observe)          # Counts primitive usage in JSX; primitives.ts maps the result
-│   │   ├── style-props.ts           # Token category mappings & StyleProps guide
-│   │   ├── tokens.ts                # Token tree collector and compression
-│   │   ├── queries.ts               # Component & token lookup engine
-│   │   └── types.ts                 # MCP data schemas & artifact interfaces
-│   └── server/                      # MCP protocol layer & project orchestration
-│       ├── server-factory.ts        # McpServer instantiation & registration
-│       ├── tools.ts                 # Tool definitions and input/output handlers
-│       ├── resources.ts             # MCP resource providers
-│       ├── project-manager.ts       # Multi-project session & active project state
-│       ├── workspace-discovery.ts   # Auto-detects ui.config.ts in workspace & machine registry
-│       ├── project-context.ts       # executeWithProject wrapper (warmup, timeouts, notices)
-│       ├── model-state.ts           # Artifact caching, background refresh & deferred readiness
-│       ├── universal-primitives.ts  # Fallback mode when no synced project is active
-│       └── instructions.ts          # Discovers and serves instructions.md to agents
-```
+This document provides a complete technical rundown of the `@reference-ui/mcp` tool specifications. File headers describe each module; Memex indexes the package map.
 
 ---
 
@@ -51,7 +11,7 @@ Reference UI codebases configure their component and asset tiers in `ui.config.t
 | Level | Layer | Source Package | Config Flag | Default | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Level 1** | **Primitives** | `@reference-ui/react` | *Always enabled* | `true` | Capitalized HTML elements (`Div`, `Span`, `Button`, `Section`, `H1`–`H6`) driven by StyleProps. |
-| **Level 2** | **Library Components** | `@reference-ui/lib` | `use_reference_library` (or `useReferenceLibrary`) | `true` | 27 compound accessible components (`Accordion`, `Tabs`, `Splitter`, `Menu`, `Popover`, `Switch`, etc.). |
+| **Level 2** | **Library Components** | `@reference-ui/lib` | `use_reference_library` (or `useReferenceLibrary`) | `true` | 24 compound accessible components (`Accordion`, `Tabs`, `Splitter`, `Menu`, `Popover`, `Switch`, etc.). |
 | **Level 3** | **Icons** | `@reference-ui/icons` | `use_reference_icons` (or `useReferenceIcons`) | `true` | 3,800+ Material Symbols React icon components. |
 
 ---

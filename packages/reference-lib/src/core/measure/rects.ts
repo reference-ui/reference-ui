@@ -1,3 +1,5 @@
+// Shared layout-rect helpers: read, snapshot, and jitter-tolerant differ.
+// Overlay autoUpdate is the consumer; Splitter must not poll.
 /** Shared layout-rect helpers. Overlay autoUpdate is the consumer; Splitter must not poll. */
 
 export interface RectLike {

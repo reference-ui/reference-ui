@@ -1,3 +1,5 @@
+// Fade keyframes: fadeIn, fadeOut, and the directional fadeIn variants.
+// They take nothing and emit the keyframes map animationTokens paces.
 import { keyframes } from '@reference-ui/system'
 
 export const fadeKeyframes = {

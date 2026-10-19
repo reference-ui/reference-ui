@@ -9,7 +9,7 @@ Tool input schemas and output contracts: [tools.md](./tools.md). Agent instructi
 Projects shape their component and asset surface with boolean flags in `ui.config.ts` (the snake_case spellings `use_reference_library` and `use_reference_icons` also work):
 
 1. **Primitives (`@reference-ui/react`)**, always enabled: standard HTML elements 1:1 (`Div`, `Span`, `Button`, `Section`, `H1`–`H6`), driven by token-aware style props.
-2. **Reference library (`@reference-ui/lib`)**, `useReferenceLibrary` (default `true`): 27 compound, accessible components. When `false`, they are excluded from `list_components` and guarded with clear notices in `get_component`.
+2. **Reference library (`@reference-ui/lib`)**, `useReferenceLibrary` (default `true`): 24 compound, accessible components. When `false`, they are excluded from `list_components` and guarded with clear notices in `get_component`.
 3. **Reference icons (`@reference-ui/icons`)**, `useReferenceIcons` (default `true`): 3,800+ Material Symbols React icon components. When `false`, `list_icons` reports that Reference Icons are disabled.
 
 ## Tools

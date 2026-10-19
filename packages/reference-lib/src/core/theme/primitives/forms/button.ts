@@ -1,3 +1,5 @@
+// Button primitive styles: default, primary, and ghost variants with stepped states.
+// It takes nothing and emits the globalCss map, including the file-upload button.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography, focusRingStyles, controlSize } from '../shared'
 

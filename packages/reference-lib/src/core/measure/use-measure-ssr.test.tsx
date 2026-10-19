@@ -1,3 +1,6 @@
+// Vitest SSR tests for useMeasure.
+// They take renderToString and assert the hook renders unsettled with no rect and
+// without touching window or ResizeObserver on the server.
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'

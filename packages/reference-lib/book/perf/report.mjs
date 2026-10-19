@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// Summarizes the Book perf JSONL log as percentile timings.
+// It takes .reference-ui/book-perf.jsonl and emits the HMR and transform report to stdout.
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
