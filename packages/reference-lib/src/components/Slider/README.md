@@ -6,7 +6,7 @@ ARIA and focus ring. The root validates configuration, runs the drag and
 keyboard sessions through hooks, and publishes everything as context —
 parts invoke session handlers but never own them.
 
-Contract: [Slider.md](./Slider.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the Slider contract. Cases: the Slider test catalog.
 
 The root is composition only: direction resolves inherited RTL, the
 registry reconciles mount ids to DOM order, value-request snaps and emits
@@ -17,4 +17,4 @@ snapping, and neighbor bounds. Interaction resolves track clicks and
 thumb presentation as pure, tested decisions. Shared holds the warn
 channel and registry ordering every hook asks.
 
-Up: [Components](../components.md).
+Up: Components.

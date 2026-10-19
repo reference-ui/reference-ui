@@ -2,4 +2,4 @@
 
 Menubar coordination MB-KEY-08: never switches menus from inside a nested submenu.
 
-Execution: `./Menubar.ct.spec.ts` (single `test` under `test.describe('Menubar coordination')`, split verbatim from `__e2e__/Menubar.ct.spec.ts`).
+Execution: single `test` under `test.describe('Menubar coordination')`, split verbatim from the shared component spec.

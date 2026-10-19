@@ -7,4 +7,4 @@ seating around the shown or bound years. The Months and Years parts map
 their cells onto the rover and keep their rendering; arrows move focus
 without selecting on both branches.
 
-Up: [Calendar](../README.md).
+Up: Calendar.

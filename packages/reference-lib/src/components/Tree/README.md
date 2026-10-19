@@ -5,7 +5,7 @@ traversal, character typeahead, and controlled expansion. It also
 serves as a Combobox dropdown body: nested in a Combobox it yields
 commits and DOM focus to the source while owning expansion itself.
 
-Contract: [Tree.md](./Tree.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the Tree contract. Cases: the Tree test catalog.
 
 The root is composition only: a session hook owns every ref and state
 cell, behavior hooks add expansion, selection, focus, and keyboard
@@ -18,10 +18,10 @@ controlled ids name no item, and shared holds the development channel that
 reports them. Pure decisions carry colocated unit tests; browser behavior
 proves out in CT.
 
-`context.ts` scopes the private item subtree (the Law 3 allowance):
+`context` scopes the private item subtree (the Law 3 allowance):
 items read selection, expansion, focus, and keyboard commands from the
 root scope, groups and expanders read identity from the item scope, and
 groups bump the level scope — while Combobox nesting is read from the
 Combobox context directly.
 
-Up: [Components](../components.md).
+Up: Components.

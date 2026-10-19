@@ -5,4 +5,4 @@ the tip anchors to its trigger, warm-group neighbors open instantly inside
 the skip window and cold after it, and Escape dismisses once without closing
 a parent Overlay.
 
-Spec: Tooltip.ct.spec.ts. Visual baselines: __snapshots__/ (13 PNGs).
+Spec: the Tooltip component spec. Visual baselines: the snapshots directory (13 PNGs).

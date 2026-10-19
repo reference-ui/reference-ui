@@ -1,6 +1,6 @@
 # parts
 
-The public RovingFocus subcomponents. Root lives in `RovingFocus.tsx`
+The public RovingFocus subcomponents. Root lives in `RovingFocus`
 because it is the composition root; Item lives here because it is the one
 repeating part. Item slots kernel behavior onto its single authored child:
 authoritative tabIndex, collection registration, and the focus, keydown,

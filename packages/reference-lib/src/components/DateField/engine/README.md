@@ -7,4 +7,4 @@ locale text, and only complete in-constraints candidates become the ISO
 the parent ever sees. Pure and proven in colocated unit tests; the
 Gregorian arithmetic underneath comes from Calendar's date kernel.
 
-Up: [DateField](../README.md).
+Up: DateField.

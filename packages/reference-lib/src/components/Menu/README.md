@@ -7,8 +7,8 @@ with omitted open meaning controlled false. Keyboard entry plants a
 first/last strategy the root consumes once per open; pointer travel
 crosses submenus through a grace polygon with frozen open/close delays.
 
-Contract: [Menu.md](./Menu.md). Features: [FEATURES.md](./FEATURES.md).
-Cases: [TESTS.md](./TESTS.md).
+Contract: the Menu contract. Features: the Menu feature catalog.
+Cases: the Menu test catalog.
 
 The root file is a dispatcher only: nested inside a level it renders a
 submenu, otherwise the root. Behavior splits by job. Levels own the
@@ -20,4 +20,4 @@ geometry. Parts render the root, nested scope, trigger, content, and
 every item kind. Pure decisions carry colocated unit tests; mounted
 behavior proves out in colocated Vitest and CT.
 
-Up: [components](../components.md).
+Up: components.

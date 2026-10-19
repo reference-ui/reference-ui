@@ -6,7 +6,7 @@ lives the mounted life — measured collapse motion, focus evacuation,
 browser-find reveals, and closed isolation. The root renders no node;
 it builds the session and provides it to the parts.
 
-Contract: [Collapsible.md](./Collapsible.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the Collapsible contract. Cases: the Collapsible test catalog.
 
 The root is composition only: a session hook owns every ref and mirror,
 parts consume it, and each behavior owns a folder. Linkage wires
@@ -21,7 +21,7 @@ suites and CT.
 
 Accordion owns this component's collection mode: an `id` inside an
 Accordion hands openness to the Accordion value through the deep context
-import. There is no `store.ts`: the
+import. There is no `store`: the
 disclosure store is the session hook, not a substrate.
 
-Up: [components](../components.md).
+Up: components.

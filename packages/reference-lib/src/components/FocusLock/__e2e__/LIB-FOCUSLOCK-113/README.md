@@ -3,4 +3,4 @@
 Mounts the fixture lab and asserts containment, arbitration, and restoration
 in a real browser.
 
-Spec: FocusLock.ct.spec.ts. Visual baselines: __snapshots__/ (29 PNGs).
+Spec: the FocusLock component spec. Visual baselines: the snapshots directory (29 PNGs).

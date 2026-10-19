@@ -2,4 +2,4 @@
 
 RovingFocus Space typeahead guard RF-TYPE-06: Space with a nonempty buffer matches a space-containing label and activates nothing.
 
-Execution: `./RovingFocus.ct.spec.ts` (single `test` under `test.describe('RovingFocus Space typeahead guard')`, split verbatim from `__e2e__/RovingFocus.ct.spec.ts`).
+Execution: single `test` under `test.describe('RovingFocus Space typeahead guard')`, split verbatim from the shared component spec.

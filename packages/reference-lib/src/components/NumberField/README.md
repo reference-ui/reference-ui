@@ -7,7 +7,7 @@ one press-and-hold engine. The root composes the formatting, session,
 action, handler, guard, identity, and form hooks and publishes them as
 context — parts invoke session handlers but never own them.
 
-Contract: [NumberField.md](./NumberField.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the NumberField contract. Cases: the NumberField test catalog.
 
 The root is composition only: formatting validates props and derives
 the Intl layer, the edit session owns the draft buffer plus every
@@ -21,4 +21,4 @@ Shared holds anatomy, DOM plumbing, naming text, and the dev channel.
 Pure decisions carry colocated unit tests; browser behavior proves out
 in CT.
 
-Up: [Components](../components.md).
+Up: Components.

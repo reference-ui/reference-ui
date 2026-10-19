@@ -2,4 +2,4 @@
 
 Listbox Composition Gates & Browser Proofs LB-VIRT-02: Virtual Listbox options should expose position metadata for the complete logical set.
 
-Execution: `./Listbox.ct.spec.ts` (single `test` under `test.describe('Listbox Composition Gates & Browser Proofs')`, split verbatim from `__e2e__/Listbox.ct.spec.ts`).
+Execution: single `test` under `test.describe('Listbox Composition Gates & Browser Proofs')`, split verbatim from the shared component spec.

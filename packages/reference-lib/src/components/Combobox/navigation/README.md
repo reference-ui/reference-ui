@@ -5,4 +5,4 @@ paths: wrapping through enabled options with keyboard source and
 nearest-block scroll, plus the still-mounted commit guard. Both focus
 sources step through this one module so arrow behavior cannot drift.
 
-Up: [Combobox](../README.md).
+Up: Combobox.

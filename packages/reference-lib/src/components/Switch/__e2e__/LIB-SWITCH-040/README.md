@@ -3,4 +3,4 @@
 Covers default initialization, instance isolation, remounts, and cancellation
 ordering against browser activation under StrictMode.
 
-Spec: Switch.contracts.ct.spec.ts. No visual baselines.
+Spec: the Switch contracts spec. No visual baselines.

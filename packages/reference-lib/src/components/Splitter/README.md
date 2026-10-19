@@ -6,7 +6,7 @@ centers a Thumb grip pill. The root composes the session hooks and
 publishes them as context — parts register, announce, and forward
 gestures, but the sessions live in the hooks.
 
-Contract: [Splitter.md](./Splitter.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the Splitter contract. Cases: the Splitter test catalog.
 
 The root is composition only: direction tracks inherited RTL, the
 registry keeps panels and handles in DOM order, the measured table
@@ -19,4 +19,4 @@ ARIA, and feasibility. Shared holds geometry, measurement merging,
 direction, refs, and the warn channel. Styles owns the injected guard
 stylesheet.
 
-Up: [Components](../components.md).
+Up: Components.

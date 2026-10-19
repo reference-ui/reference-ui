@@ -7,4 +7,4 @@ settles their overlap (Content prop over root default, findability over
 force). The same module guards the `beforematch` reveal: live, closed,
 and uncancelled, or it stays shut.
 
-Up: [Collapsible](../README.md).
+Up: Collapsible.

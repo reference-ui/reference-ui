@@ -1,7 +1,7 @@
 # Announcer
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Announcer --e2e`). Mounted by: [ReferenceLibrary](../ReferenceLibrary/ReferenceLibrary.md).
-Used by: [Toast](../Toast/Toast.md) `announce` options, and any application
+Proof: the case catalog indexes the cases, the Announcer test catalog holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Announcer --e2e`). Mounted by: ReferenceLibrary.
+Used by: Toast `announce` options, and any application
 code that needs assistive-technology status without a visual toast.
 
 Document-scoped live-region runtime. Not a visible component. Not Overlay. Not
@@ -56,16 +56,16 @@ order once the elected host subscribes; unmount resets activation when no
 subscriber remains. The host stays exempt from isolating Overlays, and one
 host speaks per document with election and failover owned by ReferenceLibrary.
 
-The root is composition only: `Announcer.tsx` renders the hidden live-region
-pair from a session hook, and `store.ts` owns every message decision. The
+The root is composition only: `Announcer` renders the hidden live-region
+pair from a session hook, and `store` owns every message decision. The
 hook claims the single-host election, registers the document, subscribes to
 the store, and replays pending speech; the election arbitrates which mount
 speaks per document; shared holds the development warning they all ask.
 Pure decisions carry colocated unit tests; AT behavior proves out in CT.
 
 There is no `parts/` — the host has one fixed rendering, owned by the
-root — and no `context.ts`: with no compound parts, there is no subtree
-to scope. `internal.ts` keeps its path because ReferenceLibrary imports
+root — and no `context`: with no compound parts, there is no subtree
+to scope. `internal` keeps its path because ReferenceLibrary imports
 the host entry directly; it re-exports, it is not a shim.
 
-Up: [components](../components.md).
+Up: components.

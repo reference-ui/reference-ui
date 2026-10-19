@@ -2,4 +2,4 @@
 
 Collapsible Ports (GSAP-owned motion) CO-DOM-04: Collapsible should expose authoritative open, closed, and disabled state on its rendered parts.
 
-Execution: `./Collapsible.ct.spec.ts` (single `test` under `test.describe('Collapsible Ports (GSAP-owned motion)')`, split verbatim from `__e2e__/Collapsible.ct.spec.ts`).
+Execution: single `test` under `test.describe('Collapsible Ports (GSAP-owned motion)')`, split verbatim from the shared component spec.

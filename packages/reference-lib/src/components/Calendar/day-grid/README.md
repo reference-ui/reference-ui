@@ -8,4 +8,4 @@ ten-field render state plus DOM/paint derivations once per date. Days
 and Day read the same resolved models, so td paint and button props
 can never disagree.
 
-Up: [Calendar](../README.md).
+Up: Calendar.

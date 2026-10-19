@@ -7,8 +7,8 @@ and consumer cancellation prove out in the contracts spec; variants,
 icon configurations, and interaction states prove out in the states
 spec with visual snaps.
 
-Cases: [case.json](./case.json). Form fixtures:
-[Button.contracts.story](./Button.contracts.story.tsx). States fixtures:
-[Button.story](./Button.story.tsx).
+Cases: the Button case catalog. Form fixtures:
+`Button.contracts.story`. States fixtures:
+`Button.story`.
 
-Up: [components](../components.md).
+Up: components.

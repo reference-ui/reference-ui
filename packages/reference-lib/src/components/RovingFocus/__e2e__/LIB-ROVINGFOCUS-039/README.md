@@ -2,4 +2,4 @@
 
 RovingFocus transparent DOM RF-DOM-01: Root and Item preserve authored tags with no wrappers.
 
-Execution: `./RovingFocus.ct.spec.ts` (single `test` under `test.describe('RovingFocus transparent DOM')`, split verbatim from `__e2e__/RovingFocus.ct.spec.ts`).
+Execution: single `test` under `test.describe('RovingFocus transparent DOM')`, split verbatim from the shared component spec.

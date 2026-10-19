@@ -5,4 +5,4 @@ consumer prevention cancels pointer and keyboard opening, controlled requests
 stay closed until the owner updates, and unmount cancels delayed opening so
 remount starts a fresh session.
 
-Spec: Tooltip.contract.ct.spec.ts. No visual baselines.
+Spec: the Tooltip contract spec. No visual baselines.

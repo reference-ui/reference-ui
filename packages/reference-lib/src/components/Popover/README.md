@@ -5,7 +5,7 @@ hover-card mode on request. The root renders no node of its own — it
 provides the intent value and wires open state into Overlay, mounting
 the document-level hover bridge only when `openOnHover` is set.
 
-Contract: [Popover.md](./Popover.md).
+Contract: the Popover contract.
 
 The root is composition only: one hover-intent hook owns open state,
 the hover session, and the trigger/content/focus handlers, returning
@@ -16,4 +16,4 @@ lives in `shared/` where trigger and content agree on one id. Pure
 decisions carry colocated unit tests; open/close, grace travel, and
 nesting prove out in CT.
 
-Up: [Components](../components.md).
+Up: Components.

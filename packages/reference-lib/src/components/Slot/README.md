@@ -5,11 +5,11 @@ registers an element into a slot id; the host reads the shared registry
 and renders that element in the matching region. Authors compose parts
 in any order; the host never collects them through layout props.
 
-Contract: [Slot.md](./Slot.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the Slot contract. Cases: the Slot test catalog.
 
 Slot renders no node — there is no `<Slot>` host and no root component
 file, only the factory, the store, and the hooks — so this root holds
-`index.ts` (barrel), `types.ts` (shared vocabulary), and `context.ts`
+`index` (barrel), `types` (shared vocabulary), and `context`
 (the factory that mints one isolated slot universe per compound).
 
 The architecture splits along the kernel's central discipline:
@@ -28,9 +28,9 @@ Data flows one way: fillers write through `useSlotRegistration` into
 the store, hosts read through `useSlot` / `useSlots`, and nothing but
 an explicit register or unregister bends the version that wakes hosts
 up. The colocated suites prove each module alone — store, visibility,
-host helpers, live container, ids, hooks — and the `__e2e__` browser
+host helpers, live container, ids, hooks — and the browser
 gates prove the composed compound: regions render, content refreshes
 in place without remount, prefix selection reacts, and visibility
 toggles without unregistering.
 
-Up: [Components](../components.md).
+Up: Components.

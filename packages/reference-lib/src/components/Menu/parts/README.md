@@ -11,4 +11,4 @@ onSelect, one state request, optional dismissal) and the indicator
 chrome. Parts read tree state from context and hooks — the levels
 decide, the parts render.
 
-Up: [Menu](../README.md).
+Up: Menu.

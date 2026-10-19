@@ -6,4 +6,4 @@ an escape, removal, or invalidation returns to. Both are pure decisions over
 the catalog's live candidate list; listeners, observers, and the actual focus
 moves stay in hooks.
 
-Up: [FocusLock](../README.md).
+Up: FocusLock.

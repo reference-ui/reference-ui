@@ -5,7 +5,7 @@ their DOM nodes land somewhere else — with no wrapper, no stacking, no
 focus, and no dismissal. That restraint is the whole design, and the
 folders below are the three questions relocation asks, in order.
 
-Contract: [Portal.md](./Portal.md). Proof: [TESTS.md](./TESTS.md).
+Contract: the Portal contract. Proof: the Portal test catalog.
 
 `destination/` answers *where*: pure resolution math mapping every
 accepted `container` form onto a node or null, plus the owner-document
@@ -18,12 +18,12 @@ document that re-anchor the physical tree while logical context flows
 through. `shared/` holds the one shape guard resolution and lifecycle
 agree on.
 
-`Portal.tsx` composes the three answers into a single conditional around
-a single `createPortal`; `types.ts` is the vocabulary they share; and
-`index.ts` re-exports both as the public surface `Overlay` and `Popover`
+`Portal` composes the three answers into a single conditional around
+a single `createPortal`; `types` is the vocabulary they share; and
+`index` re-exports both as the public surface `Overlay` and `Popover`
 configure against. There is no `parts/` folder because Portal renders no
-parts — children-only output is the contract — and no `context.ts`
+parts — children-only output is the contract — and no `context`
 because Portal creates no context of its own; it only resets the layer
 scope owned by `@reference-ui/react`.
 
-Up: [Components](../components.md).
+Up: Components.

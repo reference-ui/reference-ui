@@ -6,8 +6,8 @@ optional typeahead, optional two-dimensional movement. Root and Item are
 transparent — they slot behavior onto one authored child each and render no
 wrapper nodes.
 
-Contract: [RovingFocus.md](./RovingFocus.md). Cases: [TESTS.md](./TESTS.md).
-Features: [FEATURES.md](./FEATURES.md).
+Contract: the RovingFocus contract. Cases: the RovingFocus test catalog.
+Features: the RovingFocus feature catalog.
 
 ## Architecture
 
@@ -30,12 +30,12 @@ the visual-grid geometry; `typeahead/` owns the search buffer, its entry
 guards, and label derivation; `slot/` owns the transparent-part merge and
 the single-element anatomy gate. `shared/` carries what every layer
 reaches for: event chaining, ref fan-out, node resolution, ids, and
-inherited direction. `types.ts` and `context.ts` are the contracts between
-the layers, and `RovingFocus.tsx` re-exports the public seams — movement,
+inherited direction. `types` and `context` are the contracts between
+the layers, and `RovingFocus` re-exports the public seams — movement,
 typeahead, direction, context — so deep importers see no change.
 
 Each isolated submodule proves itself in a colocated unit test with no
 browser and no mount; the component suite keeps the SSR, anatomy, and merge
 integration cases, and the browser suite proves the full matrix.
 
-Up: [Components](../components.md).
+Up: Components.

@@ -6,4 +6,4 @@ deactivating out of order never resurrects a dead middle entry. The stack is
 module state scoped by ownerDocument, so same-document locks share one pause
 chain while each iframe document contains only its own.
 
-Up: [FocusLock](../README.md).
+Up: FocusLock.

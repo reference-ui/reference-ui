@@ -5,7 +5,7 @@ Foundational design system package built on `@reference-ui/core`.
 ## Exports
 
 - `@reference-ui/lib`: every component
-- `@reference-ui/lib/baseSystem`: the design-system payload for downstream `extends: [baseSystem]` in `ui.config.ts` — a zero-import module; import this, not the component barrel
+- `@reference-ui/lib/baseSystem`: the design-system payload for downstream `extends: [baseSystem]` in your UI config — a zero-import module; import this, not the component barrel
 - `@reference-ui/lib/theme`: the plain theme objects used to build that system
 - `@reference-ui/lib/styles.css`: the compiled stylesheet (import once at your app root)
 
@@ -16,7 +16,7 @@ npm install @reference-ui/lib react react-dom
 ```
 
 ```tsx
-// main.tsx — order matters: stylesheet first, then your app.
+// app entry — order matters: stylesheet first, then your app.
 import '@reference-ui/lib/styles.css'
 import { ReferenceLibrary, Tabs } from '@reference-ui/lib'
 ```
@@ -31,7 +31,7 @@ Notes:
   the library. App-only values (e.g. `maxW="140r"` when nothing in the lib uses `140r`)
   construct a class that paints nothing and dev-warns. Either reuse documented values or
   run `ref sync` with `extends: [baseSystem]` to compile your own sheet. In
-  `ui.config.ts`, import it from `@reference-ui/lib/baseSystem`; importing the
+  your UI config, import it from `@reference-ui/lib/baseSystem`; importing the
   component barrel instead evaluates ~3,900 icon modules (~1.5 s) on every
   `ref sync` startup. Sync names that cost: when `ui.config` takes over 750 ms
   to evaluate, it prints one `BSS-W-SLOW-CONFIG` warning naming the barrel and
@@ -40,13 +40,13 @@ Notes:
 ## Your tokens on lib props
 
 Run `ref sync` in your app and lib's style props take your token types. `strict` in
-`ui.config.ts` decides how narrow they are: name the categories you want enforced (`colors`,
+your UI config decides how narrow they are: name the categories you want enforced (`colors`,
 `radii`, `spacing`) and a value outside their tokens fails to type-check on a lib component, as it
 does in your own JSX. Leave `strict` out and lib props stay open. Run sync again after you install
 or upgrade lib.
 
 Sync's types reach your program through `@reference-ui/react`. An app that never imports it adds
-this line to its `env.d.ts`, or its lib props stay open:
+this line to its ambient types file, or its lib props stay open:
 
 ```ts
 /// <reference types="@reference-ui/react" />
@@ -64,7 +64,7 @@ same path.
 To rebrand a layered lib, wrap it in `extendSystem` in your own module:
 
 ```ts
-// src/system/lib.ts
+// your system module
 import { extendSystem } from '@reference-ui/core'
 import { baseSystem } from '@reference-ui/lib/baseSystem'
 
@@ -82,13 +82,13 @@ export const brandedLib = extendSystem(baseSystem, {
 ```
 
 ```ts
-// ui.config.ts
+// your UI config
 import { defineConfig } from '@reference-ui/core'
 import { brandedLib } from './src/system/lib'
 
 export default defineConfig({
   name: 'my-app',
-  include: ['src/**/*.{ts,tsx}'],
+  include: ['<your sources>'],
   extends: [],
   layers: [brandedLib],
 })
@@ -105,12 +105,12 @@ export default defineConfig({
 
 ## Bundle & code-splitting
 
-The package ships one JS entry (`dist/index.mjs`, ~3.6MB uncompressed at 0.0.46 —
+The package ships one JS entry (~3.6MB uncompressed at 0.0.46 —
 dominated by the ~3,900-icon barrel) plus the 255KB stylesheet and the 160KB
 primitives runtime. There are no per-component subpaths; instead the package relies on
 standard ESM tree-shaking:
 
-- `package.json` sets `"sideEffects": false`, and every export is a named ESM export,
+- The package manifest sets `"sideEffects": false`, and every export is a named ESM export,
   so production builds (`vite build`, webpack `production`) drop unused components and
   icons automatically. Import from the barrel (`@reference-ui/lib`) — do not deep-import
   `dist/` paths, which are not part of the contract.
@@ -118,7 +118,7 @@ standard ESM tree-shaking:
   every library value (~255KB raw, ~33KB gz). If that matters, generate a minimal sheet
   with `ref sync` + `extends: [baseSystem]` instead of importing the shipped CSS.
 - `react`/`react-dom` stay external (peer + dev-only): they are never bundled into
-  `dist/index.mjs`, so the browser bundle contains zero Node builtins (asserted at pack
+  the shipped entry, so the browser bundle contains zero Node builtins (asserted at pack
   time and in the consumer-smoke CI gate).
 
 ## Usage
@@ -130,18 +130,18 @@ pnpm run dev    # Watch mode
 
 ## Testing
 
-Component primitives are implemented in this package and proven with Playwright in each component's `__e2e__` suite. React 19 is the default agent loop; 17 and 18 are compatibility jobs (`pnpm agentct <Name> --e2e --react 17,18`). See [TESTING.md](./TESTING.md).
+Component primitives are implemented in this package and proven with Playwright in each component's browser suite. React 19 is the default agent loop; 17 and 18 are compatibility jobs (`pnpm agentct <Name> --e2e --react 17,18`). See the testing guide.
 
 ## Component playground (Book)
 
-Book is the component playground for `@reference-ui/lib`. It lives at `packages/reference-lib/book/` and serves on port 5000 as a single-document Fast Refresh app. Component stories are authored alongside components in `src/components/**/*.book.tsx`. Core stories (for example `useMeasure`) live next to their source in `src/core/**/*.book.tsx`.
+Book is the component playground for `@reference-ui/lib`. It lives in this package and serves on port 5000 as a single-document Fast Refresh app. Component stories are authored alongside components. Core stories (for example `useMeasure`) live next to their source.
 
 To launch Book: run `pnpm dev:lib` from the repository root (or `pnpm run dev` within this package). Open [http://localhost:5000](http://localhost:5000). To view component states, drive it with Chrome DevTools MCP (`navigate_page` to `?book=<Component>&story=<Story>`, then `take_screenshot`).
 
 ```ts
-// ui.config.ts — extends the library system
+// your UI config — extends the library system
 import { baseSystem } from '@reference-ui/lib/baseSystem'
 import { colors, fonts } from '@reference-ui/lib/theme'
 ```
 
-Part of [Reference UI](../../../README.md). Component test catalog: [testing/README.md](./testing/README.md).
+Part of Reference UI. Component test catalog: the Component Cases catalog.
