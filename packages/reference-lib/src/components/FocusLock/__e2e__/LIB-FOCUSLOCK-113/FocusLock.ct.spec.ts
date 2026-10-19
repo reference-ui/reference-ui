@@ -4,7 +4,7 @@
  * fixture lab and asserts containment, arbitration, and restoration in
  * a real browser.
  */
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap } from '../../../../../playwright/ct'
 
 // Landing-sequence engine scope: `engineOf` sniffs the Playwright project
 // (`react19` on agentct Chromium, `react19-firefox`/`react19-webkit` on the

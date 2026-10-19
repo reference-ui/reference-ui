@@ -5,8 +5,8 @@
  * association, form non-serialization, RTL-checked rendering, and an
  * accessibility-clean sweep.
  */
-import { test, expect, snap } from '../../../../playwright/ct'
-import { expectNoAxeViolations } from '../../../../playwright/axe'
+import { test, expect, snap } from '../../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../../playwright/axe'
 
 test.describe('Switch CT', () => {
   test('renders button[role=switch] with default thumb and toggles checked state', async ({
