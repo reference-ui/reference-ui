@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ROVINGFOCUS-019",
+  "name": "RovingFocus visual grid (FEATURES #1) RF-GRID-02: vertical moves choose nearest center, ties break by DOM order"
+}

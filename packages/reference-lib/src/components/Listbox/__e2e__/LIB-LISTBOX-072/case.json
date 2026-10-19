@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-072",
+  "name": "Listbox behavior CT LB-VIRT-06: Virtual Listbox should coalesce rapid navigation while a requested window is rendering"
+}

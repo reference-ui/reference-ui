@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-058",
+  "name": "Listbox behavior CT LB-MULTI-05: Listbox should not invent range or select-all behavior for modifier keys"
+}

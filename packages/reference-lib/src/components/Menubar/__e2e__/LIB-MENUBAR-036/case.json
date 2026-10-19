@@ -1,0 +1,4 @@
+{
+  "id": "LIB-MENUBAR-036",
+  "name": "Menubar consumer and lifecycle contracts MB-EVENT-01: consumer cancellation prevents pointer and native keyboard opening before value requests"
+}

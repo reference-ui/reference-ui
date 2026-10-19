@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ROVINGFOCUS-136",
+  "name": "RovingFocus instance lifetime RF-ISOLATE-01: sibling roots with repeated item identities keep focus stops and typeahead buffers independent"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-037",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-ACT-01: Collapsible should request opening once when an enabled closed trigger is clicked"
+}

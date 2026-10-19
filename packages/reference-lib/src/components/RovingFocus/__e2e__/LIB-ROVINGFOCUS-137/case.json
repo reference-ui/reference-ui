@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ROVINGFOCUS-137",
+  "name": "RovingFocus instance lifetime RF-LIFETIME-01: remount resets one root search and current item while the surviving sibling retains both"
+}

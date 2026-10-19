@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-077",
+  "name": "Listbox behavior CT LB-CB-02: windowed Combobox Listbox withholds the active descendant until the virtual target mounts"
+}

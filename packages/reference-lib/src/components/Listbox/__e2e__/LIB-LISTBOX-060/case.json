@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-060",
+  "name": "Listbox behavior CT LB-MULTI-07: Listbox should retain controlled disabled and unmounted values without activating them"
+}

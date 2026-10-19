@@ -1,0 +1,5 @@
+# LIB-MENUBAR-039 — Menubar consumer and lifecycle contracts MB-DYNAMIC-01: live menu reorder insertion removal and disabling drive one current navigation registry
+
+Menubar consumer and lifecycle contracts MB-DYNAMIC-01: live menu reorder insertion removal and disabling drive one current navigation registry.
+
+Execution: `./Menubar.hardening.ct.spec.ts` (single `test` under `test.describe('Menubar consumer and lifecycle contracts')`, split verbatim from `__e2e__/Menubar.hardening.ct.spec.ts`).

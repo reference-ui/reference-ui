@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-054",
+  "name": "Listbox behavior CT LB-SINGLE-06: Listbox should preserve controlled selection when its parent rejects a request"
+}

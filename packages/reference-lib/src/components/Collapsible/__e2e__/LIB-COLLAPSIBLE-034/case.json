@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-034",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-DOM-01: Collapsible should add no wrapper around its fixed trigger and content elements"
+}

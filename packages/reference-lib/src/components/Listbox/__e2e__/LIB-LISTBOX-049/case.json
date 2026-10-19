@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-049",
+  "name": "Listbox behavior CT LB-GROUP-04: Listbox should recompute flattened order when Options move between native groups"
+}

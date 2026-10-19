@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-057",
+  "name": "Listbox behavior CT LB-MULTI-04: Listbox should keep multiple selection unchanged during every focus-only movement"
+}

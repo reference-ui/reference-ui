@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-042",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-PRES-03: Collapsible should remove closed Content immediately when no finite exit motion exists (re-targeted: reduced-motion stub zeroes the GSAP exit)"
+}

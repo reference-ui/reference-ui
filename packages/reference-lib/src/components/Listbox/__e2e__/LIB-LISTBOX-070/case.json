@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-070",
+  "name": "Listbox behavior CT LB-DYNAMIC-06: Listbox should use current option labels and text values after descendants rerender"
+}

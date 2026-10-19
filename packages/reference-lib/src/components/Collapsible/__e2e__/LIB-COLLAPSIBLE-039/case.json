@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-039",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-ACT-03: Collapsible should use native button keyboard activation without duplicate toggle requests"
+}

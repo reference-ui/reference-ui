@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-074",
+  "name": "Listbox behavior CT LB-VIRT-09: Virtual Listbox should atomically replace logical metadata and its scroll callback"
+}

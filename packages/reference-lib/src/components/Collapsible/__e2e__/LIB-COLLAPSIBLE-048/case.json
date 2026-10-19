@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-048",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-SIZE-02: Collapsible should snapshot the last open size before closed CSS can collapse the box"
+}

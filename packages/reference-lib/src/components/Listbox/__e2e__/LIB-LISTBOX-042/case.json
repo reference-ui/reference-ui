@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-042",
+  "name": "Listbox behavior CT LB-DOM-07: Listbox should remain semantically empty without inventing a focus target"
+}

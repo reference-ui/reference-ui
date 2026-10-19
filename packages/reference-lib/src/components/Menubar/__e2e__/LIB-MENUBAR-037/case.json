@@ -1,0 +1,4 @@
+{
+  "id": "LIB-MENUBAR-037",
+  "name": "Menubar consumer and lifecycle contracts MB-EVENT-02: consumer cancellation prevents closed roving and open trigger or content switching"
+}

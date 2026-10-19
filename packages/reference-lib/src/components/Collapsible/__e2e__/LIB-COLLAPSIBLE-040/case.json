@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-040",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-PRES-01: Collapsible should keep transitioning Content mounted until its own exit completes"
+}

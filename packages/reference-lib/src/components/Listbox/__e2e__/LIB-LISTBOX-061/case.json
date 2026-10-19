@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-061",
+  "name": "Listbox behavior CT LB-MULTI-08: Listbox should default omitted multiple value to a controlled empty array"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ROVINGFOCUS-045",
+  "name": "RovingFocus typeahead browser behavior RF-TYPE-09: searches use textValue, aria-label, then rendered text live"
+}

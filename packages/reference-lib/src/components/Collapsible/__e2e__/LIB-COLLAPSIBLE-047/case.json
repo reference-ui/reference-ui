@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-047",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-SIZE-01 (exact): Collapsible should publish exact border-box measurements under GSAP-owned box-sizing"
+}

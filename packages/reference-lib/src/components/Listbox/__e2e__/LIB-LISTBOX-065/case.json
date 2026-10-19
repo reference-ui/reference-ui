@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-065",
+  "name": "Listbox behavior CT LB-POINTER-03: Listbox should leave focus and selection unchanged when an option is only hovered"
+}
