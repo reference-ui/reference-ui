@@ -10,11 +10,9 @@ export { matrixChainT17Marker }
  * T17 render entry — consumer style props on prebuilt components.
  *
  * Every case below styles a PREBUILT (external) component with a consumer
- * style prop. Before the contract each named prop was dropped and the
- * element carried an unbacked foreign class; now the consumer sheet emits and
- * backs `<system>__<stem>` for each system the package renders through.
- * Positive controls (`className` / `style` / native props) stay alive on both
- * sides.
+ * style prop. The consumer sheet emits and backs `<system>__<stem>` for each
+ * system the package renders through. Positive controls (`className` /
+ * `style` / native props) stay alive on both sides.
  */
 export function Index(): React.ReactElement {
   return (

@@ -16,9 +16,10 @@ export const T18_PACKAGE_PREFIX = 'primitive-named-library__'
 export const T18_ICONS_PREFIX = 'reference-icons__'
 
 /**
- * Whether a probe takes the external path on today's compiler, or only once
- * provenance lands (component-ownership plan S1 + S5). The spec marks every
- * `provenance` probe expected-fail until then; see the README flip list.
+ * Whether a probe took the external path before provenance or only after it
+ * (component-ownership plan S1 + S5). Provenance has landed, so the spec
+ * passes every `provenance` probe and the status only guards against a
+ * regression; see the README flip list.
  */
 export type ProbeStatus = 'external-today' | 'provenance'
 
