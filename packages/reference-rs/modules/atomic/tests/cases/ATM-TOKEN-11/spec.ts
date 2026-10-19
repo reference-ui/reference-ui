@@ -1,5 +1,6 @@
 /**
  * Token alias reference {path} resolution in @layer tokens.
+ * Aliases resolve to `var()` in the default block and flip under `[data-color-mode=dark]`.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'

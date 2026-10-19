@@ -1,5 +1,6 @@
 /**
  * Boolean container utility and named-container r query lowering.
+ * The bare utility sets `container-type` with no name; the named query prints `@container card`.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'

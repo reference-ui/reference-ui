@@ -1,5 +1,6 @@
 /**
  * Core interaction pseudo catalog lowering: _active, _focus, _focusVisible, _disabled, _checked.
+ * Each pseudo prints a `:is()` group pairing the native selector with its data/aria fallbacks.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'

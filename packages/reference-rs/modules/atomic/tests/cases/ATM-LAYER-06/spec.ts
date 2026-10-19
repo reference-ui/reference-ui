@@ -1,5 +1,6 @@
 /**
  * @font-face declarations emission inside @layer global.
+ * Pins Inter and Fira Code faces with their descriptors; `descent-override` appears exactly once.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'

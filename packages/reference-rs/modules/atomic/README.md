@@ -90,13 +90,13 @@ Compilation follows a deterministic, one-pass pipeline: `compile(request) -> { s
    - Recipe Variant Tables: maps variant permutations to compiled recipe class names for `recipe()`.
    These data structures are returned as JSON so authored TypeScript runtime helpers can perform $O(1)$ class resolution at render time.
 
-`compile(request) -> { stylesheet, css, diagnostics }`. Individual file
-descriptions belong in each file's top comment.
+`compile(request) -> { stylesheet, css, diagnostics, wants, recipes }`.
+Individual file descriptions belong in each file's top comment.
 
 ## Public contract
 
 ```text
-compile(request) -> { stylesheet, css, diagnostics }
+compile(request) -> { stylesheet, css, diagnostics, wants, recipes }
 ```
 
 JS face: `import { compile } from '@reference-ui/rust/atomic'`. Core's

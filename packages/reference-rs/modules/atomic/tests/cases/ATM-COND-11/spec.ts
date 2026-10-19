@@ -1,5 +1,6 @@
 /**
  * @media preset conditions must print as at-rules, not selectors.
+ * Pins `osDark`, `motionReduce`, and `print` at-rules plus their escaped class names.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'

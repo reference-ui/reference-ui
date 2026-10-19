@@ -1,5 +1,6 @@
 /**
  * Breakpoint range conditions lower to bounded queries.
+ * Down/between members drop with warnings while their style plans survive carrying the full object value.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'
