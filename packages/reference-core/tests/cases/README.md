@@ -1,12 +1,14 @@
 # `tests/cases/` — groups, specs, and leaf cases
 
-One folder per feature family (group); one leaf folder per case. Thirteen
-groups carry the parity work — generated-folder contracts, tokens,
-conditions, responsive lowering, the `css()` value grammar, merge
-semantics, recipes, cascade layers, global CSS, pre-generated atoms,
-extraction shapes, native primitives, and generated declarations — plus
-the parity group with its lib-shaped world and the harness group whose
-three cases prove the runner itself rather than the system.
+One folder per feature family (group); one leaf folder per case. Groups
+cover the generated-folder contracts, tokens, conditions, responsive
+lowering, the `css()` value grammar, merge semantics, recipes, cascade
+layers, global CSS, pre-generated atoms, extraction shapes, native
+primitives, generated declarations, diagnostics, sync and watch
+lifecycles, publish sites, layers config, and the smaller families
+beside them — plus the parity group with its lib-shaped world and the
+harness group whose three cases prove the runner itself rather than
+the system.
 
 The `layers/` group (`CORE-LAYERS-NN`) covers the `layers` config surface:
 visual-only upstream systems, each synced for real. Selectors match an exact id
@@ -14,11 +16,12 @@ or folder first, then an id prefix, so `agentcore run CORE-LAYER` also runs
 `CORE-LAYERS-*`; `agentcore run CORE-LAYER-` runs only the `CORE-LAYER-*` ids, and
 `agentcore run CORE-LAYERS` runs this group.
 
-Each group holds `SPEC.md` (behaviour, decisions, approved absences, the
+Most groups hold `SPEC.md` (behaviour, decisions, approved absences, the
 out-of-scope table) and `TESTS.md` (the case ledger: one row per id with
-a status word), plus leaf cases `CORE-<GROUP>-NN/`. Leaf shape: `case.json`
-(id, name, `"sync": true` to opt into the sync loop), `README.md` (first
-line is the claim), `world/` (TypeScript sources
+a status word); the small groups (`cli/`, `harness/`, `mdx/`, `ref/`)
+describe themselves in a group README instead. Leaf shape everywhere:
+`case.json` (id, name, `"sync": true` to opt into the sync loop),
+`README.md` (first line is the claim), `world/` (TypeScript sources
 built to `dist/` and served over HTTP), `specs/` (default-export `run`:
 computed-style and DOM assertions — sheet text only alongside, never
 alone).

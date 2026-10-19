@@ -48,17 +48,14 @@ The layer fixtures always shipped this shape; the packager extends
 the policy to every fixture and owns the externals list their build
 configs import, so the shape can only drift in one place.
 
-One postprocess pass survives from the legacy line: the types
-runtime rewrite, which swaps the placeholder the entry compiles
-against for the literal tasty edge app bundlers must see. It stays
-a pure string transform with triple-guard semantics — present
-before, gone after, literal after — so it unit-pins without
-touching the filesystem. The legacy layer-name injection has no
-counterpart here: the system name bakes in at generation, so no
-placeholder exists to inject. The legacy worker lifecycle, the
-TypeScript declaration fan-out, and the build-copy install mode
-were all deliberately left behind: Core's typegen plus a single
-declaration leg cover types, and junctions carry every install.
-Write-if-changed gating came back, but in the commit instead of
-the legs: legs write the stage unconditionally, and the commit
-skips identical bytes so watchers never see a no-op resync.
+One postprocess pass runs today: the types runtime rewrite, which
+swaps the placeholder the entry compiles against for the literal
+tasty edge app bundlers must see. It stays a pure string transform
+with triple-guard semantics — present before, gone after, literal
+after — so it unit-pins without touching the filesystem. The system
+name bakes in at generation, so no placeholder exists to inject;
+Core's typegen plus a single declaration leg cover types, and
+junctions carry every install. Write-if-changed gating lives in
+the commit instead of the legs: legs write the stage
+unconditionally, and the commit skips identical bytes so watchers
+never see a no-op resync.

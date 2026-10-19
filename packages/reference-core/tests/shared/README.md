@@ -29,9 +29,7 @@ that work is done. Differences from `agentct`:
   it live with your host's browser tools (host table in root
   `AGENTS.md` section 2); the capability is "inspect a live case
   world", not any one tool.
-- Per-run server first; the warm server plus queue slots (agentct's
-  daemon shape) and Darwin QoS elevation land as the case count
-  grows.
+- Per-run server: one fresh server per run, no shared daemon.
 
 Proven constraints the code designs around: the browser blocks
 `file://`, so worlds are always served over local HTTP; screenshots

@@ -10,9 +10,6 @@ its type-surface describes stay with the TYPE group.
 
 > Search terms: cli lifecycle, core sync, core clean, interrupt recovery, kill recovery, stale rewrite, idempotent resync, clean restore, P-cli-1, distro port
 
-## Cases
-
-- CORE-CLI-01 — CLI lifecycle: idempotent re-sync, stale rewrite,
-  interrupt recovery, and clean restore against the spawned binary.
-- CORE-CLI-02 — Watch flag path: spawned `core sync --watch` boot,
-  token-edit resync with sheet change, and SIGTERM shutdown.
+Two cases carry the group: CORE-CLI-01 proves the lifecycle against
+the spawned binary, and CORE-CLI-02 proves the `--watch` flag path
+from boot through token-edit resync to SIGTERM shutdown.

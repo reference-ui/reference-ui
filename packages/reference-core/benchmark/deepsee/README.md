@@ -18,27 +18,24 @@ Reports land in a `deepsee-work-*` tmp dir (printed at the end).
 
 ## How it works
 
-- `worker-phases.ts` — phased sync worker. Replicates `sync()` step for step
-  with exact timers (config, fragments.prepare, fragments.evaluate,
-  native.compile, publish), records phase boundaries, the N-API payload census
-  (per-field JSON bytes of the full 11-field result), and an RSS timeline.
-  Output is byte-identical to a bench sync (verified by `cmp`).
-- `sample-parse.ts` — parses macOS `sample` call-graph output. Leaf (self-time)
-  samples on the main thread, each attributed to the nearest phase-matching
-  ancestor (demangled Rust symbols), so shared callees (alloc, memcpy, fmt)
-  credit their caller phase. Idle frames excluded; unmatched reported as
-  `other`, never hidden. Validated: leaf sums equal the thread total.
-- `burndown.ts` — generates the locked load, runs one sync under `sample`
-  (1ms), scales sampled shares to sync wall. Cross-checks: Σ native sampled
-  vs exact `native.compile`, sampled ts vs exact TS stages.
-- `rss.ts` — parent-side `ps` polling (true timeline across the blocking
-  native call) plus a retention model: baseline (measured), source texts
-  (≈2× disk: RS + TS copies), N-API payload (≈2.5× JSON: string + parsed),
-  residual (arenas / AST / constants / overhead). Shares labeled approximate.
-- `bundle-css.ts`, `bundle-data.ts`, `bundle.ts` — byte-exact accountants.
-  CSS splits nested `@layer` blocks (brace-matched) plus block classes;
-  runtime-data splits the export envelope plus per-table/per-field JSON bytes
-  by re-serialization (round-trip asserted). Both residuals must be zero.
+The burndown replicates `sync()` step for step with exact timers per
+phase, recording phase boundaries, the N-API payload census (per-field
+JSON bytes of the full result), and an RSS timeline; its output is
+byte-identical to a bench sync. One sync runs under macOS `sample`,
+and leaf self-time samples on the main thread attribute to the
+nearest phase-matching ancestor, so shared callees (alloc, memcpy,
+fmt) credit their caller phase — idle frames excluded, unmatched
+reported as `other`, never hidden. Sampled shares scale to sync wall
+and cross-check against the exact phase timers.
+
+RSS comes from parent-side polling (a true timeline across the
+blocking native call) plus a retention model: measured baseline,
+source texts, N-API payload, and a residual for arenas, AST, and
+overhead, with shares labeled approximate. The bundle accountants
+are byte-exact: CSS splits nested `@layer` blocks plus block
+classes, runtime-data splits the export envelope plus
+per-table/per-field bytes by re-serialization, and both residuals
+must be zero.
 
 ## Reading the numbers
 
