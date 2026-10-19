@@ -51,6 +51,8 @@ reports/
 .reference
 packages/.sandbox
 .reference-ui
+# Committed declaration roots the styletrace diag cases trace against: fixtures, not sync output.
+!packages/reference-core/tests/cases/diag/*/world/decl/.reference-ui/
 .ref
 .pipeline
 .content-collections

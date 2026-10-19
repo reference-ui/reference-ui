@@ -1,0 +1,4 @@
+{
+  "name": "@reference-ui/styled",
+  "types": "./types/index.d.ts"
+}
