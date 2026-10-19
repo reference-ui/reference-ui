@@ -1,6 +1,6 @@
 /**
  * Vitest configuration for the canon module test suite.
- * Targets fail-closed platform join validation tests under generate/.
+ * Targets fail-closed platform join validation tests under tests/.
  * Runs in isolated project space without leaking into other reference-rs suites.
  */
 import { defineConfig } from 'vitest/config';

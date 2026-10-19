@@ -1,6 +1,6 @@
-//! Named `_` condition wraps the reference profile canonical conditions.
-//! Keys match canon `NAMED_CONDITIONS`. Lib TypeScript authors no conditions;
-//! these 79 wraps are canonical condition shapes (`&:is(:hover, [data-hover])` on the leaf
+//! Named `_` condition wraps for the 59 reference conditions the lib fixture ships.
+//! Keys are a subset of canon `NAMED_CONDITIONS`. Lib TypeScript authors no conditions;
+//! these wraps are canonical condition shapes (`&:is(:hover, [data-hover])` on the leaf
 //! and on group/peer). Host color mode uses `[data-color-mode=…]`, not `.dark` /
 //! `.light`. `_osDark` / `_print` / `_motionReduce` stay `@media`. Empty BaseSystem
 //! has no conditions.

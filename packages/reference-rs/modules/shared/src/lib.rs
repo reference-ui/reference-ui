@@ -1,6 +1,7 @@
 //! Common text manipulation, span slicing, and AST utility functions shared across the compiler workspace.
 //! Provides safe string unquoting, bounds-checked span slicing over source buffers, and character hygiene helpers.
 //! Used across AST extraction passes and code generators to eliminate redundant string allocations.
+//! The `testing` module holds the shared scratch workspaces and base-system fixtures compiler-crate tests use.
 
 use oxc_span::Span;
 
