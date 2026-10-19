@@ -31,3 +31,5 @@ emitted; the document picks.
 - Treat `_hover={{ mt, bg }}` as one hashed `:hover` block keyed by both.
 - Treat `sm` / `_md` / `300` as conditions. Those keys belong to `r/`.
 - Fold `_dark` / `_light` by reading the user’s theme at build time.
+
+Up: [resolve](../README.md).

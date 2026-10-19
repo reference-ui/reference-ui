@@ -136,7 +136,7 @@ styles under that `when`:
 
 Wants: `p=1r` when `@container (min-width: 300px)`, `mt=2r` when
 `@container (min-width: 768px)`. Numeric keys are language. Named keys
-look up `config/breakpoints.rs`. Unknown names warn and skip.
+look up the ingested breakpoint scale. Unknown names warn and skip.
 
 ## Responsive arrays
 
@@ -201,3 +201,5 @@ want, resolve never sees it.
   the expression is this pass.
 - Fold `undefined` to a `Null` leaf (Panda’s evaluator). Omission is
   the correct empty.
+
+Up: [extract](../README.md).

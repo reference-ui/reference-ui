@@ -21,10 +21,7 @@ depends on it, or this compile's include set reaches inside it.
 beside an own `<Div p="1r">`. `@acme/panel` borrows the runtime, so `bg` backs
 under own as `@reference-ui/lib__bg_blue`. `@acme/icons` is a foreign package:
 no want, no style plan, no class and no diagnostic, standalone and with lib
-composed (`upstreamSystems: ['reference-ui']`). Before, any linked directory
-outside `node_modules` whose `@reference-ui/react` resolved to this runtime
-was read as project code, so the icon's props backed under own
-(`@reference-ui/lib__c_red`), rules nothing renders. Nothing is configured by
+composed (`upstreamSystems: ['reference-ui']`). Nothing is configured by
 the user.
 
 Siblings: ATM-SITE-103 (an installed package not built on Reference UI),

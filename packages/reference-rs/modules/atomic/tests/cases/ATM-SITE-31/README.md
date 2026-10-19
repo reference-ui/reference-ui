@@ -12,13 +12,12 @@ with a diagnostic; a reassigned callee names its write; bare uncalled
 function values never fold.
 
 The impure-shape tripwires (`Math.random`, `.map`/`.reduce`, async, loops,
-rest params, nested calls, spread args, `f?.()`) stay pinned at ATM-SITE-32
-, which this slice must keep green untouched.
+rest params, nested calls, spread args, `f?.()`) stay pinned at ATM-SITE-32,
+kept green untouched.
 
-Known seams, filed not silent: binary arguments fold through the
-shared binary node (SITE-33 seam, closed by the tail work — a non-finite
-binary arg refuses the whole call); helper-returned computed keys compose
-with the folded-key slice (SITE-49).
+Known seams: binary arguments fold through the shared binary node
+(SITE-33: a non-finite binary arg refuses the whole call);
+helper-returned computed keys compose with the folded-key slice (SITE-49).
 
 Cross-file arms: imported arrow, function declaration,
 and object-return calls fold through the walked origin's descriptor

@@ -13,20 +13,15 @@ spec then asserts one site identity per line (located), stable
 `ATM-*` codes, and byte-identical diagnostics across a second
 compile (deterministic order).
 
-Repro honesty note: a single hover + unknown-token site warns exactly
-once in a single atomic compile (verified across three shapes:
-`css()` with `caretColor`, `css()` with the Obj-1 `bg` alias, and a
-const-object spread). The Objective-1 carry-forward's one-site ×2
-(hover usages emit exactly 2 file-less warnings
-each) does not reproduce from one site at atomic level — the lib
-doubling needs multi-file/use-site context above this case. What
-reproduces here is the atomic-level defect the carry-forward
-bundles: same-message wants collapse into indistinguishable
-file-less lines (the committed `ATM-SITE-43` golden shows the same
-shape: two identical `ATM-W-INVALID-CSS-VALUE` lines). The producers must
-give each line its site so same-message lines from distinct sites
-stay distinct — and never collapse them by message the way
-`runtime/builder.rs::is_duplicate` does today.
+A single hover + unknown-token site warns exactly once in a single
+atomic compile (verified across three shapes: `css()` with `caretColor`,
+`css()` with the Obj-1 `bg` alias, and a const-object spread). The
+atomic-level defect this case pins: same-message wants collapse into
+indistinguishable file-less lines (the committed `ATM-SITE-43` golden
+shows the same shape: two identical `ATM-W-INVALID-CSS-VALUE` lines).
+The producers must give each line its site so same-message lines from
+distinct sites stay distinct — and never collapse them by message the
+way `runtime/values.rs::is_duplicate` does.
 
 Mechanism: `resolve/tokens` warns per want with no location, so the
 message alone keys the final line. Related: `ATM-DIAG-04`

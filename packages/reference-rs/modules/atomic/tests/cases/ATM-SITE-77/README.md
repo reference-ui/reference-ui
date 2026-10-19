@@ -6,9 +6,7 @@ Both collectors record branching leaves in const-object inits — ternary
 and nullish props scoop their static leaves — and every use fans out:
 spreads lower one want and one authored plan per leaf, member reads
 resolve every leaf, and the imported instance (via the project
-bag) behaves exactly like the same-file one. Same-file spreads of
-branching objects were fully silent before this slice (zero entries,
-zero diagnostics); now they paint.
+bag) behaves exactly like the same-file one.
 
 Props with no static value diagnose instead of going silent: a
 call-valued prop and a both-sides-dynamic nullish prop each yield one
@@ -25,9 +23,8 @@ right-operand rule, plus our diagnostic). Genuinely
 empty objects stay silent.
 
 Reads consumed mid-fold (binary/unary/template operands, call
-arguments) and partially static scalar inits still need leaf-level
-provenance — follow-ups, not silence pins: they resolve today and
-diagnose nothing.
+arguments) and partially static scalar inits resolve and diagnose
+nothing; they carry no leaf-level provenance.
 
 Granularity, pinned: keys read single leaves, so a key over a clean
 entry of a dirty object stays silent; helpers bake captures whole, so

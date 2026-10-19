@@ -15,9 +15,9 @@ authoring package for fragments) and it is not the host pipeline in
 
 ## What it takes
 
-Sources (TSX / `css()` / recipe calls) plus a **base system**.
-`compile()` takes `Option<BaseSystem>`; omitted uses the frozen
-`@reference-ui/lib` fixture. Token resolution looks up that dictionary.
+Sources (TSX / `css()` / recipe calls) plus a system: the legacy
+shape carries `baseSystem`, the frozen shape carries `spec`. Token
+resolution looks up that dictionary.
 
 Styletrace answers which JSX names still carry StyleProps. Canon answers
 whether `mt` is a style prop. Do not fork either inside this crate.
@@ -26,10 +26,10 @@ whether `mt` is a style prop. Do not fork either inside this crate.
 
 Two artefacts, one namer algorithm in two implementations, one differential gate:
 
-| Name | What | Disk after cutover |
+| Name | What | Disk |
 | :--- | :--- | :--- |
 | `stylesheet` | CSS text, six layers | `.reference-ui/styled/styles.css` |
-| `css` | `(prop, value, when) → class`, concat | `.reference-ui/styled/css` |
+| `css` | `(prop, value, when) → class`, concat | `.reference-ui/styled/runtime-data.mjs` |
 
 Ghost class (runtime asks for an atom the sheet never printed) is a P0. A
 collected want that never became an atom is a P0.
@@ -93,15 +93,16 @@ Compilation follows a deterministic, one-pass pipeline: `compile(request) -> { s
 `compile(request) -> { stylesheet, css, diagnostics }`. Individual file
 descriptions belong in each file's top comment.
 
-## Public contract (when wired)
+## Public contract
 
 ```text
 compile(request) -> { stylesheet, css, diagnostics }
 ```
 
-JS face: `import { compile } from '@reference-ui/rust/atomic'`. The live wire
-from core is still `@reference-ui/rust/system` — same module, old subpath.
-N-API remains `compileSystem` so the native binary does not move.
+JS face: `import { compile } from '@reference-ui/rust/atomic'`. Core's
+sync calls it through `compileNative` in `@reference-ui/core`.
+N-API stays `compileSystem` so the native binary does not move with the
+folder rename.
 
 Grain is one class per leaf. Spelling is ours.
 
@@ -126,3 +127,5 @@ pnpm agentrs v atomic --update-goldens
 The live compiler stays in production until D.
 
 > Search terms: atom compiler, extract/css(), extract/recipe(), namer/class-map, tokens/lookup, conditions/lowering, rs:canon, rs:styletrace, rs:base-system
+
+Up: [@reference-ui/rust](../../README.md).

@@ -8,7 +8,7 @@ wrappers around nested styles.
 ```
 
 Numeric keys are language. Named widths (`md` → 768) are utterances from
-`tokens({ breakpoints })`, ingested in `config/breakpoints.rs`. Defaults
+`tokens({ breakpoints })`, ingested with the system scale. Defaults
 exist only as a CSS-generic starting table (`sm` → 640px).
 
 Extract walks the object and asks this module for the query string.
@@ -19,3 +19,5 @@ prints it. This folder does not own `_hover` or `@media`.
 
 - Copy a rem viewport dictionary next to canon.
 - Treat unknown names as passthrough. Fail closed (diagnostic / None).
+
+Up: [resolve](../README.md).

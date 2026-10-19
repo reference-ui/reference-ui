@@ -26,7 +26,7 @@ rides alongside this map. StyleProps on a recipe host still go through
 this concatenator. There is no second helper name. The author API is
 `css()` and `recipe()`.
 
-Disk: `.reference-ui/styled/css`.
+Disk: `.reference-ui/styled/runtime-data.mjs`.
 
 ## Example (Panda)
 
@@ -66,20 +66,20 @@ intentional rule change carries the bump; the freshness guard
 
 Permanent home. Each rule names the Rust site the runtime namer mirrors.
 Table-shaped rules travel as lowerings or keyword sets; the rest are
-procedures with one golden each. Counts at landing (2026-09-20, lib):
-aliases 315 · prefixes 1017 · color props 71 · unrealizable 27 ·
+procedures with one golden each. Counts (lib): aliases 315 ·
+prefixes 1017 · color props 71 · unrealizable 27 ·
 lowerings 29 props · breakpoints verbatim with `base` first, widths
 alongside (name → post-`into_px` width, `base` absent) for the range
 gate alone — the class never contains them.
 
 | # | Authored | What the class becomes | Rust site |
 |---|---|---|---|
-| 1 | any string value | structural whitespace runs collapse to one space, **quoted substrings verbatim**, then `_` for whitespace; collapse does not trim | `resolve/normalize.rs::collapse_whitespace`, `escape.rs::sanitize_class_value` |
+| 1 | any string value | structural whitespace runs collapse to one space, **quoted substrings verbatim**, then `_` for whitespace; collapse does not trim | `resolve/normalize.rs::collapse_whitespace`, `stylesheet/name/escape.rs::sanitize_class_value` |
 | 2 | number `4`, or finite numeric string `'1e3'`, `'.5'`, `'01'` on a non-color prop | stem is the canonical number via the `f64` fence + render: magnitudes outside `[1e-6, 1e21)` refuse as `NonCanonicalNumeric`; `0`/`-0` → `0`; hex/radix/`Infinity`/`NaN` refuse; bare numbers re-render through the same fence (never verbatim). CSS gets `px` on dimensional props but **the class does not** | `resolve/unit.rs` (`canonical_numeric_string`, `resolve_numeric_value`, `from_number`, `accepts_bare_number`) |
 | 3 | numeric string on a **color** prop or `font`/`fontFamily` | stays a string (`c_.5`, `c_-0` with no `0` fold) — except leading-zero, radix, and non-finite spellings, which refuse on every prop | `unit.rs::accepts_bare_number`, `legacy_string_value` |
-| 4 | `{ $token: { path, value } }` | class uses `path` | `values.rs::t_object_to_atom_value`, `AtomValue::class_name_str` |
-| 5 | `{ $r: 2 }` | `2r`; near-integers collapse under a 1e-6 epsilon, the `i64` cast saturates, non-JSON-number `$r` renders JSON-encoded (quotes included) | `values.rs::r_object_to_atom_value`, `lexical.rs::collapse_r_number` |
-| 6 | `'…!'` / `'… !important'` | marker stripped from the stem, `!` appended after sanitize; a bang inside quotes never marks importance | `css.ts::splitImportant`, `name/mod.rs` |
+| 4 | `{ $token: { path, value } }` | class uses `path` | `runtime/values.rs::t_object_to_atom_value`, `AtomValue::class_name_str` |
+| 5 | `{ $r: 2 }` | `2r`; near-integers collapse under a 1e-6 epsilon, the `i64` cast saturates, non-JSON-number `$r` renders JSON-encoded (quotes included) | `runtime/values.rs::r_object_to_atom_value`, `resolve/lexical.rs::collapse_r_number` |
+| 6 | `'…!'` / `'… !important'` | marker stripped from the stem, `!` appended after sanitize; a bang inside quotes never marks importance | `js/namer/value.ts::splitImportant`, `stylesheet/name/mod.rs` |
 | 7 | `padding` / `margin` / `inset` with 2–4 space tokens (paren-depth aware) | four longhands `pt_ pr_ pb_ pl_`; the gate is the three-prop allowlist plus the 2–4 window — 0, 1, and 5+ tokens stay the shorthand class, as do CSS-wide keywords and props like `borderWidth` outside the allowlist | `shorthands/mod.rs` (`is_dimensional_trbl`), `shorthands/dimensional.rs`, `parser.rs::split_tokens` |
 | 8 | `borderBottom: '3px solid red'`, `outline: '…'` | width / style / color longhands by token class: style keywords first (stored **lowercased**), then length-width incl. `thin`/`medium`/`thick`/math fns/`Nr`/`1/3r`, else color (width and color stored **raw**); first of each kind wins, extras dropped never re-fallthrough; `'none'` is case-sensitive (`'None'` classifies as a style); the zero gate is exactly `0`, `0px`, `0rem`, `0em`, `0%` → width `0px`; `outline` is `canon == "outline"` only (style set per prop); the whole-test lowercases but stores the original; `border: 0` → `bd-w_0px`; `border: 'none'`/`inherit`/`var()`/`borders.*` stays whole; **`outline: 'none'` → `outline: '2px solid transparent'` + `outlineOffset: 2px`**; the zero/ring/whole gates read strings and numbers only — token, bool, and null values pass through whole (the `scalar` table control) | `shorthands/border.rs`, `parser.rs`, `shorthands/mod.rs::extract_raw_val` |
 | 9 | six radius pairs `borderTopRadius` … | two corner longhands, same value | `shorthands/pair.rs` |
@@ -91,9 +91,9 @@ gate alone — the class never contains them.
 | 15 | `font: 'sans'` | `fontFamily: sans` + `fontWeight: <scale default or 400>` + every `css` extra on the definition — **system data**; extras ordered, later keys overwrite keeping first-insertion position | `resolve/font/family.rs` |
 | 16 | `weight: 'bold'` / `'sans.bold'` / `'393'` | `fontWeight` via scoped scale (`split_once('.')`), else the 6 keyword pairs (`thin`…`black`), else as-is | `resolve/font/weight.rs` |
 | 17 | `variant`, `colorMode` | zero declarations, any value (arrays/objects drop member-wise) | `resolve/mod.rs::is_runtime_owned` |
-| 18 | responsive array `['1r', null, '3r']` | index → breakpoint name pushed on `when`; `null` skips; beyond-scale skips silently; slot gets `@bp` (`base` member included) | `builder.rs::resolve_array`, `BreakpointScale::breakpoint_for_index` |
-| 19 | per-prop object `width: { base, md, _hover }` | breakpoint keys → `@bp` slot + condition; other keys → nested `when` in the slot; whole object carries one `important` | `builder.rs::resolve_object`, `css.ts::cleanResponsiveObject` |
-| 20 | `r: { 300: {…} }` | anonymous numeric keys are lowered in JS to `@container (min-width: …)` keys before lookup; named forms (`card/md`, `md@card`) drop through the generic path with no class | `lowerResponsiveStyles.ts` (anonymous numeric only), `resolve/r/query.rs` |
+| 18 | responsive array `['1r', null, '3r']` | index → breakpoint name pushed on `when`; `null` skips; beyond-scale skips silently; slot gets `@bp` (`base` member included) | `runtime/builder/resolve.rs::resolve_array`, `BreakpointScale::breakpoint_for_index` (base-system crate) |
+| 19 | per-prop object `width: { base, md, _hover }` | breakpoint keys → `@bp` slot + condition; other keys → nested `when` in the slot; whole object carries one `important` | `runtime/builder/resolve.rs::resolve_object`, core `css.ts::cleanResponsiveObject` |
+| 20 | `r: { 300: {…} }` | anonymous numeric keys are lowered in JS to `@container (min-width: …)` keys before lookup; named forms (`card/md`, `md@card`) drop through the generic path with no class | core `lowerResponsiveStyles.ts` (anonymous numeric only), `resolve/r/query.rs` |
 | 21 | table-miss prefixes (font `css` extras, custom props) | prefix = the canonical **verbatim** — the oracle never kebabs on a miss (`MyProp` stays `MyProp`, `mozFoo` stays `mozFoo`, `--brandX` stays `--brandX`); extras are the only unknown-prop path into the namer (every other path is style-prop-gated); unitless; bare numbers canonicalize; token unique-name lookup is sheet-side only | `canon::class_prefix_for_prop` fallback, `canon::is_unitless_prop` |
 
 Prefix fallback order: table hit → canonical verbatim.
@@ -197,3 +197,5 @@ starts-with-`{`-and-ends-with-`}` refusal predicate
 integer-like per-prop keys is likewise not inherited: V8 destroys it at
 object creation, so the namer correctly emits the received (V8) order
 and the differential compares those members as sets.
+
+Up: [atomic](../../README.md).

@@ -45,3 +45,5 @@ then a condition chain.
 - Invent a second OKLCH pipeline.
 - Drop unknown paths silently. Fail closed: diagnostic + `Raw` / passthrough
   only when the author wrote a raw CSS value.
+
+Up: [resolve](../README.md).

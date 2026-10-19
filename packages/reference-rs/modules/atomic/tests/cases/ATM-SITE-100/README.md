@@ -4,8 +4,7 @@ A package built on Reference UI renders through its own bundled runtime, which
 mints classes under the package's system name. The consumer's sheet backs those
 classes only for systems it composes with `extends` or `layers`; when none of the
 package's systems is composed, its wants back under no system and nothing
-paints. That used to be silent, and with any other system composed the wants
-were sprayed under it instead (plan gap 2).
+paints (plan gap 2).
 
 `App.tsx` imports `Button` from `@reference-ui/lib` and `AcmeCard` from
 `acme-ui`, both installed in the case (`input/node_modules`) with their systems

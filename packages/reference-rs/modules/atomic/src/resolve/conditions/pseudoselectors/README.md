@@ -26,3 +26,5 @@ prop; this folder is the `&` math. `_dark` is a host template, not
 
 - Own the `_` catalog. That is `pseudoprops`.
 - Look up breakpoint widths. `r/` already stamped `@container …`.
+
+Up: [conditions](../README.md).
