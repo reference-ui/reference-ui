@@ -4,10 +4,4 @@ Proves `staticCss` pre-generation: declared property × value × condition wants
 
 > Search terms: staticCss, pre-generated atoms, runtime values, wildcard expansion, static dedup, fail closed, MERGE-06
 
-## Cases
-
-- CORE-STATIC-01 — declared static values × conditions exist in the sheet with no call site, and runtime `css()` paints from them.
-- CORE-STATIC-02 — wildcard `*` expands a token category, and the overlapping static want dedups to one atom.
-- CORE-STATIC-03 — a runtime value outside the static set yields the MERGE-06 diagnostic, not a ghost, and an unsatisfiable `staticCss` request fails sync.
-
 Parent: [tests/cases/](../README.md).

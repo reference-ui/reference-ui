@@ -1,5 +1,5 @@
 // page.ts — the one home for the Playwright surface the harness and its specs touch.
-// Playwright is an optional peer resolved only at run time, so these interfaces stay local
+// Playwright is an optional dev dependency, resolved only at run time, so these interfaces stay local
 // instead of importing its types. The runner passes the real page; specs name only the members
 // they call, importing these shapes rather than redeclaring rival copies of them.
 

@@ -43,7 +43,7 @@ The local control paints the ink in every leg, and the runtime logs no `no compi
 package's own sync output go and the canonical config is restored with a heal sync in a `finally`, so the committed tree
 is the one-system shape.
 
-The shared token answers owner question 1 of `.claude/plans/styling-across-packages.md` as ruled in its §11: under
+The shared token follows the token-scope owner ruling: under
 `extends` the app's value wins inside the package's components, here on a style the app writes on the package's Card;
 under `layers` the package keeps its own. CORE-LAYERS-19 pins the same ruling on a package's own styles, CORE-LAYERS-20
 through a chain.

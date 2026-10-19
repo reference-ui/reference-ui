@@ -1,9 +1,8 @@
 # CORE-LAYERS-19 — under extends the app's token value paints inside a package's components, its own styles and the app's alike; under layers the package keeps its value, and a package-only token keeps its value either way
 
-Owner ruling, 2026-10-19 (`.claude/plans/styling-across-packages.md` §11): when an app composes a design-system
+Owner ruling, 2026-10-19 (token scope under extends vs layers): when an app composes a design-system
 package with `extends`, the app's token values win, including inside that package's components. When it composes
-it with `layers`, the package keeps its own token values. `guides/share.mdx` and `guides/theming.mdx` promise the
-same.
+it with `layers`, the package keeps its own token values. The share guide promises the same.
 
 The world keeps the prebuilt importmap shape: the page reaches acme through its importmap, and nothing installs it in
 `world/node_modules`. `upstream/` is a real package, acme (`core-layers19-acme`). Its

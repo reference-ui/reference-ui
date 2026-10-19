@@ -4,17 +4,4 @@ Proves Reference's responsive dialect paints by container width, not viewport wi
 
 > Search terms: container queries, responsive arrays, null holes, range conditions, breakpoint scale, container root, viewport contract, mobile-first sort
 
-## Cases
-
-- CORE-RESP-01 — responsive arrays map index to base and first breakpoint.
-- CORE-RESP-02 — null holes in responsive arrays skip the breakpoint.
-- CORE-RESP-03 — the `base` key is the unprefixed class.
-- CORE-RESP-04 — nested sm: { md: … } paints only when both queries hold.
-- CORE-RESP-05 — mdDown, mdOnly, smToLg bind the query and never overlap at the boundary.
-- CORE-RESP-06 — container queries sort mobile-first: min-width ascending, then max-width descending.
-- CORE-RESP-07 — container utilities paint only under a container root.
-- CORE-RESP-08 — numeric r keys lower to a concrete @container query.
-- CORE-RESP-09 — runtime and build time lower named responsive sugar to the same class.
-- CORE-RESP-10 — the viewport contract: width, height, and mixed branches gate per query.
-
 Parent: [tests/cases/](../README.md).
