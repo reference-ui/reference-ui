@@ -1,5 +1,6 @@
 /**
  * Nested arbitrary & selectors, comma-separated selector lists, and attribute quotes.
+ * Pins the `:last-child` descendant, the `:not()` selector list, and the quoted `&` attribute.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'

@@ -3,7 +3,7 @@
 Atlas-thin Node face of the `atomic` crate.
 
 Rust owns the compiler. This directory is path normalization, one native
-call, and the request/result types. Same thickness as `js/atlas`.
+call, and the request/result types. Same thickness as `../../atlas/js`.
 
 ```
 Core sync

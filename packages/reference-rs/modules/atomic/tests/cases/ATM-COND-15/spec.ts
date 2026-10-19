@@ -1,5 +1,6 @@
 /**
  * Container-query conditions without a container root in globalCss emit a diagnostic.
+ * The warning names both `container-type` and `@container`; no `@container` rule is asserted.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'

@@ -1,5 +1,6 @@
 /**
  * Keyframes emission inside @layer global with from/to and percentage selectors.
+ * Pins both `fadeIn` (from/to) and `pulse` (0/50/100%) blocks inside the global layer.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'

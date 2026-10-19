@@ -1,28 +1,14 @@
 # Tasty — JavaScript API
 
-This document describes the **TypeScript/JavaScript** API for Tasty: package entrypoints, runtime behavior, and the main types and helpers.
+The **TypeScript/JavaScript** API for Tasty: package entrypoints, runtime behavior, and the main types and helpers.
 
-## Tasty in one sentence
-
-Tasty turns a TypeScript workspace into Rust-owned metadata artifacts, then lets TypeScript consumers load that graph **lazily** through wrapper APIs and shared utility helpers.
-
-At a high level:
-
-1. Rust scans TypeScript source and lowers symbol/type information into a Tasty model.
-2. Rust emits a small manifest plus lazy chunk modules (via `scanAndEmitModules` from the native addon, or build helpers).
-3. `createTastyApi()` loads the manifest first.
-4. Symbols and related chunks are imported only when requested.
-5. Consumers either work directly with `TastySymbol`, `TastyMember`, `TastyTypeRef`, and `TastySymbolRef`, or they compose higher-level models from shared Tasty utilities.
+Tasty turns a TypeScript workspace into Rust-owned metadata artifacts, then lets TypeScript consumers load that graph **lazily** through wrapper APIs and shared utility helpers. Rust scans source and lowers symbol/type information into the Tasty model; the build entry writes a small manifest plus lazy chunk modules; `createTastyApi()` loads the manifest first and imports chunks only when requested. Consumers work with `TastySymbol`, `TastyMember`, `TastyTypeRef`, and `TastySymbolRef`, or compose higher-level models from the shared utilities.
 
 ## Package entrypoints
 
 ### `@reference-ui/rust`
 
-Lower-level **native** surface (requires the `.node` addon):
-
-- `scanAndEmitModules(rootDir, include)` — returns a JSON string with emitted module sources and diagnostics
-
-Loader utilities (`getReferenceNative`, `loadReferenceNative`, path resolution, etc.) live in the same entry and are useful for tooling that integrates with the binary.
+Lower-level **native** surface: the dynamic loader, dispatch helpers (`requireNative`, `callNativeJson`), and diagnostics (`getReferenceNative`, `loadReferenceNative`, path resolution). No Tasty calls live here.
 
 ### `@reference-ui/rust/tasty`
 
@@ -33,11 +19,11 @@ Tasty **runtime** API (consumes emitted JS artifacts; generation still uses the 
 - Wrapper types: `TastySymbol`, `TastyMember`, `TastyTypeRef`, `TastySymbolRef`
 - Graph: `api.graph` — `resolveReference`, `loadImmediateDependencies`, `loadExtendsChain`, `flattenInterfaceMembers`, `getDisplayMembers`, `projectObjectLikeMembers`, `collectUserOwnedReferences`
 - Utilities: `dedupeTastyMembers`, `getTastyMemberDefaultValue`, `getTastyMemberId`, JSDoc/callable helpers, display helpers, semantic helpers
-- Raw contract types: `RawTasty*` (re-exported from `js/tasty/generated/`)
+- Raw contract types: `RawTasty*` (re-exported from `modules/tasty/js/generated/`)
 
 ### `@reference-ui/rust/tasty/build`
 
-Node helpers that call `scanAndEmitModules`, write files under an output directory, and return a `TastyApi` — see `js/tasty/build.ts` for `buildTasty`, sessions, and diagnostics.
+Node helpers that scan, write files under an output directory, and return a `TastyApi` — see `modules/tasty/js/build.ts` for `buildTasty`, sessions, and diagnostics.
 
 ### `@reference-ui/rust/tasty/browser`
 
@@ -53,55 +39,22 @@ Rust owns compilation-adjacent correctness; TypeScript owns runtime loading, tra
 
 ## Artifact model
 
-Tasty uses a **manifest-first** layout:
+Tasty uses a **manifest-first** layout. The manifest is a small eager module (`version`, `symbolsByName`, `symbolsById`); each index entry carries `id`, `name`, `kind`, `chunk`, `library` so the runtime resolves name → id → chunk path and defers loading the full symbol object. Chunk modules hold symbol payloads keyed by exported id and load when a symbol loads, a reference resolves, or a graph operation pulls in related symbols.
 
-### Manifest
-
-Small eager module with:
-
-- `version`
-- `symbolsByName`
-- `symbolsById`
-
-Each symbol index entry includes `id`, `name`, `kind`, `chunk`, `library` so the runtime can resolve name → id → chunk path and defer loading the full symbol object.
-
-### Chunk modules
-
-Chunk modules contain emitted symbol objects keyed by exported ids. The runtime imports a chunk when a symbol is loaded, a reference is followed, or graph operations pull in related symbols.
-
-### Raw contract types
-
-Generated TypeScript for the on-disk artifact shape lives in:
-
-- `packages/reference-rs/js/tasty/generated/`
-
-The runtime re-exports those as `RawTasty*` aliases so consumers can distinguish **raw artifact JSON** from **wrapper** interfaces.
+Generated TypeScript for the on-disk artifact shape lives in `packages/reference-rs/modules/tasty/js/generated/`. The runtime re-exports those as `RawTasty*` aliases so consumers can distinguish **raw artifact JSON** from **wrapper** interfaces.
 
 ## Basic flow
 
-Emit modules with the native runtime:
-
 ```ts
-import { scanAndEmitModules } from '@reference-ui/rust'
+import { buildTasty } from '@reference-ui/rust/tasty/build'
 
-const emitted = JSON.parse(
-  scanAndEmitModules('/path/to/workspace', ['src/**/*.{ts,tsx}'])
-)
-
-console.log(Object.keys(emitted.modules))
-```
-
-Load and query with Tasty:
-
-```ts
-import { createTastyApi } from '@reference-ui/rust/tasty'
-
-const api = createTastyApi({
-  manifestPath: '/path/to/output/manifest.js',
+const built = await buildTasty({
+  rootDir: '/path/to/workspace',
+  include: ['src/**/*.{ts,tsx}'],
+  outputDir: '/path/to/output',
 })
 
-await api.ready()
-
+const api = built.api // ready; manifest loaded
 const symbol = await api.loadSymbolByName('ButtonProps')
 const members = symbol.getMembers()
 const inherited = await api.graph.loadExtendsChain(symbol)
@@ -159,9 +112,7 @@ After `createTastyApi({ manifestPath })` and `await api.ready()`:
 
 ### Utility helpers
 
-Including: `dedupeTastyMembers`, `getTastyMemberDefaultValue`, `getTastyMemberId`, `getTastyJsDocParamDescriptions`, `getTastyCallableParameters`, `parseTastyParamTag`, `normalizeTastyInlineValue`, plus semantic/display helpers exported from `js/tasty/index.ts`.
-
-Example:
+Including: `dedupeTastyMembers`, `getTastyMemberDefaultValue`, `getTastyMemberId`, `getTastyJsDocParamDescriptions`, `getTastyCallableParameters`, `parseTastyParamTag`, `normalizeTastyInlineValue`, plus semantic/display helpers exported from `modules/tasty/js/index.ts`.
 
 ```ts
 import {
@@ -172,10 +123,7 @@ import {
   getTastyMemberDefaultValue,
 } from '@reference-ui/rust/tasty'
 
-const api = createTastyApi({
-  manifestPath: '/path/to/output/manifest.js',
-})
-
+const api = createTastyApi({ manifestPath: '/path/to/output/manifest.js' })
 const buttonProps = await api.loadSymbolByName('ButtonProps')
 const members = dedupeTastyMembers(await api.graph.flattenInterfaceMembers(buttonProps))
 const size = members.find((member) => member.getName() === 'size')

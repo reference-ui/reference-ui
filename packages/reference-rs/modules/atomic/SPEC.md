@@ -24,7 +24,7 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined cases were split (`ATM-C
 | Total contract claims (`- [x]` / `- [ ]` lines) | 255 |
 | Named `[x]` proven | 253 |
 | Remaining `[ ]` | 2 (`ATM-GHOST-04`, `ATM-PERF-01`) |
-| Cargo `#[test]` | 455 (internal; not ticks) |
+| Cargo `#[test]` | 936 (internal; not ticks) |
 | Case folders | 283 (`tests/cases/<ATM-*>`, 37 without a claim line; 0 red — audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
 
 A tick means a case folder exists and is green. It does **not** mean the
@@ -53,7 +53,7 @@ defects that the suite blesses in committed goldens:
 
 Two structural causes, both of which the new areas are designed to close:
 
-1. **The cascade sorter is built.** `stylesheet/cascade.rs` sorts by `CascadeKey`
+1. **The cascade sorter is built.** `stylesheet/cascade/` sorts by `CascadeKey`
    (bucket → at-rule kind and parsed width → pseudo rank →
    `canon::property_cascade_rank` → ties) and groups shared at-rule wrappers.
    `ATM-GHOST-05` (nested dual at-rules) is closed. `ATM-SHORT-07` (paren-depth) is closed.
@@ -1282,7 +1282,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 ## 6. Remaining Cases [ ] (what a real `styles.css` still needs)
 
 Q1 closed Tier 2 and the token breadth of Tier 3, plus `ATM-FORBID-07`,
-`ATM-VALID-01`, and `ATM-VALID-03`. The 6 open IDs group below by what they buy.
+`ATM-VALID-01`, and `ATM-VALID-03`. The 2 open IDs group below by what they buy.
 Order is the recommended landing order.
 
 ### Tier 0 — stop shipping wrong CSS (P0, blocks production)
@@ -1295,8 +1295,7 @@ Order is the recommended landing order.
 
 ### Tier 1 — make the suite able to hold a line
 
-`ATM-DIAG-04` · `ATM-DIAG-05` · `ATM-DIAG-06`
-
+Done. `ATM-DIAG-04`, `ATM-DIAG-05`, and `ATM-DIAG-06` are ticked, and
 `ATM-VALID-03` is in place. Determinism and idempotence are gauges, not
 fixtures — a suite that cannot prove the same input yields the same bytes
 cannot review a golden diff at all.
@@ -1317,10 +1316,11 @@ imports, and the two cases agree about what gating means.
 
 ### A tick is not a cutover
 
-Ticking all 121 does not make atomic the production compiler, and the SPEC should
-not be read as claiming it does. Native already writes `styles.css` behind
-`REF_SYSTEM_ENGINE=native`. `CompileResult.css` and `CompileResult.recipes` are
-still discarded by the host, and runtime `css()` / `recipe()` still call
+Ticking all 255 does not make atomic the production compiler, and the SPEC should
+not be read as claiming it does. Native writes `styles.css` on every sync
+(`sync/index.ts` calls `compileNative` unconditionally; the engine flag is
+gone). `CompileResult.css` and `CompileResult.recipes` are still discarded
+by the host, and runtime `css()` / `recipe()` still call
 `@reference-ui/styled`. That means `ATM-GHOST-01` — our P0 — is unenforceable
 in production today, because the class map it protects never leaves the N-API
 boundary, and `ATM-RECIPE-02`'s variant table has no consumer. Cutover work is

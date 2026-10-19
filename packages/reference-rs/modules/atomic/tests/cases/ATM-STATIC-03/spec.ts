@@ -1,5 +1,6 @@
 /**
  * Static CSS conditions, non-color wildcards, and unknown property diagnostics.
+ * Wants and style plans cover the hover color and radius wildcards; `unknownProp` warns.
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'

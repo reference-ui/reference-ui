@@ -11,7 +11,7 @@ Scope rules, fixed:
   Vitest across the N-API seam. No browser, no dev server, no network.
 - **CSS is validated by a parser, not by a renderer.** Browser-level proof already
   exists one layer up (`test-component`, `test-core` Playwright). Pushing atomic's
-  73 cases through a browser would cost seconds each to re-prove something a
+  283 cases through a browser would cost seconds each to re-prove something a
   parser answers in under a millisecond.
 - **Self-contained.** A case needs its `input/`, a `BaseSystem`, and the
   compiler. Nothing outside `packages/reference-rs`.

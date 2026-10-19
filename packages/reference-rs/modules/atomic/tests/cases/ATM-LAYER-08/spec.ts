@@ -1,5 +1,6 @@
 /**
  * Reset layer emission ahead of tokens and utilities.
+ * Pins the root block plus layer preamble prefix, reset-before-tokens-before-utilities order, and the reset rules.
  */
 import { expect } from 'vitest'
 import {
