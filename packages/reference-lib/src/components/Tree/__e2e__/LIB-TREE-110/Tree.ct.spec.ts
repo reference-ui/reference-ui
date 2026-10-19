@@ -5,8 +5,8 @@
  * dynamic recovery, Combobox bridge commits and virtual focus, ShadowRoot
  * traversal, and an accessibility-clean sweep.
  */
-import { test, expect, snap } from '../../../../playwright/ct'
-import { expectNoAxeViolations } from '../../../../playwright/axe'
+import { test, expect, snap } from '../../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
 test.describe('Tree Composition Gates & Browser Proofs', () => {

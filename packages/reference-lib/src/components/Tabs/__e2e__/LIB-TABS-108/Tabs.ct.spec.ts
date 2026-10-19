@@ -5,8 +5,8 @@
  * and removal, the MyTabs system-variant demo, ShadowRoot locality,
  * keepMounted panels, and real-gesture selection semantics.
  */
-import { test, expect, snap } from '../../../../playwright/ct'
-import { expectNoAxeViolations } from '../../../../playwright/axe'
+import { test, expect, snap } from '../../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../../playwright/axe'
 
 test.describe('Tabs Composition Gates & Browser Proofs', () => {
   test('TB-DOM-01, TB-DOM-03 & TB-DOM-04: Renders tablist, tabs and panels with active selection, hover, ARIA linkage and keyboard roving', async ({

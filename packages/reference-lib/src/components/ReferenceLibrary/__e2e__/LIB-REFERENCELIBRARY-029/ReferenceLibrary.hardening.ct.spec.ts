@@ -4,8 +4,8 @@
  * one runtime while preserving queued work across the double render.
  */
 import type { ComponentProps } from 'react'
-import { test, expect } from '../../../../playwright/ct'
-import type { StrictRuntimeHarness } from '../ReferenceLibrary.story'
+import { test, expect } from '../../../../../playwright/ct'
+import type { StrictRuntimeHarness } from '../../ReferenceLibrary.story'
 
 type StrictProps = ComponentProps<typeof StrictRuntimeHarness>
 
