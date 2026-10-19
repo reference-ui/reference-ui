@@ -1,9 +1,10 @@
 // prebuilt-probe.spec.ts — spec for CORE-CHAIN-08, the prebuilt-dist fan-out
 // case. Takes { page, url, case } with the world synced standalone, syncs a
-// real upstream package into a materialized bound react.mjs, rewrites the
-// consumer config to extend it, re-syncs, then asserts a consumer-only token
-// paints on the prebuilt component fixture with zero runtime misses. Emits
-// nothing on success; throws naming the unbacked class on failure.
+// real upstream package into a materialized bound react.mjs, installs it as
+// `@fixture/prebuilt` in the world's node_modules, rewrites the consumer config
+// to extend it, re-syncs, then asserts a consumer-only token paints on the
+// prebuilt component fixture with zero runtime misses. Emits nothing on
+// success; throws naming the unbacked class on failure.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -30,6 +31,20 @@ interface SpecInput {
   case: CoreCase;
 }
 
+/**
+ * Install the upstream package where Node resolves `@fixture/prebuilt` from
+ * the app: the consumer sync reads the system that package published to know
+ * which system renders `<Badge>`. The browser still loads it through the
+ * world importmap. Returns the link so the finally can remove it.
+ */
+function installPrebuilt(worldDir: string, upstreamDir: string): string {
+  const link = path.join(worldDir, 'node_modules', '@fixture', 'prebuilt');
+  fs.mkdirSync(path.dirname(link), { recursive: true });
+  fs.rmSync(link, { force: true, recursive: true });
+  fs.symlinkSync(path.relative(path.dirname(link), upstreamDir), link, 'dir');
+  return link;
+}
+
 function toExtendedConfig(canonical: string): string {
   const withImport = canonical.replace(
     "import { defineConfig } from '@reference-ui/core'",
@@ -53,6 +68,7 @@ export default async function run({ page, url, case: c }: SpecInput): Promise<vo
   const upstreamDir = path.join(c.worldDir, 'upstream');
 
   const misses: string[] = [];
+  let installed: string | undefined;
   (page as unknown as ConsolePage).on('console', (message) => {
     if (message.text().includes('no compiled class')) misses.push(message.text());
   });
@@ -68,6 +84,7 @@ export default async function run({ page, url, case: c }: SpecInput): Promise<vo
     // cannot be reading a package-shipped rule by coincidence.
     assert.ok(!upstream.includes('b70233'), 'probe value is absent from the published package');
 
+    installed = installPrebuilt(c.worldDir, upstreamDir);
     fs.writeFileSync(configPath, toExtendedConfig(canonical), 'utf8');
     await sync(c.worldDir);
 
@@ -101,6 +118,7 @@ export default async function run({ page, url, case: c }: SpecInput): Promise<vo
 
     assert.deepEqual(misses, [], `zero runtime misses, got ${misses.length}`);
   } finally {
+    if (installed) fs.rmSync(installed, { force: true, recursive: true });
     fs.writeFileSync(configPath, canonical, 'utf8');
     await sync(c.worldDir);
   }

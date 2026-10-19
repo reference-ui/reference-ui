@@ -14,6 +14,13 @@ element carries `core-chain8-up__c_chain8Ink` with no backing rule, so it
 faints and the runtime warns `no compiled class`. That polarity is the point —
 a same-scope `Div` twin would pass vacuously and is refused here.
 
+The consumer sync learns which system renders `<Badge>` from the package the
+import lands in, the way Node would resolve it: the spec installs the synced
+upstream as `world/node_modules/@fixture/prebuilt` before the extended re-sync
+(and removes it after), so the engine reads the system it published,
+`core-chain8-up`, and backs the class under that system only. The browser keeps
+loading the component through the world importmap.
+
 Evidence: extraction drops capitalized non-host
 tags while the foreign runtime mints; no twin without a real prebuilt dist; `packages/reference-rs/modules/atomic/src/extract/jsx/mod.rs:50`, `packages/reference-core/src/runtime/css/css.ts:271`.
 
