@@ -21,13 +21,13 @@ import-free `theme/*.ts` objects in exactly that shape — the config data,
 not fragments to scan. Transitive middles republish: the outer fragment
 carries the inner base first and outer-local leaves second, the flattened
 bundle order a real publish produces. The exceptions are CORE-CHAIN-06,
-CORE-CHAIN-08, CORE-CHAIN-09, CORE-CHAIN-10 and CORE-CHAIN-14 to CORE-CHAIN-16:
+CORE-CHAIN-08, CORE-CHAIN-09, CORE-CHAIN-10 and CORE-CHAIN-14 to CORE-CHAIN-17:
 each syncs a genuine upstream package mid-run and composes the artifact on disk, so the publish/consume
 shape agreement is proven, not assumed — stand-ins alone once let the
 publisher drift silently.
 
-Where a case styles a package's components (CORE-CHAIN-08, CORE-CHAIN-15 and
-CORE-CHAIN-16), the package is installed for the run: linked into
+Where a case styles a package's components (CORE-CHAIN-08, CORE-CHAIN-15 to
+CORE-CHAIN-17), the package is installed for the run: linked into
 `world/node_modules` the way a workspace install leaves it (copied, for a
 registry install), and removed in the spec's `finally`. The app's sync decides
 which system renders a tag from the directory its import lands in, so a
