@@ -2,7 +2,6 @@
 // It takes an entry plus overrides and emits a full esbuild build config.
 // The working directory is pinned to the Core package root so module
 // annotation banners and metafile keys never depend on the caller's cwd.
-// This module is a core-owned copy of the retired reference-core build options.
 
 import type * as esbuild from 'esbuild'
 import { readFileSync } from 'node:fs'

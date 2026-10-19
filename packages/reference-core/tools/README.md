@@ -60,6 +60,20 @@ The run wipes the generated tasty directory first and reports how many files it 
 and how many specifiers it rewrote. Both the tool and its output are
 checked in, so fresh checkouts typecheck with no extra step.
 
+## Atlas, styletrace, and typegen declaration vendors
+
+Three smaller siblings of the tasty vendor, one tool per shelf
+(`src/native/generated/atlas/`, `/styletrace/`, `/typegen/`). Same
+mechanics — dist closure in, provenance headers plus explicit NodeNext
+specifiers out, tsconfig mapping each subpath onto its vendored top —
+run explicitly after an RS rebuild, `--check` to verify freshness. All
+three feed the diagnostics repro suite; typegen additionally feeds the
+declaration leg, which imports it at runtime.
+
+```sh
+cd packages/reference-core && node tools/vendor-rust-atlas-dts.mjs --check
+```
+
 ## Primitives roster vendor
 
 The vendor script copies the committed primitives generator output (E1 vocabulary
@@ -115,12 +129,29 @@ cd packages/reference-core && node tools/build-bin.mjs
 ```
 
 The run is idempotent and typechecks as it emits (tsc errors fail the
-build). The dev and build scripts reach it through `tools/ensure-dist.mjs`,
-which rebuilds only when the bin is missing or older than its inputs, and
-first builds the `@reference-ui/rust` JS bindings (`build:js`, no Rust
-toolchain needed) when a fresh checkout has none. Direct-source invocations
-(`node bin/ref.ts`, the CLI specs) keep working without it — only the
-installed-shim shape needs the emit.
+build). Direct-source invocations (`node bin/ref.ts`, the CLI specs)
+keep working without it — only the installed-shim shape needs the emit.
+
+## Shipped declaration post-pass
+
+`rewrite-declaration-specifiers.mjs` is the build's last mile, imported
+by `build-bin.mjs` rather than run by hand. tsc keeps the `.ts` names
+the source wrote in every emitted `.d.ts`, which TypeScript resolves
+but tasty reports as `TST-W-UNRESOLVED-IMPORT`; the post-pass repoints
+each relative specifier at its emitted name and fails the build when a
+shipped declaration reaches a file that does not ship.
+
+## Dist freshness gate
+
+`ensure-dist.mjs` guarantees `dist/bin/ref.js` exists and is newer than
+every input the compiled bin is built from, rebuilding through
+`build-bin.mjs` only when the bin is missing or older. Before a rebuild
+it fills the two generated inputs a fresh checkout lacks: the
+`@reference-ui/rust` JS bindings (`build:js`, no Rust toolchain needed)
+and the gitignored browser-component mirror. The `agentcore run`
+bootstrap calls it, so documented callers never run stale bytes;
+`REF_PIPELINE_SKIP_DEPENDENCY_BUILDS` opts CI out, and steady state
+exits silently after one stat walk.
 
 ## Quality gate
 

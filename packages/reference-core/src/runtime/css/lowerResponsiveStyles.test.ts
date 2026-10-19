@@ -1,6 +1,5 @@
 // Unit tests for the Core responsive lowering over author style objects.
 // They take r sugar plus plain shapes and assert the lowered container forms.
-// The family mirrors the retired reference-core runtime lowering assertions, minus Panda mocks.
 
 import { describe, expect, it } from 'vitest'
 import { lowerResponsiveStyles } from './lowerResponsiveStyles.ts'

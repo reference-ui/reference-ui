@@ -1,8 +1,7 @@
 // Golden pins for the structured-stylesheet merge over the hand-written corpus.
 // They take each corpus entry and pin its reprint byte-exact against the
 // whole-string literal, plus the canonical single-statement transitive form.
-// The cutover deleted the packed-css oracle this file once differentiated
-// against; the reprints plus the streams-native goldens below are what persists.
+// The reprints plus the streams-native goldens below pin the merge.
 
 import { describe, expect, it } from 'vitest'
 import { mergeStreams } from './streams.ts'

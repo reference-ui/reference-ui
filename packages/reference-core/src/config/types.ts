@@ -1,6 +1,5 @@
 // Public config surface for Core ui.config files.
 // It takes author options and emits the validated ReferenceUIConfig shape.
-// This module is a core-owned copy of the retired reference-core config types trimmed to the surviving fields.
 
 import type { BaseSystem } from '../system/base/types.ts'
 

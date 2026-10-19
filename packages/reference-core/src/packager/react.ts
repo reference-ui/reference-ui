@@ -1,11 +1,10 @@
 // React entry publishing for the Core generated folder.
 // It takes the system name, the compiled style prop names, and the synced role, and emits the
 // react package: a minified bundled react.mjs plus its external map and standalone react.d.mts. React
-// stays external (like the retired reference-core's entry): bundling it would fork the dispatcher
-// for any consumer rendering through its own react-dom, so the bundle
-// imports 'react' and the consumer provides the copy. No react-dom edge:
-// consumers bring their own copy, and packages built on the entry import
-// clean where react-dom is absent (retired reference-core contract).
+// stays external: bundling it would fork the dispatcher for any consumer
+// rendering through its own react-dom, so the bundle imports 'react' and the
+// consumer provides the copy. No react-dom edge: consumers bring their own
+// copy, and packages built on the entry import clean where react-dom is absent.
 // css()/recipe() bundle in pre-registered over this system's runtime-data;
 // styled stays data-only.
 // The synced stage sits one level deeper than the live folder the commit

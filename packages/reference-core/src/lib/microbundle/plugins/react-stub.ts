@@ -1,6 +1,5 @@
 // Zero-runtime React stubbing for Core fragment esbuild bundles.
 // It takes react-family imports and emits an in-memory proxy module instead.
-// This module is a core-owned copy of the retired reference-core react-stub plugin.
 
 import type * as esbuild from 'esbuild'
 

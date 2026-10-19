@@ -1,5 +1,5 @@
-// Builds the compiled ref bin into dist/ (FIX-3: packed installs cannot
-// type-strip bin/ref.ts under node_modules). It runs tsc over the build
+// Builds the compiled ref bin into dist/ (packed installs cannot type-strip
+// bin/ref.ts under node_modules). It runs tsc over the build
 // tsconfig, asserts the alias-literal set is exactly the known one, then
 // lays the esbuild-entry twins plus the runtime-read declaration asset
 // beside the emit, repoints the emitted declarations at shipped files

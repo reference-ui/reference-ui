@@ -1,7 +1,6 @@
 // Unit tests for the Core build option defaults and overrides.
 // They take option bags and assert the esbuild config they produce, pin the
 // canonical absWorkingDir, and prove the emitted bytes are cwd-independent.
-// This file is a core-owned copy of the retired reference-core build options tests.
 
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'

@@ -1,6 +1,5 @@
 // Fragment collectors that capture author calls from user code.
 // It takes collector configs and emits globalThis-backed collect and read pairs.
-// This module is a core-owned copy of the retired reference-core fragment collector.
 
 import {
   CONFIG_FRAGMENT_SOURCE_PROPERTY,

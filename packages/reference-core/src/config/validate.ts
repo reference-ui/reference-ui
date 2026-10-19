@@ -1,6 +1,5 @@
 // Validation and normalization for the evaluated Core config object.
 // It takes the raw module export and emits a ReferenceUIConfig or throws.
-// This module is a core-owned copy of the retired reference-core validator trimmed to the surviving fields.
 
 import type { ReferenceUIConfig, StrictCategory } from './types.ts'
 import type { BaseSystemField } from '../system/base/validate.ts'

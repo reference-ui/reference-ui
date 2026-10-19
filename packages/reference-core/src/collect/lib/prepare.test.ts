@@ -1,7 +1,6 @@
 // Unit tests for the Core fragment prepare flow over mocked scan and bundle.
 // They take fake file lists and assert upstream filtering, prepare output,
 // plus merge-time private scoping over source-tagged token fragments.
-// This file adapts the retired reference-core base fragments tests minus config templating.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { join } from 'node:path'

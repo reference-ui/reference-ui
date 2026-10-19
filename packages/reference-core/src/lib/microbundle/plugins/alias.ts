@@ -1,6 +1,5 @@
 // Exact-match module id aliasing for Core esbuild bundles.
 // It takes an id to path map and emits a resolve plugin honoring it.
-// This module is a core-owned copy of the retired reference-core alias plugin.
 
 import type * as esbuild from 'esbuild'
 

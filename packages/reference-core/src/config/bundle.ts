@@ -3,7 +3,6 @@
 // imported by bare specifier is inlined, so every load reads its current file, and its real path is a
 // watch input; all other packages stay external and are listed, so a slow evaluation can name them.
 // A failed bundle names the files it tried to import.
-// It began as a core-owned copy of the retired reference-core config bundler with a Core-local entry.
 
 import { microBundleWithResult, CORE_PACKAGE_ROOT, type MicroBundleResult } from '../lib/microbundle/index.ts'
 import { CONFIG_EXTERNALS } from './constants.ts'

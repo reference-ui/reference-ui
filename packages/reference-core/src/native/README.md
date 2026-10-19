@@ -11,7 +11,7 @@ Seam table — which Rust surface each direction crosses:
 
 | Direction | Surface | Notes |
 |---|---|---|
-| Core → Rust | frozen compile request | six keys; retention token or in-memory files carry the scan |
+| Core → Rust | frozen compile request | schema, spec, hosts, roots, scope, channels, upstream signals; retention token or in-memory files carry the scan |
 | Core → Rust | upstream owned props | `jsxOwned` on the spec, from extends and layers; set only when non-empty; atomic seeds its host gate from it |
 | Rust → Core | compiled bundle | stylesheet, portable sheet, runtime artifact, diagnostics |
 | Rust → Core | traced hosts | StyleTrace discovery joins the roster at publish |

@@ -8,22 +8,23 @@ browser.
 The pipeline runs in one direction. `config/` loads and validates
 `ui.config` — discovery, esbuild bundling, evaluation, validation, plus
 the small in-memory store behind path resolution. `collect/` finds the
-author calls (`tokens()`, `font()`, `keyframes()`, `globalCss()`, pattern
-extensions), evaluates each file once in Node, and merges the results
-into one `EvaluatedSystemSpec`. `sync/` drives the whole pass: prepare
-fragments, hand the frozen compile request to the native engine, then
-publish the generated `system`, `styled`, and `react` legs and link them
-into the project. Nothing here lowers styles; the wire format lives in
-`reference-rs/contracts/`, and the stylesheet comes back from Rust.
+author calls (`tokens()`, `font()`, `keyframes()`, `globalCss()`,
+`recipe()`, pattern extensions), evaluates each file once in Node, and
+merges the results into one `EvaluatedSystemSpec`. `sync/` drives the
+whole pass: prepare fragments, hand the frozen compile request to the
+native engine, then publish the generated `system`, `styled`, `react`,
+and `types` legs and link them into the project. Nothing here lowers
+styles; the wire format lives in `reference-rs/contracts/`, and the
+stylesheet comes back from Rust.
 
 The other half faces the browser. `runtime/` (`css/`, `recipe/`) holds the
 authored `css()` and `recipe()` resolvers over the natively compiled plans —
 the runtime picks classes, constructs the miss class on a miss, and warns
-once in dev. `primitives/` holds the native tags: the factory that splits
-style props from DOM props and stamps the layer, color-mode, and variant
-attributes, plus the generator that writes the `react` entry (its stable
-surface also types worlds under the pre-run check). `entry/` holds the unbound
-React entry and its type files. `index.ts` is the single entry behind the
+once in dev. `primitives/` holds the generator that writes the per-system
+`react` entry; the executable roster itself (the factory plus its runtime
+trio) ships live from `@reference-ui/rust/primitives`. `entry/` holds the
+unbound React entry and its type files — the unbound surface also types
+worlds under the pre-run check. `index.ts` is the single entry behind the
 `@reference-ui/core` id that fragment files and configs import, and
 `system-surface.d.ts` is the stable type surface for the generated
 `@reference-ui/system` entry. `reference/` is the S6 reference API that Node

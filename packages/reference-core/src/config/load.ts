@@ -1,6 +1,6 @@
 // Loading for Core ui.config files from a project root.
 // It takes a working directory and emits the validated config plus dependencies and load-time warnings.
-// This module is a core-owned copy of the retired reference-core loader with no global registry; it also times the evaluation and
+// No global registry: every load reads current files. It also times the evaluation and
 // carries the slow-config warning (slow-evaluation.ts) for sync to report.
 
 import { resolve } from 'node:path'

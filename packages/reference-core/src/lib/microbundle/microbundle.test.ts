@@ -1,6 +1,5 @@
 // Unit tests for the Core microbundle wrapper over mocked esbuild.
 // They take fake build outputs and assert code plus metafile passthrough.
-// This file is a core-owned copy of the retired reference-core microbundle tests.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 

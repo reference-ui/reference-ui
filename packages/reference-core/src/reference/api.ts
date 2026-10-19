@@ -2,7 +2,6 @@
 // and types and emits the `./reference` surface consumers import. MCP and
 // other Node consumers build documents here without touching the browser
 // runtime or the presentation mirror.
-// (Seam S6 of the Objective 1 cartography; Objective 2 migrates mcp onto it.)
 
 export {
   createReferenceUiTastyApi,

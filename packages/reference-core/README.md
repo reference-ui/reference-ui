@@ -10,17 +10,18 @@ authors ──▶ collect ──▶ spec ──▶ Rust ──▶ system
    font()      evaluate  SystemSpec    stylesheet  system·styled
    keyframes() merge                 + class map   react·types
    globalCss()
+   recipe()
 ```
 
 ## What it is
 
 The host side of the system vision. Authors write `tokens()`, `font()`,
-`keyframes()`, `globalCss()`; Core finds those call sites, evaluates
-them once in Node, and produces the spec — the entire TypeScript
-product of the build-time layer. Rust never runs author files. After
-Rust returns the stylesheet and class map, Core packages the generated
-system the ecosystem imports. Fragments in, a spec across the cut, Rust
-compiles, a system comes out.
+`keyframes()`, `globalCss()`, `recipe()`; Core finds those call sites,
+evaluates them once in Node, and produces the spec — the entire
+TypeScript product of the build-time layer. Rust never runs author
+files. After Rust returns the stylesheet and class map, Core packages
+the generated system the ecosystem imports. Fragments in, a spec across
+the cut, Rust compiles, a system comes out.
 
 ## What it is not
 

@@ -1,7 +1,7 @@
 // Shared helpers for the native-scan differential battery.
 // They take temp trees plus scan outputs and emit manifests, hashes, and the
-// native call boundary. The FNV-1a manifest form here must match the seal
-// script and the Rust entry hash byte-for-byte; the goldens pin that.
+// native call boundary. The FNV-1a manifest form here must match the committed
+// goldens and the Rust entry hash byte-for-byte; the goldens pin that.
 
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'

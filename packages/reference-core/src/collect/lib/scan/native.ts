@@ -1,6 +1,6 @@
 // Native single-read scan for fragment discovery.
 // It takes scan options and emits matches plus a retention ref; bytes stay native.
-// fg still enumerates, Rust reads plus gates plus retains, and the verbatim
+// fg enumerates, Rust reads plus gates plus retains, and the verbatim
 // splitScan confirms the needle-hits, so match order and selection never drift.
 
 import { sep } from 'node:path'

@@ -1,6 +1,6 @@
 // Package definitions for Core generated packages.
 // They take nothing and emit the declarative set sync publishes: system, styled, react, types.
-// Values are transcribed from the legs verbatim — the definitions own them now, so manifests can only change here.
+// The definitions own these values, so manifests can only change here.
 // One assembly, no phase split: Core's legs run as a single ordered chain, not event-gated runtime/final phases.
 
 import type { PackageDefinition } from './package/index.ts'

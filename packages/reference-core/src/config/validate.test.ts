@@ -1,6 +1,5 @@
 // Unit tests for the Core config validator over the surviving fields.
 // They take candidate configs and assert accept or typed rejection.
-// This file is a core-owned copy of the retired reference-core validator tests trimmed with the surface.
 
 import { describe, expect, it } from 'vitest'
 import { defineConfig } from './types.ts'

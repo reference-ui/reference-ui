@@ -1,6 +1,5 @@
 // Shared constants for Core config bundling and output layout.
 // It takes nothing and emits the out-dir default plus the defineConfig externals.
-// This module is a core-owned copy of the retired reference-core config constants with core ids added.
 
 export { DEFAULT_OUT_DIR } from '../constants.ts'
 

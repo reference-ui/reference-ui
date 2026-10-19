@@ -1,7 +1,7 @@
 // Codes Core mints in TypeScript, the counterpart to the Rust codes.rs tables. It takes nothing and
 // emits one constant per wire string plus CORE_MINTED_CODES, the list the registry self-check reads.
 // A producer imports its constant from here so each wire string is spelled once, and a new
-// TypeScript-minted code joins the list and gets its row in REGISTRY.md.
+// TypeScript-minted code joins the list and gets its row in the RS REGISTRY.md.
 
 /** A local token leaf replaces an upstream value. Namespace BSS, emitted by the collect step. */
 export const TOKEN_SHADOW_CODE = 'BSS-W-TOKEN-SHADOW'
