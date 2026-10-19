@@ -13,6 +13,6 @@ Retired reference-core parity: `@reference-ui/lib` ships `summaryChipRecipe` wit
 the retired reference-core admitted as `summaryChip` (RS-33); the retired reference-core's own runtime resolved that call
 through atoms, never the named table.
 
-Evidence: ATM-RECIPE-08; reference-lib `SummaryChip.tsx` (RS-33).
+Evidence: ATM-RECIPE-08; reference-lib `SummaryChip` (RS-33).
 
 > Search terms: inferred className, implicit identity, binding name, export name, recipe/identity, recipe/inference, CORE-RECIPE-06

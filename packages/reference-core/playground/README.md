@@ -14,7 +14,7 @@ View it through Chrome DevTools MCP against the serving instance:
 `take_screenshot`, then `list_console_messages`. Screenshots come back
 inline; theme flips via `?theme=light`.
 
-Routes are hash pages auto-discovered from `src/pages/*.tsx` (filename is
+Routes are hash pages auto-discovered from the pages folder (filename is
 the route) with a Book-like side menu (search with `/`, theme toggle in the
 header). A page exports `meta` (menu title + blurb) and `Page` (the content)
 — adding a route is adding one file. The menu shell is harness chrome:
@@ -23,19 +23,19 @@ Page content uses the system (`css()`, `recipe()`, primitives, `globalCss()`).
 
 The shell stamps `data-color-mode` on `<html>` (dark by default, synced to
 `?theme=`), which drives the engine's token islands and `_dark` wraps.
-`src/tokens.ts` is the mini token set: tailwind's palette verbatim plus
+The tokens module is the mini token set: tailwind's palette verbatim plus
 `ink`/`paper`/`brand` with dark leaves, animation tokens, spacing, and
-lib's radii. `src/motion.ts` holds the keyframes those animation tokens
-name, and `src/global.ts` the tag and class rules.
+lib's radii. The motion module holds the keyframes those animation tokens
+name, and the globals module the tag and class rules.
 
 There is no capture client: `pnpm playground` serves, and DevTools MCP
 does the looking (`navigate_page`, `take_screenshot`,
 `list_console_messages`).
 
 Layout: `index.html` is the minimal vite entry (no inline style or
-script — the undercoat lives in `src/base.css`, the pre-paint theme
-stamp in `src/theme-init.js`). `src/` holds the app (shell, tokens,
-motion, pages). `tools/` holds the harness (`serve.mjs`, `lib.mjs` shared boot).
+script — the undercoat lives in the base stylesheet, the pre-paint theme
+stamp in the theme init script). The app tree holds the shell, tokens,
+motion and pages. The harness holds the serve script and shared boot.
 Sync output (`.reference-ui/`) stays gitignored at root.
 
 Why no `public/`: vite serves the entry from the project root and only
@@ -44,7 +44,7 @@ processes scripts, styles, and aliases from that entry. Files under
 there would unplug the TSX shell, the css/link pipeline, and the
 `@reference-ui/react` alias. `index.html` stays at root and stays tiny.
 
-Minimal page (`src/pages/hello.tsx` → `#/hello`):
+Minimal page (a hello page → `#/hello`):
 
 ```tsx
 import type * as React from 'react';

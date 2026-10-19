@@ -11,7 +11,7 @@ census), CORE-PRIM-10 (re-anchored surface).
 The three legs read independently so no two can drift together silently. The
 roster leg imports the E2 module live and subtracts the seven pinned helper
 exports; the shelf leg parses the committed E1 JSON; the canon leg parses the
-current 125-row html.rs tables plus the overlay namespace partition with the
+current 125-row element tables plus the overlay namespace partition with the
 generator's own discipline, since canon has no napi export. The retired SVG
 list itself is pinned against the live SVG partition, so a 25th SVG child
 fails loud. The case then proves its own diff trips: Div dropped from a

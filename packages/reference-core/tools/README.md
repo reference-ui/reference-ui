@@ -23,7 +23,7 @@ The run takes a lock file, wipes the mirror directory first, and reports how
 many files it wrote. The mirror directory itself is gitignored; the tool that
 fills it is the checked-in artifact.
 
-The dist gate (`tools/ensure-dist.mjs`) also runs it when the mirror directory
+The dist gate also runs it when the mirror directory
 is missing, so a fresh checkout can build the bin; the gate never regenerates a
 mirror that exists.
 
@@ -31,7 +31,7 @@ mirror that exists.
 
 The vendor script copies the reachable `@reference-ui/rust` tasty declaration
 closure out of the built RS dist and into the committed
-`src/native/generated/tasty/` tree. Only specifier strings move: every extensionless
+generated tasty tree. Only specifier strings move: every extensionless
 relative import becomes its explicit NodeNext form, so the vendored tree
 typechecks under core's module resolution while the RS source tree stays
 untouched. Every copied file gains a provenance header pinning the RS version
@@ -42,7 +42,7 @@ type-only). The reference-types bundle leg consumes tasty values through
 node resolution to the RS dist and passes explicit tsconfigRaw, so these
 paths entries — which point at declaration files — never feed a bundle.
 
-The `src/entry/types.d.mts` template type-imports the tasty handle names
+The entry-types template type-imports the tasty handle names
 rather than inlining them, so an RS rebuild that renames a handle breaks
 the package typecheck loudly instead of drifting silently. No regen step
 exists or is needed for the template: no RS rebuild means no action, and
@@ -63,7 +63,7 @@ checked in, so fresh checkouts typecheck with no extra step.
 ## Atlas, styletrace, and typegen declaration vendors
 
 Three smaller siblings of the tasty vendor, one tool per shelf
-(`src/native/generated/atlas/`, `/styletrace/`, `/typegen/`). Same
+(atlas, styletrace, typegen). Same
 mechanics — dist closure in, provenance headers plus explicit NodeNext
 specifiers out, tsconfig mapping each subpath onto its vendored top —
 run explicitly after an RS rebuild, `--check` to verify freshness. All
@@ -78,7 +78,7 @@ cd packages/reference-core && node tools/vendor-rust-atlas-dts.mjs --check
 
 The vendor script copies the committed primitives generator output (E1 vocabulary
 JSON plus the E4 raw-types closure) out of the linked `@reference-ui/rust` module
-sources and into the committed `src/native/generated/primitives/` shelf. E1 copies
+sources and into the committed primitives shelf. E1 copies
 byte-exact, since JSON carries no header; every E4 declaration file gains a
 provenance header pinning the RS version and the regen command, with relative
 specifiers rewritten to their explicit NodeNext form exactly like the tasty vendor.
@@ -110,14 +110,14 @@ reorders: each one consumes the bytes of the previous.
 
 The build script compiles the shippable `ref` bin. Node refuses to
 type-strip files under `node_modules`, so the packed package cannot ship
-`bin/ref.ts` source the way dev runs it — the bin must be compiled JS.
-The build transpiles `src/` + `bin/` into the gitignored `dist/` tree with
+the `ref` source the way dev runs it — the bin must be compiled JS.
+The build transpiles sources plus the bin entry into the gitignored `dist/` tree with
 tsc (layout-preserving on purpose: sync resolves esbuild alias entries and
 reads declaration assets from paths computed off `import.meta.url`, so a
 single-file bundle would break resolution), then lays the alias-entry
 twins plus the runtime-read `types.d.mts` beside the emit, asserts the
 alias-literal set is exactly the known one (drift fails loudly), and makes
-`dist/bin/ref.js` executable. `package.json` points `bin` and the
+`dist/bin/ref.js` executable. The manifest points `bin` and the
 `./runtime` export at the emit; `prepack`/`prepublishOnly` run the build,
 and `files` carries `dist` only.
 
@@ -129,23 +129,23 @@ cd packages/reference-core && node tools/build-bin.mjs
 ```
 
 The run is idempotent and typechecks as it emits (tsc errors fail the
-build). Direct-source invocations (`node bin/ref.ts`, the CLI specs)
+build). Direct-source invocations (running `ref` from source, the CLI specs)
 keep working without it — only the installed-shim shape needs the emit.
 
 ## Shipped declaration post-pass
 
-`rewrite-declaration-specifiers.mjs` is the build's last mile, imported
-by `build-bin.mjs` rather than run by hand. tsc keeps the `.ts` names
-the source wrote in every emitted `.d.ts`, which TypeScript resolves
+The declaration rewrite is the build's last mile, imported
+by the bin build rather than run by hand. tsc keeps the `.ts` names
+the source wrote in every emitted declaration file, which TypeScript resolves
 but tasty reports as `TST-W-UNRESOLVED-IMPORT`; the post-pass repoints
 each relative specifier at its emitted name and fails the build when a
 shipped declaration reaches a file that does not ship.
 
 ## Dist freshness gate
 
-`ensure-dist.mjs` guarantees `dist/bin/ref.js` exists and is newer than
+The dist freshness gate guarantees `dist/bin/ref.js` exists and is newer than
 every input the compiled bin is built from, rebuilding through
-`build-bin.mjs` only when the bin is missing or older. Before a rebuild
+the bin build only when the bin is missing or older. Before a rebuild
 it fills the two generated inputs a fresh checkout lacks: the
 `@reference-ui/rust` JS bindings (`build:js`, no Rust toolchain needed)
 and the gitignored browser-component mirror. The `agentcore run`

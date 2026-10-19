@@ -5,7 +5,7 @@ Evidence: ATM-DIAG-01..03, ATM-TOKEN-12.
 This case opts OUT of the runner sync hook (`"sync": false`): the world
 carries a failing compile, so the hook would fail before any spec runs.
 Instead the spec drives `sync()` itself node-side and asserts it rejects
-with `packages/reference-core/tests/cases/sync/CORE-SYNC-11/world/theme/bad.ts:3` in the message and leaves no `.reference-ui/` behind — the
+with the bad-theme fixture path in the message and leaves no `.reference-ui/` behind — the
 folder is atomic. The failing input is a missing `{colors.nope}` token ref,
 the RS-3 located error (ATM-TOKEN-12 pins file, line, column); the row's
 `display: true` cannot serve because the engine answers it with an

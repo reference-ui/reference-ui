@@ -6,6 +6,6 @@ string is exactly the `background` atom, and the element paints the clay
 background — the alias and the longhand share one cascade slot.
 
 Evidence: ATM-MERGE-02; case
-`packages/reference-rs/modules/atomic/tests/cases/ATM-MERGE-02`.
+`rs-cases:ATM-MERGE-02`.
 
 > Search terms: shorthand, canonicalization, prop normalization, twin props, merge/alias-collapse, CORE-MERGE-01

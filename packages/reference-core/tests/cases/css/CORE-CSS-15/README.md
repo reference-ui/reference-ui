@@ -7,9 +7,9 @@ browser proof sets the viewport below and above 840px: base padding
 and transparent paint below, the queried padding and colours above.
 The viewport — not a container — gates the branch.
 
-Matrix source: `matrix/css/tests/e2e/css-contract.spec.ts` "keeps the
+Matrix source: the CSS contract spec "keeps the
 viewport media-query probe on its base branch below the viewport
 threshold" + "applies the viewport media-query branch above the
-viewport threshold" + `matrix/css/src/styles.ts` (`viewportProbeClass`).
+viewport threshold" + the `viewportProbeClass` probe.
 
 > Search terms: viewport, media query, min-width, screen breakpoint, css-viewport-probe, CORE-CSS-15

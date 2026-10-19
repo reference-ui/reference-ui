@@ -1,7 +1,7 @@
 # CORE-LAYERS-15 — a re-synced layered upstream drops its removed rule from the consumer's sheet, and watch mode re-syncs the consumer after a relative-path upstream rebuild
 
 The consumer lists one real upstream under `layers`, imported by a relative path
-(`../upstreams/lc/.reference-ui/system/baseSystem.mjs`). Because the import is relative, the
+(the upstream published system). Because the import is relative, the
 published file is a watch input. The upstream ships one ink token pair (`lcInk`, `lcPaper`)
 and two utilities: `lcInkClass` (a colour) and `lcPaperClass` (a background). Both are synced
 for real, and the consumer config is rewritten by the spec and restored in a `finally`.
@@ -25,7 +25,7 @@ The class names are the engine's names for these utilities. The spec asserts eac
 published utilities, so a renamed class fails loud.
 
 Not covered here: a bare-specifier upstream. The bundler inlines a published base system imported
-by bare specifier and watches its real path (`src/config/bundle.ts`), so a bare upstream rebuild
+by bare specifier and watches its real path (the config bundler), so a bare upstream rebuild
 resyncs a watch too. CORE-WATCH-28 asserts that for a linked and an installed upstream.
 CORE-LAYERS-06 covers the bare-specifier re-sync in one process.
 

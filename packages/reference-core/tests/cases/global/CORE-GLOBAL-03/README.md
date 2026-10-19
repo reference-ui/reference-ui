@@ -8,7 +8,7 @@ attribute, `data-hover`, and `data-focus-visible`. One rule per node —
 no Panda comma-merge — cascade-equal to the lib sheet.
 
 Evidence: reference-lib Trace C
-(`button.ts` 20–27, 45–59 → `global.css` 371–407); reference-lib
+(the button reference 20–27, 45–59 → `global.css` 371–407); reference-lib
 `styles.css` L461–475; ATM-LAYER-03, ATM-COND-10.
 
 > Search terms: nesting, ampersand selector, disabled state, interaction states, data attributes, triple twin, global/nesting, global/conditions, selector :is(), CORE-GLOBAL-12

@@ -7,7 +7,7 @@ entry imports `react` externally with no bundled copy inside, then proves the
 primitive paints its style props, stamps `data-layer`, and commits no
 invalid-hook-call: one shared dispatcher, exactly the lib shape.
 
-Evidence: reference-lib landing regen (`Tabs.test.tsx` invalid-hook-call);
-`react.mjs` external `react`/`react/jsx-runtime` imports.
+Evidence: reference-lib landing regen (the Tabs regen test's invalid-hook-call);
+the react entry's external `react`/`react/jsx-runtime` imports.
 
 > Search terms: dedup, singleton react, peer dependency, externalized, duplicate react, prim/external-react, prim/shared-dispatcher

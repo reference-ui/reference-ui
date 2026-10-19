@@ -8,7 +8,7 @@ friends. The twin is no host, but `Other.Panel` is project code nobody
 traces, so its `bg` lowers under own (styling plan S3) and, being `Div`
 underneath, it paints its backdrop too.
 
-Evidence: ATM-SITE-22; reference-lib `Menu.tsx` `<Overlay.Content
-minW="40r">`, `Showcase.book.tsx` modal (RS-36).
+Evidence: ATM-SITE-22; reference-lib `Menu` `<Overlay.Content
+minW="40r">`, the Showcase book modal (RS-36).
 
 > Search terms: namespaced component, compound component, dot-notation, site/member-tags, CORE-SITE-11

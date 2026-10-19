@@ -1,6 +1,6 @@
 # CORE-WATCH-06 — an edit to a dotfile that include matches resyncs its class
 
-The runner syncs this world fresh, then the spec adds `theme/.hidden.ts` with a
+The runner syncs this world fresh, then the spec adds a hidden theme file with a
 `css()` call. The engine's include walk is dot-enabled, so the baseline sheet carries
 the class. The watch must match that: an edit to the dotfile resyncs the sheet, where
 a non-dot matcher would drop it. The dotfile is removed and the world restored in a

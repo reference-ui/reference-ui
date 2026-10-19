@@ -1,8 +1,8 @@
 # CORE-SYNC-13 — styled is data-only: css()/recipe() come from react bound to the owner
 
 The runner syncs this world fresh, then the spec checks node-side that
-`styled/` carries no executable module besides `runtime-data.mjs`
-(`styled/css.mjs` is gone) while the generated `react` entry exports
+`styled/` carries no executable module besides the runtime-data bundle
+(the styled CSS entry is gone) while the generated `react` entry exports
 `css` and `recipe` pre-registered over this system's compiled plans: a
 `css()` call resolves its plan class and a `recipe()` call returns a class
 carrying the `${system}__` owner prefix. The world authors one `css()` want

@@ -20,8 +20,8 @@ Checked against the served `styled/styles.css` and the computed paints in `index
 The published payload still lists `a` in each branch's streams. Only the printed sheets dedupe, and a
 consumer of this consumer dedupes at print too.
 
-Evidence: `src/system/base/streams.ts` (`mergeStreams` prints the first occurrence of each system),
-`src/system/base/streams.test.ts` (the diamond unit test). Siblings: CORE-LAYERS-03 (config order and the
+Evidence: the stream printer (`mergeStreams` prints the first occurrence of each system),
+the streams coverage (the diamond unit test). Siblings: CORE-LAYERS-03 (config order and the
 winner flip), CORE-LAYERS-14 (the relation rejections), CORE-CHAIN-02 (the extends diamond).
 
 > Search terms: diamond, shared upstream, shared base, duplicate block, print once, first occurrence, order statement, layers, mergeStreams, CORE-LAYERS-03, CORE-CHAIN-02

@@ -15,7 +15,7 @@ twice too. Now D publishes its named list with A once, and E resolves exactly wh
 `rgb(187, 0, 0)`, B's value.
 
 Cause (fixed): the same as CORE-CHAIN-09. The fragment list is linearized by name, so a base that two branches
-republish appears once in the list a diamond publishes (`src/system/base/fragments.ts`), and every consumer of
+republish appears once in the list a diamond publishes (fragment linearization), and every consumer of
 that list evaluates it once.
 
 Siblings: CORE-CHAIN-09 (the diamond's override, which this case builds on), CORE-CHAIN-02 (the diamond

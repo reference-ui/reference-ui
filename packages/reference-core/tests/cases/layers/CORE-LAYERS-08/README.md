@@ -28,8 +28,8 @@ What the spec proves, on the served `styled/styles.css` and in computed style:
    that selector. `#up-only` paints the layer's global colour, so a global rule from a
    layer still lands when the consumer does not restate it.
 
-The committed `ui.config.ts` imports nothing; the spec rewrites it, re-syncs, and restores
+The committed `ui.config` imports nothing; the spec rewrites it, re-syncs, and restores
 the canonical spelling in a `finally`. The consumer's `globalCss` lives in a fragment file
-(`src/theme.ts`), and the page loads no script, so no browser code imports `@reference-ui/core`.
+(the world theme), and the page loads no script, so no browser code imports `@reference-ui/core`.
 
 > Search terms: layers, globalCss, font-face, keyframes, global stream, reset stream, root default, :root hoisting, tokens portable, data-layer scope, own wins same selector, CORE-LAYERS-01, CORE-GLOBAL-08

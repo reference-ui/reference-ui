@@ -10,7 +10,7 @@ for real through the native compiler, and pins one report with the combined
 result. The report keeps two files: a JSON record for machines and a
 markdown readout for humans. Three numbers lead every scale because they
 are the whole point: peak RSS during sync, sync wall time, and total bundle
-size (`styles.css` + `runtime-data.mjs`, raw and gzip). Beside them sits
+size (`styles.css` + the runtime-data bundle, raw and gzip). Beside them sits
 the load that produced them: generator, style files, `css()` calls,
 recipes, tokens, and the messiness ratios. Generation time is reported as
 context and never counted as sync.
@@ -64,8 +64,8 @@ the default suite runs small, medium, enterprise.
 
 ## What it is not
 
-Bench is not a test and never runs in a suite. It has no `case.json`, so
-`agentcore run` cannot see it; it has no `*.test.ts`, so Vitest cannot see
+Bench is not a test and never runs in a suite. It has no case registration, so
+`agentcore run` cannot see it; it has no unit tests, so Vitest cannot see
 it either. It runs only by explicit command, one invocation at a time, and
 it is never gated. Its reports are the committed log, not scratch: hash
 pins land in git beside the code they measured.
@@ -91,8 +91,8 @@ writes the log. Memory sampling ticks every 10ms inside the child around
 
 ```
 reports/<hash>/
-  result.json   # full record: every scale, per-run samples, bundle bytes
-  report.md     # the readout: summary table first, then one section per scale
+  full record   # full record: every scale, per-run samples, bundle bytes
+  readout       # the readout: summary table first, then one section per scale
 ```
 
 The pin resolves before generation, from the tree ignoring `reports/`
@@ -102,7 +102,7 @@ commit overwrites that folder. A dirty tree, or no git checkout at all,
 overwrites `reports/latest/` instead. `latest/` is the scratch pad for
 the refine loop: iterate dirty until the numbers mean something, commit
 the change, bench again for the hash pin, then commit the pin as the new
-log entry. Compare `report.md` across pins for drift; reach for
-`result.json` when a number needs its per-run spread. A new scale starts
+log entry. Compare the readout across pins for drift; reach for
+the full record when a number needs its per-run spread. A new scale starts
 as overrides on an old one and earns a name only when the team keeps
 reaching for it.

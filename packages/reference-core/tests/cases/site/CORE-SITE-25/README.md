@@ -12,7 +12,7 @@ one-, two-, and three-hop member reads; and a refused bitwise position
 exactly the fourteen utilities, every folded shape paints its declaration,
 the dead arms stay out of the sheet, the refused node paints only its
 sibling, and a fresh compile of the frozen request reports the `|`
-warning located at the world's `app.ts` — sync itself succeeds.
+warning located at the world app fixture — sync itself succeeds.
 
 Evidence: concat, arithmetic, comparison, short-circuit, member reads, dead
 arms; Panda v2 call tests (concat, arithmetic, logical literals, equality and

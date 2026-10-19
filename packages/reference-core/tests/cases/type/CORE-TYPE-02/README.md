@@ -13,7 +13,6 @@ stable surface, whose wide `StyleProps` would accept the negative. The engine (`
 `ColorToken = 'brand' | 'ink' | 'paper'` with the open hatch and no strict
 wrappers; no host change is needed.
 
-Evidence: Panda v1 generate-token-dts tests; typegen golden
-`tokens.d.ts`; TYP-STRICT-04.
+Evidence: Panda v1 generate-token-dts tests; the tokens declaration golden; TYP-STRICT-04.
 
 > Search terms: autocomplete, intellisense, code completion, suggestions, type/token-unions, type/negative-typecheck, CORE-TYPE-01

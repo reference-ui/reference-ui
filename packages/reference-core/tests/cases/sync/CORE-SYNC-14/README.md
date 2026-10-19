@@ -1,13 +1,13 @@
 # CORE-SYNC-14 — watch resyncs on change and deletion
 
-Evidence: watch behaviour (`sync/watch.ts`
+Evidence: watch behaviour (the sync watch
 maps parcel `create/update/delete` to `add/change/unlink`, filters by
 `ui.config.include`, and ignores `node_modules`, `.reference-ui`, `.git`,
 and gitignored paths before matching).
 
 The runner syncs this world fresh, then the spec starts `watchSync()`
-node-side and edits live sources: adding `theme/extra.ts` resyncs its
-utility into the sheet (add → discovery), rewriting `theme/uses.ts`
+node-side and edits live sources: adding a theme extra resyncs its
+utility into the sheet (add → discovery), rewriting the theme uses file
 swaps one utility for another (change → alignment), and deleting both
 files resyncs every utility away (unlink → deletion). Every resync
 re-scans the include globs from disk, so all three nouns ride the same

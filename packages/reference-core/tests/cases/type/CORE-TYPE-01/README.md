@@ -1,8 +1,7 @@
 # CORE-TYPE-01 — generated react declarations compile a consumer world
 
 After `sync()`, the generated `react.d.mts` types a consumer world using
-primitives, `css()`/`recipe()`, and named types: the world `tsconfig.json`
-`paths` point at the generated `.d.mts` files and `tsc --noEmit` exits 0.
+primitives, `css()`/`recipe()`, and named types: the world tsconfig `paths` point at the generated `.d.mts` files and `tsc --noEmit` exits 0.
 The world declares brand/ink/paper colors plus spacing and radii, renders
 primitives with token props, and resolves one `css()` panel and one
 tone/size recipe. The spec pins the committed `paths` mapping, typechecks an
@@ -16,9 +15,9 @@ surface, which exports no `css`/`recipe` until the generated named graph lands
 in lockstep. The engine (`emitDtsSync` over this world's token and
 recipe shape) prints the unions, `StyleProps`, `SystemStyleObject`, recipe
 variant props, and `FontRegistry` with no forbidden surface; the host leg
-(`publish.ts` writing `styled/types`, react types referencing them) is in place, as are the `react.d.mts` filename and the all-from-react import
+(the styled-types publisher writing `styled/types`, react types referencing them) is in place, as are the `react.d.mts` filename and the all-from-react import
 graph.
 
-Evidence: generated `.reference-ui/types`; typegen goldens `tokens.d.ts`, `styles.d.ts`, `recipes.d.ts`.
+Evidence: generated `.reference-ui/types`; the tokens, styles and recipes declaration goldens.
 
 > Search terms: integration, e2e, smoke test, baseline, round trip, full pipeline, type/react-declarations, type/consumer-compile

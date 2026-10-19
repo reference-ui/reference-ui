@@ -7,6 +7,6 @@ control. The spec checks the sheet carries both atoms with the spaced
 alone, and both paint ember while the control paints ocean.
 
 Evidence: Panda v1 global-CSS tests for important; reference-rs case
-`packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-09`.
+`rs-cases:ATM-LEAF-09`.
 
 > Search terms: bang suffix, exclamation mark, trailing bang, priority, exclamation override, merge/important, merge/slot-precedence, CORE-MERGE-01

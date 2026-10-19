@@ -9,8 +9,8 @@ eight oracle legs: css width below/above, recipe height below/above,
 and the four mixed cells (narrow/wide × below/above), each asserting
 exactly its active branches.
 
-Matrix source: `matrix/responsive/tests/e2e/viewport-contract.spec.ts`
-(whole file, 8 tests) + `matrix/responsive/src/styles.ts`
+Matrix source: the viewport contract spec
+(whole file, 8 tests) + the responsive styles
 (`viewportCss`, `responsiveViewportRecipe`, `mixedCss`).
 
 > Search terms: viewport contract, media width, media height, mixed container viewport, responsive-mixed, CORE-RESP-10

@@ -1,6 +1,6 @@
 # CORE-WATCH-12 — a one-shot that meets a stopping watch syncs for itself, so an edit saved during the stop is never lost
 
-Evidence: the covered handshake (`src/sync/session-covered.ts`, `src/lib/watch/index.ts`). A one-shot that pokes a
+Evidence: the covered handshake (the covered handshake, the watch entry). A one-shot that pokes a
 watch which is stopping used to be told "covered" (exit 0), but a stopping watch drops the poke, so the edit it was asked
 to sync was never synced and nothing was left watching. The watch now publishes `stopping` before it settles, and a
 one-shot that finds it waits for the release and syncs for itself.

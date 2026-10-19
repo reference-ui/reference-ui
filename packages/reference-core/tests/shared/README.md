@@ -1,6 +1,6 @@
-# `tests/shared/` — the harness
+# The shared harness
 
-Everything the cases share: `case.json` discovery and search, the
+Everything the cases share: case discovery and search, the
 isolated per-case HTTP server, headless runs, artifact plumbing. This
 folder IS the harness, and it ships its own CLI (`agentcore`):
 
@@ -14,11 +14,11 @@ Based on the `test-component` skill and its scripts. Differences from
 
 - React 19 latest only. No `--react` switching. We're testing CSS; the
   multi-runtime axis stays a matrix problem for later.
-- Cases, not components. Discovers `tests/cases/` via `case.json`,
-  descriptions from each case's `README.md`, search over id, name,
+- Cases, not components. Discovers the case tree via each case index entry,
+  descriptions from each case's README claim, search over id, name,
   and README text.
-- Convention checks at discovery (`caseIndex.ts`): the folder is a raw
-  case ID, `case.json` `id` equals the folder and `name` is set, and the
+- Convention checks at discovery: the folder is a raw
+  case ID, the index entry `id` equals the folder and `name` is set, and the
   README first line is `# <ID> — <name>` with that same name. `list`,
   `search`, `status` and run-all fail on any broken folder; `run <ID>`
   fails only for the folders it selects and warns about the rest.
@@ -31,7 +31,7 @@ Based on the `test-component` skill and its scripts. Differences from
 
 Proven constraints the code designs around: the browser blocks
 `file://`, so worlds are always served over local HTTP; screenshots
-and artifacts must land under the workspace (`tests/.artifacts/`).
+and artifacts must land under the workspace (the workspace artifacts dir).
 
 Mechanism lives here. Policy lives in the `agent-core` skill: how the
 CLI gets executed — concurrency, gating, QoS — so that many agents

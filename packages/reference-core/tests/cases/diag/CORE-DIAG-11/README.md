@@ -2,8 +2,8 @@
 
 Wildcard on a prop with no token category. The world carries only config plus the brand token on the diagnostics channel. The spec drives the whole compiler (`compileWorld` over the case world) and asserts the code with warning severity plus a non-blank message, so the case fails loudly if the engine ever stops emitting it.
 
-Raised in: `modules/atomic/src/static_css.rs`. Driver: the whole compiler (`compileWorld` over the case world).
+Raised in: the atomic static-CSS pass. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: ATM-W-STATIC-WILDCARD (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-STATIC-WILDCARD (the diagnostic registry inventory + the shared repro suite row).
 
 > Search terms: ATM-W-STATIC-WILDCARD, atm-w-static-wildcard, diagnostics case index, CORE-DIAG-11

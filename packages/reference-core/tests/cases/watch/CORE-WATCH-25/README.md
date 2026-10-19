@@ -2,8 +2,8 @@
 
 The runner syncs this world fresh, then the spec makes `theme/linkdir` a symlink to `shared/empty`, a directory
 outside include that is empty when the watch boots. Starting `watchSync()` must subscribe to the real target
-directory, so a new file created inside it (`shared/empty/fresh.ts`) resyncs the sheet, and the change is reported
-under the link's own path, `theme/linkdir/fresh.ts`. Before the fix nothing watched the empty target, so the new
+directory, so a new file created inside it (a fresh shared file) resyncs the sheet, and the change is reported
+under the link's own path in the linked dir. Before the fix nothing watched the empty target, so the new
 file was never seen until a later matched event rescanned the tree. The link, the target and the world are restored
 in a `finally`.
 

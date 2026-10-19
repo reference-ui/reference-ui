@@ -6,10 +6,10 @@ padding. The spec checks the sheet keeps both combinators, the adjacent
 peer paints the margin while its leader stays flush, and the overlay past
 a spacer paints the padding while the spacer stays flat.
 
-Matrix source: `matrix/css-selectors/tests/e2e/css-selectors-contract.spec.ts`
+Matrix source: the CSS-selectors contract spec
 "adjacent sibling selector applies margin to the following peer" +
 "general sibling selector applies padding to later overlay siblings" +
-`matrix/css-selectors/src/styles.ts` (`adjacentSiblingSelectorClass`,
+the selector styles (`adjacentSiblingSelectorClass`,
 `generalSiblingSelectorClass`).
 
 > Search terms: sibling, adjacent, general sibling, combinator, data-slot, css-selectors, CORE-COND-18

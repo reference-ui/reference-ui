@@ -1,7 +1,7 @@
 # CORE-WATCH-20 — --break-lock over a sync frozen mid-commit leaves the breaker exit 0 and the folder equal to a clean rebuild, and the displaced holder fails cleanly
 
 The spec plants a few stale generated files, which a commit retires last, then changes the brand. It starts a holder
-sync armed with the commit's test-only pause point (`REF_TEST_COMMIT_PAUSE`, `src/sync/commit-pause.ts`): once the
+sync armed with the commit's test-only pause point (`REF_TEST_COMMIT_PAUSE`, the commit pause point): once the
 holder's live changes have been applied, and before it retires anything, the commit writes a marker and blocks until the spec
 resumes it, so the spec acts at that exact point and not on a timer. With the holder held, it starts a breaker sync with
 `--break-lock`, which takes the lock and is held at its own pause point. It resumes the holder first: the holder goes on

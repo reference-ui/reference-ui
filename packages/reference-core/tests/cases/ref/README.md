@@ -16,8 +16,8 @@ REF-06 has no case: no `unionTypeLabel` surface remains in the tree.
 
 ## Shared helper
 
-`shared/ref-world.ts` carries the readiness wait plus the manifest-backed API opener every spec uses, and
+The shared ref-world helper carries the readiness wait plus the manifest-backed API opener every spec uses, and
 the page-text toolkit the browser specs share: normalized reads, readiness-anchored opens, inherited-section
 expansion, settle reads, and the innermost-exact-text frequency map for element-exact count ports.
 
-Parent: [tests/cases/](../README.md).
+Parent: the case-group index.

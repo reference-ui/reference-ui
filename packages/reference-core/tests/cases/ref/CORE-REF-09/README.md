@@ -11,6 +11,6 @@ keys — a removal cannot add members, so any drift is widen-side, not projector
 
 ## Oracle mapping
 
-`tasty/api.ts` via a probe: `P` resolves to the same 1391 members as the bare lookup, non-`P`
+The tasty API via a probe: `P` resolves to the same 1391 members as the bare lookup, non-`P`
 resolves to `undefined`, scoped lookups miss. The spec calls the shipped projector from
 `getReferenceUiTastyApiOptions`, not a copy — the numbers pin the production path.

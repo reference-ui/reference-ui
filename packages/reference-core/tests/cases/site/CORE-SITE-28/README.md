@@ -1,8 +1,8 @@
 # CORE-SITE-28 — `css()` identity flows through a consumer re-export
 
 The world keeps `export { css } from '@reference-ui/react'` in
-`src/ui.ts` and a two-hop `export { css } from './ui.js'` in
-`src/chain.ts`, while `src/shadow.ts` exports a same-named imposter.
+a UI re-export and a two-hop `export { css } from './ui.js'` in
+a chained re-export, while the shadowed module exports a same-named imposter.
 The entry styles one node through each. The spec asserts the wrapper
 and chain nodes paint cherry and ocean while the miss paints nothing
 with zero recompile diagnostics — so site identity follows bindings
@@ -15,4 +15,4 @@ Evidence: ATM-SITE-55 (re-export identity); Panda v2 import-map tests
 
 Design note: the dependent-invalidation rider this case's binding walk
 motivates lives in the
-[SITE SPEC appendix](../SPEC.md#appendix-dependent-invalidation-design-from-core-site-28).
+site spec appendix on dependent invalidation.

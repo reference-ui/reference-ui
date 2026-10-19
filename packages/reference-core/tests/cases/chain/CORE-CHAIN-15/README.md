@@ -6,19 +6,19 @@ a name-gated compile: `Button`, which spells one of the app's own primitives, an
 publishes in `jsxElements`. The app styles them with `chain15Ink`, a token defined only downstream, in the three ways
 apps import components:
 
-1. Direct: `import { Button, Tile } from '@fixture/chain15'` in `src/direct.tsx`, unaliased.
-2. Barrel: `src/ui/index.ts` re-exports the package's `Button`, and `src/barrel.tsx` imports it from `./ui/index.js`.
-3. `css` wrapper: `src/wrapper.tsx` declares `const Wrap = ({ css }) => <Button css={css} />` around the package's
+1. Direct: `import { Button, Tile } from '@fixture/chain15'` in the direct fixture, unaliased.
+2. Barrel: the UI barrel re-exports the package's `Button`, and the barrel fixture imports it from `./ui/index.js`.
+3. `css` wrapper: the wrapper fixture declares `const Wrap = ({ css }) => <Button css={css} />` around the package's
    `Button` and calls `<Wrap css={{ color: 'chain15Ink' }}>`.
 
-The package is real and installed. `upstream/` is `@fixture/chain15` (system `core-chain15-up`): a `package.json` whose
-`exports` map `.` to `./dist/src/index.js` and `./baseSystem` to `./.reference-ui/system/baseSystem.mjs`, a `src/Tile.tsx`
-that forwards to `Div` (so its sync traces Tile and publishes it), and a `src/index.ts` that re-exports `Button` from the
+The package is real and installed. `upstream/` is `@fixture/chain15` (system `core-chain15-up`): a manifest whose
+`exports` map `.` to the built index and `./baseSystem` to the published base system, a Tile component
+that forwards to `Div` (so its sync traces Tile and publishes it), and an index re-export that re-exports `Button` from the
 package's own `@reference-ui/react` beside `Tile`. The app never scans it.
 
 The spec syncs the upstream through the real `sync()` and checks the published base system names `core-chain15-up`,
-lists `Tile` in `jsxElements` and does not carry the probe value. It builds the package's `src/` to its `dist/` with the
-harness's world build, links the package into `world/node_modules/@fixture/chain15` the way a workspace install leaves
+lists `Tile` in `jsxElements` and does not carry the probe value. It builds the package's sources to its `dist/` with the
+harness's world build, links the package into the world install the way a workspace install leaves
 it, extends the published artifact and re-syncs the app. The app's sync follows each import to that directory and reads
 the system it published there. The page loads the package through the same install, and an importmap scope resolves
 the package's own `@reference-ui/react` to its bound runtime, so every class its components mint is
@@ -41,4 +41,4 @@ published `Tile` apart from the app's own hosts. Siblings: CORE-CHAIN-08 (a preb
 its published system), CORE-CHAIN-14 (real upstream sync), CORE-CHAIN-16 (the same shapes with the package not
 composed: the unbacked warning), CORE-CHAIN-17 (a workspace package, own or composed).
 
-> Search terms: component ownership, provenance, package import, installed package, node_modules link, workspace install, importmap scope, published system, primitive name, Button, published jsxElements, upstreamHosts, barrel re-export, css wrapper, package backing, external style props, prebuilt dist, bound react.mjs, foreign qualifier, no compiled class, CORE-CHAIN-08, CORE-CHAIN-14, CORE-CHAIN-16, ATM-SITE-96, ATM-SITE-97, ATM-SITE-98, ATM-SITE-99, CORE-CHAIN-17
+> Search terms: component ownership, provenance, package import, installed package, node_modules link, workspace install, importmap scope, published system, primitive name, Button, published jsxElements, upstreamHosts, barrel re-export, css wrapper, package backing, external style props, prebuilt dist, bound react entry, foreign qualifier, no compiled class, CORE-CHAIN-08, CORE-CHAIN-14, CORE-CHAIN-16, ATM-SITE-96, ATM-SITE-97, ATM-SITE-98, ATM-SITE-99, CORE-CHAIN-17

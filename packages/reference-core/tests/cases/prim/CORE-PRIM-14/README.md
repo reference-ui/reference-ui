@@ -13,9 +13,9 @@ paints light, and no `data-panda-theme` spelling appears in the document
 or the sheet. The island/child split mirrors the matrix portal test;
 every Panda-chrome assertion is re-targeted to `data-color-mode`.
 
-Matrix source: `matrix/color-mode/tests/e2e/system-contract.spec.ts`
+Matrix source: the color-mode system contract spec
 "portaled island preserves dark colorMode and token resolution outside
-light host DOM" + `matrix/color-mode/src/index.tsx`
+light host DOM" + the color-mode probe
 (`color-mode-portal-light-host`).
 
 > Search terms: portal, island, out-of-tree, second root, dark mode, colorMode inherit, data-color-mode, no panda theme, CORE-PRIM-14

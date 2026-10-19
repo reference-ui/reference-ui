@@ -1,4 +1,4 @@
-# `docs/` — the package's standing documents
+# Standing documents
 
 The three files agents reach for beyond the code. The domain doc names
 the load-bearing vocabulary (cases, worlds, specs, fragments, the cut);

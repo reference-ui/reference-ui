@@ -1,6 +1,6 @@
 # CORE-WATCH-29 — a config whose top-level await never settles exits a one-shot 1 with a named evaluation-timeout line, and a watch reports it and keeps watching until the config is fixed
 
-Evidence: `src/config/evaluate.ts` (`evaluateConfig`, `importWithTimeout`) and `src/config/errors.ts`. The config is
+Evidence: config evaluation (`evaluateConfig`, `importWithTimeout`) and config errors. The config is
 imported as an ES module, and the import waits on the config's top-level await. Before the fix nothing bounds that wait.
 When the event loop has no other work, Node ends the process with exit 13 and prints its own unsettled-await warning, so
 `ref sync` prints no `[ref]` line and gives no reason.

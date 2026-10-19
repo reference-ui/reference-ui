@@ -9,7 +9,7 @@ a real `page.hover()`, and the base color again after the pointer leaves.
 
 Evidence: ATM-COND-02, ATM-COND-10; Panda v1 test "simple" (grouped conditions
 lower `_hover` to one `:is()` wrap); reference-lib
-`packages/reference-lib/.reference-ui/styled/styles.css` `:is(:hover,
+the built lib styles `:is(:hover,
 [data-hover])` ×26 (e.g. L475).
 
 > Search terms: pseudo-class, dual bind, hover twin, conditions/hover, selector :is(), CORE-COND-02

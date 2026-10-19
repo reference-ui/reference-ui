@@ -8,6 +8,6 @@ magenta reference, and the owner type bundle still declares the
 `'_private.secret'` token.
 
 Evidence: typegen golden
-`'_private.secret'` (`modules/typegen/tests/seam.test.ts` TYP-NATIVE-01).
+`'_private.secret'` (the typegen seam suite, TYP-NATIVE-01).
 
 > Search terms: internal, encapsulation, package-private, hidden, token/private

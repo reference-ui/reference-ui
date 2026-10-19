@@ -1,6 +1,6 @@
 # CORE-SYNC-03 — baseSystem.mjs is the singular BaseSystem
 
-The runner syncs this world fresh, then the spec imports `system/baseSystem.mjs`
+The runner syncs this world fresh, then the spec imports the published `baseSystem`
 node-side and checks the frozen contract shape: a `name`, the bundled singular
 `fragment` string, the portable `css` stylesheet, and merged `jsxElements[]` —
 exactly what the extends validator and reader consume. The world authors one

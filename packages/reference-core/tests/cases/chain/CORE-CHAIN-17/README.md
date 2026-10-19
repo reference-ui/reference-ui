@@ -10,20 +10,20 @@ has a system of its own).
 
 The world is the monorepo root:
 
-- `ui.config.ts` (system `core-chain17`) includes `theme/**`, `apps/web/src/**` and `packages/ui/src/**`.
-- `theme/tokens.ts` defines the app-only `chain17Ink` (`#1d4ed8`) and `shared` (`#15803d`).
-- `packages/ui/` is `@acme/ui`, a workspace source package: `package.json` exports `.` as `./src/index.ts` and
-  `./baseSystem`; `src/Card.tsx` forwards a Div's props to `Div`; `ui.config.ts` (system `chain17-ui`) and
-  `theme/tokens.ts`, which defines `shared` too (`#be185d`), are used only when the package runs its own sync.
-- `apps/web/src/app.tsx` imports `{ Card } from '@acme/ui'` and renders a local `<Div color="chain17Ink">` control,
+- The `ui.config` (system `core-chain17`) includes the theme, web app and UI package globs.
+- The theme tokens fixture defines the app-only `chain17Ink` (`#1d4ed8`) and `shared` (`#15803d`).
+- The UI package is `@acme/ui`, a workspace source package whose manifest exports `.` as its bundled index and
+  `./baseSystem`; a Card component forwards a Div's props to `Div`; `ui.config` (system `chain17-ui`) and
+  the theme tokens fixture, which defines `shared` too (`#be185d`), are used only when the package runs its own sync.
+- The web app fixture imports `{ Card } from '@acme/ui'` and renders a local `<Div color="chain17Ink">` control,
   `<Card bg="chain17Ink">`, a same-file wrapper `const Panel = ({ css }) => <Card css={css} />` called as
   `<Panel css={{ bg: 'chain17Ink' }}>`, and `<Card bg="shared">`.
 
-The spec builds both workspaces' `src/` to their `dist/` with the harness's world build and links `packages/ui` into
-`world/node_modules/@acme/ui`, the way a workspace install leaves it. It then runs three legs over the same tree,
+The spec builds both workspaces' sources to their `dist/` with the harness's world build and links the UI package into
+the world install, the way a workspace install leaves it. It then runs three legs over the same tree,
 re-syncing the root each time and loading the page:
 
-| leg | packages/ui | root config | page |
+| leg | ui package | root config | page |
 | --- | --- | --- | --- |
 | one system | no sync of its own | canonical | `index.html`: the package renders the root runtime |
 | extends | synced as `chain17-ui` | `extends: [uiBase]` from `'@acme/ui/baseSystem'` | `two-systems.html`: an importmap scope resolves the package's `@reference-ui/react` to its own runtime |
@@ -55,7 +55,7 @@ runtime mints `chain17-ui__bg_chain17Ink`, so Card, Panel and the shared probe p
 
 Mechanism: the atomic extract resolves a bare specifier the way Node does, through each ancestor `node_modules` and the
 link, canonicalised. A hit in this compile's sources continues the identity walk (the traced Card is own) unless its
-package directory published a system, which then renders it (`identity/alias.rs`, `package_system.rs`). Evidence:
+package directory published a system, which then renders it (the identity alias, the package-system step). Evidence:
 `ATM-SITE-101` (the workspace package, own and with its own system), `ATM-SITE-102` (a package borrowing this project's
 runtime). Siblings: CORE-CHAIN-15 (an installed package, composed), CORE-CHAIN-16 (not composed: the warning),
 CORE-LAYERS-19 and CORE-LAYERS-20 (token scope).

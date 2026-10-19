@@ -3,7 +3,7 @@
 The consumer lists one real upstream under `extends` (ext) and another under `layers` (lay).
 Both are synced for real. Each upstream ships two conditional utilities: a dark-mode colour
 (`_dark`, a `[data-color-mode=dark]` wrap) and a wide-container colour (`sm`, a 640px
-`@container` query). The consumer adds its own base, dark and wide rules in `src/app.ts`.
+`@container` query). The consumer adds its own base, dark and wide rules in the app fixture.
 
 Eight probes cover the three ranks under both conditions. Each probe lists its upstream
 classes statically in `index.html` and receives its own rule at runtime. The spec reads each
@@ -34,7 +34,7 @@ would, so the portable layer tokens resolve in their scope. The class names are 
 names for each conditional utility (`<system>__dark:c_<token>`, `<system>__sm:c_<token>`); the
 spec asserts each name in the published utilities, so a renamed class fails loud.
 
-The committed `ui.config.ts` imports nothing; the spec rewrites it, re-syncs, and restores the
+The committed `ui.config` imports nothing; the spec rewrites it, re-syncs, and restores the
 canonical spelling in a `finally`.
 
 > Search terms: layers, dark mode, data-color-mode, breakpoint, container query, sm, cascade layer rank, own beats layer, layer beats extends, conditions under layers, CORE-LAYERS-01, CORE-LAYERS-04, CORE-COND-02

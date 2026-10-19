@@ -3,8 +3,8 @@
 The consumer lists a real upstream under `layers`. The upstream is a real sync (`upstreams/up`): it
 declares one colour token with a light and a dark leaf (`upInk`) and one utility source that calls
 `css({ color: 'upInk' })`, so the layer emits its rule. The spec syncs that upstream, copies its
-published react entry (`.reference-ui/react/react.mjs`, bound to the upstream's own layer
-`core-layers9-up`) beside the world, rewrites the consumer `ui.config.ts` to `layers: [up]`, re-syncs,
+published react entry (the published react entry, bound to the upstream's own layer
+`core-layers9-up`) beside the world, rewrites the consumer `ui.config` to `layers: [up]`, re-syncs,
 and restores the canonical spelling in a `finally`.
 
 The page renders a consumer `Div` (layer `core-layers9`) that holds a same-system `Div` and the
@@ -30,9 +30,9 @@ page or an ancestor, skipped its stamp. The upstream probe then lost its layer s
 nearest ancestor's layer name, so a primitive of another system always stamps, and only the same
 system keeps the skip.
 
-Evidence: `packages/reference-rs/modules/primitives/js/context.ts` (the scope context and the stamp
-rule), `packages/reference-core/src/primitives/generate/generate.ts` (each system binds its own layer
-name through `configurePrimitives`), `src/config/types.ts` (the `layers` field), `src/sync/index.ts`
+Evidence: the primitives scope context (the scope context and the stamp
+rule), the primitives generator (each system binds its own layer
+name through `configurePrimitives`), the config types (the `layers` field), the sync entry
 (the upstream sync and the published react entry). Siblings: CORE-LAYERS-01 (a layer paints between
 extends and own), CORE-LAYERS-02 (the layered visual-only boundary), CORE-PRIM-07 (colour-mode islands
 on one system), CORE-PGEN-02 (the first primitive stamps its layer on a plain root).

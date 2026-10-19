@@ -15,6 +15,6 @@ wide surface, which would accept the negative. Token-less families stay
 usable through the open `(string & {})` hatch; only the keys widened.
 
 Evidence: typegen TYP-SURFACE T1 (canon-enumerated full-surface positive);
-matrix `extend-library` `DemoComponent.tsx` (colors-only consumer).
+the `extend-library` DemoComponent (colors-only consumer).
 
 > Search terms: typegen widening, StyleProps keys, colors-only, css call-site excess property, TS2353, Cause-B, CORE-TYPE-02, TYP-SURFACE

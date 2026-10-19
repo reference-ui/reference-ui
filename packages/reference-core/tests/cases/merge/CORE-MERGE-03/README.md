@@ -8,7 +8,7 @@ holds the other three. Spacing tokens carry the values: rhythm `Nr` atoms
 reference `--spacing-root`, which minimal systems never define.
 
 Evidence: reference-rs cases
-`packages/reference-rs/modules/atomic/tests/cases/ATM-SHORT-06` and
+`rs-cases:ATM-SHORT-06` and
 `ATM-ORDER-04`; Panda v1 test "resolve property conflicts and order - border
 example".
 

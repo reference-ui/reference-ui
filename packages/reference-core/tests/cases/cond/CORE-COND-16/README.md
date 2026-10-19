@@ -2,7 +2,7 @@
 
 The world styles an icon-only button and a text button with one class
 carrying `paddingInline: '20px'` plus the `&:where(:has(...))` collapse
-to `'0'` (`packages/reference-lib/src/core/theme/primitives/forms/button.ts:24` verbatim). The spec checks the sheet carries
+to `'0'` (the lib button source verbatim). The spec checks the sheet carries
 the bare utility and the substituted `:where(:has(...))` rule, the
 icon-only button paints `0px`, and the text button keeps `20px`. The
 frozen-request recompile carries zero diagnostics.

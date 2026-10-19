@@ -4,14 +4,14 @@ With `strict: ['colors']` in ui.config, sync narrows every colour position of th
 declarations to the consumer's own tokens. The upstream (`upstreams/up`) defines one token, `upInk`,
 and the consumer lists that upstream under `layers`. The spec syncs the upstream for real, rewrites the
 consumer config to `layers: [up]`, and re-syncs. Then it materializes temp consumers and typechecks
-each one against the generated `react.d.mts` and `styled/types/index.d.ts`:
+each one against the generated `react.d.mts` and the styled-types declarations:
 
 - Under layers, `<Div color="consumerInk" />` and `css({ color: 'consumerInk' })` assign: the
   consumer's own token is in the typed vocabulary.
 - Under layers, `<Div color="upInk" />` fails with TS2322 at its own line, naming `"upInk"`.
   `css({ color: 'upInk' })` fails with TS2345 naming `"upInk"`. A layer-only token is not a
   `ColorToken`, so the strict surface rejects it.
-- The generated `styled/types/index.d.ts` carries `StrictColorProps<BaseStyleProps>` and no `'upInk'`
+- The generated styled-types declarations carry `StrictColorProps<BaseStyleProps>` and no `'upInk'`
   literal under layers.
 
 The spec then rewrites the consumer config to `extends: [up]` and re-syncs, as a control. The same
@@ -21,9 +21,9 @@ token name that exists nowhere. The canonical config is restored in a `finally`.
 CORE-LAYERS-02 pins the typegen omission in open mode (no `strict`). It does not typecheck a consumer
 colour prop, so the strict rejection is asserted here and not by extending 02.
 
-Evidence: `src/config/types.ts` (the `strict` field: a strict category accepts only its tokens),
-`src/config/validate.ts` (the strict list), `src/sync/index.ts` (the `strict` pass-through to typegen),
-`src/packager/types-bundle.ts` (strict is omitted in open mode). Siblings: CORE-TYPE-09 (strict colours
+Evidence: the config types (the `strict` field: a strict category accepts only its tokens),
+config validation (the strict list), the sync entry (the `strict` pass-through to typegen),
+the types bundler (strict is omitted in open mode). Siblings: CORE-TYPE-09 (strict colours
 reject off-token values, the typecheck pattern this case follows), CORE-LAYERS-02 (the open-mode typegen
 boundary), CORE-LAYERS-01 (a layer paints without joining the roster or the types).
 

@@ -7,4 +7,4 @@ settled-snapshot bless flow with its committed baselines.
 
 > Search terms: harness probe, smoke canary, runner self-test, multi-spec, bless flow, harness/snapshots
 
-Parent: [tests/cases/](../README.md).
+Parent: the case-group index.
