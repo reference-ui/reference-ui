@@ -21,11 +21,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined cases were split (`ATM-C
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes a required `BaseSystem` (`packages/reference-rs/modules/atomic/src/types.rs:42`); `lib_fixture()` is test-only. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates hosts on traced names plus `@reference-ui/react` imports; a non-host component tag backs under the runtime its import lands in: own, the published systems of a Reference package the consumer composes, or nothing for a package not built on Reference UI (`ATM-SITE-96`..`105`). `css()` / `recipe()` extract only from those imports. |
-| Total contract claims (`- [x]` / `- [ ]` lines) | 253 |
-| Named `[x]` proven | 251 |
+| Total contract claims (`- [x]` / `- [ ]` lines) | 255 |
+| Named `[x]` proven | 253 |
 | Remaining `[ ]` | 2 (`ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 455 (internal; not ticks) |
-| Case folders | 281 (`tests/cases/<ATM-*>`, 37 without a claim line; 0 red — audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
+| Case folders | 283 (`tests/cases/<ATM-*>`, 37 without a claim line; 0 red — audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
 
 A tick means a case folder exists and is green. It does **not** mean the
 case proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -67,7 +67,7 @@ Two structural causes, both of which the new areas are designed to close:
 | Area | Meaning | Total | Proven `[x]` | Remaining `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
 | `GHOST` | Zero ghost class invariants & injective namer (P0) | 5 | 4 | 1 |
-| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports, package backing) | 83 | 83 | 0 |
+| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports, package backing) | 85 | 85 | 0 |
 | `LEAF` | AST leaf literal extraction & branch flattening | 11 | 11 | 0 |
 | `WANT` | Raw styling intention IR (`Want`) & serialization | 2 | 2 | 0 |
 | `ATOM` | Atom representation, values, hashing, & `AtomSet` | 5 | 5 | 0 |
@@ -89,7 +89,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `SEAM` | Rust ⇄ N-API artifact parity | 6 | 6 | 0 |
 | `SCAN` | Include scoping of the source-root scan | 1 | 1 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **253** | **251** | **2** |
+| **Total** | | **255** | **253** | **2** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -359,6 +359,12 @@ compiler contract.
 - [x] `ATM-SITE-105` `[reference]` `[seam]` — **[package backing, untraced and unbound tags]**
   **A styled component tag no trace admits backs under own unless a package or a composed upstream renders it: project, runtime-borrowing and unbound tags are own, an upstream's published name is that upstream's.**
   Case `ATM-SITE-105` (styling plan S3). `App.tsx` writes `<Badge bg="red" />` (a `withTone(Div)` product the trace cannot see through), `<Panel bg="blue" />` from a dist-only workspace package that borrows the own runtime, and the unbound `<UpstreamCard p="2r" />` and `<Mystery color="green" />` (names an MDX components map or a global provides), beside a `<Div p="1r">` control. Assert `tracedJsxHosts` is empty and every want backs under own standalone, with zero diagnostics. Under Core's request (`upstreamSystems: ['reference-ui', 'acme']`, `upstreamHosts: { acme: ['UpstreamCard'] }`) the published name backs under `acme` alone (`acme__p_2r`), the other three stay own, nothing is painted under `reference-ui`, and nothing warns.
+- [x] `ATM-SITE-106` `[reference]` `[seam]` — **[package backing, first sync]**
+  **A built workspace package that imports `@reference-ui/react` is own on the first sync, before the runtime it borrows is generated: a link that points nowhere yet, or none at all, is where this sync puts the runtime.**
+  Case `ATM-SITE-106`. `@acme/panel` is linked at `node_modules/@acme/panel` with `main` at its built `dist/index.mjs`, outside the compile sources, which imports `Div` from `@reference-ui/react`; it publishes no system. The project has not synced: `.reference-ui` does not exist, the committed tree links `node_modules/@reference-ui/react` to it anyway (a link that points nowhere), and a twin built at verify time has no `@reference-ui` scope at all. `App.tsx` writes `<Panel bg="red" />` beside a `<Div p="1r">` control. Assert `bg` backs under own as `@reference-ui/lib__bg_red` with zero diagnostics in both trees, and under Core's request (`upstreamSystems: ['reference-ui']`) nothing is painted under `reference-ui`. The verdict reads no generated output: the own root's `node_modules` is where the sync links its runtime, and a nearer link is read by its target (`extract/own_runtime.rs`).
+- [x] `ATM-SITE-107` `[reference]` `[seam]` — **[package backing, linked package not built on Reference UI]**
+  **A linked workspace package not built on Reference UI is silent even where this project's runtime resolves from it: a linked directory is own code only when it imports `@reference-ui/react` or lies in the include set.**
+  Case `ATM-SITE-107` (owner ruling, styling plan §11.2). `@acme/icons` (a plain icon package, `<StarIcon color size>`) and `@acme/panel` (forwards into `Div` from `@reference-ui/react`) are linked into `node_modules` with built `dist` entries outside the compile sources and no published system; the project's generated runtime is linked, so `@reference-ui/react` resolves to it from both. `App.tsx` writes `<StarIcon color="red" size={16} />` and `<Panel bg="blue" />` beside a `<Div p="1r">` control. Assert the site wants are exactly `bg:blue` and `p:1r`, both own, the icon's props mint no want, plan, class or diagnostic, and the same holds under Core's request (`upstreamSystems: ['reference-ui']`). A linked directory is own code only when the include set reaches into it or it uses `@reference-ui/react` (manifest dependency or a root entry import) and that lands on this runtime.
 - [x] `ATM-SITE-28` `[reference]` `[seam]`
   **A `let`/`var` with any assignment must drop to a diagnostic naming the write; unmutated `let`/`var` keep resolving.**
   Case `ATM-SITE-28`. Compile `let color = 'red'; color = 'blue'; css({ color })` beside `+=` compound, `++` update, member-root (`theme.primary = …`), and for-of-head write controls. Assert each mutated use yields zero wants plus one `Dynamic mutated binding '…'` warning naming the write (`reassigned at file:line:col`) — never the stale init. Assert unmutated `let`/`var` controls and unmutated `export let` (cross-file via `tokens.ts`) resolve exactly like `const` with zero diagnostics, and that a mutated `export let` drops the same way. Const/member/spread resolution is otherwise unchanged; wants and authored plans stay 1:1 because the strip lives in the index both walkers read (`extract/constants/mutate/`). Cross-file mutation poison is name-wide (fail-closed: over-drops, never stale-resolves) until the binding walk exists.
@@ -1104,6 +1110,8 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-103` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-103/` |
 | `ATM-SITE-104` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-104/` |
 | `ATM-SITE-105` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-105/` |
+| `ATM-SITE-106` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-106/` |
+| `ATM-SITE-107` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-107/` |
 | `ATM-LEAF-01` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-01/` |
 | `ATM-LEAF-02` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-02/` |
 | `ATM-LEAF-03` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-03/` |
