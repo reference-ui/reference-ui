@@ -1,3 +1,6 @@
+// Per-project model build state behind project selection.
+// It takes build lifecycle events and emits idle/warming/ready/error state plus classified
+// project errors for tool output. One instance tracks one selected project.
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { log } from './logger'

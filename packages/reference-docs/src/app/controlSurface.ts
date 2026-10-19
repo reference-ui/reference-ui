@@ -1,3 +1,6 @@
+// Frosted surface for controls floating over scrolling content.
+// It takes nothing and emits the translucent fill, blur, and hairline recipe; consumers add
+// sizing and radius. Keeps header actions legible without an opaque bar.
 import { css } from '@reference-ui/react'
 
 /**

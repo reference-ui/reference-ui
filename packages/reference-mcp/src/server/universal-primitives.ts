@@ -1,3 +1,6 @@
+// Fallback answers when no ui.config is detected in the workspace.
+// They take component queries and emit primitive-only components, props, and examples with
+// the universal-serving notice attached. Projects with config never reach this path.
 import {
   findReferenceUiPrimitive,
   REFERENCE_UI_PRIMITIVES,

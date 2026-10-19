@@ -1,3 +1,5 @@
+// Vitest tests for the static library catalog.
+// They take component names and assert catalog entries plus the find-by-name lookup.
 import { describe, expect, it } from 'vitest'
 import { REFERENCE_UI_LIBRARY_COMPONENTS } from './library-catalog'
 

@@ -1,3 +1,6 @@
+// Reference UI primitive components as McpComponent records.
+// It takes the HTML tag table and emits one primitive per tag, plus observed primitives
+// built from Atlas elements. findReferenceUiPrimitive looks one up by name.
 import type { ComponentProp, ObservedElement } from '@reference-ui/rust/atlas'
 import { TAGS } from './constants'
 import type { McpComponent, McpComponentProp } from './types'

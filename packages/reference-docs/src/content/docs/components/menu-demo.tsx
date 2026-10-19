@@ -1,3 +1,5 @@
+// Live Menu demo for the Menu component page.
+// It takes nothing and emits the dropdown menu. Colocated with the page that embeds it.
 import { useState } from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Menu, Popover, useMenuTriggerKeys } from '@reference-ui/lib'

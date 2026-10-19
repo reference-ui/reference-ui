@@ -1,3 +1,6 @@
+// Vitest tests for the declaration cleaner.
+// They take temp dist trees and assert stale .d.ts files are removed while runtime
+// .mjs and .css files are left untouched.
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'

@@ -1,3 +1,6 @@
+// Section specimens for the Foundations color page.
+// They take nothing and emit the shade/tone ramps, the intensity grid, and the role
+// specimens. Colocated with the page that embeds them.
 import { Div, Span, css } from '@reference-ui/react'
 import { Preview } from '../../../mdx/Preview'
 

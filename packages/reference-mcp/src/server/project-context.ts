@@ -1,3 +1,6 @@
+// Runs tool handlers against the active project or the universal fallback.
+// It takes the project manager plus a project handler and emits the handler result, the
+// not-synced message, or the universal-primitives fallback when no project applies.
 import { getMcpTypesManifestPath } from '../pipeline/paths'
 import type { McpBuildArtifact } from '../pipeline/types'
 import { toErrorResult, toTextResult } from './formatters'

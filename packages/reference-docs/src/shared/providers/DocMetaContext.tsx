@@ -1,3 +1,6 @@
+// Current-page metadata context for the docs shell.
+// It takes nothing and emits the DocMeta of the rendered article; useDocMeta reads it.
+// The value is undefined outside a doc page.
 import { createContext, useContext } from 'react'
 import type { DocMeta } from '../../collections/runtime'
 

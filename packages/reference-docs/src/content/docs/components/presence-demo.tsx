@@ -1,3 +1,6 @@
+// Live Presence demo for the Presence component page.
+// It takes nothing and emits the mount/unmount transition. Colocated with the page that
+// embeds it.
 import { useState } from 'react'
 import { Button, Div, css } from '@reference-ui/react'
 import { Presence } from '@reference-ui/lib'

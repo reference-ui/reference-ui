@@ -1,3 +1,5 @@
+// Vitest tests for the no-config universal fallback.
+// They take component queries and assert primitive-only answers with the serving notice.
 import { describe, expect, it } from 'vitest'
 import {
   getUniversalComponent,

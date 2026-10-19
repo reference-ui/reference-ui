@@ -1,3 +1,5 @@
+// Live Collapsible demo for the Collapsible component page.
+// It takes nothing and emits the expandable region. Colocated with the page that embeds it.
 import { Div, P } from '@reference-ui/react'
 import { Collapsible } from '@reference-ui/lib'
 

@@ -63,3 +63,5 @@ either way.
 ## Build
 
 Generated sources live under `src/generated/` and are intentionally not committed. Run `pnpm run build` to regenerate icon sources, refresh the packaged base system, bundle the package, and emit declarations.
+
+Part of [Reference UI](../../../README.md).

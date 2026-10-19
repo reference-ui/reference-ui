@@ -1,3 +1,6 @@
+// Install command tabs for npm/yarn/pnpm/bun.
+// It takes package lists plus dev flags and emits the tabbed command block; the selected
+// manager is underlined in the accent, shared by every block, and remembered.
 import { useRef, useSyncExternalStore, type KeyboardEvent } from 'react'
 import { Div, css } from '@reference-ui/react'
 import { CopyButton, panelCode, panelFrame, panelSurface } from './codePanel'

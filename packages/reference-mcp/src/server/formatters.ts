@@ -1,3 +1,6 @@
+// Tool-result formatters shared by every MCP tool.
+// They take payloads and emit text results, error results, and the public model projection
+// served over resources.
 import { listComponents } from '../pipeline/queries'
 import type { McpBuildArtifact, McpPublicModel } from '../pipeline/types'
 

@@ -1,3 +1,6 @@
+// Transport selection and dispatch for ref-mcp.
+// It takes parsed options and emits stdio or HTTP serving: explicit --transport wins,
+// --http is shorthand, and a bare --port/--host implies HTTP.
 import {
   DEFAULT_REFERENCE_MCP_HOST,
   DEFAULT_REFERENCE_MCP_PORT,

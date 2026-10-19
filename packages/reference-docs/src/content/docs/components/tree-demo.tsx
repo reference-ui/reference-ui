@@ -1,3 +1,5 @@
+// Live Tree demo for the Tree component page.
+// It takes nothing and emits the tree specimen. Colocated with the page that embeds it.
 import { useState } from 'react'
 import { Span } from '@reference-ui/react'
 import { Tree } from '@reference-ui/lib'

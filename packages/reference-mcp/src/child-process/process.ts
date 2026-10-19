@@ -1,3 +1,6 @@
+// Out-of-process MCP build and prefetch spawning.
+// It takes a project cwd and emits the child build result or a typed child-process error,
+// keeping Atlas analysis and config loads out of the server process.
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'

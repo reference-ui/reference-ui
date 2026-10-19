@@ -1,3 +1,5 @@
+// Vitest tests for the icon search facade.
+// They take demand queries and assert ranked results, categories, and readout shapes.
 import { describe, expect, it } from 'vitest'
 import { searchIcons, ICON_CATEGORIES } from './icons-catalog'
 

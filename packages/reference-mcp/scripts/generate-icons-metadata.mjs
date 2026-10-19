@@ -1,3 +1,6 @@
+// Generates the icon search metadata MCP serves.
+// It takes the generated @reference-ui/icons barrel plus the curated visual-motif table and
+// emits src/data/icons-metadata.json: one visual/usage/category record per icon slug.
 import { writeFile, readFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'

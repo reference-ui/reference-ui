@@ -1,3 +1,6 @@
+// Component doc extraction from library source files.
+// It takes a component name plus its source root and emits the parsed anatomy, props, and
+// examples record, cached per file. The clear entry resets the cache for tests.
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import type { McpComponentAnatomy, McpComponentAnatomyPart } from './types'

@@ -1,3 +1,6 @@
+// Docs-only semantic color tokens collected by ref sync.
+// It declares the grayscale ramp plus docsHighlight and the single docsAccent hue; dark
+// mode rides Panda dark keys. Imported for its side effects by main.tsx.
 import { tokens } from '@reference-ui/system'
 
 /**

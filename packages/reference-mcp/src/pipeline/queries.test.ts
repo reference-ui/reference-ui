@@ -1,3 +1,6 @@
+// Vitest tests for the MCP read-model queries.
+// They take fixture components and catalogs and assert listing, enrichment, prop summaries,
+// and token projections.
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_OUT_DIR } from '../core/paths'

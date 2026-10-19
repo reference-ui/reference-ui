@@ -1,3 +1,5 @@
+// Live Toast demo for the Toast component page.
+// It takes nothing and emits the toast trigger. Colocated with the page that embeds it.
 import { Button, Div } from '@reference-ui/react'
 import { ReferenceLibrary, toast } from '@reference-ui/lib'
 

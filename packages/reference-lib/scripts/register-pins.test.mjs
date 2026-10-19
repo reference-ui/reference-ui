@@ -1,3 +1,6 @@
+// Vitest tests for the SyncedSystem register-pin guard.
+// They take temp declaration trees and assert publisher register types are found where
+// forbidden, exempted under dist/runtime, and fail the build through the assert entry.
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'

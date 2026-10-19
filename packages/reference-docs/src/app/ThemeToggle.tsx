@@ -1,3 +1,5 @@
+// Light/dark switch for the docs chrome.
+// It takes nothing and emits a toggle wired to the docs theme context.
 import { DarkModeIcon, LightModeIcon } from '@reference-ui/lib'
 import { useDocsTheme } from '../shared/providers/DocsThemeContext'
 import { IconButton } from './IconButton'

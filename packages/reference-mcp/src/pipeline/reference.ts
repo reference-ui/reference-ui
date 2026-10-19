@@ -1,3 +1,6 @@
+// Tasty manifest loading for resolved component types.
+// It takes a manifest path and emits the loaded reference document plus per-component
+// data, formatting manifest diagnostics through the shared warning one-liner.
 import type { TastyApi, TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
 import { getTastyResolvedType } from '@reference-ui/rust/tasty'
 import {

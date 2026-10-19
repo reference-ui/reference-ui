@@ -1,3 +1,5 @@
+// Vitest tests for the style-prop vocabulary reference.
+// They take prop names and query inputs and assert the predicate plus the shared guide text.
 import { describe, expect, it } from 'vitest'
 import { getStylePropsReference, isStylePropName } from './style-props'
 

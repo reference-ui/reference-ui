@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Sparse-clones other design systems' docs into vendor/docs for the docs-corpus reference.
+# Takes optional source names (default: every source) and emits the clones, llms files, and manifest.json.
 set -euo pipefail
 
 # usage: bash .agents/docs-corpus/clone.sh [name ...]

@@ -1,3 +1,6 @@
+// Streamable HTTP transport for the MCP server.
+// It takes the server factory plus host/port/path options and emits a running HTTP server,
+// printing the ready line once listening. Defaults bind 127.0.0.1:3697 on /mcp.
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import {

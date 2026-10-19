@@ -1,3 +1,6 @@
+// Live Combobox demos for the Combobox component page.
+// They take nothing and emit the editable combo plus the select-style variant. Colocated
+// with the page that embeds them.
 import { useState } from 'react'
 import { Div, Span, css } from '@reference-ui/react'
 import { Combobox, Field, Listbox } from '@reference-ui/lib'

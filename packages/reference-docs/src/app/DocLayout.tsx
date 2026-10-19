@@ -1,3 +1,6 @@
+// Docs shell: sidebar rail beside an independently scrolling main column.
+// It takes the routed child and emits the nav rail, floating header, article, outline, and
+// pager composition. Small viewports hide the rail in favor of the off-canvas nav.
 import { Outlet } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { MDXProvider } from '@mdx-js/react'

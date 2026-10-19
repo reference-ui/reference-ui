@@ -1,3 +1,6 @@
+// Shared code-panel look: frame, surface, code, and copy button.
+// It takes nothing and emits the hairline frame, tinted surface, and CopyButton recipe every
+// code block and install tab composes. Highlight and reveal behavior lives in CodeBlock.
 import { useEffect, useState, type CSSProperties } from 'react'
 import { css } from '@reference-ui/react'
 import { CheckIcon, ContentCopyIcon } from '@reference-ui/lib'

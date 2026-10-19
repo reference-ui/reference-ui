@@ -1,3 +1,6 @@
+// Arrow gallery specimen for the /diagram gallery.
+// It takes nothing and emits the arrow vocabulary: labeled connectors in all four
+// directions, vertical labels stacked and horizontal labels beside.
 import { Span, css } from '@reference-ui/react'
 import { Diagram } from '../../components/diagram/Diagram'
 

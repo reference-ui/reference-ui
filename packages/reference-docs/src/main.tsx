@@ -1,3 +1,6 @@
+// Docs app entry: mounts the TanStack router under theme and error boundary.
+// It takes the #root node and emits the running SPA with docs styles, syntax CSS, and the
+// compiled system stylesheet loaded.
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider } from '@tanstack/react-router'

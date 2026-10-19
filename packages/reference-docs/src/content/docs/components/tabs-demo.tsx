@@ -1,3 +1,6 @@
+// Live Tabs demos for the Tabs component page.
+// They take nothing and emit default, pill, and vertical tabs. Colocated with the page that
+// embeds them.
 import { Div, P } from '@reference-ui/react'
 import { Tabs } from '@reference-ui/lib'
 

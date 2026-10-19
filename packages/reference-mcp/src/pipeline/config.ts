@@ -1,3 +1,7 @@
+// Atlas config for the MCP build.
+// It takes the project ui.config and emits the Atlas selector: the project's own include/
+// exclude plus an observe entry for the Reference UI primitives. Empty lists are dropped
+// so Atlas sees no selector at all.
 import type { AtlasConfig } from '@reference-ui/rust/atlas'
 import type { ReferenceUIConfig } from '@reference-ui/core/config/types'
 import { REFERENCE_UI_PRIMITIVE_NAMES } from './primitives'

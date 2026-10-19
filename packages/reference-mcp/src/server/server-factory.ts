@@ -1,3 +1,5 @@
+// Builds the MCP server instance with tools and resources registered.
+// It takes the project wiring options and emits a ready-to-serve server for either transport.
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { loadReferenceMcpInstructions } from './instructions'
 import type { McpModelState } from './model-state'

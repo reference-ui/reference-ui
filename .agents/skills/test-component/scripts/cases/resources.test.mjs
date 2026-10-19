@@ -1,3 +1,6 @@
+// node:test suite for the agentct job-slot and worker-budget rules.
+// It takes synthetic process inventories and asserts slot acquisition, worker budgets, and
+// owned-listener detection without touching real processes.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {

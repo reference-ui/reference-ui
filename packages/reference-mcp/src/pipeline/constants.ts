@@ -1,3 +1,6 @@
+// Shared constant tables for the MCP pipeline.
+// It takes nothing and emits the HTML tag list primitives derive from plus the color prop
+// keys the style-props reference treats as token-typed.
 export const TAGS = [
   'a',
   'abbr',

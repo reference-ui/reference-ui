@@ -23,7 +23,7 @@ packages/reference-mcp/
 │   │   ├── artifact.ts              # Reads & writes .reference-ui/mcp/model.json
 │   │   ├── build.ts                 # Enriches Atlas AST with tasty types & token maps
 │   │   ├── library-catalog.ts       # 24 @reference-ui/lib component specs & examples
-│   │   ├── icons-catalog.ts         # 2,500+ @reference-ui/icons search index
+│   │   ├── icons-catalog.ts         # 3,800+ @reference-ui/icons search index
 │   │   ├── primitives.ts            # Built-in @reference-ui/react HTML primitives catalog
 │   │   ├── (Atlas observe)          # Counts primitive usage in JSX; primitives.ts maps the result
 │   │   ├── style-props.ts           # Token category mappings & StyleProps guide
@@ -51,8 +51,8 @@ Reference UI codebases configure their component and asset tiers in `ui.config.t
 | Level | Layer | Source Package | Config Flag | Default | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Level 1** | **Primitives** | `@reference-ui/react` | *Always enabled* | `true` | Capitalized HTML elements (`Div`, `Span`, `Button`, `Section`, `H1`–`H6`) driven by StyleProps. |
-| **Level 2** | **Library Components** | `@reference-ui/lib` | `use_reference_library` (or `useReferenceLibrary`) | `true` | 24 compound accessible components (`Accordion`, `Tabs`, `Splitter`, `Menu`, `Popover`, `Switch`, etc.). |
-| **Level 3** | **Icons** | `@reference-ui/icons` | `use_reference_icons` (or `useReferenceIcons`) | `true` | 2,500+ Material Symbols React icon components. |
+| **Level 2** | **Library Components** | `@reference-ui/lib` | `use_reference_library` (or `useReferenceLibrary`) | `true` | 27 compound accessible components (`Accordion`, `Tabs`, `Splitter`, `Menu`, `Popover`, `Switch`, etc.). |
+| **Level 3** | **Icons** | `@reference-ui/icons` | `use_reference_icons` (or `useReferenceIcons`) | `true` | 3,800+ Material Symbols React icon components. |
 
 ---
 

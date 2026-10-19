@@ -1,3 +1,5 @@
+// Live Portal demo for the Portal component page.
+// It takes nothing and emits the out-of-tree render. Colocated with the page that embeds it.
 import { useRef, useState } from 'react'
 import { Button, Div, Span } from '@reference-ui/react'
 import { Portal } from '@reference-ui/lib'

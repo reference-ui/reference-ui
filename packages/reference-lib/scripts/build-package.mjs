@@ -1,3 +1,7 @@
+// Post-bundle packaging for @reference-ui/lib.
+// It writes the theme entry, materializes the runtime, rewrites declaration specifiers at
+// shipped copies, and fails on dangling specifiers or SyncedSystem register pins. It also
+// strips the dead node:url branch from the bundle so the shipped JS names zero Node builtins.
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { execFileSync } from 'node:child_process'

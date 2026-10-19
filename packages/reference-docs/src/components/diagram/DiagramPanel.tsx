@@ -1,3 +1,6 @@
+// Panel surface of the docs Diagram kit.
+// It takes tone, intensity, and variant props plus content and emits the toned panel.
+// Toned panels sit on the canvas; everything inside stays neutral.
 import type { ReactNode } from 'react'
 import { Div, css } from '@reference-ui/react'
 import type {

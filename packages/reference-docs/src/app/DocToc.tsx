@@ -1,3 +1,6 @@
+// Right-hand "On this page" outline for wide viewports.
+// It takes nothing and reads headings back out of the rendered article, so there is no
+// second source of truth. A scroll listener tracks the active section.
 import { useEffect, useState } from 'react'
 import { useRouterState } from '@tanstack/react-router'
 import { Aside, Div, css } from '@reference-ui/react'

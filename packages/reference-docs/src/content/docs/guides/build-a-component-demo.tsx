@@ -1,3 +1,5 @@
+// Worked card example for the build-a-component guide.
+// It takes nothing and emits the guide's CardDemo. Colocated with the page that embeds it.
 import { Div, type DivProps, type RecipeVariantProps, recipe } from '@reference-ui/react'
 
 /**

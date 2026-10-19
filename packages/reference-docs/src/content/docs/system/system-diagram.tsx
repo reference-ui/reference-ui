@@ -1,3 +1,6 @@
+// System introduction diagram: authoring surface, sync, engine, outputs.
+// It takes nothing and emits the layered architecture figure for the System introduction
+// page. Colocated with the page that embeds it.
 import { Div, Span, css } from '@reference-ui/react'
 import { Diagram } from '../../../components/diagram/Diagram'
 

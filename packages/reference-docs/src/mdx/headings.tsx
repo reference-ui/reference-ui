@@ -1,3 +1,6 @@
+// Page and section headings for MDX articles.
+// They take heading children and emit the title-plus-lead page header, anchored h2/h3
+// sections, and numbered tutorial Steps. Ids and outline entries derive from heading text.
 import { isValidElement, type JSX, type ReactNode } from 'react'
 import { Div, H1, H2, H3, H4, P, css } from '@reference-ui/react'
 import { useDocMeta } from '../shared/providers/DocMetaContext'

@@ -1,3 +1,6 @@
+// Vitest tests for project-scoped handler execution.
+// They take temp projects and assert handler results, the not-synced message, and fallback
+// resolution.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'

@@ -1,3 +1,6 @@
+// Agent instruction text served as an MCP resource.
+// It takes a working directory and emits the instructions file contents, falling back to the
+// bundled const when no file exists. The cache clear entry resets it for tests.
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

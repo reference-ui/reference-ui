@@ -1,3 +1,5 @@
+// Live useMeasure demo for the useMeasure docs page.
+// It takes nothing and emits the measured-box readout. Colocated with the page that embeds it.
 import { Div, Span, Textarea } from '@reference-ui/react'
 import { useMeasure } from '@reference-ui/lib'
 import { demoNote, demoStack } from './demo-surface'

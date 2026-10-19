@@ -1,3 +1,6 @@
+// Live color-mode demo for the Foundations color page.
+// It takes nothing and emits specimens rendered across light and dark modes. Colocated
+// with the page that embeds it.
 import { Div, Span, css } from '@reference-ui/react'
 
 /**

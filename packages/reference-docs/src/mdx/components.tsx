@@ -1,3 +1,6 @@
+// MDX element mapping: docs visual system for rendered pages.
+// It takes nothing and emits the provider component map (headings, lists, code, links) that
+// turns MDX output into docs chrome. This is rendering policy, not generic shared UI.
 import type { AnchorHTMLAttributes } from 'react'
 import type { MDXComponents } from 'mdx/types'
 import { Link } from '@tanstack/react-router'

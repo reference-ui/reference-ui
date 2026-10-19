@@ -1,3 +1,6 @@
+// Live Overlay demos for the Overlay component page.
+// They take nothing and emit dialog, sheet, and anchored variants. Colocated with the page
+// that embeds them.
 import { useState } from 'react'
 import { Button, Div, H2, P, Span, css } from '@reference-ui/react'
 import { Overlay } from '@reference-ui/lib'

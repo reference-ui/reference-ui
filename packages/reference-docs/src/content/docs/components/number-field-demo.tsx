@@ -1,3 +1,6 @@
+// Live NumberField demos for the NumberField component page.
+// They take nothing and emit the plain plus formatted inputs. Colocated with the page that
+// embeds them.
 import { useState } from 'react'
 import { Div, Label } from '@reference-ui/react'
 import { NumberField } from '@reference-ui/lib'

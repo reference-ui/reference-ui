@@ -1,3 +1,6 @@
+// MCP resource registrations for Reference UI guidance.
+// It takes the server instance and emits the instructions, getting-started, and
+// component-model resources under reference-ui:// URIs.
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { McpPublicModel } from '../pipeline/types'
 import { toPublicModel } from './formatters'

@@ -1,3 +1,6 @@
+// Slug-to-MDX page rendering inside the doc shell.
+// It takes the route slug and emits the article with header, body, and pager. The index
+// route pins the initialize slug through the fixed-slug prop.
 import { useParams } from '@tanstack/react-router'
 import { Div } from '@reference-ui/react'
 import { docs, slugToModule } from '../collections/runtime'

@@ -1,3 +1,6 @@
+// Section specimens for the System primitives page.
+// They take nothing and emit the primitive card specimens. Colocated with the page that
+// embeds them.
 import { A, Div, H3, P } from '@reference-ui/react'
 
 /**

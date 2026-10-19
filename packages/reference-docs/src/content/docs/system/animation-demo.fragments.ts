@@ -1,3 +1,6 @@
+// Motion tokens defined by the System animation page itself.
+// It declares two keyframes plus three animation tokens under the example prefix, keeping
+// them apart from the docs' own motion. Collected by ref sync from ui.config include patterns.
 import { keyframes, tokens } from '@reference-ui/system'
 
 /**

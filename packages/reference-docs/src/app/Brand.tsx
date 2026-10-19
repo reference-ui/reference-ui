@@ -1,3 +1,5 @@
+// Docs product wordmark for the shell chrome.
+// It takes nothing and emits the Reference UI brand lockup.
 import { Link } from '@tanstack/react-router'
 import { Span, css } from '@reference-ui/react'
 

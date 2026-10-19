@@ -1,3 +1,6 @@
+// Live Slider demos for the Slider component page.
+// They take nothing and emit single, range, and vertical sliders. Colocated with the page
+// that embeds them.
 import { useState } from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Slider } from '@reference-ui/lib'

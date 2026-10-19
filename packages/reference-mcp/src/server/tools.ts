@@ -1,3 +1,6 @@
+// MCP tool registrations: the nine tools the README documents.
+// It takes the server instance plus project wiring and emits list/select/discover/inspect
+// tools over the active project's model, with the universal fallback where defined.
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import {

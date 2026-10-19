@@ -1,3 +1,6 @@
+// Shared square icon button for shell chrome.
+// It takes an icon plus button props and emits the frosted control-surface button the
+// header and nav actions share.
 import type { MouseEventHandler, ReactNode } from 'react'
 import { css } from '@reference-ui/react'
 import { controlSurface } from './controlSurface'

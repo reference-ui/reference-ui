@@ -1,7 +1,8 @@
 /**
  * Emits one TSX component per Material Symbols slug: a single component with
  * variant "outline" | "filled", backed by the configured material-symbols weight from
- * @material-symbols-svg/react/icons/<slug>.
+ * @material-symbols-svg/react/icons/<slug>. It takes the installed icon package plus the
+ * weight in src/constants.ts and emits the gitignored src/generated/ tree and its barrel.
  */
 
 import { createRequire } from 'node:module'

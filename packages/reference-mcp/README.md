@@ -1,29 +1,18 @@
 # Reference UI MCP
 
-`@reference-ui/mcp` provides project-aware Model Context Protocol (MCP) intelligence for Reference UI workspaces. It exposes high-signal, token-efficient tools for AI coding assistants to discover, inspect, and style components, access design tokens, and search icons.
+`@reference-ui/mcp` is project-aware Model Context Protocol intelligence for Reference UI workspaces: token-efficient tools for AI coding assistants to discover, inspect, and style components, read design tokens, and search icons.
 
-For complete tool input schemas, output contracts, and architecture internals, see **[tools.md](./tools.md)**.
-For AI agent instructions and guiding principles, see **[instructions.md](./instructions.md)**.
+Tool input schemas and output contracts: [tools.md](./tools.md). Agent instructions: [instructions.md](./instructions.md).
 
----
+## Customization tiers (`ui.config.ts`)
 
-## 3 Customization Tiers (`ui.config.ts`)
+Projects shape their component and asset surface with boolean flags in `ui.config.ts` (the snake_case spellings `use_reference_library` and `use_reference_icons` also work):
 
-Reference UI projects configure their component and asset surface via boolean flags in `ui.config.ts` (the snake_case spellings `use_reference_library` and `use_reference_icons` also work):
+1. **Primitives (`@reference-ui/react`)**, always enabled: standard HTML elements 1:1 (`Div`, `Span`, `Button`, `Section`, `H1`–`H6`), driven by token-aware style props.
+2. **Reference library (`@reference-ui/lib`)**, `useReferenceLibrary` (default `true`): 27 compound, accessible components. When `false`, they are excluded from `list_components` and guarded with clear notices in `get_component`.
+3. **Reference icons (`@reference-ui/icons`)**, `useReferenceIcons` (default `true`): 3,800+ Material Symbols React icon components. When `false`, `list_icons` reports that Reference Icons are disabled.
 
-1. **Level 1: Primitives (`@reference-ui/react`)** (Always Enabled):
-   - Mirror standard HTML elements 1:1 (`Div`, `Span`, `Button`, `Section`, `H1`–`H6`).
-   - Driven entirely by type-safe, token-aware StyleProps.
-2. **Level 2: Reference Library (`@reference-ui/lib`)** (`useReferenceLibrary`, default: `true`):
-   - 24 compound, accessible components (`Accordion`, `Tabs`, `Splitter`, `Menu`, `Popover`, `Switch`, etc.).
-   - When set to `false`, excluded from `list_components` and guarded with clear notices in `get_component`.
-3. **Level 3: Reference Icons (`@reference-ui/icons`)** (`useReferenceIcons`, default: `true`):
-   - 3,800+ Material Symbols React icon components.
-   - When set to `false`, `list_icons` notifies that Reference Icons are disabled.
-
----
-
-## Tool Surface
+## Tools
 
 | Tool | Purpose |
 | :--- | :--- |
@@ -37,20 +26,9 @@ Reference UI projects configure their component and asset surface via boolean fl
 | `get_tokens` | Project token paths, categories, and values (compressed for large token graphs). |
 | `list_icons` | Searches `@reference-ui/icons` by name with import statements and usage snippets. |
 
----
+## Running
 
-## Architecture
-
-- **`src/child-process/`**: Sandboxed worker pool executing Atlas AST analysis and model builds out-of-process.
-- **`src/pipeline/`**: Data model extraction, library/icon catalogs, AST enrichment, and query engines.
-- **`src/server/`**: MCP protocol server, active project tracking, model state caching, and universal fallback mode.
-- **`src/cli/`**: CLI command bindings for stdio and Streamable HTTP transports (`ref-mcp`).
-
----
-
-## Running MCP
-
-Run `ref sync` once after installation or package updates before starting the MCP server:
+Run `ref sync` once after installation or package updates, then start the server. It runs in the CLI process (`ref-mcp`, stdio or HTTP) — not in the sync worker pool — with shared catalog and query helpers in `src/pipeline/`.
 
 ```shell
 # Stdio transport (for IDEs and AI agent configs):
@@ -60,3 +38,4 @@ pnpm exec ref-mcp
 pnpm exec ref-mcp --http --port 3000
 ```
 
+Part of [Reference UI](../../../README.md).
