@@ -4,18 +4,19 @@
 //! specifier does not land in this compile's sources, and [`dir_verdict`] reads
 //! that directory once: a package that published a system
 //! (`exports["./baseSystem"]`, else `.reference-ui/system/baseSystem.mjs`)
-//! renders through it, a linked project directory whose `@reference-ui/react`
-//! resolves to this compile's own generated runtime borrows that runtime, and
-//! anything else is foreign. A published file is Core's
-//! `export const baseSystem = <JSON>`; only `name` and `streams[].name` are
-//! read, on first demand, once per path and mtime for the life of the process.
+//! renders through it, a linked directory that is Reference code for this
+//! compile borrows its runtime (`own_runtime`), and anything else is foreign.
+//! A published file is Core's `export const baseSystem = <JSON>`; only `name`
+//! and `streams[].name` are read, on first demand, once per path and mtime.
 
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 use std::time::SystemTime;
 
-use module_graph::{package_export_targets, ExtensionPolicy, FileSystem, ModuleKey, SpecifierLadder};
+use module_graph::{package_export_targets, FileSystem, ModuleKey};
 use rustc_hash::FxHashMap;
 use serde::Deserialize;
+
+use super::own_runtime::{borrows_own_runtime, OwnCompile};
 
 /// Where Core writes a package's published system, when `exports` names none.
 const PUBLISHED_FALLBACK: &str = ".reference-ui/system/baseSystem.mjs";
@@ -110,43 +111,22 @@ impl PartialEq for PublishedSystem {
 
 impl Eq for PublishedSystem {}
 
-/// This compile's own root, canonicalized: the runtime and the generated
-/// tree under `.reference-ui` that a package directory may share.
-#[derive(Debug, Clone)]
-pub(crate) struct OwnRoot {
-    root: String,
-    generated: String,
-}
-
-impl OwnRoot {
-    /// The own root at `root`, when it exists on disk.
-    pub(crate) fn at<F: FileSystem>(fs: &F, root: &str) -> Option<Self> {
-        let root = fs.canonicalize(root)?;
-        let generated = format!("{root}/.reference-ui");
-        Some(Self { root, generated })
-    }
-
-    /// True for the root itself and anything Core generates under it.
-    fn owns(&self, dir: &str) -> bool {
-        dir == self.root
-            || dir
-                .strip_prefix(&self.generated)
-                .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
-    }
-}
-
 /// The verdict on one resolved package directory (canonical). This compile's
 /// own tree is its own runtime; a published system wins next; a linked
-/// project directory outside every `node_modules` borrows the own runtime
-/// when its `@reference-ui/react` resolves there; anything else is foreign.
-pub(crate) fn dir_verdict<F: FileSystem>(fs: &F, dir: &str, own: Option<&OwnRoot>) -> DirVerdict {
-    if own.is_some_and(|own| own.owns(dir)) {
+/// directory outside every `node_modules` borrows the own runtime when it is
+/// Reference code for this compile; anything else is foreign.
+pub(crate) fn dir_verdict<F: FileSystem>(
+    fs: &F,
+    dir: &str,
+    own: Option<&OwnCompile<'_>>,
+) -> DirVerdict {
+    if own.is_some_and(|own| own.root.owns(dir)) {
         return DirVerdict::OwnRuntime;
     }
     if let Some(file) = published_file(fs, dir) {
         return DirVerdict::Package(PackageVerdict::Published(published(&file)));
     }
-    if !is_installed(dir) && own.is_some_and(|own| borrows_runtime(fs, dir, own)) {
+    if !is_installed(dir) && own.is_some_and(|own| borrows_own_runtime(fs, dir, own)) {
         return DirVerdict::OwnRuntime;
     }
     DirVerdict::Package(PackageVerdict::Foreign)
@@ -207,19 +187,6 @@ fn under(dir: &str, target: &str) -> String {
 /// copy, which brings its own runtime and never borrows the consumer's.
 fn is_installed(dir: &str) -> bool {
     dir.split('/').any(|segment| segment == "node_modules")
-}
-
-/// True when `@reference-ui/react`, resolved as Node would from the package
-/// directory, is this compile's own generated runtime.
-fn borrows_runtime<F: FileSystem>(fs: &F, dir: &str, own: &OwnRoot) -> bool {
-    let ladder = SpecifierLadder::new(fs, ExtensionPolicy::Source);
-    let from = ModuleKey::new(&format!("{dir}/package.json"));
-    let runtime = format!("{}/react", own.generated);
-    ladder
-        .resolve_located(&from, "@reference-ui/react")
-        .ok()
-        .and_then(|hit| hit.package_dir)
-        .is_some_and(|found| found == runtime)
 }
 
 /// Published systems by path for the life of the process, each beside the

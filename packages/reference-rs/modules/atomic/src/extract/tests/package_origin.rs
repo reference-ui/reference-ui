@@ -6,7 +6,8 @@
 //! (`Local`, gap 1), unless that package published a system of its own; an
 //! installed package without one is foreign; one whose entry is not built
 //! yet still keeps the system it published; a linked package borrowing
-//! this compile's own runtime is `Local`. The compile probe replays the
+//! this compile's own runtime is `Local`, on the first sync too, and one
+//! that is not Reference code is foreign. The compile probe replays the
 //! plan's gap-1 tree end to end: the traced wrapper backs under own.
 
 #![cfg(unix)]
@@ -175,7 +176,10 @@ fn an_installed_package_with_no_built_entry_keeps_its_system() {
 fn a_linked_package_borrowing_the_own_runtime_is_local() {
     let repo = Repo::new("origin-borrowed");
     repo.write("packages/kit/package.json", r#"{"name":"@acme/kit","main":"./dist/index.mjs"}"#);
-    repo.write("packages/kit/dist/index.mjs", "export const Tile = () => null\n");
+    repo.write(
+        "packages/kit/dist/index.mjs",
+        "import { Div } from '@reference-ui/react'\nexport const Tile = (props) => Div(props)\n",
+    );
     repo.write(".reference-ui/react/package.json", r#"{"main":"./react.mjs"}"#);
     repo.write(".reference-ui/react/react.mjs", "export {}\n");
     repo.link("node_modules/@acme/kit", "packages/kit");
@@ -190,6 +194,47 @@ fn a_linked_package_borrowing_the_own_runtime_is_local() {
             ..
         })
     ));
+}
+
+/// The first sync: the kit imports the runtime, which is neither generated
+/// nor linked yet. The sync links it at the own root, so the kit is `Local`.
+#[test]
+fn a_linked_package_borrows_the_runtime_before_the_first_sync() {
+    let repo = Repo::new("origin-first-sync");
+    repo.write("packages/kit/package.json", r#"{"name":"@acme/kit","main":"./dist/index.mjs"}"#);
+    repo.write(
+        "packages/kit/dist/index.mjs",
+        "import { Div } from '@reference-ui/react'\nexport const Tile = (props) => Div(props)\n",
+    );
+    repo.link("node_modules/@acme/kit", "packages/kit");
+    let root = repo.root.clone();
+    assert_eq!(repo.origin("@acme/kit", "Tile", Some(&root)), Origin::Local);
+}
+
+/// A linked package that never imports the runtime is foreign though the
+/// generated runtime resolves from it; one the include set reaches into is
+/// `Local` whatever its built entry says.
+#[test]
+fn a_linked_package_is_local_only_when_it_is_reference_code() {
+    let repo = Repo::new("origin-plain-linked");
+    repo.write("packages/icons/package.json", r#"{"name":"@acme/icons","main":"./dist/index.mjs"}"#);
+    repo.write("packages/icons/dist/index.mjs", "export const StarIcon = () => null\n");
+    repo.write(".reference-ui/react/package.json", r#"{"main":"./react.mjs"}"#);
+    repo.write(".reference-ui/react/react.mjs", "export {}\n");
+    repo.link("node_modules/@acme/icons", "packages/icons");
+    repo.link("node_modules/@reference-ui/react", ".reference-ui/react");
+    let root = repo.root.clone();
+    assert!(matches!(
+        repo.origin("@acme/icons", "StarIcon", Some(&root)),
+        Origin::Package(PackageTag {
+            verdict: PackageVerdict::Foreign,
+            ..
+        })
+    ));
+
+    repo.write("packages/ui/package.json", r#"{"name":"@acme/ui","main":"./dist/index.mjs"}"#);
+    repo.write("packages/ui/dist/index.mjs", "export { Card } from './chunk.mjs'\n");
+    assert_eq!(repo.origin("@acme/ui", "Card", Some(&root)), Origin::Local);
 }
 
 /// The plan's gap-1 compile: one sync at the root spans the app and the

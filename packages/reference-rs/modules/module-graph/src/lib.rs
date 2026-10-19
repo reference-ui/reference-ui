@@ -20,8 +20,8 @@ pub use fs::{DiskFs, FileSystem, MemoryFs};
 pub use graph::{Loader, ModuleGraph};
 pub use key::ModuleKey;
 pub use ladder::{
-    package_export_targets, ExtensionPolicy, ProbeMemo, Resolution, RootEntryPolicy,
-    SpecifierLadder, TsconfigPolicy, Unresolved,
+    package_export_targets, package_root_targets, ExtensionPolicy, ProbeMemo, Resolution,
+    RootEntryPolicy, SpecifierLadder, TsconfigPolicy, Unresolved,
 };
 pub use record::{DefaultExport, ExportShape, ExportTable, ImportEdge, Imported, ModuleRecord};
 pub use walk::{BindingOrigin, BindingWalk, Refused};

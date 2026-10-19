@@ -1,0 +1,1 @@
+{"id": "ATM-SITE-106", "name": "A built workspace package that imports @reference-ui/react is own on the first sync, before the runtime it borrows is generated: a link that points nowhere yet, or none at all, is where this sync puts the runtime"}

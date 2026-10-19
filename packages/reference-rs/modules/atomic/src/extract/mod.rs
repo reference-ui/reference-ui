@@ -23,6 +23,7 @@ pub mod identity_map;
 pub mod jsx;
 pub mod jsx_hosts;
 pub mod owned_props;
+pub(crate) mod own_runtime;
 pub mod package_system;
 pub mod provenance;
 pub mod recipes;

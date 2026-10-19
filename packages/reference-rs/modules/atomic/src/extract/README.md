@@ -40,9 +40,15 @@ it is:
   its system. `package_system.rs` reads the system's `name` and
   `streams[].name` and nothing else, on first demand, once per file and
   mtime.
-- **A linked workspace directory whose `@reference-ui/react` resolves to
-  this compile's generated runtime**: project code, since it renders the
-  same runtime.
+- **A linked workspace directory that is Reference code for this app**:
+  project code, since it renders the same runtime. It is Reference code when
+  this compile's include set reaches into it, or when it uses
+  `@reference-ui/react` (its manifest depends on it, or a root entry imports
+  it) and that specifier, climbing from the directory, lands where this sync
+  links its runtime. The landing is read without the generated runtime, so
+  the first sync agrees with every later one; a linked package that never
+  uses the runtime (a plain icon or utils package) is not Reference code
+  however the specifier would resolve from it (`own_runtime.rs`).
 - **Anywhere else, or nowhere**: a package not built on Reference UI.
 
 Resolutions memoize per importing directory and specifier. `provenance.rs`

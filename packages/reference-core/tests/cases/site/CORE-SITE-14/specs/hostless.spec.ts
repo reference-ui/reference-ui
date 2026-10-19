@@ -1,8 +1,8 @@
 // hostless.spec.ts — spec for CORE-SITE-14, the hostless-world case. Takes
 // { case } from the runner with the world freshly synced; the page stays
 // parked because the census is node-side over the sheet plus a frozen
-// recompile. Emits nothing on success; throws naming the stray utility,
-// the missing closed failure, or the unlocated diagnostic on failure.
+// recompile. Emits nothing on success; throws naming a stray utility, the
+// missing closed failure, or the unlocated diagnostic on failure.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -33,15 +33,16 @@ interface SpecInput {
   case: CoreCase;
 }
 
-// The hostless tag yields zero utilities in the synced sheet instead of
-// scanning every tag; the frozen request recompiled with emptied hosts
-// fails closed with the located no-hosts error and zero wants or plans.
+// The synced sheet carries one utility: Foo is a component nobody traces, so
+// its `mt` lowers under own (styling plan S3) though nothing mints the class.
+// The frozen request recompiled with emptied hosts fails closed with the
+// located no-hosts error and zero wants or plans.
 export default async function run({ case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const styles = fs.readFileSync(path.join(outDir, 'styled/styles.css'), 'utf8');
+  assert.ok(styles.includes('.core-site14__mt_4r {'), 'Foo margin lowers under own');
   const utilityCount = styles.match(/\.core-site14__/g)?.length ?? 0;
-  assert.equal(utilityCount, 0, `sheet carries zero hostless utilities, got ${utilityCount}`);
-  assert.ok(!styles.includes('mt_4r'), 'no stray margin utility reaches the sheet');
+  assert.equal(utilityCount, 1, `sheet carries only the Foo utility, got ${utilityCount}`);
 
   const request = JSON.parse(
     fs.readFileSync(path.join(outDir, 'system/compile-request.json'), 'utf8'),

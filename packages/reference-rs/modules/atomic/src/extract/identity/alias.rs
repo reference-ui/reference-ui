@@ -8,8 +8,9 @@
 //! sources from memory and everything else from disk, canonicalized through
 //! symlinks. A hit in the compile sources continues the walk unless its package
 //! directory published a system of its own; any other package directory ends it
-//! with that directory's verdict. Hits memoize per importing directory and
-//! specifier, verdicts per directory, so a lane pays one probe per pair.
+//! with that directory's verdict, which also asks whether the compile sources
+//! reach into it. Hits memoize per importing directory and specifier, verdicts
+//! per directory, so a lane pays one probe per pair.
 
 use std::cell::{OnceCell, RefCell};
 
@@ -19,9 +20,8 @@ use module_graph::{
 use rustc_hash::FxHashMap;
 
 use super::paths::{dir_of, normalize_path};
-use crate::extract::package_system::{
-    dir_verdict, installed_dir, package_name, DirVerdict, OwnRoot,
-};
+use crate::extract::own_runtime::{OwnCompile, OwnRoot};
+use crate::extract::package_system::{dir_verdict, installed_dir, package_name, DirVerdict};
 use crate::extract::provenance::names_package;
 
 /// Where a bare specifier lands, if anywhere.
@@ -184,7 +184,12 @@ impl super::IdentityGraph<'_> {
         if let Some(verdict) = self.aliases.verdicts.borrow().get(dir) {
             return verdict.clone();
         }
-        let verdict = dir_verdict(fs, dir, self.own_root());
+        let includes = |dir: &str| self.includes(dir);
+        let own = self.own_root().map(|root| OwnCompile {
+            root,
+            includes: &includes,
+        });
+        let verdict = dir_verdict(fs, dir, own.as_ref());
         self.aliases
             .verdicts
             .borrow_mut()
@@ -201,6 +206,17 @@ impl super::IdentityGraph<'_> {
                 OwnRoot::at(&self.project_fs(), root)
             })
             .as_ref()
+    }
+
+    /// True when a compile source lies inside the canonical `dir`: this
+    /// compile's include set reaches into it.
+    fn includes(&self, dir: &str) -> bool {
+        let lexical = match self.own_root() {
+            Some(own) => own.lexical_of(dir),
+            None => dir.into(),
+        };
+        let prefix = format!("{}/", normalize_path(&lexical));
+        self.index.keys().any(|path| path.starts_with(&prefix))
     }
 
     /// The compile sources over disk, sharing this graph's probe memo.
