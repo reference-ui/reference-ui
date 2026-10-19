@@ -1,17 +1,39 @@
-# Reference RS Runtime Host (`modules/runtime`)
+# Runtime
 
-The runtime module serves as the isolated Node-API host and distribution layer for `@reference-ui/rust`. It encapsulates dynamic native addon resolution, binary compilation, and Node runtime linking without embedding product-specific compiler or AST analysis logic.
+The isolated Node-API host and distribution layer for `@reference-ui/rust`.
+It links, loads, and ships the native addon. It owns no product logic.
 
-## Architecture & Responsibilities
+## What it is
 
-The host operates across two complementary boundaries:
+1. **Native host (`src/`, crate `reference-native`)** — the sole `cdylib`
+   compiling to `.node`. Links each product module's colocated `native.rs`
+   (atlas, atomic, styletrace, tasty, typegen) via compile-time `#[path]`
+   includes; the host itself only exposes the schema-versioned capability
+   ping (`get_native_capabilities`). The `alloc-trace` / `counters-trace`
+   instrument builds never ship.
+2. **JS host (`js/`)** — resolves the platform `.node` binary across target
+   triples (`loader.ts`), dispatches calls over generic JSON bridging
+   (`native.ts`), and fails closed with a loud message when the binary is
+   missing or stale. `REFERENCE_UI_NATIVE_PATH` overrides the candidate so
+   instrument builds load without touching `dist/`.
+3. **Pack tooling (`js/tools/`, `js/shared/`)** — target-triple maps, the
+   composed native-exports contract, content hashing over exactly the files
+   cargo reads, freshness stamps beside every shipped binary, and
+   publish / stage / verify gates, so a pack can never silently ship a
+   prebuilt compiled from older sources.
 
-1. **Native Dynamic Link Host (`cdylib`)**: Compiles the single native binary (`reference-native`) loaded by Node.js runtimes. Rather than authoring product entrypoints directly, the host crate links module ABIs via compile-time path declarations (`#[path]`) pointing to colocated `native.rs` files in `atlas`, `styletrace`, `system`, and `tasty`. The host itself only exposes a schema-versioned capability ping (`get_native_capabilities`).
-2. **TypeScript Runtime Host (`js/`)**: Provides binary resolution across target triples, platform detection, and graceful fail-closed error diagnostics. When downstream consumers invoke native operations, the host validates binary compatibility and dispatches execution via generic JSON serialization helpers (`callNativeJson`) and typed native bindings.
+## Boundaries
 
-## Module Boundaries
+- No AST, component, or stylesheet logic: each product module owns its
+  domain and ABI contract.
+- Internal foundation, not a public npm subpath.
 
-- **No Product Logic**: The host does not author AST transformations, component indexing, or stylesheet generation. Each product module owns its domain logic and ABI contract.
-- **Zero Public Module Door**: The runtime host is an internal execution foundation and is not exposed as a public npm subpath.
+## Verify
+
+```bash
+pnpm agentrs v runtime
+```
+
+> Up: [@reference-ui/rust](../../README.md)
 
 > Search terms: loader, napi host, binary loader, runtime/loader, runtime/native-bindings, runtime/capabilities, rs:shared

@@ -13,19 +13,19 @@ The crate keeps two shapes. `BaseSystemSpec` is the authored nested
 wire format (`{ value | light | dark }` leaves, brace aliases intact) —
 what evaluated fragments specify. `BaseSystem::from_json` lowers a spec
 into the indexed `BaseSystem` query engine (flat `category.path` keys,
-precomputed `cssVar`). `compile()` still deserializes the indexed shape
-directly so case `baseSystem.json` files keep working.
-`BaseSystem::default()` stays empty. `staticCss` is a property →
-token-list bag (`color: ['*']` or `bg: ['n100']`); the lib fixture leaves
-it empty so AtomSet stays small. `layers` is not here yet. `jsxOwned` maps a
-component name to the sorted prop names it keeps for itself (omitted when
-empty); `from_json` keeps it, and atomic seeds its host gate from it.
+precomputed `cssVar`). Rust-to-Rust callers can also deserialize the
+indexed shape directly. `BaseSystem::default()` stays empty. `staticCss`
+is a property → token-list bag (`color: ['*']` or `bg: ['n100']`); the lib
+fixture leaves it empty so AtomSet stays small. `layers` is not here yet.
+`jsxOwned` maps a component name to the sorted prop names it keeps for
+itself (omitted when empty); `from_json` keeps it, and atomic seeds its
+host gate from it.
 
 Extends composition lives in Core: see packages/reference-core/src/system/base/SPEC.md (E1–E15).
 
 `lib_fixture()` loads the committed lib spec (`src/lib_fixture/lib.json`)
-through `from_json`, then overlays host/Panda conditions, the standard
-breakpoint scale, and `:root { --spacing-root: 0.25rem }`. The spec is
+through the public `from_spec` path, overlaying host/Panda conditions, the
+standard breakpoint scale, and `:root { --spacing-root: 0.25rem }`. The spec is
 produced by `pnpm --filter @reference-ui/rust base-system` from lib
 theme object literals (tokens, fonts, keyframes); `--check` fails if it
 would change. Recipes are not scraped from components; the fixture map
@@ -50,7 +50,7 @@ Answers both consumers ask of the same definition:
 | What breakpoints exist? | atomic | Array slots and `r/` widths. |
 | Which `staticCss` utilities to pre-emit? | atomic | Third want source; `['*']` is category enumeration. |
 
-Atomic `compile()` takes `Option<BaseSystem>`. Omitted means the lib fixture.
+The native compile request requires a `baseSystem` evaluated spec (or a frozen `spec`), lowered through `from_json`; `BaseSystem::lib_fixture()` is the Rust-side lib default for tests.
 
 ## What it does not do
 
@@ -65,5 +65,7 @@ Atomic `compile()` takes `Option<BaseSystem>`. Omitted means the lib fixture.
 pnpm agentrs c base_system
 pnpm --filter @reference-ui/rust base-system --check
 ```
+
+> Up: [@reference-ui/rust](../../README.md)
 
 > Search terms: system definition, theme artefact, base-system/spec, base-system/tokens, base-system/conditions, base-system/lib-fixture, rs:canon, rs:atomic, rs:typegen

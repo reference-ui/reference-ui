@@ -46,7 +46,7 @@ exactly one place: the code is always present, always documented.
   JSON-string convention. Adoption means a module's `native.rs` serializes
   template diagnostics into payloads it already returns.
 - Presentation is a shared util, display stays with consumers: the frame
-  renderer (`src/render.rs`, mirrored in `js/render.ts`) turns spans, labels,
+  renderer (`src/render/`, mirrored in `js/render.ts`) turns spans, labels,
   and help into deterministic code frames, capped so the first N diagnostics
   get frames and the rest stay one-liners — but the CLI and Core own when and
   where frames print. No info level: `-I-` is reserved and rejected;
@@ -61,9 +61,11 @@ exactly one place: the code is always present, always documented.
 ## Verifying
 
 ```bash
-pnpm agentrs c --crate diagnostics        # Rust unit tests (+ regenerates js/generated)
-pnpm agentrs v modules/diagnostics/js/index.test.ts  # Vitest seam tests
-pnpm agentrs q modules/diagnostics        # quality gate over the template
+pnpm agentrs c diagnostics                # Rust unit tests (+ regenerates js/generated)
+pnpm agentrs v diagnostics                # Vitest seam tests
+pnpm agentrs q packages/reference-rs/modules/diagnostics  # quality gate over the template
 ```
+
+> Up: [@reference-ui/rust](../../README.md)
 
 > Search terms: diagnostics, diagnostic template, error codes, code registry, transport, napi diagnostics, rs:diagnostics, severity, message pattern

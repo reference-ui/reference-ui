@@ -49,12 +49,25 @@ The generator emits platform definitions from web standards and aborts if:
 
 No `Box` / `Flex` / `Grid`. Hallucinated layout wrappers fail the dictionary tests.
 
+## Generator (`generate/`)
+
+JavaScript ingest: reads `@webref/css` and `@webref/elements`, joins them with
+the dialect overlay, runs the fail-closed join, and emits static Rust tables
+into `src/` (a 1:1 mirror: `html.rs`, `dialect.rs`, `conditions.rs`,
+`css/*.rs`, `lib.rs`, `tests.rs`). Generated artifacts never sit alongside
+handwritten files. Vendor-prefixed rows come from csstype via
+`overlay/vendor-extensions.ts` (re-derive, never hand-extend); unitless rows
+union `overlay/unitless.ts`.
+
 ## Regenerate
 
 ```bash
 pnpm --filter @reference-ui/rust run canon
+cargo fmt -p canon
 ```
 
+The emitter writes compact chunks; `cargo fmt` expands them to the committed
+form, so a clean regen plus fmt diffs only the rows you meant to change.
 Do not hand-edit generated tables under `src/`. Passes must not grow a second
 property list in extract or resolve.
 
@@ -68,5 +81,7 @@ pnpm agentrs q packages/reference-rs/modules/canon
 ```
 
 Dictionary membership is proven in generated `src/tests.rs`, and fail-closed join validation is proven in `tests/suites/join.test.ts`. Refine this crate first — everything else looks it up.
+
+> Up: [@reference-ui/rust](../../README.md)
 
 > Search terms: shorthands, style dictionary, prop language, canon/dialect, canon/platform, canon/aliases, canon/shorthands, canon/join, rs:base-system, rs:atomic, rs:typegen
