@@ -37,7 +37,7 @@ never across invocations or collections.
 | `surfaces` | rs       | `packages/reference-rs/modules` (README + suite/case inventory)    | agent-rs skill   |
 | `rs-cases` | rs-case  | `packages/reference-rs/modules/*/tests/cases` (case.json + README + spec.ts) | agent-rs skill |
 | `graph`    | system   | built in: every README.md + every file-top header                  | memex itself     |
-| `docs-corpus` | markdown | `vendor/docs/_normalized` (built by `vendor/docs/normalize`; targeted only: `--in docs-corpus`) | vendor/docs/normalize |
+| `docs-corpus` | markdown | `vendor/docs/_normalized` (built by `.agents/docs-corpus/normalize`; targeted only: `--in docs-corpus`) | .agents/docs-corpus/normalize |
 
 Global `search` ranks the manifest collections with a prior for
 authoritative docs (surfaces ×3, cases ×2, rs-cases ×2) over evidence logs. The

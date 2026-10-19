@@ -1,0 +1,110 @@
+{
+  "_about": "Clone files the site nav does not route (checked 2026-10-19). include: the live site links the page from its docs nav or a docs section, and the live URL resolves. exclude: no live docs page, with the reason. after/before place the page next to a nav URL; without them it goes last in its section.",
+  "include": [
+    {
+      "file": "guides/accessibility/placeholders.mdx",
+      "url": "https://primer.style/accessibility/patterns/placeholders/",
+      "section": "Guides / Accessibility",
+      "type": "guide",
+      "after": "/guides/accessibility/tooltip-alternatives",
+      "via": "the accessibility section links it; live title matches"
+    },
+    {
+      "file": "guides/accessibility/color-considerations.mdx",
+      "url": "https://primer.style/accessibility/design-guidance/color-considerations/",
+      "section": "Guides / Accessibility",
+      "type": "guide",
+      "after": "/guides/accessibility/tooltip-alternatives",
+      "via": "the accessibility section links it; live title matches. Its nav twin foundations/color/accessibility redirects to the same live page."
+    },
+    {
+      "file": "guides/rails/migration-guides/primer-button-component.mdx",
+      "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-button-component/",
+      "section": "Guides / Rails / Migration guides",
+      "type": "migration",
+      "after": "/guides/rails/migration-guides",
+      "via": "the live migration guides index links it"
+    },
+    {
+      "file": "guides/rails/migration-guides/primer-css-select-menu.mdx",
+      "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-css-select-menu/",
+      "section": "Guides / Rails / Migration guides",
+      "type": "migration",
+      "after": "/guides/rails/migration-guides",
+      "via": "the live migration guides index links it"
+    },
+    {
+      "file": "guides/rails/migration-guides/primer-css-tooltipped.mdx",
+      "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-css-tooltipped/",
+      "section": "Guides / Rails / Migration guides",
+      "type": "migration",
+      "after": "/guides/rails/migration-guides",
+      "via": "the live migration guides index links it"
+    },
+    {
+      "file": "guides/rails/migration-guides/primer-dialog.mdx",
+      "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-dialog/",
+      "section": "Guides / Rails / Migration guides",
+      "type": "migration",
+      "after": "/guides/rails/migration-guides",
+      "via": "the live migration guides index links it"
+    },
+    {
+      "file": "guides/rails/migration-guides/primer-layout-component.mdx",
+      "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-layout-component/",
+      "section": "Guides / Rails / Migration guides",
+      "type": "migration",
+      "after": "/guides/rails/migration-guides",
+      "via": "the live migration guides index links it"
+    },
+    {
+      "file": "guides/rails/migration-guides/primer-local-time.mdx",
+      "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-local-time/",
+      "section": "Guides / Rails / Migration guides",
+      "type": "migration",
+      "after": "/guides/rails/migration-guides",
+      "via": "the live migration guides index links it"
+    },
+    {
+      "file": "guides/rails/migration-guides/primer-time-ago.mdx",
+      "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-time-ago/",
+      "section": "Guides / Rails / Migration guides",
+      "type": "migration",
+      "after": "/guides/rails/migration-guides",
+      "via": "the live migration guides index links it"
+    },
+    {
+      "file": "guides/rails/migration-guides/primer-truncate.mdx",
+      "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-truncate/",
+      "section": "Guides / Rails / Migration guides",
+      "type": "migration",
+      "after": "/guides/rails/migration-guides",
+      "via": "the live migration guides index links it"
+    },
+    {
+      "file": "ui-patterns/index.mdx",
+      "slug": "ui-patterns",
+      "title": "UI patterns",
+      "url": "https://primer.style/product/ui-patterns/",
+      "section": "UI patterns",
+      "type": "guide",
+      "before": "/ui-patterns/data-visualization",
+      "via": "the UI patterns group of the docs nav; live page /product/ui-patterns/"
+    }
+  ],
+  "exclude": [
+    { "file": "index.mdx", "reason": "home page: a landing page, not a docs page" },
+    { "file": "about.mdx", "reason": "live /about/ is the team page, not in the docs nav or a docs section" },
+    { "file": "components/button-marketing.mdx", "reason": "no live page: /product/components/button-marketing/ resolves to the home page" },
+    { "file": "components/clipboard-copy-button.mdx", "reason": "no live page: /product/components/clipboard-copy-button/ resolves to the home page" },
+    { "file": "components/timeline-item.mdx", "reason": "no live page: /product/components/timeline-item/ resolves to the home page" },
+    { "file": "components/action-list/react/deprecated.mdx", "reason": "no live page: resolves to the home page" },
+    { "file": "components/action-menu/react/deprecated.mdx", "reason": "no live page: resolves to the home page" },
+    { "file": "components/button/react/deprecated.mdx", "reason": "no live page: resolves to the home page" },
+    { "file": "components/underline-nav/react/deprecated.mdx", "reason": "no live page: resolves to the home page" },
+    { "file": "deprecated-components/index.mdx", "reason": "no live page: the deprecated section is gone from the live site" },
+    { "file": "deprecated-components/side-nav/react/latest.mdx", "reason": "no live page: resolves to the home page" },
+    { "file": "ui-patterns/forms/react.mdx", "reason": "no live page: /product/ui-patterns/forms/react/ resolves to the home page" },
+    { "file": "ui-patterns/forms/rails.mdx", "reason": "no live page: /product/ui-patterns/forms/rails/ resolves to the home page" }
+  ]
+}

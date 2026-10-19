@@ -86,3 +86,30 @@ After the gate is green, do the reading pass — a human reviewer's eye:
    its layout, simplify the layout instead.
 
 When the language evolves, update `DOCS.md` / `STRUCTURE.md` in the same pass.
+
+## 6. Writing From the Corpus
+
+Docs prose starts from the docs corpus: production design-system docs
+(Panda, Radix, Chakra, Mantine, shadcn and ten more), normalized and searchable
+through Memex. Build it once with `bash .agents/docs-corpus/clone.sh`, then
+`node .agents/docs-corpus/normalize/normalize.mjs` (see
+`.agents/docs-corpus/README.md`).
+
+```bash
+node .agents/memex/cli.mjs search "semantic tokens" --in docs-corpus --per-source 1   # each library's take
+node .agents/memex/cli.mjs search "recipes" --in docs-corpus --source panda             # one library
+node .agents/memex/cli.mjs show panda:theming/tokens#semantic-tokens                    # read a section
+```
+
+1. Search the key terms and read three or four libraries' versions.
+2. Take the pattern they share: page shape, sentence shape, how much they say.
+3. Fill it with facts from our code. Never carry over their API or behaviour.
+4. Every sentence has a source: a corpus pattern plus a fact from our code.
+   Rewrite or cut a sentence that has neither.
+
+Panda is the structure model, since it is the closest system, but ours is
+simpler: skip Panda concepts we don't have (user-defined patterns, utilities,
+presets). The corpus is for reference only: never paste long passages from it.
+Don't rewrite the owner-reviewed pages either: `getting-started/initialize`,
+`guides/theming`, `guides/library-components` and
+`components/reference-library`.

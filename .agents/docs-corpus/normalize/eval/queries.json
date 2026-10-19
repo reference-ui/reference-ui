@@ -1,0 +1,157 @@
+[
+  {"intent":1,"q":"semantic tokens","k":10,
+   "expect":["^panda:theming/tokens#semantic","^chakra:theming/semantic-tokens$"],
+   "libs":[{"source":"panda","expect":"^panda:theming/tokens#semantic"},{"source":"chakra","expect":"^chakra:theming/semantic-tokens$"}]},
+
+  {"intent":2,"q":"dark mode","k":10,
+   "expect":["^chakra:styling/dark-mode$","^tailwind:dark-mode$","^radix:themes/docs/theme/dark-mode$","^shadcn:dark-mode/index$","^panda:theming/multiple-themes$"],
+   "libs":[{"source":"chakra","expect":"^chakra:styling/dark-mode$"},{"source":"tailwind","expect":"^tailwind:dark-mode$"},{"source":"radix","expect":"^radix:themes/docs/theme/dark-mode$"},{"source":"shadcn","expect":"^shadcn:dark-mode/index$"},{"source":"panda","expect":"^panda:theming/multiple-themes$"}]},
+
+  {"intent":3,"q":"color mode","k":10,
+   "expect":["^chakra:components/concepts/color-mode(#|$)","^mantine:theming/color-schemes(#|$)"],
+   "libs":[{"source":"chakra","expect":"^chakra:components/concepts/color-mode(#|$)"},{"source":"mantine","expect":"^mantine:theming/color-schemes(#|$)"}]},
+
+  {"intent":4,"q":"install","k":10,
+   "expect":["^radix:themes/docs/overview/getting-started(#|$)","^chakra:get-started/installation(#|$)","^mantine:getting-started(#|$)","^panda:get-started/"],
+   "libs":[{"source":"radix","expect":"^radix:themes/docs/overview/getting-started(#|$)"},{"source":"chakra","expect":"^chakra:get-started/installation(#|$)"},{"source":"mantine","expect":"^mantine:getting-started(#|$)"},{"source":"panda","expect":"^panda:get-started/"}]},
+  {"intent":4,"q":"installation","k":10,
+   "expect":["^radix:themes/docs/overview/getting-started(#|$)","^chakra:get-started/installation(#|$)","^mantine:getting-started(#|$)","^panda:get-started/"],
+   "libs":[{"source":"radix","expect":"^radix:themes/docs/overview/getting-started(#|$)"},{"source":"chakra","expect":"^chakra:get-started/installation(#|$)"},{"source":"mantine","expect":"^mantine:getting-started(#|$)"},{"source":"panda","expect":"^panda:get-started/"}]},
+
+  {"intent":5,"q":"getting started","k":10,
+   "expect":["^radix:themes/docs/overview/getting-started(#|$)","^radix:primitives/docs/overview/getting-started(#|$)","^base-ui:react/overview/quick-start(#|$)"],
+   "libs":[{"source":"radix","expect":"^radix:themes/docs/overview/getting-started(#|$)"},{"source":"radix","expect":"^radix:primitives/docs/overview/getting-started(#|$)"},{"source":"base-ui","expect":"^base-ui:react/overview/quick-start(#|$)"}]},
+
+  {"intent":6,"q":"asChild","k":10,
+   "expect":["^radix:primitives/docs/guides/composition(#|$)","^ark-ui:guides/composition(#|$)"],
+   "libs":[{"source":"radix","expect":"^radix:primitives/docs/guides/composition(#|$)"},{"source":"ark-ui","expect":"^ark-ui:guides/composition(#|$)"}]},
+
+  {"intent":7,"q":"composition","k":10,
+   "expect":["^radix:primitives/docs/guides/composition(#|$)","^chakra:components/concepts/composition(#|$)","^ark-ui:guides/composition(#|$)"],
+   "libs":[{"source":"radix","expect":"^radix:primitives/docs/guides/composition(#|$)"},{"source":"chakra","expect":"^chakra:components/concepts/composition(#|$)"},{"source":"ark-ui","expect":"^ark-ui:guides/composition(#|$)"}]},
+
+  {"intent":8,"q":"polymorphic","k":10,
+   "expect":["^mantine:guides/polymorphic(#|$)"],
+   "libs":[{"source":"mantine","expect":"^mantine:guides/polymorphic(#|$)"}]},
+
+  {"intent":9,"q":"style props","k":10,
+   "expect":["^panda:styling/style-props(#|$)","^chakra:styling/style-props/"],
+   "libs":[{"source":"panda","expect":"^panda:styling/style-props(#|$)"},{"source":"chakra","expect":"^chakra:styling/style-props/"}]},
+
+  {"intent":10,"q":"responsive","k":10,
+   "expect":["^panda:styling/responsive-design(#|$)","^tailwind:responsive-design(#|$)","^chakra:styling/responsive-design(#|$)"],
+   "libs":[{"source":"panda","expect":"^panda:styling/responsive-design(#|$)"},{"source":"tailwind","expect":"^tailwind:responsive-design(#|$)"},{"source":"chakra","expect":"^chakra:styling/responsive-design(#|$)"}]},
+
+  {"intent":11,"q":"breakpoints","k":10,
+   "expect":["^radix:themes/docs/theme/breakpoints(#|$)","^panda:(theming/theme#breakpoints|styling/responsive-design#customizing-breakpoints)(#|$)","^chakra:theming/breakpoints(#|$)"],
+   "libs":[{"source":"radix","expect":"^radix:themes/docs/theme/breakpoints(#|$)"},{"source":"panda","expect":"^panda:(theming/theme#breakpoints|styling/responsive-design#customizing-breakpoints)(#|$)"},{"source":"chakra","expect":"^chakra:theming/breakpoints(#|$)"}]},
+
+  {"intent":12,"q":"recipes","k":10,
+   "expect":["^panda:recipes/overview(#|$)","^chakra:theming/recipes(#|$)"],
+   "libs":[{"source":"panda","expect":"^panda:recipes/overview(#|$)"},{"source":"chakra","expect":"^chakra:theming/recipes(#|$)"}]},
+
+  {"intent":13,"q":"variants","k":10,
+   "expect":["^panda:recipes/[a-z-]*variants(#|$)","^stylex:learn/recipes/variants(#|$)"],
+   "libs":[{"source":"panda","expect":"^panda:recipes/[a-z-]*variants(#|$)"},{"source":"stylex","expect":"^stylex:learn/recipes/variants(#|$)"}]},
+
+  {"intent":14,"q":"global css","k":10,
+   "expect":["^panda:styling/global-styles(#|$)","^chakra:theming/customization/global-css(#|$)"],
+   "libs":[{"source":"panda","expect":"^panda:styling/global-styles(#|$)"},{"source":"chakra","expect":"^chakra:theming/customization/global-css(#|$)"}]},
+
+  {"intent":15,"q":"server side rendering","k":10,
+   "expect":["^radix:primitives/docs/guides/server-side-rendering(#|$)","^mantine:(guides/next|core/portal#server-side-rendering)(#|$)"],
+   "libs":[{"source":"radix","expect":"^radix:primitives/docs/guides/server-side-rendering(#|$)"},{"source":"mantine","expect":"^mantine:(guides/next|core/portal#server-side-rendering)(#|$)"}],
+   "note":"mantine: either the Next.js guide or the Portal server-side-rendering section (the brief writes mantine ssr/next). The Next.js guide has no SSR wording of its own."},
+  {"intent":15,"q":"SSR","k":10,
+   "expect":["^radix:primitives/docs/guides/server-side-rendering(#|$)","^mantine:(guides/next|core/portal#server-side-rendering)(#|$)"],
+   "libs":[{"source":"radix","expect":"^radix:primitives/docs/guides/server-side-rendering(#|$)"},{"source":"mantine","expect":"^mantine:(guides/next|core/portal#server-side-rendering)(#|$)"}],
+   "note":"mantine: either the Next.js guide or the Portal server-side-rendering section (the brief writes mantine ssr/next). The Next.js guide has no SSR wording of its own."},
+
+  {"intent":16,"q":"testing","k":10,
+   "expect":["^mantine:guides/jest(#|$)","^mantine:guides/vitest(#|$)","^chakra:components/concepts/testing(#|$)","^vanilla-extract:overview/test-environments(#|$)"],
+   "libs":[{"source":"mantine","expect":"^mantine:guides/jest(#|$)"},{"source":"mantine","expect":"^mantine:guides/vitest(#|$)"},{"source":"chakra","expect":"^chakra:components/concepts/testing(#|$)"},{"source":"vanilla-extract","expect":"^vanilla-extract:overview/test-environments(#|$)"}]},
+  {"intent":16,"q":"jest","k":10,
+   "expect":["^mantine:guides/jest(#|$)"],
+   "libs":[{"source":"mantine","expect":"^mantine:guides/jest(#|$)"}],
+   "note":"Each framework phrasing names its own mantine page (ruling: the other framework's page is not required)."},
+  {"intent":16,"q":"vitest","k":10,
+   "expect":["^mantine:guides/vitest(#|$)"],
+   "libs":[{"source":"mantine","expect":"^mantine:guides/vitest(#|$)"}],
+   "note":"Each framework phrasing names its own mantine page (ruling: the other framework's page is not required)."},
+
+  {"intent":17,"q":"typescript","k":10,
+   "expect":["^mantine:guides/typescript(#|$)","^stylex:learn/static-types(#|$)"],
+   "libs":[{"source":"mantine","expect":"^mantine:guides/typescript(#|$)"},{"source":"stylex","expect":"^stylex:learn/static-types(#|$)"}]},
+
+  {"intent":18,"q":"accessibility","k":10,
+   "expect":["^radix:primitives/docs/overview/accessibility(#|$)","^react-aria:quality(#|$)"],
+   "libs":[{"source":"radix","expect":"^radix:primitives/docs/overview/accessibility(#|$)"},{"source":"react-aria","expect":"^react-aria:quality(#|$)"}],
+   "note":"react-aria: no accessibility page exists in vendor/docs/react-aria (no page titled or headed Accessibility). react-aria:quality replaces it: its first part is an Accessibility section."},
+
+  {"intent":19,"q":"migration","k":10,
+   "expect":["^chakra:get-started/migration(#|$)","^tailwind:upgrade-guide(#|$)","^mantine:guides/[0-9]x-to-[0-9]x(#|$)"],
+   "libs":[{"source":"chakra","expect":"^chakra:get-started/migration(#|$)"},{"source":"tailwind","expect":"^tailwind:upgrade-guide(#|$)"},{"source":"mantine","expect":"^mantine:guides/[0-9]x-to-[0-9]x(#|$)"}]},
+  {"intent":19,"q":"upgrade guide","k":10,
+   "expect":["^chakra:get-started/migration(#|$)","^tailwind:upgrade-guide(#|$)","^mantine:guides/[0-9]x-to-[0-9]x(#|$)"],
+   "libs":[{"source":"chakra","expect":"^chakra:get-started/migration(#|$)"},{"source":"tailwind","expect":"^tailwind:upgrade-guide(#|$)"},{"source":"mantine","expect":"^mantine:guides/[0-9]x-to-[0-9]x(#|$)"}]},
+
+  {"intent":20,"q":"tokens","k":10,
+   "expect":["^panda:theming/tokens(#|$)","^chakra:theming/tokens(#|$)","^vanilla-extract:overview/theming(#|$)"],
+   "libs":[{"source":"panda","expect":"^panda:theming/tokens(#|$)"},{"source":"chakra","expect":"^chakra:theming/tokens(#|$)"},{"source":"vanilla-extract","expect":"^vanilla-extract:overview/theming(#|$)"}],
+   "note":"Known miss, left failing on purpose: vanilla-extract:overview/theming never says 'token' (0 occurrences in its body) and carries only the theming concept, so no ranking can link it to 'tokens'."},
+
+  {"intent":21,"q":"fonts","k":10,
+   "expect":["^panda:theming/fonts(#|$)","^chakra:guides/theming-add-custom-font-to-(nextjs|vite)(#|$)"],
+   "libs":[{"source":"panda","expect":"^panda:theming/fonts(#|$)"},{"source":"chakra","expect":"^chakra:guides/theming-add-custom-font-to-(nextjs|vite)(#|$)"}]},
+
+  {"intent":22,"q":"animation","k":10,
+   "expect":["^panda:(styling/keyframes|theming/animation-styles)(#|$)","^chakra:(components/concepts/animation|theming/animations)(#|$)","^radix:primitives/docs/guides/animation(#|$)"],
+   "libs":[{"source":"panda","expect":"^panda:(styling/keyframes|theming/animation-styles)(#|$)"},{"source":"chakra","expect":"^chakra:(components/concepts/animation|theming/animations)(#|$)"},{"source":"radix","expect":"^radix:primitives/docs/guides/animation(#|$)"}]},
+
+  {"intent":23,"q":"theming","k":10,
+   "expect":["^radix:themes/docs/theme/overview(#|$)","^chakra:theming/overview(#|$)","^mantine:theming/theme-object(#|$)"],
+   "libs":[{"source":"radix","expect":"^radix:themes/docs/theme/overview(#|$)"},{"source":"chakra","expect":"^chakra:theming/overview(#|$)"},{"source":"mantine","expect":"^mantine:theming/theme-object(#|$)"}]},
+
+  {"intent":24,"q":"Accordion props","k":10,
+   "expect":["^radix:primitives/docs/components/accordion(#|$)","^ark-ui:components/accordion(#|$)","^base-ui:react/components/accordion(#|$)","^chakra:components/accordion(#|$)","^mantine:core/accordion(#|$)"],
+   "libs":[{"source":"radix","expect":"^radix:primitives/docs/components/accordion(#|$)"},{"source":"ark-ui","expect":"^ark-ui:components/accordion(#|$)"},{"source":"base-ui","expect":"^base-ui:react/components/accordion(#|$)"},{"source":"chakra","expect":"^chakra:components/accordion(#|$)"},{"source":"mantine","expect":"^mantine:core/accordion(#|$)"}]},
+
+  {"intent":25,"q":"Tabs","k":10,
+   "expect":["^radix:primitives/docs/components/tabs(#|$)","^ark-ui:components/tabs(#|$)","^base-ui:react/components/tabs(#|$)","^chakra:components/tabs(#|$)","^mantine:core/tabs(#|$)","^react-aria:Tabs(#|$)"],
+   "libs":[{"source":"radix","expect":"^radix:primitives/docs/components/tabs(#|$)"},{"source":"ark-ui","expect":"^ark-ui:components/tabs(#|$)"},{"source":"base-ui","expect":"^base-ui:react/components/tabs(#|$)"},{"source":"chakra","expect":"^chakra:components/tabs(#|$)"},{"source":"mantine","expect":"^mantine:core/tabs(#|$)"},{"source":"react-aria","expect":"^react-aria:Tabs(#|$)"}]},
+
+  {"intent":26,"q":"how it works","k":10,
+   "expect":["^stylex:learn/thinking-in-stylex(#|$)","^panda:get-started/(thinking-in-panda|why-panda)(#|$)"],
+   "libs":[{"source":"stylex","expect":"^stylex:learn/thinking-in-stylex(#|$)"},{"source":"panda","expect":"^panda:get-started/(thinking-in-panda|why-panda)(#|$)"}]},
+  {"intent":26,"q":"thinking in","k":10,
+   "expect":["^stylex:learn/thinking-in-stylex(#|$)","^panda:get-started/(thinking-in-panda|why-panda)(#|$)"],
+   "libs":[{"source":"stylex","expect":"^stylex:learn/thinking-in-stylex(#|$)"},{"source":"panda","expect":"^panda:get-started/(thinking-in-panda|why-panda)(#|$)"}]},
+
+  {"intent":27,"q":"codegen","k":10,
+   "expect":["^panda:reference/cli"],
+   "libs":[{"source":"panda","expect":"^panda:reference/cli"}]},
+
+  {"intent":28,"q":"monorepo","k":10,
+   "expect":["^shadcn:monorepo(#|$)","^panda:design-systems/monorepo-workflow(#|$)"],
+   "libs":[{"source":"shadcn","expect":"^shadcn:monorepo(#|$)"},{"source":"panda","expect":"^panda:design-systems/monorepo-workflow(#|$)"}]},
+
+  {"intent":29,"q":"llms.txt","k":10,
+   "expect":["^panda:get-started/llms-txt(#|$)","^chakra:get-started/ai/llms(#|$)","^mantine:guides/llms(#|$)"],
+   "libs":[{"source":"panda","expect":"^panda:get-started/llms-txt(#|$)"},{"source":"chakra","expect":"^chakra:get-started/ai/llms(#|$)"},{"source":"mantine","expect":"^mantine:guides/llms(#|$)"}]},
+
+  {"intent":30,"q":"MCP server","k":10,
+   "expect":["^panda:get-started/mcp-server(#|$)","^chakra:get-started/ai/mcp-server(#|$)","^shadcn:mcp(#|$)"],
+   "libs":[{"source":"panda","expect":"^panda:get-started/mcp-server(#|$)"},{"source":"chakra","expect":"^chakra:get-started/ai/mcp-server(#|$)"},{"source":"shadcn","expect":"^shadcn:mcp(#|$)"}]},
+
+  {"intent":31,"q":"css variables","k":10,
+   "expect":["^mantine:styles/css-variables(#|$)","^(radix:themes/docs/overview/styling|tailwind:theme)(#|$)"],
+   "libs":[{"source":"mantine","expect":"^mantine:styles/css-variables(#|$)"},{"any":[{"source":"radix","expect":"^radix:themes/docs/overview/styling(#|$)"},{"source":"tailwind","expect":"^tailwind:theme(#|$)"}]}],
+   "note":"radix themes / tailwind theme variables: either page. Radix styling says its components are powered by CSS variables."},
+
+  {"intent":32,"q":"rtl","k":10,
+   "expect":["^chakra:guides/overview-rtl-support(#|$)","^mantine:styles/rtl(#|$)","^radix:primitives/docs/utilities/direction-provider(#|$)"],
+   "libs":[{"source":"chakra","expect":"^chakra:guides/overview-rtl-support(#|$)"},{"source":"mantine","expect":"^mantine:styles/rtl(#|$)"},{"source":"radix","expect":"^radix:primitives/docs/utilities/direction-provider(#|$)"}]},
+  {"intent":32,"q":"right to left","k":10,
+   "expect":["^chakra:guides/overview-rtl-support(#|$)","^mantine:styles/rtl(#|$)","^radix:primitives/docs/utilities/direction-provider(#|$)"],
+   "libs":[{"source":"chakra","expect":"^chakra:guides/overview-rtl-support(#|$)"},{"source":"mantine","expect":"^mantine:styles/rtl(#|$)"},{"source":"radix","expect":"^radix:primitives/docs/utilities/direction-provider(#|$)"}]}
+]

@@ -1,0 +1,1685 @@
+{
+ "_about": "Docs URLs in https://primer.style/sitemap.xml (all but the home page), fetched 2026-10-19. Each resolves with 200 and carries its page title. Used for coverage and for the accessibility link targets.",
+ "urls": [
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit",
+   "url": "https://primer.style/accessibility/annotation-toolkit/",
+   "title": "Annotation Toolkit"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/basics",
+   "url": "https://primer.style/accessibility/annotation-toolkit/basics/",
+   "title": "Basics"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/basics/features",
+   "url": "https://primer.style/accessibility/annotation-toolkit/basics/features/",
+   "title": "Features"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/basics/getting-started",
+   "url": "https://primer.style/accessibility/annotation-toolkit/basics/getting-started/",
+   "title": "Getting started"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/deep-dives",
+   "url": "https://primer.style/accessibility/annotation-toolkit/deep-dives/",
+   "title": "Training and deep dives"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/deep-dives/annotation-theory",
+   "url": "https://primer.style/accessibility/annotation-toolkit/deep-dives/annotation-theory/",
+   "title": "Annotation Theory"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/deep-dives/best-practices-for-annotating",
+   "url": "https://primer.style/accessibility/annotation-toolkit/deep-dives/best-practices-for-annotating/",
+   "title": "Best practices"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/deep-dives/best-practices-for-hand-off",
+   "url": "https://primer.style/accessibility/annotation-toolkit/deep-dives/best-practices-for-hand-off/",
+   "title": "Avoiding hand-off friction"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/deep-dives/tiered-model",
+   "url": "https://primer.style/accessibility/annotation-toolkit/deep-dives/tiered-model/",
+   "title": "The Tiered Model"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/",
+   "title": "Tutorials"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/basic-notes",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/basic-notes/",
+   "title": "Basic Notes"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/button",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/button/",
+   "title": "Button annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/flow-lines",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/flow-lines/",
+   "title": "Flow lines"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/form-element",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/form-element/",
+   "title": "Form element annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/heading",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/heading/",
+   "title": "Heading annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/landmark",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/landmark/",
+   "title": "Landmark annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/link",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/link/",
+   "title": "Link annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/list",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/list/",
+   "title": "List annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/media",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/media/",
+   "title": "Media annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/metadata",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/metadata/",
+   "title": "Metadata annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/mobile-annotations",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/mobile-annotations/",
+   "title": "Mobile annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/ordering",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/ordering/",
+   "title": "Ordering annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/primer-presets",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/primer-presets/",
+   "title": "Primer A11y Presets"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/system-feedback",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/system-feedback/",
+   "title": "System Feedback"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/table",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/table/",
+   "title": "Table annotations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/annotation-toolkit/tutorials/user-interactions",
+   "url": "https://primer.style/accessibility/annotation-toolkit/tutorials/user-interactions/",
+   "title": "User Interactions"
+  },
+  {
+   "loc": "https://primer.style/accessibility/design-guidance",
+   "url": "https://primer.style/accessibility/design-guidance/",
+   "title": "Design guidance"
+  },
+  {
+   "loc": "https://primer.style/accessibility/design-guidance/alternative-text-for-images",
+   "url": "https://primer.style/accessibility/design-guidance/alternative-text-for-images/",
+   "title": "Alternative text for images"
+  },
+  {
+   "loc": "https://primer.style/accessibility/design-guidance/app-like-web-experiences",
+   "url": "https://primer.style/accessibility/design-guidance/app-like-web-experiences/",
+   "title": "App-like web experiences"
+  },
+  {
+   "loc": "https://primer.style/accessibility/design-guidance/color-considerations",
+   "url": "https://primer.style/accessibility/design-guidance/color-considerations/",
+   "title": "Color considerations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/design-guidance/focus-management",
+   "url": "https://primer.style/accessibility/design-guidance/focus-management/",
+   "title": "Focus management"
+  },
+  {
+   "loc": "https://primer.style/accessibility/design-guidance/links-and-buttons",
+   "url": "https://primer.style/accessibility/design-guidance/links-and-buttons/",
+   "title": "Links and buttons"
+  },
+  {
+   "loc": "https://primer.style/accessibility/design-guidance/motion-and-animation",
+   "url": "https://primer.style/accessibility/design-guidance/motion-and-animation/",
+   "title": "Motion and animation"
+  },
+  {
+   "loc": "https://primer.style/accessibility/design-guidance/semantic-html-and-aria",
+   "url": "https://primer.style/accessibility/design-guidance/semantic-html-and-aria/",
+   "title": "Semantic HTML and ARIA"
+  },
+  {
+   "loc": "https://primer.style/accessibility/design-guidance/text-resize-and-spacing",
+   "url": "https://primer.style/accessibility/design-guidance/text-resize-and-spacing/",
+   "title": "Text resizing and spacing"
+  },
+  {
+   "loc": "https://primer.style/accessibility/foundations",
+   "url": "https://primer.style/accessibility/foundations/",
+   "title": "Accessibility Foundations"
+  },
+  {
+   "loc": "https://primer.style/accessibility/foundations/accessibility-at-github",
+   "url": "https://primer.style/accessibility/foundations/accessibility-at-github/",
+   "title": "Accessibility at GitHub"
+  },
+  {
+   "loc": "https://primer.style/accessibility/foundations/accessibility-fundamentals",
+   "url": "https://primer.style/accessibility/foundations/accessibility-fundamentals/",
+   "title": "Accessibility fundamentals"
+  },
+  {
+   "loc": "https://primer.style/accessibility/foundations/cli-accessibility",
+   "url": "https://primer.style/accessibility/foundations/cli-accessibility/",
+   "title": "CLI accessibility"
+  },
+  {
+   "loc": "https://primer.style/accessibility/foundations/copilot-principles",
+   "url": "https://primer.style/accessibility/foundations/copilot-principles/",
+   "title": "Copilot Accessibility Principles"
+  },
+  {
+   "loc": "https://primer.style/accessibility/foundations/scenarios-framework",
+   "url": "https://primer.style/accessibility/foundations/scenarios-framework/",
+   "title": "Scenarios Framework"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns",
+   "url": "https://primer.style/accessibility/patterns/",
+   "title": "Patterns"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/accessible-notifications-and-messages",
+   "url": "https://primer.style/accessibility/patterns/accessible-notifications-and-messages/",
+   "title": "Accessible notifications and messages"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/copilot-accessibility-practices",
+   "url": "https://primer.style/accessibility/patterns/copilot-accessibility-practices/",
+   "title": "Copilot Accessibility Practices"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/drag-and-drop",
+   "url": "https://primer.style/accessibility/patterns/drag-and-drop/",
+   "title": "Drag and Drop"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/keyboard-shortcuts",
+   "url": "https://primer.style/accessibility/patterns/keyboard-shortcuts/",
+   "title": "Keyboard shortcuts"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/placeholders",
+   "url": "https://primer.style/accessibility/patterns/placeholders/",
+   "title": "Placeholders"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/primer-components",
+   "url": "https://primer.style/accessibility/patterns/primer-components/",
+   "title": "Primer components"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/primer-components/descriptive-buttons",
+   "url": "https://primer.style/accessibility/patterns/primer-components/descriptive-buttons/",
+   "title": "Buttons"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/primer-components/headings",
+   "url": "https://primer.style/accessibility/patterns/primer-components/headings/",
+   "title": "Headings"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/primer-components/icons",
+   "url": "https://primer.style/accessibility/patterns/primer-components/icons/",
+   "title": "Icons"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/primer-components/links",
+   "url": "https://primer.style/accessibility/patterns/primer-components/links/",
+   "title": "Links"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/primer-components/tooltips",
+   "url": "https://primer.style/accessibility/patterns/primer-components/tooltips/",
+   "title": "Tooltips"
+  },
+  {
+   "loc": "https://primer.style/accessibility/patterns/truncation",
+   "url": "https://primer.style/accessibility/patterns/truncation/",
+   "title": "Truncation"
+  },
+  {
+   "loc": "https://primer.style/accessibility/tools-and-resources",
+   "url": "https://primer.style/accessibility/tools-and-resources/",
+   "title": "GitHub tools and resources"
+  },
+  {
+   "loc": "https://primer.style/accessibility/tools-and-resources/checklists",
+   "url": "https://primer.style/accessibility/tools-and-resources/checklists/",
+   "title": "Checklists"
+  },
+  {
+   "loc": "https://primer.style/accessibility/tools-and-resources/checklists/designer-checklist",
+   "url": "https://primer.style/accessibility/tools-and-resources/checklists/designer-checklist/",
+   "title": "Designer Checklist"
+  },
+  {
+   "loc": "https://primer.style/accessibility/tools-and-resources/checklists/engineering-checklist",
+   "url": "https://primer.style/accessibility/tools-and-resources/checklists/engineering-checklist/",
+   "title": "Engineering Checklist"
+  },
+  {
+   "loc": "https://primer.style/accessibility/tools-and-resources/checklists/mobile-checklist",
+   "url": "https://primer.style/accessibility/tools-and-resources/checklists/mobile-checklist/",
+   "title": "Mobile Checklist"
+  },
+  {
+   "loc": "https://primer.style/accessibility/tools-and-resources/extensions-and-tools",
+   "url": "https://primer.style/accessibility/tools-and-resources/extensions-and-tools/",
+   "title": "Accessibility extensions and tools"
+  },
+  {
+   "loc": "https://primer.style/octicons/code",
+   "url": "https://primer.style/octicons/code/",
+   "title": "Octicons"
+  },
+  {
+   "loc": "https://primer.style/octicons/design-guidelines",
+   "url": "https://primer.style/octicons/design-guidelines/",
+   "title": "Octicons"
+  },
+  {
+   "loc": "https://primer.style/octicons/usage-guidelines",
+   "url": "https://primer.style/octicons/usage-guidelines/",
+   "title": "Octicons"
+  },
+  {
+   "loc": "https://primer.style/product/components",
+   "url": "https://primer.style/product/components/",
+   "title": "Components"
+  },
+  {
+   "loc": "https://primer.style/product/components/action-bar",
+   "url": "https://primer.style/product/components/action-bar/",
+   "title": "ActionBar"
+  },
+  {
+   "loc": "https://primer.style/product/components/action-bar/accessibility",
+   "url": "https://primer.style/product/components/action-bar/accessibility/",
+   "title": "Accessibility - ActionBar"
+  },
+  {
+   "loc": "https://primer.style/product/components/action-bar/guidelines",
+   "url": "https://primer.style/product/components/action-bar/guidelines/",
+   "title": "Guidelines - ActionBar"
+  },
+  {
+   "loc": "https://primer.style/product/components/action-list",
+   "url": "https://primer.style/product/components/action-list/",
+   "title": "ActionList"
+  },
+  {
+   "loc": "https://primer.style/product/components/action-list/accessibility",
+   "url": "https://primer.style/product/components/action-list/accessibility/",
+   "title": "Accessibility - ActionList"
+  },
+  {
+   "loc": "https://primer.style/product/components/action-list/guidelines",
+   "url": "https://primer.style/product/components/action-list/guidelines/",
+   "title": "Guidelines - ActionList"
+  },
+  {
+   "loc": "https://primer.style/product/components/action-menu",
+   "url": "https://primer.style/product/components/action-menu/",
+   "title": "ActionMenu"
+  },
+  {
+   "loc": "https://primer.style/product/components/action-menu/accessibility",
+   "url": "https://primer.style/product/components/action-menu/accessibility/",
+   "title": "Accessibility - ActionMenu"
+  },
+  {
+   "loc": "https://primer.style/product/components/action-menu/guidelines",
+   "url": "https://primer.style/product/components/action-menu/guidelines/",
+   "title": "Guidelines - ActionMenu"
+  },
+  {
+   "loc": "https://primer.style/product/components/anchored-overlay",
+   "url": "https://primer.style/product/components/anchored-overlay/",
+   "title": "AnchoredOverlay"
+  },
+  {
+   "loc": "https://primer.style/product/components/anchored-overlay/acessibility",
+   "url": "https://primer.style/product/components/anchored-overlay/acessibility/",
+   "title": "Accessibility - AnchoredOverlay"
+  },
+  {
+   "loc": "https://primer.style/product/components/autocomplete",
+   "url": "https://primer.style/product/components/autocomplete/",
+   "title": "Autocomplete"
+  },
+  {
+   "loc": "https://primer.style/product/components/autocomplete/guidelines",
+   "url": "https://primer.style/product/components/autocomplete/guidelines/",
+   "title": "Guidelines - Autocomplete"
+  },
+  {
+   "loc": "https://primer.style/product/components/avatar-stack",
+   "url": "https://primer.style/product/components/avatar-stack/",
+   "title": "AvatarStack"
+  },
+  {
+   "loc": "https://primer.style/product/components/avatar",
+   "url": "https://primer.style/product/components/avatar/",
+   "title": "Avatar"
+  },
+  {
+   "loc": "https://primer.style/product/components/banner",
+   "url": "https://primer.style/product/components/banner/",
+   "title": "Banner"
+  },
+  {
+   "loc": "https://primer.style/product/components/banner/accessibility",
+   "url": "https://primer.style/product/components/banner/accessibility/",
+   "title": "Accessibility - Banner"
+  },
+  {
+   "loc": "https://primer.style/product/components/banner/guidelines",
+   "url": "https://primer.style/product/components/banner/guidelines/",
+   "title": "Guidelines - Banner"
+  },
+  {
+   "loc": "https://primer.style/product/components/blankslate",
+   "url": "https://primer.style/product/components/blankslate/",
+   "title": "Blankslate"
+  },
+  {
+   "loc": "https://primer.style/product/components/blankslate/guidelines",
+   "url": "https://primer.style/product/components/blankslate/guidelines/",
+   "title": "Guidelines - Blankslate"
+  },
+  {
+   "loc": "https://primer.style/product/components/branch-name",
+   "url": "https://primer.style/product/components/branch-name/",
+   "title": "BranchName"
+  },
+  {
+   "loc": "https://primer.style/product/components/branch-name/accessibility",
+   "url": "https://primer.style/product/components/branch-name/accessibility/",
+   "title": "Accessibility - BranchName"
+  },
+  {
+   "loc": "https://primer.style/product/components/breadcrumbs",
+   "url": "https://primer.style/product/components/breadcrumbs/",
+   "title": "Breadcrumbs"
+  },
+  {
+   "loc": "https://primer.style/product/components/breadcrumbs/accessibility",
+   "url": "https://primer.style/product/components/breadcrumbs/accessibility/",
+   "title": "Accessibility - Breadcrumbs"
+  },
+  {
+   "loc": "https://primer.style/product/components/breadcrumbs/guidelines",
+   "url": "https://primer.style/product/components/breadcrumbs/guidelines/",
+   "title": "Guidelines - Breadcrumbs"
+  },
+  {
+   "loc": "https://primer.style/product/components/button-group",
+   "url": "https://primer.style/product/components/button-group/",
+   "title": "ButtonGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/button-group/accessibility",
+   "url": "https://primer.style/product/components/button-group/accessibility/",
+   "title": "Accessibility - ButtonGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/button-group/guidelines",
+   "url": "https://primer.style/product/components/button-group/guidelines/",
+   "title": "Guidelines - ButtonGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/button",
+   "url": "https://primer.style/product/components/button/",
+   "title": "Button"
+  },
+  {
+   "loc": "https://primer.style/product/components/button/accessibility",
+   "url": "https://primer.style/product/components/button/accessibility/",
+   "title": "Accessibility - Button"
+  },
+  {
+   "loc": "https://primer.style/product/components/button/guidelines",
+   "url": "https://primer.style/product/components/button/guidelines/",
+   "title": "Guidelines - Button"
+  },
+  {
+   "loc": "https://primer.style/product/components/card",
+   "url": "https://primer.style/product/components/card/",
+   "title": "Card"
+  },
+  {
+   "loc": "https://primer.style/product/components/card/accessibility",
+   "url": "https://primer.style/product/components/card/accessibility/",
+   "title": "Accessibility - Card"
+  },
+  {
+   "loc": "https://primer.style/product/components/checkbox-group",
+   "url": "https://primer.style/product/components/checkbox-group/",
+   "title": "CheckboxGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/checkbox-group/accessibility",
+   "url": "https://primer.style/product/components/checkbox-group/accessibility/",
+   "title": "Accessibility - CheckboxGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/checkbox-group/guidelines",
+   "url": "https://primer.style/product/components/checkbox-group/guidelines/",
+   "title": "Guidelines - CheckboxGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/checkbox",
+   "url": "https://primer.style/product/components/checkbox/",
+   "title": "Checkbox"
+  },
+  {
+   "loc": "https://primer.style/product/components/checkbox/accessibility",
+   "url": "https://primer.style/product/components/checkbox/accessibility/",
+   "title": "Accessibility - Checkbox"
+  },
+  {
+   "loc": "https://primer.style/product/components/circle-badge",
+   "url": "https://primer.style/product/components/circle-badge/",
+   "title": "CircleBadge"
+  },
+  {
+   "loc": "https://primer.style/product/components/confirmation-dialog",
+   "url": "https://primer.style/product/components/confirmation-dialog/",
+   "title": "ConfirmationDialog"
+  },
+  {
+   "loc": "https://primer.style/product/components/confirmation-dialog/accessibility",
+   "url": "https://primer.style/product/components/confirmation-dialog/accessibility/",
+   "title": "Accessibility - ConfirmationDialog"
+  },
+  {
+   "loc": "https://primer.style/product/components/confirmation-dialog/guidelines",
+   "url": "https://primer.style/product/components/confirmation-dialog/guidelines/",
+   "title": "Guidelines - ConfirmationDialog"
+  },
+  {
+   "loc": "https://primer.style/product/components/counter-label",
+   "url": "https://primer.style/product/components/counter-label/",
+   "title": "CounterLabel"
+  },
+  {
+   "loc": "https://primer.style/product/components/counter-label/accessibility",
+   "url": "https://primer.style/product/components/counter-label/accessibility/",
+   "title": "Accessibility - CounterLabel"
+  },
+  {
+   "loc": "https://primer.style/product/components/data-table",
+   "url": "https://primer.style/product/components/data-table/",
+   "title": "DataTable"
+  },
+  {
+   "loc": "https://primer.style/product/components/data-table/accessibility",
+   "url": "https://primer.style/product/components/data-table/accessibility/",
+   "title": "Accessibility - DataTable"
+  },
+  {
+   "loc": "https://primer.style/product/components/data-table/guidelines",
+   "url": "https://primer.style/product/components/data-table/guidelines/",
+   "title": "Guidelines - DataTable"
+  },
+  {
+   "loc": "https://primer.style/product/components/details",
+   "url": "https://primer.style/product/components/details/",
+   "title": "Details"
+  },
+  {
+   "loc": "https://primer.style/product/components/details/accessibility",
+   "url": "https://primer.style/product/components/details/accessibility/",
+   "title": "Accessibility - Details"
+  },
+  {
+   "loc": "https://primer.style/product/components/dialog",
+   "url": "https://primer.style/product/components/dialog/",
+   "title": "Dialog"
+  },
+  {
+   "loc": "https://primer.style/product/components/dialog/accessibility",
+   "url": "https://primer.style/product/components/dialog/accessibility/",
+   "title": "Accessibility - Dialog"
+  },
+  {
+   "loc": "https://primer.style/product/components/dialog/guidelines",
+   "url": "https://primer.style/product/components/dialog/guidelines/",
+   "title": "Guidelines - Dialog"
+  },
+  {
+   "loc": "https://primer.style/product/components/form-control",
+   "url": "https://primer.style/product/components/form-control/",
+   "title": "FormControl"
+  },
+  {
+   "loc": "https://primer.style/product/components/form-control/accessibility",
+   "url": "https://primer.style/product/components/form-control/accessibility/",
+   "title": "Accessibility - FormControl"
+  },
+  {
+   "loc": "https://primer.style/product/components/heading",
+   "url": "https://primer.style/product/components/heading/",
+   "title": "Heading"
+  },
+  {
+   "loc": "https://primer.style/product/components/heading/accessibility",
+   "url": "https://primer.style/product/components/heading/accessibility/",
+   "title": "Accessibility - Heading"
+  },
+  {
+   "loc": "https://primer.style/product/components/icon-button",
+   "url": "https://primer.style/product/components/icon-button/",
+   "title": "IconButton"
+  },
+  {
+   "loc": "https://primer.style/product/components/icon-button/accessibility",
+   "url": "https://primer.style/product/components/icon-button/accessibility/",
+   "title": "Accessibility - IconButton"
+  },
+  {
+   "loc": "https://primer.style/product/components/icon-button/guidelines",
+   "url": "https://primer.style/product/components/icon-button/guidelines/",
+   "title": "Guidelines - IconButton"
+  },
+  {
+   "loc": "https://primer.style/product/components/inline-message",
+   "url": "https://primer.style/product/components/inline-message/",
+   "title": "InlineMessage"
+  },
+  {
+   "loc": "https://primer.style/product/components/keybinding-hint",
+   "url": "https://primer.style/product/components/keybinding-hint/",
+   "title": "KeybindingHint"
+  },
+  {
+   "loc": "https://primer.style/product/components/label-group",
+   "url": "https://primer.style/product/components/label-group/",
+   "title": "LabelGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/label-group/accessibility",
+   "url": "https://primer.style/product/components/label-group/accessibility/",
+   "title": "Accessibility - LabelGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/label",
+   "url": "https://primer.style/product/components/label/",
+   "title": "Label"
+  },
+  {
+   "loc": "https://primer.style/product/components/label/accessibility",
+   "url": "https://primer.style/product/components/label/accessibility/",
+   "title": "Accessibility - Label"
+  },
+  {
+   "loc": "https://primer.style/product/components/link",
+   "url": "https://primer.style/product/components/link/",
+   "title": "Link"
+  },
+  {
+   "loc": "https://primer.style/product/components/link/accessibility",
+   "url": "https://primer.style/product/components/link/accessibility/",
+   "title": "Accessibility - Link"
+  },
+  {
+   "loc": "https://primer.style/product/components/link/guidelines",
+   "url": "https://primer.style/product/components/link/guidelines/",
+   "title": "Guidelines - Link"
+  },
+  {
+   "loc": "https://primer.style/product/components/nav-list",
+   "url": "https://primer.style/product/components/nav-list/",
+   "title": "NavList"
+  },
+  {
+   "loc": "https://primer.style/product/components/nav-list/accessibility",
+   "url": "https://primer.style/product/components/nav-list/accessibility/",
+   "title": "Accessibility - NavList"
+  },
+  {
+   "loc": "https://primer.style/product/components/nav-list/guidlines",
+   "url": "https://primer.style/product/components/nav-list/guidlines/",
+   "title": "Guidelines - NavList"
+  },
+  {
+   "loc": "https://primer.style/product/components/overlay",
+   "url": "https://primer.style/product/components/overlay/",
+   "title": "Overlay"
+  },
+  {
+   "loc": "https://primer.style/product/components/overlay/accessibility",
+   "url": "https://primer.style/product/components/overlay/accessibility/",
+   "title": "Accessibility - Overlay"
+  },
+  {
+   "loc": "https://primer.style/product/components/page-header",
+   "url": "https://primer.style/product/components/page-header/",
+   "title": "PageHeader"
+  },
+  {
+   "loc": "https://primer.style/product/components/page-header/accessibility",
+   "url": "https://primer.style/product/components/page-header/accessibility/",
+   "title": "Accessibility - PageHeader"
+  },
+  {
+   "loc": "https://primer.style/product/components/page-header/guidelines",
+   "url": "https://primer.style/product/components/page-header/guidelines/",
+   "title": "Guidelines - PageHeader"
+  },
+  {
+   "loc": "https://primer.style/product/components/page-layout",
+   "url": "https://primer.style/product/components/page-layout/",
+   "title": "PageLayout"
+  },
+  {
+   "loc": "https://primer.style/product/components/page-layout/accessibility",
+   "url": "https://primer.style/product/components/page-layout/accessibility/",
+   "title": "Accessibility - PageLayout"
+  },
+  {
+   "loc": "https://primer.style/product/components/pagination",
+   "url": "https://primer.style/product/components/pagination/",
+   "title": "Pagination"
+  },
+  {
+   "loc": "https://primer.style/product/components/pagination/accessibility",
+   "url": "https://primer.style/product/components/pagination/accessibility/",
+   "title": "Accessibility - Pagination"
+  },
+  {
+   "loc": "https://primer.style/product/components/pagination/guidelines",
+   "url": "https://primer.style/product/components/pagination/guidelines/",
+   "title": "Guidelines - Pagination"
+  },
+  {
+   "loc": "https://primer.style/product/components/popover",
+   "url": "https://primer.style/product/components/popover/",
+   "title": "Popover"
+  },
+  {
+   "loc": "https://primer.style/product/components/popover/accessibility",
+   "url": "https://primer.style/product/components/popover/accessibility/",
+   "title": "Accessibility - Popover"
+  },
+  {
+   "loc": "https://primer.style/product/components/popover/guidelines",
+   "url": "https://primer.style/product/components/popover/guidelines/",
+   "title": "Guidelines - Popover"
+  },
+  {
+   "loc": "https://primer.style/product/components/progress-bar",
+   "url": "https://primer.style/product/components/progress-bar/",
+   "title": "ProgressBar"
+  },
+  {
+   "loc": "https://primer.style/product/components/progress-bar/accessibility",
+   "url": "https://primer.style/product/components/progress-bar/accessibility/",
+   "title": "Accessibility - ProgressBar"
+  },
+  {
+   "loc": "https://primer.style/product/components/radio-group",
+   "url": "https://primer.style/product/components/radio-group/",
+   "title": "RadioGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/radio-group/accessibility",
+   "url": "https://primer.style/product/components/radio-group/accessibility/",
+   "title": "Accessibility - RadioGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/radio-group/guidelines",
+   "url": "https://primer.style/product/components/radio-group/guidelines/",
+   "title": "Guidelines - RadioGroup"
+  },
+  {
+   "loc": "https://primer.style/product/components/radio",
+   "url": "https://primer.style/product/components/radio/",
+   "title": "Radio"
+  },
+  {
+   "loc": "https://primer.style/product/components/radio/accessibility",
+   "url": "https://primer.style/product/components/radio/accessibility/",
+   "title": "Accessibility - Radio"
+  },
+  {
+   "loc": "https://primer.style/product/components/relative-time",
+   "url": "https://primer.style/product/components/relative-time/",
+   "title": "RelativeTime"
+  },
+  {
+   "loc": "https://primer.style/product/components/relative-time/accessibility",
+   "url": "https://primer.style/product/components/relative-time/accessibility/",
+   "title": "Accessibility - RelativeTime"
+  },
+  {
+   "loc": "https://primer.style/product/components/relative-time/guidelines",
+   "url": "https://primer.style/product/components/relative-time/guidelines/",
+   "title": "Guidelines - RelativeTime"
+  },
+  {
+   "loc": "https://primer.style/product/components/segmented-control",
+   "url": "https://primer.style/product/components/segmented-control/",
+   "title": "SegmentedControl"
+  },
+  {
+   "loc": "https://primer.style/product/components/segmented-control/accessibility",
+   "url": "https://primer.style/product/components/segmented-control/accessibility/",
+   "title": "Accessibility - SegmentedControl"
+  },
+  {
+   "loc": "https://primer.style/product/components/segmented-control/guidelines",
+   "url": "https://primer.style/product/components/segmented-control/guidelines/",
+   "title": "Guidelines - SegmentedControl"
+  },
+  {
+   "loc": "https://primer.style/product/components/select-panel",
+   "url": "https://primer.style/product/components/select-panel/",
+   "title": "SelectPanel"
+  },
+  {
+   "loc": "https://primer.style/product/components/select-panel/accessibility",
+   "url": "https://primer.style/product/components/select-panel/accessibility/",
+   "title": "Accessibility - SelectPanel"
+  },
+  {
+   "loc": "https://primer.style/product/components/select-panel/guidelines",
+   "url": "https://primer.style/product/components/select-panel/guidelines/",
+   "title": "Guidelines - SelectPanel"
+  },
+  {
+   "loc": "https://primer.style/product/components/select",
+   "url": "https://primer.style/product/components/select/",
+   "title": "Select"
+  },
+  {
+   "loc": "https://primer.style/product/components/select/accessibility",
+   "url": "https://primer.style/product/components/select/accessibility/",
+   "title": "Accessibility - Select"
+  },
+  {
+   "loc": "https://primer.style/product/components/select/guidelines",
+   "url": "https://primer.style/product/components/select/guidelines/",
+   "title": "Guidelines - Select"
+  },
+  {
+   "loc": "https://primer.style/product/components/skeleton-avatar",
+   "url": "https://primer.style/product/components/skeleton-avatar/",
+   "title": "SkeletonAvatar"
+  },
+  {
+   "loc": "https://primer.style/product/components/skeleton-avatar/accessibility",
+   "url": "https://primer.style/product/components/skeleton-avatar/accessibility/",
+   "title": "Accessibility - SkeletonAvatar"
+  },
+  {
+   "loc": "https://primer.style/product/components/skeleton-box",
+   "url": "https://primer.style/product/components/skeleton-box/",
+   "title": "SkeletonBox"
+  },
+  {
+   "loc": "https://primer.style/product/components/skeleton-box/accessibility",
+   "url": "https://primer.style/product/components/skeleton-box/accessibility/",
+   "title": "Accessibility - SkeletonBox"
+  },
+  {
+   "loc": "https://primer.style/product/components/skeleton-text",
+   "url": "https://primer.style/product/components/skeleton-text/",
+   "title": "SkeletonText"
+  },
+  {
+   "loc": "https://primer.style/product/components/skeleton-text/accessibility",
+   "url": "https://primer.style/product/components/skeleton-text/accessibility/",
+   "title": "Accessibility - SkeletonText"
+  },
+  {
+   "loc": "https://primer.style/product/components/spinner",
+   "url": "https://primer.style/product/components/spinner/",
+   "title": "Spinner"
+  },
+  {
+   "loc": "https://primer.style/product/components/spinner/accessibility",
+   "url": "https://primer.style/product/components/spinner/accessibility/",
+   "title": "Accessibility - Spinner"
+  },
+  {
+   "loc": "https://primer.style/product/components/split-page-layout",
+   "url": "https://primer.style/product/components/split-page-layout/",
+   "title": "SplitPageLayout"
+  },
+  {
+   "loc": "https://primer.style/product/components/stack",
+   "url": "https://primer.style/product/components/stack/",
+   "title": "Stack"
+  },
+  {
+   "loc": "https://primer.style/product/components/stack/accessibility",
+   "url": "https://primer.style/product/components/stack/accessibility/",
+   "title": "Accessibility - Stack"
+  },
+  {
+   "loc": "https://primer.style/product/components/state-label",
+   "url": "https://primer.style/product/components/state-label/",
+   "title": "StateLabel"
+  },
+  {
+   "loc": "https://primer.style/product/components/state-label/accessibility",
+   "url": "https://primer.style/product/components/state-label/accessibility/",
+   "title": "Accessibility - StateLabel"
+  },
+  {
+   "loc": "https://primer.style/product/components/text-input-with-tokens",
+   "url": "https://primer.style/product/components/text-input-with-tokens/",
+   "title": "TextInputWithTokens"
+  },
+  {
+   "loc": "https://primer.style/product/components/text-input-with-tokens/accessibility",
+   "url": "https://primer.style/product/components/text-input-with-tokens/accessibility/",
+   "title": "Accessibility - TextInputWithTokens"
+  },
+  {
+   "loc": "https://primer.style/product/components/text-input-with-tokens/guidelines",
+   "url": "https://primer.style/product/components/text-input-with-tokens/guidelines/",
+   "title": "Guidelines - TextInputWithTokens"
+  },
+  {
+   "loc": "https://primer.style/product/components/text-input",
+   "url": "https://primer.style/product/components/text-input/",
+   "title": "TextInput"
+  },
+  {
+   "loc": "https://primer.style/product/components/text-input/accessibility",
+   "url": "https://primer.style/product/components/text-input/accessibility/",
+   "title": "Accessibility - TextInput"
+  },
+  {
+   "loc": "https://primer.style/product/components/text-input/guidelines",
+   "url": "https://primer.style/product/components/text-input/guidelines/",
+   "title": "Guidelines - TextInput"
+  },
+  {
+   "loc": "https://primer.style/product/components/text",
+   "url": "https://primer.style/product/components/text/",
+   "title": "Text"
+  },
+  {
+   "loc": "https://primer.style/product/components/text/accessibility",
+   "url": "https://primer.style/product/components/text/accessibility/",
+   "title": "Accessibility - Text"
+  },
+  {
+   "loc": "https://primer.style/product/components/textarea",
+   "url": "https://primer.style/product/components/textarea/",
+   "title": "Textarea"
+  },
+  {
+   "loc": "https://primer.style/product/components/textarea/accessibility",
+   "url": "https://primer.style/product/components/textarea/accessibility/",
+   "title": "Accessibility - Textarea"
+  },
+  {
+   "loc": "https://primer.style/product/components/textarea/guidelines",
+   "url": "https://primer.style/product/components/textarea/guidelines/",
+   "title": "Guidelines - Textarea"
+  },
+  {
+   "loc": "https://primer.style/product/components/timeline",
+   "url": "https://primer.style/product/components/timeline/",
+   "title": "Timeline"
+  },
+  {
+   "loc": "https://primer.style/product/components/timeline/accessibility",
+   "url": "https://primer.style/product/components/timeline/accessibility/",
+   "title": "Accessibility - Timeline"
+  },
+  {
+   "loc": "https://primer.style/product/components/toggle-switch",
+   "url": "https://primer.style/product/components/toggle-switch/",
+   "title": "ToggleSwitch"
+  },
+  {
+   "loc": "https://primer.style/product/components/toggle-switch/accessibility",
+   "url": "https://primer.style/product/components/toggle-switch/accessibility/",
+   "title": "Accessibility - ToggleSwitch"
+  },
+  {
+   "loc": "https://primer.style/product/components/toggle-switch/guidelines",
+   "url": "https://primer.style/product/components/toggle-switch/guidelines/",
+   "title": "Guidelines - ToggleSwitch"
+  },
+  {
+   "loc": "https://primer.style/product/components/token",
+   "url": "https://primer.style/product/components/token/",
+   "title": "Token"
+  },
+  {
+   "loc": "https://primer.style/product/components/token/accessibility",
+   "url": "https://primer.style/product/components/token/accessibility/",
+   "title": "Accessibility - Token"
+  },
+  {
+   "loc": "https://primer.style/product/components/token/guidelines",
+   "url": "https://primer.style/product/components/token/guidelines/",
+   "title": "Guidelines - Token"
+  },
+  {
+   "loc": "https://primer.style/product/components/tooltip",
+   "url": "https://primer.style/product/components/tooltip/",
+   "title": "Tooltip"
+  },
+  {
+   "loc": "https://primer.style/product/components/tooltip/accessibility",
+   "url": "https://primer.style/product/components/tooltip/accessibility/",
+   "title": "Accessibility - Tooltip"
+  },
+  {
+   "loc": "https://primer.style/product/components/tooltip/guidelines",
+   "url": "https://primer.style/product/components/tooltip/guidelines/",
+   "title": "Guidelines - Tooltip"
+  },
+  {
+   "loc": "https://primer.style/product/components/tree-view",
+   "url": "https://primer.style/product/components/tree-view/",
+   "title": "TreeView"
+  },
+  {
+   "loc": "https://primer.style/product/components/tree-view/accessibility",
+   "url": "https://primer.style/product/components/tree-view/accessibility/",
+   "title": "Accessibility - TreeView"
+  },
+  {
+   "loc": "https://primer.style/product/components/tree-view/guidelines",
+   "url": "https://primer.style/product/components/tree-view/guidelines/",
+   "title": "Guidelines - TreeView"
+  },
+  {
+   "loc": "https://primer.style/product/components/truncate",
+   "url": "https://primer.style/product/components/truncate/",
+   "title": "Truncate"
+  },
+  {
+   "loc": "https://primer.style/product/components/truncate/accessibility",
+   "url": "https://primer.style/product/components/truncate/accessibility/",
+   "title": "Accessibility - Truncate"
+  },
+  {
+   "loc": "https://primer.style/product/components/underline-nav",
+   "url": "https://primer.style/product/components/underline-nav/",
+   "title": "UnderlineNav"
+  },
+  {
+   "loc": "https://primer.style/product/components/underline-nav/accessibility",
+   "url": "https://primer.style/product/components/underline-nav/accessibility/",
+   "title": "Accessibility - UnderlineNav"
+  },
+  {
+   "loc": "https://primer.style/product/components/underline-nav/guidelines",
+   "url": "https://primer.style/product/components/underline-nav/guidelines/",
+   "title": "Guidelines - UnderlineNav"
+  },
+  {
+   "loc": "https://primer.style/product/components/underline-panels",
+   "url": "https://primer.style/product/components/underline-panels/",
+   "title": "UnderlinePanels"
+  },
+  {
+   "loc": "https://primer.style/product/components/underline-panels/accessibility",
+   "url": "https://primer.style/product/components/underline-panels/accessibility/",
+   "title": "Accessibility - UnderlinePanels"
+  },
+  {
+   "loc": "https://primer.style/product/components/underline-panels/guidelines",
+   "url": "https://primer.style/product/components/underline-panels/guidelines/",
+   "title": "Guidelines - UnderlinePanels"
+  },
+  {
+   "loc": "https://primer.style/product/contribute",
+   "url": "https://primer.style/product/contribute/",
+   "title": "Contribute"
+  },
+  {
+   "loc": "https://primer.style/product/contribute/adding-new-components",
+   "url": "https://primer.style/product/contribute/adding-new-components/",
+   "title": "Adding new components"
+  },
+  {
+   "loc": "https://primer.style/product/contribute/contributing-to-figma",
+   "url": "https://primer.style/product/contribute/contributing-to-figma/",
+   "title": "Contributing to Figma"
+  },
+  {
+   "loc": "https://primer.style/product/contribute/design",
+   "url": "https://primer.style/product/contribute/design/",
+   "title": "Design"
+  },
+  {
+   "loc": "https://primer.style/product/contribute/documentation",
+   "url": "https://primer.style/product/contribute/documentation/",
+   "title": "Documentation"
+  },
+  {
+   "loc": "https://primer.style/product/contribute/handling-new-patterns",
+   "url": "https://primer.style/product/contribute/handling-new-patterns/",
+   "title": "Handling new patterns"
+  },
+  {
+   "loc": "https://primer.style/product/contribute/how-to-contribute",
+   "url": "https://primer.style/product/contribute/how-to-contribute/",
+   "title": "How to contribute"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities",
+   "url": "https://primer.style/product/css-utilities/",
+   "title": "CSS Utilities"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/animations",
+   "url": "https://primer.style/product/css-utilities/animations/",
+   "title": "Animations"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/borders",
+   "url": "https://primer.style/product/css-utilities/borders/",
+   "title": "Borders"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/box-shadow",
+   "url": "https://primer.style/product/css-utilities/box-shadow/",
+   "title": "Box shadow"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/colors",
+   "url": "https://primer.style/product/css-utilities/colors/",
+   "title": "Colors"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/details",
+   "url": "https://primer.style/product/css-utilities/details/",
+   "title": "Details"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/flexbox",
+   "url": "https://primer.style/product/css-utilities/flexbox/",
+   "title": "Flexbox"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/grid",
+   "url": "https://primer.style/product/css-utilities/grid/",
+   "title": "Grid"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/layout",
+   "url": "https://primer.style/product/css-utilities/layout/",
+   "title": "Layout"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/margin",
+   "url": "https://primer.style/product/css-utilities/margin/",
+   "title": "Margin"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/padding",
+   "url": "https://primer.style/product/css-utilities/padding/",
+   "title": "Padding"
+  },
+  {
+   "loc": "https://primer.style/product/css-utilities/typography",
+   "url": "https://primer.style/product/css-utilities/typography/",
+   "title": "Typography"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started",
+   "url": "https://primer.style/product/getting-started/",
+   "title": "Getting started"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/component-status",
+   "url": "https://primer.style/product/getting-started/component-status/",
+   "title": "Component status"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/figma",
+   "url": "https://primer.style/product/getting-started/figma/",
+   "title": "Figma libraries"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/foundations",
+   "url": "https://primer.style/product/getting-started/foundations/",
+   "title": "Foundations"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/foundations/color-usage",
+   "url": "https://primer.style/product/getting-started/foundations/color-usage/",
+   "title": "Color usage"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/foundations/content",
+   "url": "https://primer.style/product/getting-started/foundations/content/",
+   "title": "Content"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/foundations/icons",
+   "url": "https://primer.style/product/getting-started/foundations/icons/",
+   "title": "Icons"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/foundations/layout",
+   "url": "https://primer.style/product/getting-started/foundations/layout/",
+   "title": "Layout"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/foundations/mcp",
+   "url": "https://primer.style/product/getting-started/foundations/mcp/",
+   "title": "MCP server"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/foundations/responsive",
+   "url": "https://primer.style/product/getting-started/foundations/responsive/",
+   "title": "Responsive"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/foundations/typography",
+   "url": "https://primer.style/product/getting-started/foundations/typography/",
+   "title": "Typography"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/rails",
+   "url": "https://primer.style/product/getting-started/rails/",
+   "title": "Rails"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/rails/migration-guides",
+   "url": "https://primer.style/product/getting-started/rails/migration-guides/",
+   "title": "Migration guides"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/rails/migration-guides/primer-button-component",
+   "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-button-component/",
+   "title": "Moving Away From Primer::ButtonComponent"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/rails/migration-guides/primer-css-select-menu",
+   "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-css-select-menu/",
+   "title": "SelectMenu migration"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/rails/migration-guides/primer-css-tooltipped",
+   "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-css-tooltipped/",
+   "title": "Tooltipped migration"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/rails/migration-guides/primer-dialog",
+   "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-dialog/",
+   "title": "Moving Away From &lt;details-dialog&gt;"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/rails/migration-guides/primer-layout-component",
+   "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-layout-component/",
+   "title": "Moving Away From Primer::LayoutComponent"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/rails/migration-guides/primer-local-time",
+   "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-local-time/",
+   "title": "Moving Away From Primer::LocalTime"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/rails/migration-guides/primer-time-ago",
+   "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-time-ago/",
+   "title": "Moving Away From Primer::TimeAgoComponent"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/rails/migration-guides/primer-truncate",
+   "url": "https://primer.style/product/getting-started/rails/migration-guides/primer-truncate/",
+   "title": "Moving Away From `Primer::Truncate`"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react",
+   "url": "https://primer.style/product/getting-started/react/",
+   "title": "React"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react/extending-components",
+   "url": "https://primer.style/product/getting-started/react/extending-components/",
+   "title": "Extending components"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react/linting",
+   "url": "https://primer.style/product/getting-started/react/linting/",
+   "title": "Linting"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react/migration-guides",
+   "url": "https://primer.style/product/getting-started/react/migration-guides/",
+   "title": "Migration guides"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react/migration-guides/primer-experimental-selectpanel",
+   "url": "https://primer.style/product/getting-started/react/migration-guides/primer-experimental-selectpanel/",
+   "title": "Moving Away From Experimental SelectPanel"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react/migration-guides/primer-flash",
+   "url": "https://primer.style/product/getting-started/react/migration-guides/primer-flash/",
+   "title": "Moving Away From Flash"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react/philosophy",
+   "url": "https://primer.style/product/getting-started/react/philosophy/",
+   "title": "Primer React Philosophy"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react/recommended-practices",
+   "url": "https://primer.style/product/getting-started/react/recommended-practices/",
+   "title": "Recommended practices"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react/shared-components",
+   "url": "https://primer.style/product/getting-started/react/shared-components/",
+   "title": "GitHub shared components"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react/theme-reference",
+   "url": "https://primer.style/product/getting-started/react/theme-reference/",
+   "title": "Theme Reference"
+  },
+  {
+   "loc": "https://primer.style/product/getting-started/react/theming",
+   "url": "https://primer.style/product/getting-started/react/theming/",
+   "title": "Theming"
+  },
+  {
+   "loc": "https://primer.style/product/hooks",
+   "url": "https://primer.style/product/hooks/",
+   "title": "React hooks"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useColorSchemeVar",
+   "url": "https://primer.style/product/hooks/useColorSchemeVar/",
+   "title": "useColorSchemeVar"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useConfirm",
+   "url": "https://primer.style/product/hooks/useConfirm/",
+   "title": "useConfirm"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useDetails",
+   "url": "https://primer.style/product/hooks/useDetails/",
+   "title": "useDetails"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useFocusTrap",
+   "url": "https://primer.style/product/hooks/useFocusTrap/",
+   "title": "useFocusTrap"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useFocusZone",
+   "url": "https://primer.style/product/hooks/useFocusZone/",
+   "title": "useFocusZone"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useFormControlForwardedProps",
+   "url": "https://primer.style/product/hooks/useFormControlForwardedProps/",
+   "title": "useFormControlForwardedProps"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useOnEscapePress",
+   "url": "https://primer.style/product/hooks/useOnEscapePress/",
+   "title": "useOnEscapePress"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useOnOutsideClick",
+   "url": "https://primer.style/product/hooks/useOnOutsideClick/",
+   "title": "useOnOutsideClick"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useOpenAndCloseFocus",
+   "url": "https://primer.style/product/hooks/useOpenAndCloseFocus/",
+   "title": "useOpenAndCloseFocus"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useOverlay",
+   "url": "https://primer.style/product/hooks/useOverlay/",
+   "title": "useOverlay"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useProvidedRefOrCreate",
+   "url": "https://primer.style/product/hooks/useProvidedRefOrCreate/",
+   "title": "useProvidedRefOrCreate"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useRefObjectAsForwardedRef",
+   "url": "https://primer.style/product/hooks/useRefObjectAsForwardedRef/",
+   "title": "useRefObjectAsForwardedRef"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useResizeObserver",
+   "url": "https://primer.style/product/hooks/useResizeObserver/",
+   "title": "useResizeObserver"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useResponsiveValue",
+   "url": "https://primer.style/product/hooks/useResponsiveValue/",
+   "title": "useResponsiveValue"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useRovingTabIndex",
+   "url": "https://primer.style/product/hooks/useRovingTabIndex/",
+   "title": "useRovingTabIndex"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useSafeTimeout",
+   "url": "https://primer.style/product/hooks/useSafeTimeout/",
+   "title": "useSafeTimeout"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useSlots",
+   "url": "https://primer.style/product/hooks/useSlots/",
+   "title": "useSlots"
+  },
+  {
+   "loc": "https://primer.style/product/hooks/useTheme",
+   "url": "https://primer.style/product/hooks/useTheme/",
+   "title": "useTheme"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components",
+   "url": "https://primer.style/product/internal-components/",
+   "title": "Internal Components"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/action-list-items",
+   "url": "https://primer.style/product/internal-components/action-list-items/",
+   "title": "ActionListItems"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/banner-stack",
+   "url": "https://primer.style/product/internal-components/banner-stack/",
+   "title": "BannerStack"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/chart-card",
+   "url": "https://primer.style/product/internal-components/chart-card/",
+   "title": "ChartCard"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/command-palette",
+   "url": "https://primer.style/product/internal-components/command-palette/",
+   "title": "CommandPalette"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/control-group",
+   "url": "https://primer.style/product/internal-components/control-group/",
+   "title": "ControlGroup"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/copilot-animation",
+   "url": "https://primer.style/product/internal-components/copilot-animation/",
+   "title": "CopilotAnimation"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/copy-to-clipboard",
+   "url": "https://primer.style/product/internal-components/copy-to-clipboard/",
+   "title": "CopyToClipboard"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/date-picker",
+   "url": "https://primer.style/product/internal-components/date-picker/",
+   "title": "DatePicker"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/drag-and-drop",
+   "url": "https://primer.style/product/internal-components/drag-and-drop/",
+   "title": "DragAndDrop"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/emoji-autocomplete",
+   "url": "https://primer.style/product/internal-components/emoji-autocomplete/",
+   "title": "EmojiAutocomplete"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/filter-core",
+   "url": "https://primer.style/product/internal-components/filter-core/",
+   "title": "FilterCore"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/filter",
+   "url": "https://primer.style/product/internal-components/filter/",
+   "title": "Filter"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/github-avatar",
+   "url": "https://primer.style/product/internal-components/github-avatar/",
+   "title": "GitHubAvatar"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/inline-autocomplete",
+   "url": "https://primer.style/product/internal-components/inline-autocomplete/",
+   "title": "InlineAutocomplete"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/lifecycle-labels",
+   "url": "https://primer.style/product/internal-components/lifecycle-labels/",
+   "title": "LifecycleLabels"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/list-filter-button",
+   "url": "https://primer.style/product/internal-components/list-filter-button/",
+   "title": "ListFilterButton"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/list-item-action-menu",
+   "url": "https://primer.style/product/internal-components/list-item-action-menu/",
+   "title": "ListItemActionMenu"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/list-view",
+   "url": "https://primer.style/product/internal-components/list-view/",
+   "title": "ListView"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/markdown-editor-view-switch",
+   "url": "https://primer.style/product/internal-components/markdown-editor-view-switch/",
+   "title": "MarkdownEditorViewSwitch"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/markdown-editor",
+   "url": "https://primer.style/product/internal-components/markdown-editor/",
+   "title": "MarkdownEditor"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/nested-list-view",
+   "url": "https://primer.style/product/internal-components/nested-list-view/",
+   "title": "NestedListView"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/quick-search",
+   "url": "https://primer.style/product/internal-components/quick-search/",
+   "title": "QuickSearch"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/simple-list-view",
+   "url": "https://primer.style/product/internal-components/simple-list-view/",
+   "title": "SimpleListView"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/simple-select",
+   "url": "https://primer.style/product/internal-components/simple-select/",
+   "title": "SimpleSelect"
+  },
+  {
+   "loc": "https://primer.style/product/internal-components/ui-commands",
+   "url": "https://primer.style/product/internal-components/ui-commands/",
+   "title": "UiCommands"
+  },
+  {
+   "loc": "https://primer.style/product/primitives",
+   "url": "https://primer.style/product/primitives/",
+   "title": "Primitives"
+  },
+  {
+   "loc": "https://primer.style/product/primitives/color",
+   "url": "https://primer.style/product/primitives/color/",
+   "title": "Color"
+  },
+  {
+   "loc": "https://primer.style/product/primitives/migrating",
+   "url": "https://primer.style/product/primitives/migrating/",
+   "title": "Migrating to CSS variables"
+  },
+  {
+   "loc": "https://primer.style/product/primitives/size",
+   "url": "https://primer.style/product/primitives/size/",
+   "title": "Size"
+  },
+  {
+   "loc": "https://primer.style/product/primitives/token-names",
+   "url": "https://primer.style/product/primitives/token-names/",
+   "title": "Token names"
+  },
+  {
+   "loc": "https://primer.style/product/primitives/typography",
+   "url": "https://primer.style/product/primitives/typography/",
+   "title": "Typography"
+  },
+  {
+   "loc": "https://primer.style/product/scenario-patterns",
+   "url": "https://primer.style/product/scenario-patterns/",
+   "title": "Scenario patterns"
+  },
+  {
+   "loc": "https://primer.style/product/scenario-patterns/copy",
+   "url": "https://primer.style/product/scenario-patterns/copy/",
+   "title": "Copy"
+  },
+  {
+   "loc": "https://primer.style/product/scenario-patterns/create",
+   "url": "https://primer.style/product/scenario-patterns/create/",
+   "title": "Create"
+  },
+  {
+   "loc": "https://primer.style/product/scenario-patterns/customize",
+   "url": "https://primer.style/product/scenario-patterns/customize/",
+   "title": "Customize"
+  },
+  {
+   "loc": "https://primer.style/product/scenario-patterns/delegate",
+   "url": "https://primer.style/product/scenario-patterns/delegate/",
+   "title": "Delegate"
+  },
+  {
+   "loc": "https://primer.style/product/scenario-patterns/delete",
+   "url": "https://primer.style/product/scenario-patterns/delete/",
+   "title": "Delete"
+  },
+  {
+   "loc": "https://primer.style/product/scenario-patterns/edit",
+   "url": "https://primer.style/product/scenario-patterns/edit/",
+   "title": "Edit"
+  },
+  {
+   "loc": "https://primer.style/product/scenario-patterns/filter",
+   "url": "https://primer.style/product/scenario-patterns/filter/",
+   "title": "Filter"
+  },
+  {
+   "loc": "https://primer.style/product/scenario-patterns/search",
+   "url": "https://primer.style/product/scenario-patterns/search/",
+   "title": "Search"
+  },
+  {
+   "loc": "https://primer.style/product/scenario-patterns/view",
+   "url": "https://primer.style/product/scenario-patterns/view/",
+   "title": "View"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns",
+   "url": "https://primer.style/product/ui-patterns/",
+   "title": "UI Patterns"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns/data-visualization",
+   "url": "https://primer.style/product/ui-patterns/data-visualization/",
+   "title": "Data visualization"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns/degraded-experiences",
+   "url": "https://primer.style/product/ui-patterns/degraded-experiences/",
+   "title": "Degraded experiences"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns/empty-states",
+   "url": "https://primer.style/product/ui-patterns/empty-states/",
+   "title": "Empty states"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns/feature-onboarding",
+   "url": "https://primer.style/product/ui-patterns/feature-onboarding/",
+   "title": "Feature onboarding"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns/forms",
+   "url": "https://primer.style/product/ui-patterns/forms/",
+   "title": "Forms"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns/loading",
+   "url": "https://primer.style/product/ui-patterns/loading/",
+   "title": "Loading"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns/navigation",
+   "url": "https://primer.style/product/ui-patterns/navigation/",
+   "title": "Navigation"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns/notification-messaging",
+   "url": "https://primer.style/product/ui-patterns/notification-messaging/",
+   "title": "Notification messaging"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns/progressive-disclosure",
+   "url": "https://primer.style/product/ui-patterns/progressive-disclosure/",
+   "title": "Progressive disclosure"
+  },
+  {
+   "loc": "https://primer.style/product/ui-patterns/saving",
+   "url": "https://primer.style/product/ui-patterns/saving/",
+   "title": "Saving"
+  }
+ ]
+}

@@ -1,0 +1,724 @@
+{
+  "captured": "2026-10-19",
+  "from": "https://primer.style/product/components/ (sidebar navigation, in page order)",
+  "note": "Snapshot of the live primer.style sidebar. The primer-react clone has no nav config (its manifest extras are stories and codesandbox), so the live nav is the page list and order.",
+  "groups": [
+    {
+      "title": "Getting Started",
+      "items": [
+        {
+          "title": "Component status",
+          "href": "/product/getting-started/component-status/"
+        },
+        {
+          "title": "Figma libraries",
+          "href": "/product/getting-started/figma/"
+        },
+        {
+          "title": "Overview",
+          "href": "/product/getting-started/foundations/"
+        },
+        {
+          "title": "MCP server",
+          "href": "/product/getting-started/foundations/mcp/"
+        },
+        {
+          "title": "Color usage",
+          "href": "/product/getting-started/foundations/color-usage/"
+        },
+        {
+          "title": "Content",
+          "href": "/product/getting-started/foundations/content/"
+        },
+        {
+          "title": "Icons",
+          "href": "/product/getting-started/foundations/icons/"
+        },
+        {
+          "title": "Layout",
+          "href": "/product/getting-started/foundations/layout/"
+        },
+        {
+          "title": "Responsive",
+          "href": "/product/getting-started/foundations/responsive/"
+        },
+        {
+          "title": "Typography",
+          "href": "/product/getting-started/foundations/typography/"
+        },
+        {
+          "title": "Overview",
+          "href": "/product/getting-started/rails/"
+        },
+        {
+          "title": "Migration guides",
+          "href": "/product/getting-started/rails/migration-guides/"
+        },
+        {
+          "title": "Component list",
+          "href": "/product/getting-started/rails/components/"
+        },
+        {
+          "title": "Overview",
+          "href": "/product/getting-started/react/"
+        },
+        {
+          "title": "Migration guides",
+          "href": "/product/getting-started/react/migration-guides/"
+        },
+        {
+          "title": "Linting",
+          "href": "/product/getting-started/react/linting/"
+        },
+        {
+          "title": "Primer React Philosophy",
+          "href": "/product/getting-started/react/philosophy/"
+        },
+        {
+          "title": "Recommended practices",
+          "href": "/product/getting-started/react/recommended-practices/"
+        },
+        {
+          "title": "Extending components",
+          "href": "/product/getting-started/react/extending-components/"
+        },
+        {
+          "title": "Theming",
+          "href": "/product/getting-started/react/theming/"
+        },
+        {
+          "title": "Theme Reference",
+          "href": "/product/getting-started/react/theme-reference/"
+        },
+        {
+          "title": "GitHub shared components",
+          "href": "/product/getting-started/react/shared-components/"
+        }
+      ]
+    },
+    {
+      "title": "Primitives",
+      "items": [
+        {
+          "title": "Color",
+          "href": "/product/primitives/color/"
+        },
+        {
+          "title": "Size",
+          "href": "/product/primitives/size/"
+        },
+        {
+          "title": "Typography",
+          "href": "/product/primitives/typography/"
+        },
+        {
+          "title": "Token Names",
+          "href": "/product/primitives/token-names/"
+        },
+        {
+          "title": "Migrating to CSS Variables",
+          "href": "/product/primitives/migrating/"
+        }
+      ]
+    },
+    {
+      "title": "UI Patterns",
+      "items": [
+        {
+          "title": "Data visualization",
+          "href": "/product/ui-patterns/data-visualization/"
+        },
+        {
+          "title": "Degraded experiences",
+          "href": "/product/ui-patterns/degraded-experiences/"
+        },
+        {
+          "title": "Empty states",
+          "href": "/product/ui-patterns/empty-states/"
+        },
+        {
+          "title": "Feature onboarding",
+          "href": "/product/ui-patterns/feature-onboarding/"
+        },
+        {
+          "title": "Forms",
+          "href": "/product/ui-patterns/forms/"
+        },
+        {
+          "title": "Loading",
+          "href": "/product/ui-patterns/loading/"
+        },
+        {
+          "title": "Navigation",
+          "href": "/product/ui-patterns/navigation/"
+        },
+        {
+          "title": "Notification messaging",
+          "href": "/product/ui-patterns/notification-messaging/"
+        },
+        {
+          "title": "Progressive disclosure",
+          "href": "/product/ui-patterns/progressive-disclosure/"
+        },
+        {
+          "title": "Saving",
+          "href": "/product/ui-patterns/saving/"
+        }
+      ]
+    },
+    {
+      "title": "Scenario Patterns",
+      "items": [
+        {
+          "title": "Copy",
+          "href": "/product/scenario-patterns/copy/"
+        },
+        {
+          "title": "Create",
+          "href": "/product/scenario-patterns/create/"
+        },
+        {
+          "title": "Customize",
+          "href": "/product/scenario-patterns/customize/"
+        },
+        {
+          "title": "Delegate",
+          "href": "/product/scenario-patterns/delegate/"
+        },
+        {
+          "title": "Delete",
+          "href": "/product/scenario-patterns/delete/"
+        },
+        {
+          "title": "Edit",
+          "href": "/product/scenario-patterns/edit/"
+        },
+        {
+          "title": "Filter",
+          "href": "/product/scenario-patterns/filter/"
+        },
+        {
+          "title": "Search",
+          "href": "/product/scenario-patterns/search/"
+        },
+        {
+          "title": "View",
+          "href": "/product/scenario-patterns/view/"
+        }
+      ]
+    },
+    {
+      "title": "Components",
+      "items": [
+        {
+          "title": "ActionBar",
+          "href": "/product/components/action-bar/"
+        },
+        {
+          "title": "ActionList",
+          "href": "/product/components/action-list/"
+        },
+        {
+          "title": "ActionMenu",
+          "href": "/product/components/action-menu/"
+        },
+        {
+          "title": "AnchoredOverlay",
+          "href": "/product/components/anchored-overlay/"
+        },
+        {
+          "title": "Autocomplete",
+          "href": "/product/components/autocomplete/"
+        },
+        {
+          "title": "Avatar",
+          "href": "/product/components/avatar/"
+        },
+        {
+          "title": "AvatarStack",
+          "href": "/product/components/avatar-stack/"
+        },
+        {
+          "title": "Banner",
+          "href": "/product/components/banner/"
+        },
+        {
+          "title": "Blankslate",
+          "href": "/product/components/blankslate/"
+        },
+        {
+          "title": "BranchName",
+          "href": "/product/components/branch-name/"
+        },
+        {
+          "title": "Breadcrumbs",
+          "href": "/product/components/breadcrumbs/"
+        },
+        {
+          "title": "Button",
+          "href": "/product/components/button/"
+        },
+        {
+          "title": "ButtonGroup",
+          "href": "/product/components/button-group/"
+        },
+        {
+          "title": "Card",
+          "href": "/product/components/card/"
+        },
+        {
+          "title": "Checkbox",
+          "href": "/product/components/checkbox/"
+        },
+        {
+          "title": "CheckboxGroup",
+          "href": "/product/components/checkbox-group/"
+        },
+        {
+          "title": "CircleBadge",
+          "href": "/product/components/circle-badge/"
+        },
+        {
+          "title": "ConfirmationDialog",
+          "href": "/product/components/confirmation-dialog/"
+        },
+        {
+          "title": "CounterLabel",
+          "href": "/product/components/counter-label/"
+        },
+        {
+          "title": "DataTable",
+          "href": "/product/components/data-table/"
+        },
+        {
+          "title": "Details",
+          "href": "/product/components/details/"
+        },
+        {
+          "title": "Dialog",
+          "href": "/product/components/dialog/"
+        },
+        {
+          "title": "FormControl",
+          "href": "/product/components/form-control/"
+        },
+        {
+          "title": "Heading",
+          "href": "/product/components/heading/"
+        },
+        {
+          "title": "IconButton",
+          "href": "/product/components/icon-button/"
+        },
+        {
+          "title": "InlineMessage",
+          "href": "/product/components/inline-message/"
+        },
+        {
+          "title": "KeybindingHint",
+          "href": "/product/components/keybinding-hint/"
+        },
+        {
+          "title": "Label",
+          "href": "/product/components/label/"
+        },
+        {
+          "title": "LabelGroup",
+          "href": "/product/components/label-group/"
+        },
+        {
+          "title": "Link",
+          "href": "/product/components/link/"
+        },
+        {
+          "title": "NavList",
+          "href": "/product/components/nav-list/"
+        },
+        {
+          "title": "Overlay",
+          "href": "/product/components/overlay/"
+        },
+        {
+          "title": "PageHeader",
+          "href": "/product/components/page-header/"
+        },
+        {
+          "title": "PageLayout",
+          "href": "/product/components/page-layout/"
+        },
+        {
+          "title": "Pagination",
+          "href": "/product/components/pagination/"
+        },
+        {
+          "title": "Popover",
+          "href": "/product/components/popover/"
+        },
+        {
+          "title": "ProgressBar",
+          "href": "/product/components/progress-bar/"
+        },
+        {
+          "title": "Radio",
+          "href": "/product/components/radio/"
+        },
+        {
+          "title": "RadioGroup",
+          "href": "/product/components/radio-group/"
+        },
+        {
+          "title": "RelativeTime",
+          "href": "/product/components/relative-time/"
+        },
+        {
+          "title": "SegmentedControl",
+          "href": "/product/components/segmented-control/"
+        },
+        {
+          "title": "Select",
+          "href": "/product/components/select/"
+        },
+        {
+          "title": "SelectPanel",
+          "href": "/product/components/select-panel/"
+        },
+        {
+          "title": "SkeletonAvatar",
+          "href": "/product/components/skeleton-avatar/"
+        },
+        {
+          "title": "SkeletonBox",
+          "href": "/product/components/skeleton-box/"
+        },
+        {
+          "title": "SkeletonText",
+          "href": "/product/components/skeleton-text/"
+        },
+        {
+          "title": "Spinner",
+          "href": "/product/components/spinner/"
+        },
+        {
+          "title": "SplitPageLayout",
+          "href": "/product/components/split-page-layout/"
+        },
+        {
+          "title": "Stack",
+          "href": "/product/components/stack/"
+        },
+        {
+          "title": "StateLabel",
+          "href": "/product/components/state-label/"
+        },
+        {
+          "title": "Text",
+          "href": "/product/components/text/"
+        },
+        {
+          "title": "TextInput",
+          "href": "/product/components/text-input/"
+        },
+        {
+          "title": "TextInputWithTokens",
+          "href": "/product/components/text-input-with-tokens/"
+        },
+        {
+          "title": "Textarea",
+          "href": "/product/components/textarea/"
+        },
+        {
+          "title": "Timeline",
+          "href": "/product/components/timeline/"
+        },
+        {
+          "title": "ToggleSwitch",
+          "href": "/product/components/toggle-switch/"
+        },
+        {
+          "title": "Token",
+          "href": "/product/components/token/"
+        },
+        {
+          "title": "Tooltip",
+          "href": "/product/components/tooltip/"
+        },
+        {
+          "title": "TreeView",
+          "href": "/product/components/tree-view/"
+        },
+        {
+          "title": "Truncate",
+          "href": "/product/components/truncate/"
+        },
+        {
+          "title": "UnderlineNav",
+          "href": "/product/components/underline-nav/"
+        },
+        {
+          "title": "UnderlinePanels",
+          "href": "/product/components/underline-panels/"
+        }
+      ]
+    },
+    {
+      "title": "Internal Components",
+      "items": [
+        {
+          "title": "ActionListItems",
+          "href": "/product/internal-components/action-list-items/"
+        },
+        {
+          "title": "BannerStack",
+          "href": "/product/internal-components/banner-stack/"
+        },
+        {
+          "title": "ChartCard",
+          "href": "/product/internal-components/chart-card/"
+        },
+        {
+          "title": "CommandPalette",
+          "href": "/product/internal-components/command-palette/"
+        },
+        {
+          "title": "ControlGroup",
+          "href": "/product/internal-components/control-group/"
+        },
+        {
+          "title": "CopilotAnimation",
+          "href": "/product/internal-components/copilot-animation/"
+        },
+        {
+          "title": "CopyToClipboard",
+          "href": "/product/internal-components/copy-to-clipboard/"
+        },
+        {
+          "title": "DatePicker",
+          "href": "/product/internal-components/date-picker/"
+        },
+        {
+          "title": "DragAndDrop",
+          "href": "/product/internal-components/drag-and-drop/"
+        },
+        {
+          "title": "EmojiAutocomplete",
+          "href": "/product/internal-components/emoji-autocomplete/"
+        },
+        {
+          "title": "Filter",
+          "href": "/product/internal-components/filter/"
+        },
+        {
+          "title": "FilterCore",
+          "href": "/product/internal-components/filter-core/"
+        },
+        {
+          "title": "GitHubAvatar",
+          "href": "/product/internal-components/github-avatar/"
+        },
+        {
+          "title": "InlineAutocomplete",
+          "href": "/product/internal-components/inline-autocomplete/"
+        },
+        {
+          "title": "LifecycleLabels",
+          "href": "/product/internal-components/lifecycle-labels/"
+        },
+        {
+          "title": "ListFilterButton",
+          "href": "/product/internal-components/list-filter-button/"
+        },
+        {
+          "title": "ListItemActionMenu",
+          "href": "/product/internal-components/list-item-action-menu/"
+        },
+        {
+          "title": "ListView",
+          "href": "/product/internal-components/list-view/"
+        },
+        {
+          "title": "MarkdownEditor",
+          "href": "/product/internal-components/markdown-editor/"
+        },
+        {
+          "title": "MarkdownEditorViewSwitch",
+          "href": "/product/internal-components/markdown-editor-view-switch/"
+        },
+        {
+          "title": "NestedListView",
+          "href": "/product/internal-components/nested-list-view/"
+        },
+        {
+          "title": "QuickSearch",
+          "href": "/product/internal-components/quick-search/"
+        },
+        {
+          "title": "SimpleListView",
+          "href": "/product/internal-components/simple-list-view/"
+        },
+        {
+          "title": "SimpleSelect",
+          "href": "/product/internal-components/simple-select/"
+        },
+        {
+          "title": "UiCommands",
+          "href": "/product/internal-components/ui-commands/"
+        }
+      ]
+    },
+    {
+      "title": "React Hooks",
+      "items": [
+        {
+          "title": "useColorSchemeVar",
+          "href": "/product/hooks/useColorSchemeVar/"
+        },
+        {
+          "title": "useConfirm",
+          "href": "/product/hooks/useConfirm/"
+        },
+        {
+          "title": "useDetails",
+          "href": "/product/hooks/useDetails/"
+        },
+        {
+          "title": "useFocusTrap",
+          "href": "/product/hooks/useFocusTrap/"
+        },
+        {
+          "title": "useFocusZone",
+          "href": "/product/hooks/useFocusZone/"
+        },
+        {
+          "title": "useFormControlForwardedProps",
+          "href": "/product/hooks/useFormControlForwardedProps/"
+        },
+        {
+          "title": "useOnEscapePress",
+          "href": "/product/hooks/useOnEscapePress/"
+        },
+        {
+          "title": "useOnOutsideClick",
+          "href": "/product/hooks/useOnOutsideClick/"
+        },
+        {
+          "title": "useOpenAndCloseFocus",
+          "href": "/product/hooks/useOpenAndCloseFocus/"
+        },
+        {
+          "title": "useOverlay",
+          "href": "/product/hooks/useOverlay/"
+        },
+        {
+          "title": "useProvidedRefOrCreate",
+          "href": "/product/hooks/useProvidedRefOrCreate/"
+        },
+        {
+          "title": "useRefObjectAsForwardedRef",
+          "href": "/product/hooks/useRefObjectAsForwardedRef/"
+        },
+        {
+          "title": "useResizeObserver",
+          "href": "/product/hooks/useResizeObserver/"
+        },
+        {
+          "title": "useResponsiveValue",
+          "href": "/product/hooks/useResponsiveValue/"
+        },
+        {
+          "title": "useRovingTabIndex",
+          "href": "/product/hooks/useRovingTabIndex/"
+        },
+        {
+          "title": "useSafeTimeout",
+          "href": "/product/hooks/useSafeTimeout/"
+        },
+        {
+          "title": "useSlots",
+          "href": "/product/hooks/useSlots/"
+        },
+        {
+          "title": "useTheme",
+          "href": "/product/hooks/useTheme/"
+        }
+      ]
+    },
+    {
+      "title": "CSS Utilities",
+      "items": [
+        {
+          "title": "Animations",
+          "href": "/product/css-utilities/animations/"
+        },
+        {
+          "title": "Borders",
+          "href": "/product/css-utilities/borders/"
+        },
+        {
+          "title": "Box shadow",
+          "href": "/product/css-utilities/box-shadow/"
+        },
+        {
+          "title": "Colors",
+          "href": "/product/css-utilities/colors/"
+        },
+        {
+          "title": "Details",
+          "href": "/product/css-utilities/details/"
+        },
+        {
+          "title": "Flexbox",
+          "href": "/product/css-utilities/flexbox/"
+        },
+        {
+          "title": "Grid",
+          "href": "/product/css-utilities/grid/"
+        },
+        {
+          "title": "Layout",
+          "href": "/product/css-utilities/layout/"
+        },
+        {
+          "title": "Margin",
+          "href": "/product/css-utilities/margin/"
+        },
+        {
+          "title": "Padding",
+          "href": "/product/css-utilities/padding/"
+        },
+        {
+          "title": "Typography",
+          "href": "/product/css-utilities/typography/"
+        }
+      ]
+    },
+    {
+      "title": "Contribute",
+      "items": [
+        {
+          "title": "Adding new components",
+          "href": "/product/contribute/adding-new-components/"
+        },
+        {
+          "title": "Contributing to Figma",
+          "href": "/product/contribute/contributing-to-figma/"
+        },
+        {
+          "title": "Design",
+          "href": "/product/contribute/design/"
+        },
+        {
+          "title": "Documentation",
+          "href": "/product/contribute/documentation/"
+        },
+        {
+          "title": "Handling new patterns",
+          "href": "/product/contribute/handling-new-patterns/"
+        },
+        {
+          "title": "How to contribute",
+          "href": "/product/contribute/how-to-contribute/"
+        }
+      ]
+    }
+  ]
+}

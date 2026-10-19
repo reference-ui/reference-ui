@@ -1,0 +1,1290 @@
+{
+ "_about": "Live URL of each primer-design nav page, probed on 2026-10-19 at https://primer.style (curl, redirects followed). status: live = the live page has the archived title; moved = the site redirects the page to a differently titled page; dead = no live page. via: redirect, product path (the same-named /product/components page exists), or title match (exact unique sitemap title). Re-probe to refresh.",
+ "pages": {
+  "/guides": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Guides",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/guides/introduction": {
+   "live": "https://primer.style/product/getting-started/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Introduction",
+   "liveTitle": "Getting started"
+  },
+  "/guides/figma": {
+   "live": "https://primer.style/product/getting-started/figma/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Introduction",
+   "liveTitle": "Figma libraries"
+  },
+  "/guides/figma/getting-started": {
+   "live": "https://primer.style/product/getting-started/figma/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Getting started",
+   "liveTitle": "Figma libraries"
+  },
+  "/guides/figma/contribute": {
+   "live": "https://primer.style/product/contribute/contributing-to-figma/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "How to contribute",
+   "liveTitle": "Contributing to Figma"
+  },
+  "/guides/rails": {
+   "live": "https://primer.style/product/getting-started/rails/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Getting started",
+   "liveTitle": "Rails"
+  },
+  "/guides/rails/migration-guides": {
+   "live": "https://primer.style/product/getting-started/rails/migration-guides/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Migration guides",
+   "liveTitle": "Migration guides"
+  },
+  "/guides/react": {
+   "live": "https://primer.style/product/getting-started/react/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Getting started",
+   "liveTitle": "React"
+  },
+  "/guides/react/theming": {
+   "live": "https://primer.style/product/getting-started/react/theming/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Theming",
+   "liveTitle": "Theming"
+  },
+  "/guides/react/theme-reference": {
+   "live": "https://primer.style/product/getting-started/react/theme-reference/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Theme reference",
+   "liveTitle": "Theme Reference"
+  },
+  "/guides/react/linting": {
+   "live": "https://primer.style/product/getting-started/react/linting/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Linting",
+   "liveTitle": "Linting"
+  },
+  "/guides/react/system-props": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "System props",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/guides/react/core-concepts": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Core concepts",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/guides/react/philosophy": {
+   "live": "https://primer.style/product/getting-started/react/philosophy/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Philosophy",
+   "liveTitle": "Primer React Philosophy"
+  },
+  "/guides/react/overriding-styles": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Overriding styles",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/guides/react/hooks": {
+   "live": "https://primer.style/product/hooks/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Hooks",
+   "liveTitle": "React hooks"
+  },
+  "/guides/react/hooks/use-safe-timeout": {
+   "live": "https://primer.style/product/hooks/useSafeTimeout/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "useSafeTimeout",
+   "liveTitle": "useSafeTimeout"
+  },
+  "/guides/react/hooks/use-anchored-position": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "useAnchoredPosition",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/guides/react/hooks/use-focus-trap": {
+   "live": "https://primer.style/product/hooks/useFocusTrap/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "useFocusTrap",
+   "liveTitle": "useFocusTrap"
+  },
+  "/guides/react/hooks/use-focus-zone": {
+   "live": "https://primer.style/product/hooks/useFocusZone/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "useFocusZone",
+   "liveTitle": "useFocusZone"
+  },
+  "/guides/react/hooks/use-on-escape-press": {
+   "live": "https://primer.style/product/hooks/useOnEscapePress/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "useOnEscapePress",
+   "liveTitle": "useOnEscapePress"
+  },
+  "/guides/react/hooks/use-on-outside-click": {
+   "live": "https://primer.style/product/hooks/useOnOutsideClick/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "useOnOutsideClick",
+   "liveTitle": "useOnOutsideClick"
+  },
+  "/guides/react/hooks/use-open-and-close-focus": {
+   "live": "https://primer.style/product/hooks/useOpenAndCloseFocus/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "useOpenAndCloseFocus",
+   "liveTitle": "useOpenAndCloseFocus"
+  },
+  "/guides/react/hooks/use-overlay": {
+   "live": "https://primer.style/product/hooks/useOverlay/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "useOverlay",
+   "liveTitle": "useOverlay"
+  },
+  "/guides/component-lifecycle": {
+   "live": "https://primer.style/product/getting-started/component-status/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Component lifecycle",
+   "liveTitle": "Component status"
+  },
+  "/guides/status": {
+   "live": "https://primer.style/product/getting-started/component-status/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Component status",
+   "liveTitle": "Component status"
+  },
+  "/guides/accessibility": {
+   "live": "https://primer.style/accessibility/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Accessibility",
+   "liveTitle": "Accessibility"
+  },
+  "/guides/accessibility/accessibility-at-github": {
+   "live": "https://primer.style/accessibility/foundations/accessibility-at-github/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Accessibility at GitHub",
+   "liveTitle": "Accessibility at GitHub"
+  },
+  "/guides/accessibility/guidelines": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Guidelines",
+   "note": "no live page: the legacy path resolves to the /accessibility/ landing, whose title differs"
+  },
+  "/guides/accessibility/tools": {
+   "live": "https://primer.style/accessibility/tools-and-resources/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Tools",
+   "liveTitle": "GitHub tools and resources"
+  },
+  "/guides/accessibility/alternative-text-for-images": {
+   "live": "https://primer.style/accessibility/design-guidance/alternative-text-for-images/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Alternative text for images",
+   "liveTitle": "Alternative text for images"
+  },
+  "/guides/accessibility/announcements": {
+   "live": "https://primer.style/accessibility/patterns/accessible-notifications-and-messages/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Assistive technology announcements",
+   "liveTitle": "Accessible notifications and messages"
+  },
+  "/guides/accessibility/descriptive-buttons": {
+   "live": "https://primer.style/accessibility/patterns/primer-components/descriptive-buttons/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Descriptive buttons",
+   "liveTitle": "Buttons"
+  },
+  "/guides/accessibility/focus-management": {
+   "live": "https://primer.style/accessibility/design-guidance/focus-management/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Focus management",
+   "liveTitle": "Focus management"
+  },
+  "/guides/accessibility/headings": {
+   "live": "https://primer.style/accessibility/patterns/primer-components/headings/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Headings",
+   "liveTitle": "Headings"
+  },
+  "/guides/accessibility/links": {
+   "live": "https://primer.style/accessibility/patterns/primer-components/links/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Links",
+   "liveTitle": "Links"
+  },
+  "/guides/accessibility/semantic-html": {
+   "live": "https://primer.style/accessibility/design-guidance/semantic-html-and-aria/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Semantic HTML",
+   "liveTitle": "Semantic HTML and ARIA"
+  },
+  "/guides/accessibility/text-resize-and-respacing": {
+   "live": "https://primer.style/accessibility/design-guidance/text-resize-and-spacing/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Text resize and respacing",
+   "liveTitle": "Text resizing and spacing"
+  },
+  "/guides/accessibility/tooltip-alternatives": {
+   "live": "https://primer.style/accessibility/patterns/primer-components/tooltips/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Tooltips",
+   "liveTitle": "Tooltips"
+  },
+  "/guides/contribute": {
+   "live": "https://primer.style/product/contribute/",
+   "status": "moved",
+   "via": "title match",
+   "archivedTitle": "Contribute",
+   "liveTitle": "Contribute"
+  },
+  "/guides/contribute/how-to-contribute": {
+   "live": "https://primer.style/product/contribute/how-to-contribute/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "How to contribute",
+   "liveTitle": "How to contribute"
+  },
+  "/guides/contribute/design": {
+   "live": "https://primer.style/product/contribute/design/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Design",
+   "liveTitle": "Design"
+  },
+  "/guides/contribute/documentation": {
+   "live": "https://primer.style/product/contribute/documentation/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Documentation",
+   "liveTitle": "Documentation"
+  },
+  "/guides/contribute/handling-new-patterns": {
+   "live": "https://primer.style/product/contribute/handling-new-patterns/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Handling new patterns",
+   "liveTitle": "Handling new patterns"
+  },
+  "/guides/contribute/adding-new-components": {
+   "live": "https://primer.style/product/contribute/adding-new-components/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Adding new components",
+   "liveTitle": "Adding new components"
+  },
+  "/foundations": {
+   "live": "https://primer.style/product/getting-started/foundations/",
+   "status": "moved",
+   "via": "title match",
+   "archivedTitle": "Foundations",
+   "liveTitle": "Foundations"
+  },
+  "/foundations/color": {
+   "live": "https://primer.style/product/primitives/color/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Color",
+   "liveTitle": "Color"
+  },
+  "/foundations/color/overview": {
+   "live": "https://primer.style/product/getting-started/foundations/color-usage/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Overview",
+   "liveTitle": "Color usage"
+  },
+  "/foundations/color/base-scales": {
+   "live": "https://primer.style/product/getting-started/foundations/color-usage/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Base scales",
+   "liveTitle": "Color usage"
+  },
+  "/foundations/color/accessibility": {
+   "live": "https://primer.style/accessibility/design-guidance/color-considerations/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Accessibility",
+   "liveTitle": "Color considerations"
+  },
+  "/foundations/primitives": {
+   "live": "https://primer.style/product/primitives/",
+   "status": "moved",
+   "via": "title match",
+   "archivedTitle": "Primitives",
+   "liveTitle": "Primitives"
+  },
+  "/foundations/primitives/getting-started": {
+   "live": "https://primer.style/product/primitives/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Getting started",
+   "liveTitle": "Primitives"
+  },
+  "/foundations/primitives/token-names": {
+   "live": "https://primer.style/product/primitives/token-names/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Token names",
+   "liveTitle": "Token names"
+  },
+  "/foundations/primitives/color": {
+   "live": "https://primer.style/product/primitives/color/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Color",
+   "liveTitle": "Color"
+  },
+  "/foundations/primitives/size": {
+   "live": "https://primer.style/product/primitives/size/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Size",
+   "liveTitle": "Size"
+  },
+  "/foundations/primitives/typography": {
+   "live": "https://primer.style/product/primitives/typography/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Typography",
+   "liveTitle": "Typography"
+  },
+  "/foundations/primitives/migrating": {
+   "live": "https://primer.style/product/primitives/migrating/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Migrating",
+   "liveTitle": "Migrating to CSS variables"
+  },
+  "/foundations/responsive": {
+   "live": "https://primer.style/product/getting-started/foundations/responsive/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Responsive",
+   "liveTitle": "Responsive"
+  },
+  "/foundations/css-utilities": {
+   "live": "https://primer.style/product/css-utilities/",
+   "status": "moved",
+   "via": "title match",
+   "archivedTitle": "CSS utilities",
+   "liveTitle": "CSS Utilities"
+  },
+  "/foundations/css-utilities/getting-started": {
+   "live": "https://primer.style/product/css-utilities/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Getting started",
+   "liveTitle": "CSS Utilities"
+  },
+  "/foundations/css-utilities/animations": {
+   "live": "https://primer.style/product/css-utilities/animations/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Animations",
+   "liveTitle": "Animations"
+  },
+  "/foundations/css-utilities/borders": {
+   "live": "https://primer.style/product/css-utilities/borders/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Borders",
+   "liveTitle": "Borders"
+  },
+  "/foundations/css-utilities/box-shadow": {
+   "live": "https://primer.style/product/css-utilities/box-shadow/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Box shadow",
+   "liveTitle": "Box shadow"
+  },
+  "/foundations/css-utilities/colors": {
+   "live": "https://primer.style/product/css-utilities/colors/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Colors",
+   "liveTitle": "Colors"
+  },
+  "/foundations/css-utilities/details": {
+   "live": "https://primer.style/product/css-utilities/details/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Details",
+   "liveTitle": "Details"
+  },
+  "/foundations/css-utilities/flexbox": {
+   "live": "https://primer.style/product/css-utilities/flexbox/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Flexbox",
+   "liveTitle": "Flexbox"
+  },
+  "/foundations/css-utilities/grid": {
+   "live": "https://primer.style/product/css-utilities/grid/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Grid",
+   "liveTitle": "Grid"
+  },
+  "/foundations/css-utilities/layout": {
+   "live": "https://primer.style/product/css-utilities/layout/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Layout",
+   "liveTitle": "Layout"
+  },
+  "/foundations/css-utilities/margin": {
+   "live": "https://primer.style/product/css-utilities/margin/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Margin",
+   "liveTitle": "Margin"
+  },
+  "/foundations/css-utilities/padding": {
+   "live": "https://primer.style/product/css-utilities/padding/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Padding",
+   "liveTitle": "Padding"
+  },
+  "/foundations/css-utilities/typography": {
+   "live": "https://primer.style/product/css-utilities/typography/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Typography",
+   "liveTitle": "Typography"
+  },
+  "/foundations/layout": {
+   "live": "https://primer.style/product/getting-started/foundations/layout/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Layout",
+   "liveTitle": "Layout"
+  },
+  "/foundations/typography": {
+   "live": "https://primer.style/product/getting-started/foundations/typography/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Typography",
+   "liveTitle": "Typography"
+  },
+  "/foundations/icons": {
+   "live": "https://primer.style/octicons/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Octicons",
+   "liveTitle": "Octicons"
+  },
+  "/foundations/icons/octovisuals": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Octovisuals",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/foundations/icons/design-guidelines": {
+   "live": "https://primer.style/octicons/design-guidelines/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Design guidelines",
+   "liveTitle": "Octicons"
+  },
+  "/foundations/content": {
+   "live": "https://primer.style/product/getting-started/foundations/content/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Content",
+   "liveTitle": "Content"
+  },
+  "/ui-patterns/data-visualization": {
+   "live": "https://primer.style/product/ui-patterns/data-visualization/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Data visualization",
+   "liveTitle": "Data visualization"
+  },
+  "/ui-patterns/degraded-experiences": {
+   "live": "https://primer.style/product/ui-patterns/degraded-experiences/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Degraded experiences",
+   "liveTitle": "Degraded experiences"
+  },
+  "/ui-patterns/empty-states": {
+   "live": "https://primer.style/product/ui-patterns/empty-states/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Empty states",
+   "liveTitle": "Empty states"
+  },
+  "/ui-patterns/feature-onboarding": {
+   "live": "https://primer.style/product/ui-patterns/feature-onboarding/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Feature onboarding",
+   "liveTitle": "Feature onboarding"
+  },
+  "/ui-patterns/forms/overview": {
+   "live": "https://primer.style/product/ui-patterns/forms/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Forms",
+   "liveTitle": "Forms"
+  },
+  "/ui-patterns/loading": {
+   "live": "https://primer.style/product/ui-patterns/loading/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Loading",
+   "liveTitle": "Loading"
+  },
+  "/ui-patterns/navigation": {
+   "live": "https://primer.style/product/ui-patterns/navigation/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Navigation",
+   "liveTitle": "Navigation"
+  },
+  "/ui-patterns/notification-messaging": {
+   "live": "https://primer.style/product/ui-patterns/notification-messaging/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Notification messaging",
+   "liveTitle": "Notification messaging"
+  },
+  "/ui-patterns/progressive-disclosure": {
+   "live": "https://primer.style/product/ui-patterns/progressive-disclosure/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Progressive disclosure",
+   "liveTitle": "Progressive disclosure"
+  },
+  "/ui-patterns/saving": {
+   "live": "https://primer.style/product/ui-patterns/saving/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Saving",
+   "liveTitle": "Saving"
+  },
+  "/components": {
+   "live": "https://primer.style/product/components/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Components",
+   "liveTitle": "Components"
+  },
+  "/components/action-bar": {
+   "live": "https://primer.style/product/components/action-bar/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Action bar",
+   "liveTitle": "ActionBar"
+  },
+  "/components/action-list": {
+   "live": "https://primer.style/product/components/action-list/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Action list",
+   "liveTitle": "ActionList"
+  },
+  "/components/action-menu": {
+   "live": "https://primer.style/product/components/action-menu/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Action menu",
+   "liveTitle": "ActionMenu"
+  },
+  "/components/anchored-overlay": {
+   "live": "https://primer.style/product/components/anchored-overlay/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Anchored overlay",
+   "liveTitle": "AnchoredOverlay"
+  },
+  "/components/autocomplete": {
+   "live": "https://primer.style/product/components/autocomplete/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Autocomplete",
+   "liveTitle": "Autocomplete"
+  },
+  "/components/avatar": {
+   "live": "https://primer.style/product/components/avatar/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Avatar",
+   "liveTitle": "Avatar"
+  },
+  "/components/avatar-pair": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Avatar pair",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/components/avatar-stack": {
+   "live": "https://primer.style/product/components/avatar-stack/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Avatar stack",
+   "liveTitle": "AvatarStack"
+  },
+  "/components/banner": {
+   "live": "https://primer.style/product/components/banner/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Banner",
+   "liveTitle": "Banner"
+  },
+  "/components/blankslate": {
+   "live": "https://primer.style/product/components/blankslate/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Blankslate",
+   "liveTitle": "Blankslate"
+  },
+  "/components/border-box": {
+   "live": "https://primer.style/product/getting-started/rails/components/border-box/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Border box",
+   "liveTitle": "BorderBox Rails component"
+  },
+  "/components/box": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Box",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/components/branch-name": {
+   "live": "https://primer.style/product/components/branch-name/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Branch name",
+   "liveTitle": "BranchName"
+  },
+  "/components/breadcrumbs": {
+   "live": "https://primer.style/product/components/breadcrumbs/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Breadcrumbs",
+   "liveTitle": "Breadcrumbs"
+  },
+  "/components/button": {
+   "live": "https://primer.style/product/components/button/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Button",
+   "liveTitle": "Button"
+  },
+  "/components/button-group": {
+   "live": "https://primer.style/product/components/button-group/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Button group",
+   "liveTitle": "ButtonGroup"
+  },
+  "/components/checkbox": {
+   "live": "https://primer.style/product/components/checkbox/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Checkbox",
+   "liveTitle": "Checkbox"
+  },
+  "/components/checkbox-group": {
+   "live": "https://primer.style/product/components/checkbox-group/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Checkbox group",
+   "liveTitle": "CheckboxGroup"
+  },
+  "/components/circle-badge": {
+   "live": "https://primer.style/product/components/circle-badge/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Circle badge",
+   "liveTitle": "CircleBadge"
+  },
+  "/components/circle-octicon": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Circle octicon",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/components/clipboard-copy": {
+   "live": "https://primer.style/product/getting-started/rails/components/clipboard-copy/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Clipboard copy",
+   "liveTitle": "ClipboardCopy Rails component"
+  },
+  "/components/close-button": {
+   "live": "https://primer.style/product/getting-started/rails/components/close-button/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Close button",
+   "liveTitle": "CloseButton Rails component"
+  },
+  "/components/comment-box": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Comment box",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/components/counter-label": {
+   "live": "https://primer.style/product/components/counter-label/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Counter label",
+   "liveTitle": "CounterLabel"
+  },
+  "/components/data-table": {
+   "live": "https://primer.style/product/components/data-table/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Data table",
+   "liveTitle": "DataTable"
+  },
+  "/components/details": {
+   "live": "https://primer.style/product/components/details/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Details",
+   "liveTitle": "Details"
+  },
+  "/components/dialog": {
+   "live": "https://primer.style/product/components/dialog/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Dialog",
+   "liveTitle": "Dialog"
+  },
+  "/components/form-control": {
+   "live": "https://primer.style/product/components/form-control/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Form control",
+   "liveTitle": "FormControl"
+  },
+  "/components/header": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Header",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/components/heading": {
+   "live": "https://primer.style/product/components/heading/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Heading",
+   "liveTitle": "Heading"
+  },
+  "/components/hidden-text-expander": {
+   "live": "https://primer.style/product/getting-started/rails/components/hidden-text-expander/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Hidden text expander",
+   "liveTitle": "HiddenTextExpander Rails component"
+  },
+  "/components/icon": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Icon",
+   "note": "no live page: the legacy path resolves to the /octicons/ landing, whose title differs"
+  },
+  "/components/icon-button": {
+   "live": "https://primer.style/product/components/icon-button/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Icon button",
+   "liveTitle": "IconButton"
+  },
+  "/components/image": {
+   "live": "https://primer.style/product/getting-started/rails/components/image/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Image",
+   "liveTitle": "Image Rails component"
+  },
+  "/components/inline-message": {
+   "live": "https://primer.style/product/components/inline-message/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Inline message",
+   "liveTitle": "InlineMessage"
+  },
+  "/components/label": {
+   "live": "https://primer.style/product/components/label/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Label",
+   "liveTitle": "Label"
+  },
+  "/components/label-group": {
+   "live": "https://primer.style/product/components/label-group/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Label group",
+   "liveTitle": "LabelGroup"
+  },
+  "/components/layout": {
+   "live": "https://primer.style/product/getting-started/rails/components/layout/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Layout",
+   "liveTitle": "Layout Rails component"
+  },
+  "/components/link": {
+   "live": "https://primer.style/product/components/link/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Link",
+   "liveTitle": "Link"
+  },
+  "/components/markdown": {
+   "live": "https://primer.style/product/getting-started/rails/components/markdown/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Markdown",
+   "liveTitle": "Markdown Rails component"
+  },
+  "/components/nav-list": {
+   "live": "https://primer.style/product/components/nav-list/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Nav list",
+   "liveTitle": "NavList"
+  },
+  "/components/octicon-symbols": {
+   "live": "https://primer.style/product/getting-started/rails/components/octicon-symbols/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Octicon symbols",
+   "liveTitle": "OcticonSymbols Rails component"
+  },
+  "/components/overlay": {
+   "live": "https://primer.style/product/components/overlay/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Overlay",
+   "liveTitle": "Overlay"
+  },
+  "/components/pagehead": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Pagehead",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/components/page-header": {
+   "live": "https://primer.style/product/components/page-header/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Page header",
+   "liveTitle": "PageHeader"
+  },
+  "/components/page-layout": {
+   "live": "https://primer.style/product/components/page-layout/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Page layout",
+   "liveTitle": "PageLayout"
+  },
+  "/components/pagination": {
+   "live": "https://primer.style/product/components/pagination/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Pagination",
+   "liveTitle": "Pagination"
+  },
+  "/components/popover": {
+   "live": "https://primer.style/product/components/popover/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Popover",
+   "liveTitle": "Popover"
+  },
+  "/components/pointer-box": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Pointer box",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/components/progress-bar": {
+   "live": "https://primer.style/product/components/progress-bar/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Progress bar",
+   "liveTitle": "ProgressBar"
+  },
+  "/components/radio": {
+   "live": "https://primer.style/product/components/radio/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Radio",
+   "liveTitle": "Radio"
+  },
+  "/components/radio-group": {
+   "live": "https://primer.style/product/components/radio-group/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Radio group",
+   "liveTitle": "RadioGroup"
+  },
+  "/components/relative-time": {
+   "live": "https://primer.style/product/components/relative-time/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Relative time",
+   "liveTitle": "RelativeTime"
+  },
+  "/components/segmented-control": {
+   "live": "https://primer.style/product/components/segmented-control/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Segmented control",
+   "liveTitle": "SegmentedControl"
+  },
+  "/components/select": {
+   "live": "https://primer.style/product/components/select/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Select",
+   "liveTitle": "Select"
+  },
+  "/components/selectpanel": {
+   "live": "https://primer.style/product/components/select-panel/",
+   "status": "live",
+   "via": "redirect",
+   "archivedTitle": "Select panel",
+   "liveTitle": "SelectPanel"
+  },
+  "/components/skeleton-avatar": {
+   "live": "https://primer.style/product/components/skeleton-avatar/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Skeleton avatar",
+   "liveTitle": "SkeletonAvatar"
+  },
+  "/components/skeleton-text": {
+   "live": "https://primer.style/product/components/skeleton-text/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Skeleton text",
+   "liveTitle": "SkeletonText"
+  },
+  "/components/skeleton-box": {
+   "live": "https://primer.style/product/components/skeleton-box/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Skeleton box",
+   "liveTitle": "SkeletonBox"
+  },
+  "/components/spinner": {
+   "live": "https://primer.style/product/components/spinner/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Spinner",
+   "liveTitle": "Spinner"
+  },
+  "/components/split-page-layout": {
+   "live": "https://primer.style/product/components/split-page-layout/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Split page layout",
+   "liveTitle": "SplitPageLayout"
+  },
+  "/components/stack": {
+   "live": "https://primer.style/product/components/stack/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Stack",
+   "liveTitle": "Stack"
+  },
+  "/components/state-label": {
+   "live": "https://primer.style/product/components/state-label/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "State label",
+   "liveTitle": "StateLabel"
+  },
+  "/components/subnav": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Subnav",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/components/tab-container": {
+   "live": "https://primer.style/product/getting-started/rails/components/tab-container/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Tab container",
+   "liveTitle": "TabContainer Rails component"
+  },
+  "/components/tab-nav": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Tab nav",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/components/tab-panels": {
+   "live": "https://primer.style/product/getting-started/rails/components/tab-panels/",
+   "status": "moved",
+   "via": "redirect",
+   "archivedTitle": "Tab panels",
+   "liveTitle": "TabPanels Rails component"
+  },
+  "/components/text": {
+   "live": "https://primer.style/product/components/text/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Text",
+   "liveTitle": "Text"
+  },
+  "/components/text-input": {
+   "live": "https://primer.style/product/components/text-input/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Text input",
+   "liveTitle": "TextInput"
+  },
+  "/components/text-input-with-tokens": {
+   "live": "https://primer.style/product/components/text-input-with-tokens/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Text input with tokens",
+   "liveTitle": "TextInputWithTokens"
+  },
+  "/components/textarea": {
+   "live": "https://primer.style/product/components/textarea/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Textarea",
+   "liveTitle": "Textarea"
+  },
+  "/components/timeline": {
+   "live": "https://primer.style/product/components/timeline/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Timeline",
+   "liveTitle": "Timeline"
+  },
+  "/components/toggle-switch": {
+   "live": "https://primer.style/product/components/toggle-switch/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Toggle switch",
+   "liveTitle": "ToggleSwitch"
+  },
+  "/components/token": {
+   "live": "https://primer.style/product/components/token/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Token",
+   "liveTitle": "Token"
+  },
+  "/components/tooltip": {
+   "live": "https://primer.style/product/components/tooltip/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Tooltip",
+   "liveTitle": "Tooltip"
+  },
+  "/components/tree-view": {
+   "live": "https://primer.style/product/components/tree-view/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Tree view",
+   "liveTitle": "TreeView"
+  },
+  "/components/truncate": {
+   "live": "https://primer.style/product/components/truncate/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Truncate",
+   "liveTitle": "Truncate"
+  },
+  "/components/underline-nav": {
+   "live": "https://primer.style/product/components/underline-nav/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Underline nav",
+   "liveTitle": "UnderlineNav"
+  },
+  "/components/underline-panels": {
+   "live": "https://primer.style/product/components/underline-panels/",
+   "status": "live",
+   "via": "product path",
+   "archivedTitle": "Underline panels",
+   "liveTitle": "UnderlinePanels"
+  },
+  "/deprecated-components/box-overlay": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Box overlay",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/deprecated-components/dropdown": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Dropdown",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/deprecated-components/filter-list": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Filter list",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/deprecated-components/filtered-search": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Filtered search",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/deprecated-components/flash": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Flash",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/deprecated-components/menu": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Menu",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/deprecated-components/select-menu": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Select menu",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/deprecated-components/side-nav": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Side nav",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/deprecated-components/toast": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Toast",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/github-staff": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "GitHub staff",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/github-staff/github-shared-components": {
+   "live": "https://primer.style/product/getting-started/react/shared-components/",
+   "status": "moved",
+   "via": "title match",
+   "archivedTitle": "GitHub shared components",
+   "liveTitle": "GitHub shared components"
+  },
+  "/native": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Native",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/native/cli": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "CLI",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/native/cli/getting-started": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Getting started",
+   "note": "no live page: the legacy path resolves to a GitHub 404"
+  },
+  "/native/cli/foundations": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Foundations",
+   "note": "no live page: the legacy path resolves to a GitHub 404"
+  },
+  "/native/cli/components": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Components",
+   "note": "no live page: the legacy path resolves to a GitHub 404"
+  },
+  "/native/desktop": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Desktop",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/native/desktop/getting-started": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Getting started",
+   "note": "no live page: the legacy path resolves to a GitHub 404"
+  },
+  "/native/desktop/foundations": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Foundations",
+   "note": "no live page: the legacy path resolves to a GitHub 404"
+  },
+  "/native/mobile": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Mobile",
+   "note": "no live page: the legacy path resolves to the home page"
+  },
+  "/native/mobile/platforms": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Platforms",
+   "note": "no live page: the legacy path resolves to a GitHub 404"
+  },
+  "/native/mobile/foundations": {
+   "live": "",
+   "status": "dead",
+   "archivedTitle": "Foundations",
+   "note": "no live page: the legacy path resolves to a GitHub 404"
+  }
+ }
+}
