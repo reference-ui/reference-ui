@@ -1,3 +1,6 @@
+// Entry for the PRIM-07 world: paints the #root, #surface, #ink-light, #brand-light, #dark-island,
+// #ink-dark, #brand-dark, #light-island probes through the generated runtime. Takes the synced css
+// bindings and emits the DOM the specs assert against.
 import { createRoot } from 'react-dom/client'
 import { Div } from '@reference-ui/react'
 

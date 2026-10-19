@@ -1,3 +1,5 @@
+// Entry for the RECIPE-01 world: paints the #accent, #combo, #muted, #defaults probes through the
+// generated runtime. Takes the synced css bindings and emits the DOM the specs assert against.
 import { recipe } from '@reference-ui/react'
 
 function el(id: string): HTMLElement {
