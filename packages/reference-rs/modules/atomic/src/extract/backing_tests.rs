@@ -4,7 +4,7 @@
 //! never under a composed system it does not render through; with none composed it is unbacked
 //! and names its own system; an unreadable published file is unbacked and names the file; a
 //! foreign package lowers nothing. A tag no import binds backs under the upstreams that publish
-//! its name, and any other project or unbound tag under every composed system.
+//! its name, and any other project or unbound tag under own, never under a composed system.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -110,7 +110,7 @@ fn a_foreign_package_lowers_nothing() {
 }
 
 #[test]
-fn an_unbound_published_name_backs_under_its_publisher_and_the_rest_spread() {
+fn an_unbound_published_name_backs_under_its_publisher_and_the_rest_own() {
     let mut hosts = BTreeMap::new();
     hosts.insert(
         "acme".to_string(),
@@ -129,19 +129,24 @@ fn an_unbound_published_name_backs_under_its_publisher_and_the_rest_spread() {
         Some(Backing::systems(["acme"])),
         "member tags match their concatenated spelling"
     );
-    let every = Some(Backing::systems(["reference-ui", "acme"]));
     assert_eq!(
         backed(composed.non_host(None, &unbound, "Other")),
-        every,
-        "`other` is not composed"
+        Some(Backing::Own),
+        "`other` is not composed, so nothing composed renders it"
     );
     assert_eq!(
         backed(composed.non_host(None, &TagProvenance::Local, "AcmeCard")),
-        every
+        Some(Backing::Own),
+        "a project binding outranks the published spelling"
+    );
+    assert_eq!(
+        backed(composed.non_host(None, &TagProvenance::Own, "Mystery")),
+        Some(Backing::Own)
     );
     let standalone = Composed::standalone();
     assert_eq!(
         backed(standalone.non_host(None, &unbound, "AcmeCard")),
-        Some(Backing::none())
+        Some(Backing::Own),
+        "standalone, an unbound tag lowers under own too"
     );
 }

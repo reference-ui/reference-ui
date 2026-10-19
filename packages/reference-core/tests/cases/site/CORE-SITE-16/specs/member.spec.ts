@@ -1,7 +1,7 @@
 // member.spec.ts — spec for CORE-SITE-16, the member-host case. Takes
 // { page, case } from the runner with the world freshly synced and the page
 // already navigated to it. Emits nothing on success; throws naming the
-// missing member utility, the leaked twin utility, or the unpainted probe.
+// missing member or twin utility, or the unpainted probe.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,9 +13,10 @@ interface SpecInput {
   case: CoreCase;
 }
 
-// The NS.Panel member tag matches the NSPanel host: the sheet carries
-// exactly its two utilities and the member paints both. The unhosted
-// Other.Panel twin emits no utility and renders with a transparent back.
+// The NS.Panel member tag matches the NSPanel host: the sheet carries its
+// two utilities and the member paints both. The unhosted Other.Panel twin is
+// project code nobody traces, so it lowers under own (styling plan S3) and,
+// being Div underneath, paints its paper backdrop.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
@@ -23,9 +24,9 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   assert.ok(styles.includes('.core-site-16__c_brand'), 'sheet carries member color');
   assert.ok(styles.includes('.core-site-16__p_sm'), 'sheet carries member spacing');
-  assert.ok(!styles.includes('bg_paper'), 'sheet carries no twin utility');
+  assert.ok(styles.includes('.core-site-16__bg_paper'), 'sheet carries the twin backdrop under own');
   const utilityCount = styles.match(/\.core-site-16__/g)?.length ?? 0;
-  assert.equal(utilityCount, 2, `sheet carries exactly the member utilities, got ${utilityCount}`);
+  assert.equal(utilityCount, 3, `sheet carries the member and twin utilities, got ${utilityCount}`);
 
   const member = page.locator('#member');
   await member.waitFor();
@@ -44,7 +45,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   await twin.waitFor();
   assert.equal(
     await twin.evaluate((el) => getComputedStyle(el).backgroundColor),
-    'rgba(0, 0, 0, 0)',
-    'twin renders with no backdrop',
+    'rgb(255, 255, 255)',
+    'twin paints its paper backdrop',
   );
 }

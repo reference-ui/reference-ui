@@ -1,7 +1,8 @@
 /**
  * Styletrace gating case. Div is a Reference import and extracts.
- * Foo is a local component without StyleProps and must not extract,
- * including when it authors known style props. No PascalCase matcher.
+ * Foo is a local component without StyleProps and is never a host, even
+ * when it authors known style props: no PascalCase matcher. Untraced, its
+ * props lower under own (styling plan S3).
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'

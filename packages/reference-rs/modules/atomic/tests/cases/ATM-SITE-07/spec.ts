@@ -1,7 +1,7 @@
 /**
- * Non-style DOM attributes and hallucinated primitives are ignored.
- * id / onClick / tabIndex / aria-label never become wants. Foo is not
- * a StyleProps host, so its color does not extract. No diagnostics.
+ * Non-style DOM attributes are ignored and an untraced component lowers under
+ * own. id / onClick / tabIndex / aria-label never become wants. Foo is not a
+ * StyleProps host; its color lowers under own (styling plan S3). No diagnostics.
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
@@ -15,6 +15,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'tabIndex', 0)).toBe(false)
     expect(hasWant(result, 'aria-label', 'hello')).toBe(false)
     expect(hasWant(result, 'color', 'red')).toBe(true)
+    expect(result.css?.classes?.['color:red']).toBe('@reference-ui/lib__c_red')
     expect(result.diagnostics).toEqual([])
   },
 }

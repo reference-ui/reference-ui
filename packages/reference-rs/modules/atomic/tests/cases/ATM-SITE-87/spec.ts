@@ -3,8 +3,8 @@
  * (`Tabs.Panel = TabPanel`) mint dotted hosts, so member-form use sites
  * collect: inline literals and const spreads alike. `Tabs.List` is the
  * concatenation-coincidence control (it collected even before dotted
- * hosts), and `Tabs.Plain` is the alias-to-untraced negative whose use
- * site must stay silent.
+ * hosts), and `Tabs.Plain` is the alias-to-untraced negative that mints no
+ * host; its use site lowers under own (styling plan S3).
  */
 import { expect } from 'vitest'
 import {
@@ -34,7 +34,7 @@ const spec: AtomicCaseSpec = {
     // List-coincidence control still collects.
     expect(hasWant(result, 'mt', '5r')).toBe(true)
     // Alias-to-untraced negative: Tabs.Plain mints no host; its site is still a
-    // capitalized non-host tag, so its prop extracts as an external want.
+    // capitalized non-host tag nobody traces, so its prop lowers under own.
     expect(hasWant(result, 'mt', '11r')).toBe(true)
     expect(getWantsForProp(result, 'mt')).toHaveLength(5)
     expect(result.wants ?? []).toHaveLength(8)
@@ -42,10 +42,10 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('mt_7r')
     expect(result.stylesheet).toContain('py_5r')
     expect(result.stylesheet).toContain('mt_5r')
-    expect(result.stylesheet).not.toContain('mt_11r')
+    expect(result.stylesheet).toContain('mt_11r')
     expect(result.diagnostics.filter(d => d.severity === 'error')).toEqual([])
     expect(result.diagnostics ?? []).toHaveLength(0)
-    expect(Object.keys(result.css?.classes ?? {})).toHaveLength(7)
+    expect(Object.keys(result.css?.classes ?? {})).toHaveLength(8)
   },
 }
 

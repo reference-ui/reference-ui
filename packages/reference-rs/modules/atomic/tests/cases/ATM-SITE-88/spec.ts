@@ -1,8 +1,9 @@
 /**
  * Bound-root member (ATM-SITE-88). `<NS.Panel />` extracts when its
  * root resolves through a same-file const object literal to an admitted host
- * and `NSPanel` is a host; the unconfigured `<Other.Panel />` twin stays
- * silent; the use-before-declare `<Late.Panel />` pair extracts the same.
+ * and `NSPanel` is a host; the unconfigured `<Other.Panel />` twin is no
+ * host and lowers under own (styling plan S3); the use-before-declare
+ * `<Late.Panel />` pair extracts the same.
  * Zero diagnostics either way.
  */
 import { expect } from 'vitest'
@@ -21,7 +22,7 @@ const spec: AtomicCaseSpec = {
     expect(result.css?.classes?.['minW:40r']).toBe(`${SYSTEM}__min-w_40r`)
     expect(result.css?.classes?.['bg:red']).toBe(`${SYSTEM}__bg_red`)
     expect(result.css?.classes?.['mt:2r']).toBe(`${SYSTEM}__mt_2r`)
-    expect(result.css?.classes?.['p:4r']).toBeUndefined()
+    expect(result.css?.classes?.['p:4r']).toBe(`${SYSTEM}__p_4r`)
 
     const sheet = result.stylesheet
     expect(sheet).toContain('min-width: calc(40 * var(--spacing-root));')

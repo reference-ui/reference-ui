@@ -4,11 +4,13 @@
 //! tag is a StyleProps host. Hosts come from styletrace names plus file-local
 //! `@reference-ui/react` / `@reference-ui/styled` component imports. The `r`
 //! prop object is walked through `resolve/r`, not as a scalar value. A styled
-//! tag no host admits lowers under the systems that render it ([`Composed`]):
-//! a package's published systems this compile composes, or, when none is,
-//! nothing at all, with `ATM-W-EXTERNAL-UNBACKED` at the tag naming the package
-//! and its `baseSystem`. A tag from a package not built on Reference UI is not
-//! a Reference component and lowers nothing, silently.
+//! component tag no host admits lowers under the systems that render it,
+//! decided by its binding ([`Composed`]), never its spelling: a package's
+//! published systems this compile composes, or, when none is, nothing at all,
+//! with `ATM-W-EXTERNAL-UNBACKED` at the tag naming the package and its
+//! `baseSystem`; an upstream's published name under that upstream; any other
+//! project or unbound component under own. A tag from a package not built on
+//! Reference UI is not a Reference component and lowers nothing, silently.
 
 use attribute::{handle_attribute_value, handle_jsx_attribute};
 use canon::{is_condition_prop, is_known_style_prop};
@@ -22,7 +24,7 @@ use crate::extract::expressions::BagSemantics;
 use crate::extract::ExtractContext;
 use crate::resolve::font::scope;
 
-pub(crate) use names::{format_jsx_attribute_name, format_jsx_element_name, is_external_tag};
+pub(crate) use names::{format_jsx_attribute_name, format_jsx_element_name, is_component_tag};
 
 mod attribute;
 mod names;
@@ -36,6 +38,9 @@ mod external_tag_tests;
 
 #[cfg(test)]
 mod unbacked_tests;
+
+#[cfg(test)]
+mod untraced_tag_tests;
 
 /// A JSX style-block prop site (`css`, `r`, or a condition prop) under walk.
 struct StyleAttr<'a> {
@@ -134,9 +139,9 @@ fn lower_attributes(
 /// `None` when the tag is a threaded wrapper (already lowered) or dropped.
 ///
 /// Order is pinned (G0 §D): a threaded wrapper lowers its `css` first,
-/// unchanged; then a capitalized non-host tag lowers under the systems that
+/// unchanged; then a non-host component tag lowers under the systems that
 /// render it — but only once the host graph resolved, so an empty graph still
-/// reports the missing graph; every other tag takes today's drop path.
+/// reports the missing graph; a DOM tag takes today's drop path.
 fn tag_gate<'a>(
     opening: &JSXOpeningElement<'_>,
     tag_name: &str,
@@ -148,7 +153,7 @@ fn tag_gate<'a>(
     if extract_threaded_wrapper(opening, tag_name, ctx) {
         return None;
     }
-    if !ctx.jsx_hosts.is_empty() && is_external_tag(tag_name) {
+    if !ctx.jsx_hosts.is_empty() && is_component_tag(tag_name) {
         return non_host_gate(opening, tag_name, ctx);
     }
     report_dropped_tag(opening, tag_name, ctx);

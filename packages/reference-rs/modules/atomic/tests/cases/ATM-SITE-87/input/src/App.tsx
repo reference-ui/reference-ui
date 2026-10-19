@@ -1,7 +1,7 @@
 /**
  * Use sites for ATM-SITE-87: inline and const-spread member forms collect,
  * the List-coincidence control holds, and the alias-to-untraced use site
- * stays silent. Each mt value maps to exactly one use site.
+ * lowers under own. Each mt value maps to exactly one use site.
  */
 import { Tabs, TabPanel } from './tabs'
 

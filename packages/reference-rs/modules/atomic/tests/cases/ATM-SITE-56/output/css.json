@@ -1,3 +1,4 @@
 {
+  "color:red.500": "@reference-ui/lib__c_red.500",
   "mt:4r": "@reference-ui/lib__mt_4r"
 }

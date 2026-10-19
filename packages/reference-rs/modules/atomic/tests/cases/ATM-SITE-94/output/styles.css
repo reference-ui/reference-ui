@@ -14,7 +14,10 @@
   .\@reference-ui\/lib__c_currentColor { color: currentColor; }
   .\@reference-ui\/lib__c_inherit { color: inherit; }
   .\@reference-ui\/lib__d_inline-flex { display: inline-flex; }
+  .\@reference-ui\/lib__fill_currentColor { fill: currentColor; }
+  .\@reference-ui\/lib__h_100\% { height: 100%; }
   .\@reference-ui\/lib__h_2r { height: calc(2 * var(--spacing-root)); }
+  .\@reference-ui\/lib__w_100\% { width: 100%; }
   .\@reference-ui\/lib__w_2r { width: calc(2 * var(--spacing-root)); }
 }
 }

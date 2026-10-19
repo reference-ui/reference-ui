@@ -2,7 +2,8 @@
  * Zero-config discovery (ATM-SITE-56). A local Card forwarding
  * StyleProps into Div extracts with jsxHosts absent and no declarations
  * on disk; tracedJsxHosts carries the discovered name. Random (bare div)
- * and Label (no style props) are not traced and stay silent.
+ * and Label (no style props) are not traced; Random's color lowers under
+ * own (styling plan S3) without a diagnostic.
  */
 import { expect } from 'vitest'
 import {
@@ -31,7 +32,7 @@ const spec: AtomicCaseSpec = {
     )
     expect(warnings).toHaveLength(1)
     expect(warnings[0]!.message).toContain('spread')
-    expect(Object.keys(result.css?.classes ?? {})).toHaveLength(1)
+    expect(Object.keys(result.css?.classes ?? {})).toEqual(['color:red.500', 'mt:4r'])
   },
 }
 
