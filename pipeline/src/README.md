@@ -1,6 +1,6 @@
 # Pipeline Source
 
-Execution graph for build, test, and release. `cli.ts` is the `pnpm pipeline` command tree; each subfolder owns one stage and hands artifacts to the next through the pipeline-local registry.
+Execution graph for build, test, and release. The `cli` command tree defines `pnpm pipeline`; each subfolder owns one stage and hands artifacts to the next through the pipeline-local registry.
 
 ## Boundaries
 
@@ -10,6 +10,6 @@ Execution graph for build, test, and release. `cli.ts` is the `pnpm pipeline` co
 - `release/` gates promotion from the local registry to npm. Changesets authors intent (`pnpm changeset`); the pipeline executes versioning, staging, and publish.
 - `dev/` materializes registry-backed local dev workspaces; `clean/` wipes pipeline-managed state; `lib/` holds shared terminal and runtime helpers.
 
-Commands outside `pnpm pipeline` are thin aliases or helpers: `pnpm release`, `pnpm setup:local`, and small conditional wrappers under `pipeline/scripts/`.
+Commands outside `pnpm pipeline` are thin aliases or helpers: `pnpm release`, `pnpm setup:local`, and small conditional wrappers in the pipeline scripts.
 
 Parent: [pipeline/README.md](../README.md).

@@ -1,6 +1,6 @@
 # Reference UI Pipeline
 
-Dagger-backed delivery graph for the monorepo: build, test, and release run here. The CLI entry point is `pnpm pipeline` (routes to `src/cli.ts`); shared constants live in `config.ts` and `dependencies.ts`.
+Dagger-backed delivery graph for the monorepo: build, test, and release run here. The CLI entry point is `pnpm pipeline` (the `cli` command tree); shared constants live in the pipeline config (`MATRIX_CONFIG`) and dependency pins.
 
 ## Setup
 
@@ -25,18 +25,18 @@ pnpm pipeline dev docs|lib     # registry-backed dev workspace under .pipeline/d
 pnpm pipeline clean            # delete managed registry state, build cache, Dagger engine cache
 ```
 
-Inside `pipeline/`, `test:pipeline` runs the Node test runner over pipeline unit tests and `typecheck` runs `tsc --noEmit`.
+Inside the pipeline package, `test:pipeline` runs the Node test runner over pipeline unit tests and `typecheck` runs `tsc --noEmit`.
 
 ## Managed registry
 
-- Verdaccio at `http://127.0.0.1:4873`; config is `src/registry/verdaccio/config.yaml`, storage is `src/registry/.store/storage`.
+- Verdaccio at `http://127.0.0.1:4873`; the managed registry module owns its Verdaccio config and on-disk storage.
 - Unmatched packages proxy to the npmjs uplink with `maxage: 30d` and no tarball caching.
 - Matrix containers reach it as the service `registry` (`http://registry:4873`).
 - The build flow writes tarballs plus `.pipeline/registry/manifest.json`, then loads only versions missing from the registry.
 
 ## Matrix test modes
 
-Each `matrix/tests/*/matrix.json` declares `react` (react17/18/19, single or array with the first entry as default) and `bundlers` (vite7, webpack5).
+Each matrix contract declares `react` (react17/18/19, single or array with the first entry as default) and `bundlers` (vite7, webpack5).
 
 - Default run: each package's first declared React runtime with its latest declared Vite bundler, else its first declared bundler.
 - `--react` pins one declared runtime; `--full` expands every declared React × bundler.
@@ -47,4 +47,4 @@ Each `matrix/tests/*/matrix.json` declares `react` (react17/18/19, single or arr
 
 Registry staging omits `.git` and `node_modules` at any depth, and `target`, `dist/cargo`, `.turbo`, `coverage` at the package root. Excludes match paths relative to the package root, never bare basenames: publishable `dist/` trees must survive the copy.
 
-Subsystem details live in [src/README.md](src/README.md).
+Subsystem details live in the [pipeline source overview](./src/README.md).
