@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-081",
+  "name": "Splitter DOM, keyboard, and environment CT SP-DOM-11: Omitted collapsible/disabled default to plain resize; opt-in collapse resolves size 0"
+}

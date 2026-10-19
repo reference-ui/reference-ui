@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-069",
+  "name": "Overlay Deep SPEC & Production Verification Suite Anchored Floating UI & Arrow Contracts (OV-POS-*) OV-SCRL-01 / OV-SCRL-02: closeOnScroll omitted maintains living anchored position; closeOnScroll=true dismisses on composed ancestor scroll only"
+}

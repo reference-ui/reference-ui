@@ -1,0 +1,4 @@
+{
+  "id": "LIB-POPOVER-015",
+  "name": "Popover Composition Gates & Browser Proofs PO-HOVER-09: Popover should avoid mouse-intent timers when touch or non-hover pen input synthesizes pointer entry"
+}

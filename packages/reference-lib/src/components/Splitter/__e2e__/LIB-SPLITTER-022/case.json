@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-022",
+  "name": "Splitter pointer-session robustness SP-DRAG-01: Primary pointerdown focuses, captures, and marks resizing before any move"
+}

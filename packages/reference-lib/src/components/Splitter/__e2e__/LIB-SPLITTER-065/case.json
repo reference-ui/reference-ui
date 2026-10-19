@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-065",
+  "name": "Splitter FEATURES #5: pointer-session frame budget SP-PERF-02: Pointermove reads no layout after the session captures geometry"
+}

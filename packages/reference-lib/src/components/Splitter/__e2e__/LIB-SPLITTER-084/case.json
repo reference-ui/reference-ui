@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-084",
+  "name": "Splitter DOM, keyboard, and environment CT SP-KEY-03: Shift+Arrow requests ten points through the same solver, clamped at bounds"
+}

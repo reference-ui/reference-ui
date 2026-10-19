@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-049",
+  "name": "Overlay Deep SPEC & Production Verification Suite 7. Edge Sheets & Handle Gestures OV-EDGE-03: Overlay treats Trigger as opener, not floating reference, when edge is set"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-POPOVER-038",
+  "name": "Rejected Popover Tab dismissal advances beyond the logical trigger once"
+}

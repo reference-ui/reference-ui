@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-063",
+  "name": "Overlay Deep SPEC & Production Verification Suite Focus & Restoration Contracts (OV-FOCUS-* & OV-RESTORE-*) OV-RESTORE-04: Skips focus restoration entirely when restoreFocus={false}"
+}

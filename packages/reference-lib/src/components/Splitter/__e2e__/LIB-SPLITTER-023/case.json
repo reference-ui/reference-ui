@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-023",
+  "name": "Splitter pointer-session robustness SP-DRAG-04: Captured drag continues beyond the handle, group, and edges"
+}

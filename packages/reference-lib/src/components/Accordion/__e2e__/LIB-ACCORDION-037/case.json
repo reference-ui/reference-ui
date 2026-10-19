@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ACCORDION-037",
+  "name": "Accordion Composition Gates & Browser Proofs AC-KEY-02: Accordion header traversal should move ArrowUp to the previous enabled Trigger and wrap at the beginning"
+}

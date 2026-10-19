@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-101",
+  "name": "Overlay Exotica Pass OV-RESTORE-08: restoreFocus resolver is evaluated at Presence teardown"
+}

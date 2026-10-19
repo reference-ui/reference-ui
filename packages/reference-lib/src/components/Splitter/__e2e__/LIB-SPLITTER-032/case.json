@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-032",
+  "name": "Splitter pointer-session robustness SP-DRAG-12: Secondary click terminates the drag; the held release is a no-op"
+}

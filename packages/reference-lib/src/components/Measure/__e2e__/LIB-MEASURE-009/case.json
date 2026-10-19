@@ -1,0 +1,4 @@
+{
+  "id": "LIB-MEASURE-009",
+  "name": "Measure sharp edges MS-HIDDEN-01: display:none publishes a zero box and re-measures on reappear"
+}

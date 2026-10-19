@@ -1,0 +1,5 @@
+# LIB-OVERLAY-010 — Overlay Deep SPEC & Production Verification Suite 1. DOM & Anatomy Contracts OV-ISO-02: isolation={false} does not inert the background
+
+Overlay Deep SPEC & Production Verification Suite 1. DOM & Anatomy Contracts OV-ISO-02: isolation={false} does not inert the background.
+
+Execution: single `test` under `test.describe('1. DOM & Anatomy Contracts')` within `test.describe('Overlay Deep SPEC & Production Verification Suite')`, split verbatim from the shared component spec.

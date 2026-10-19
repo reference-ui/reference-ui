@@ -1,0 +1,4 @@
+{
+  "id": "LIB-MEASURE-007",
+  "name": "Measure sharp edges MS-LOOP-01: sizing the host from rect converges without a ResizeObserver loop"
+}

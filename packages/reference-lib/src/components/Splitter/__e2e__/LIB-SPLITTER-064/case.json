@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-064",
+  "name": "Splitter FEATURES #5: pointer-session frame budget SP-PERF-01: Pointermove commits no React on Panel descendants and never toggles resizing"
+}

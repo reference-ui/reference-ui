@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-033",
+  "name": "Overlay Deep SPEC & Production Verification Suite 4. Outside Press & Pointer Mechanics OV-OUT-06: Overlay should cancel stale outside dismissal when a deferred touch sequence returns inside or is canceled before click"
+}

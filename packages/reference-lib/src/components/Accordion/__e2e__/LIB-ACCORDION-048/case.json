@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ACCORDION-048",
+  "name": "Accordion Composition Gates & Browser Proofs AC-PRES-01: A single Accordion should expose only the new item as expanded while the old Content completes its exit"
+}

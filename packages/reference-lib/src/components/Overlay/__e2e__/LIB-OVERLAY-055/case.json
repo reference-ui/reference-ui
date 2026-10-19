@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-055",
+  "name": "Overlay Deep SPEC & Production Verification Suite Focus & Restoration Contracts (OV-FOCUS-* & OV-RESTORE-*) OV-FOCUS-03: Skips initial focus move when initialFocus={false}, reclaims once inside"
+}

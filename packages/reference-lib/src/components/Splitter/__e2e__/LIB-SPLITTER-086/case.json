@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-086",
+  "name": "Splitter DOM, keyboard, and environment CT SP-ENV-03: A ShadowRoot Splitter keeps focus and drag cleanup inside its instance"
+}

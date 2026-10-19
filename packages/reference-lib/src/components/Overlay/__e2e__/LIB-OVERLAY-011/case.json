@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-011",
+  "name": "Overlay Deep SPEC & Production Verification Suite 1. DOM & Anatomy Contracts OV-DOM-08 & OV-DOM-09: Duplicate parts fail atomically and emit diagnostic warnings"
+}

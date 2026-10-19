@@ -1,0 +1,4 @@
+{
+  "id": "LIB-MEASURE-001",
+  "name": "Measure browser proofs MS-DOM-01: publishes the authored host border box with no wrapper node"
+}

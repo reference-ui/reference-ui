@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-080",
+  "name": "Overlay Deep SPEC & Production Verification Suite 11. Modal Pointer Isolation OV-POINTER-05: Retains modal pointer isolation through entire animated exit until unmount"
+}

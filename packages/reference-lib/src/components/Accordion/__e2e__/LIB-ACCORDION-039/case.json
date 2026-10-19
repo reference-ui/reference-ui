@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ACCORDION-039",
+  "name": "Accordion Composition Gates & Browser Proofs AC-KEY-04: Accordion header traversal should skip every disabled item, including a trigger disabled after it held focus"
+}

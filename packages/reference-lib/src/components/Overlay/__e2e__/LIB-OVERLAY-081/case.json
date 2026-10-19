@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-081",
+  "name": "Overlay Deep SPEC & Production Verification Suite 11. Modal Pointer Isolation OV-POINTER-06: Cancels pointer teardown when reopening during exit"
+}

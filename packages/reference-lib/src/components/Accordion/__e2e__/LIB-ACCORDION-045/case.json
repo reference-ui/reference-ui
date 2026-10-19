@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ACCORDION-045",
+  "name": "Accordion Composition Gates & Browser Proofs AC-KEY-10: Accordion should recompute header order after dynamic collection changes without remounting surviving Triggers"
+}

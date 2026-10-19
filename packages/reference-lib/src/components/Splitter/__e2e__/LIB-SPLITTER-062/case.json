@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-062",
+  "name": "Splitter FEATURES #6: collapse memory and dynamic panels SP-DYNAMIC-03: Transiently invalid trees fail locally with a diagnostic, then restore cleanly"
+}

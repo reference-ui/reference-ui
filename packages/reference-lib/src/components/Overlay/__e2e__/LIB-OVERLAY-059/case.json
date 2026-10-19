@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-059",
+  "name": "Overlay Deep SPEC & Production Verification Suite Focus & Restoration Contracts (OV-FOCUS-* & OV-RESTORE-*) OV-FOCUS-05: Preserves focus containment when focused element is removed, disabled, or hidden"
+}

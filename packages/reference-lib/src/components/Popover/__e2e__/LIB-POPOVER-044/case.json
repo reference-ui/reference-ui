@@ -1,0 +1,4 @@
+{
+  "id": "LIB-POPOVER-044",
+  "name": "A hover-card Popover returns focus to its Trigger without reopening"
+}

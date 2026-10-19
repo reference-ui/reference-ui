@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ACCORDION-047",
+  "name": "Accordion Composition Gates & Browser Proofs AC-NEST-01: A nested Accordion should keep its collection, values, and header keys independent from its parent"
+}

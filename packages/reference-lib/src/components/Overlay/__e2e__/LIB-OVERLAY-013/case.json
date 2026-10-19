@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-013",
+  "name": "Overlay Deep SPEC & Production Verification Suite 2. Escape Ordering & Cancellation OV-ESC-03: Observes latest state closure and prevents escape dismissal after rerender"
+}

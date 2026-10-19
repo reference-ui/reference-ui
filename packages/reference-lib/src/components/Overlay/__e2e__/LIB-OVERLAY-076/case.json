@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-076",
+  "name": "Overlay Deep SPEC & Production Verification Suite 10. Presence & Exit Lifecycle OV-PRES-05: Maintains one current lifecycle during rapid close -> reopen -> close sequence"
+}

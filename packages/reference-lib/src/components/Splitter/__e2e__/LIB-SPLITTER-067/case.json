@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-067",
+  "name": "Splitter FEATURES #5: pointer-session frame budget SP-PERF-04: Changed moves write CSS size signals synchronously, ahead of the delayed value"
+}

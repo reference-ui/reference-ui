@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ACCORDION-056",
+  "name": "Accordion controlled policy in the browser AC-SINGLE-06: consumer cancellation stops native pointer and keyboard clicks before collection requests"
+}

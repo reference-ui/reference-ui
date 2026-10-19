@@ -1,0 +1,4 @@
+{
+  "id": "LIB-POPOVER-010",
+  "name": "Popover Composition Gates & Browser Proofs PO-HOVER-03: Popover should request delayed close when the pointer leaves the safe region and should cancel it on reentry"
+}

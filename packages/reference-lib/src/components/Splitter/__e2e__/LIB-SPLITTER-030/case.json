@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-030",
+  "name": "Splitter pointer-session robustness SP-DRAG-10: Only the first pointer owns the group"
+}
