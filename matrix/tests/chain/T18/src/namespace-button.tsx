@@ -3,8 +3,9 @@ import * as Acme from '@fixtures/primitive-named-library'
 
 /**
  * Namespace import of the same third-party primitive (plan probe 5). A member
- * tag never matched the host roster, so this takes the external fan-out today:
- * an unmapped package composed in `extends` is backed under its own name.
+ * tag never matched the host roster; its root's import lands in the fixture's
+ * directory, so its `color` backs under the fixture's published system,
+ * `primitive-named-library`, which the app composes in `extends`.
  */
 export function NamespaceButtonProbe(): React.ReactElement {
   return (

@@ -8,8 +8,8 @@ Core cases (`packages/reference-core/tests/cases/`) or Rust seam tests.
 
 ## The kept gate
 
-Twelve suites stay in `matrix/tests/`: the full 11-tier chain set
-plus MCP. Every kept suite installs from packed tarballs via the
+Fifteen suites stay in `matrix/tests/`: the 11-tier chain set, three
+package-composition tiers (T16, T17, T18), plus MCP. Every kept suite installs from packed tarballs via the
 staged registry and runs setup in a virgin container on every run,
 so each one re-proves the install dimension. Chain stays in one
 place to test and reason about between-packages and
@@ -29,9 +29,11 @@ between-environments composition (distro/watch/etc. are decommissioned).
 | `@matrix/chain-t12` | `matrix/tests/chain/T12` | Diamond base with mixed branches: one branch layered, one extended. |
 | `@matrix/chain-t13` | `matrix/tests/chain/T13` | Parallel extend chains plus a shared app-level layer. |
 | `@matrix/chain-t16` | `matrix/tests/chain/T16` | Prebuilt aliased-host composition: extends lib (transitive icons layers) plus a direct `layers` leg on `@fixtures/aliased-host-library`; asserts every emitted class has a backing rule, zero `no compiled class` warnings, and shell computed styles. |
+| `@matrix/chain-t17` | `matrix/tests/chain/T17` | Consumer style props on prebuilt components (T16's topology): a consumer token, raw value, `css` prop, condition and tone paint on icons, a lib root and a fixture badge through rules backed under each package's published systems, with structured icons accounting and zero `no compiled class` warnings. |
+| `@matrix/chain-t18` | `matrix/tests/chain/T18` | Component ownership by provenance: extends lib and `@fixtures/primitive-named-library`, layers icons; a tag imported from a package is backed under that package's published systems only, whatever its name or import shape (direct, namespace, barrel, `css` wrapper, published `jsxElements` name), with no spray and nothing configured. Sync legs under `tests/sync/`: `backed` and `unbacked` (icons composed or not, `ATM-W-EXTERNAL-UNBACKED` at the styled icon) and `partial`, the partly composed app (extends lib, not the fixture): one warning per styled fixture tag naming the package, its system and the `baseSystem` fix, and its props backed under no prefix. |
 | `@matrix/mcp` | `matrix/tests/mcp` (19 files) | The whole MCP standard against the shipped artifact: tools, resources, icons, project discovery/switching, paths/symlinks, registry lifecycle, resilient boot — including packed-boundary `_private` legs over `@fixtures/extend-library`. |
 
-Mixed tiers (T3/T9/T10/T12/T13/T16) exercise `layers:` legs in
+Mixed tiers (T3/T9/T10/T12/T13/T16/T17/T18) exercise `layers:` legs in
 combination; T2 is the isolated single-mode proof. All chain tiers
 run over packed fixtures, so packed-boundary extends stays proven
 in matrix.
@@ -50,6 +52,9 @@ pnpm agent test --packages=@matrix/chain-t10
 pnpm agent test --packages=@matrix/chain-t11
 pnpm agent test --packages=@matrix/chain-t12
 pnpm agent test --packages=@matrix/chain-t13
+pnpm agent test --packages=@matrix/chain-t16
+pnpm agent test --packages=@matrix/chain-t17
+pnpm agent test --packages=@matrix/chain-t18
 pnpm agent test --packages=@matrix/mcp
 ```
 

@@ -1,6 +1,6 @@
 # CHAIN — topology sketches
 
-> All 12 tiers are live matrix provers at `matrix/tests/chain/T*`. Chain stays in one place to test
+> All 14 tiers are live matrix provers at `matrix/tests/chain/T*`. Chain stays in one place to test
 > between-packages / between-environments composition; the Core
 > `CORE-CHAIN-01..05` tier ports were deleted as duplicates — one
 > home is matrix. T4/T5 still have no tiers. The execution-order
@@ -172,8 +172,9 @@ Compiler question: does the compiler compose multiple transitive upstreams plus 
 
 Compiler question: does a consumer inherit transitively-layered CSS through
 an extends chain, and does a prebuilt package whose components render style
-props on aliased hosts (`const Shell = Div as …`) ship complete CSS without
-any `jsxElements` crutch?
+props on aliased hosts (`const Shell = Div as …`) ship complete CSS with
+nothing configured? StyleTrace finds the hosts; no `jsxElements` entry is
+needed, and none would apply to a package's tags.
 
 ```
   @reference-ui/icons ──▶ layer ──▶ @reference-ui/lib ──▶ extend ──┐
@@ -188,9 +189,53 @@ import) and fixture badges alike.
 
 ---
 
+### T17: Style prebuilt components with consumer style props
+
+Compiler question: does a consumer style prop on a prebuilt package's
+component resolve against the consumer's tokens and paint, backed in the
+consumer's sheet under the systems that package renders through?
+
+```
+  @reference-ui/icons ──▶ layer ──▶ @reference-ui/lib ──▶ extend ──┐
+                                                                      ├──▶ User space
+  @fixtures/aliased-host-library ──▶ layer  ───────────────────────┘
+```
+
+Contract: a consumer token, a raw value, the `css` prop, a `_hover` arm and a
+role-split tone paint on icons, a lib root and a fixture badge with zero
+`no compiled class` warnings; each probe's rule is foreign-qualified in the
+loaded sheet, and the `reference-icons__` selectors equal the icons set plus
+the consumer's own probe stems.
+
+---
+
+### T18: Component ownership across packages
+
+Compiler question: is a tag imported from another package backed under that
+package's published systems, and only those, whatever it is called and however
+it reaches the file; and does a partly composed app warn instead of spraying
+the rule under the systems it does compose?
+
+```
+  @reference-ui/lib ─────────────────▶ extend ──┐   (lib itself layers icons)
+  @fixtures/primitive-named-library ─▶ extend ──┼──▶ User space
+  @reference-ui/icons ───────────────▶ layer  ──┘
+```
+
+Contract: each probe (direct import, namespace import, relative barrel,
+same-file `css` wrapper, published `jsxElements` name, icon, owned prop)
+paints, its class backed only under its renderer's published streams and
+never under `chain-t18__`; nothing configures `jsxElements`. Sync-level
+projects under `tests/sync/`: `backed` and `unbacked` compose icons or not
+(`ATM-W-EXTERNAL-UNBACKED` at the styled icon), and `partial` extends lib but
+not the fixture, so each styled fixture tag warns once, naming the package,
+its system and the `baseSystem` fix, and its props back under no prefix.
+
+---
+
 ## Derived / reduced sketches
 
-These are useful naming shortcuts, but they are not separate heavy-fixture requirements once the core proof set is green.
+These are useful naming shortcuts, but they are not separate heavy-fixture requirements once the core proof set is green. Their numbers predate the live tiers: the T16, T17 and T18 suites are the provers above, not the sketches of the same names below.
 
 ### T14: One extend + several layers
 
@@ -305,6 +350,8 @@ We can reasonably say "we have a chainable design system compiler" once all of t
 8. T7
 9. T8
 10. T16
+11. T17
+12. T18
 
 **Stop rule**
 

@@ -3,18 +3,18 @@ import { baseSystem as libSystem } from '@reference-ui/lib/baseSystem'
 import { baseSystem as aliasedHostSystem } from '@fixtures/aliased-host-library'
 
 /**
- * T17 — Fan-out: consumer style props on prebuilt components.
+ * T17 — consumer style props on prebuilt components.
  *
  * Topology (identical to T16):
  *   @reference-ui/lib  ──▶ extend ──┐   (lib itself layers @reference-ui/icons)
  *                                     ├──▶ chain-t17 (user space)
  *   @fixtures/aliased-host-library ──▶ layer ───┘
  *
- * Contract: a named style prop on an external (prebuilt) component ALWAYS
- * paints. The consumer compile keeps the prop on the capitalized non-host
+ * Contract: a named style prop on a prebuilt component from a composed
+ * package ALWAYS paints. The consumer compile keeps the prop on the package's
  * tag, resolves it against the CONSUMER's tokens, and emits the deterministic
- * `<system>__<stem>` class the foreign runtime mints — one group per composed
- * system — into its own utilities block. The value lands on the component's
+ * `<system>__<stem>` class the package's runtime mints — one group for each
+ * system the package renders through — into its own utilities block. The value lands on the component's
  * outermost element and overrides the package default.
  *
  * Novel probe tokens live in `src/tokens.ts`. The spec proves they are absent

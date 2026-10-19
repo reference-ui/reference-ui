@@ -25,7 +25,7 @@ import { baseSystem as primitiveNamedSystem } from '@fixtures/primitive-named-li
  * project under `tests/sync/unbacked` (`tests/unit/icons-composition.test.ts`).
  *
  * Novel probe tokens live in `src/tokens.ts`, one per probe, so no probe's
- * fan-out can back another probe's class by coincidence.
+ * rule can back another probe's class by coincidence.
  */
 export default defineConfig({
   name: 'chain-t18',
