@@ -1,4 +1,4 @@
-# matrix/chain/T6 — Chain (transitive extend)
+# chain-t6 — Chain (transitive extend)
 
 **Topology:**
 ```

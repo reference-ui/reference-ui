@@ -1,4 +1,4 @@
-# matrix/chain/T8 — Same library in extends + layers
+# chain-t8 — Same library in extends + layers
 
 ```
 extend-library ──▶ extend ──┐
@@ -6,5 +6,4 @@ extend-library ──▶ extend ──┐
 extend-library ──▶ layer  ──┘
 ```
 
-Documents the current allow-and-duplicate policy. See
-[`matrix/CHAIN_RULES.md`](../../../CHAIN_RULES.md).
+Documents the current allow-and-duplicate policy in the chain rules.

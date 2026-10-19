@@ -29,7 +29,7 @@ rather than its re-exports; that is why `<Field padding>` also adds
 
 ## Probes
 
-Novel consumer-local tokens (`src/tokens.ts`) — a color (`t17ProbeInk`,
+Novel consumer-local tokens — a color (`t17ProbeInk`,
 `rgb(183, 2, 51)`), a spacing (`t17ProbeGap`, `13px`) and a role-split tone
 (`t17ProbeTone`, `surface` 12%, `line` 41%). The spec proves the names are
 absent from the published icons/lib/fixture sheets, so a passing paint can
@@ -68,7 +68,7 @@ at 41%, serialised by Chromium as `color(srgb 0.717647 0.00784314 0.2 / 0.41)`.
 ## Re-sync order (G1 §3 amendment ii)
 
 Rebuild the Rust binding → `ref sync` icons → `ref sync` lib → re-materialize
-lib `react.mjs` → republish base systems → matrix
-`setup --packages=@matrix/chain-t17 --sync` → run this contract. Native gate
+the lib React runtime → republish base systems → re-sync this suite
+(`setup --packages=@matrix/chain-t17 --sync`) → run this contract. Native gate
 evidence requires a fresh `ref sync` first (`pnpm agent playwright` does not
 re-sync; a stale `.reference-ui` is the classic false pass).

@@ -1,4 +1,4 @@
-# matrix/chain/T10 — Chain + layer
+# chain-t10 — Chain + layer
 
 ```
 extend-library ──▶ extend ──▶ meta-extend-library ──▶ extend ──┐

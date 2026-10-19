@@ -1,7 +1,7 @@
 # chain-t18 — Ownership: a tag imported from a package is never an own host
 
-Prover for the component-ownership plan (`.claude/plans/component-ownership.md`,
-§4 and §9): a style prop on a component that renders through **another
+Prover for the component-ownership plan (§4 and §9): a style prop on a
+component that renders through **another
 package's bundled runtime** is backed under that package's system name, never
 under the app's, whatever the tag is called and however it reaches the file.
 Nothing configures `jsxElements`; ownership comes from provenance alone.
@@ -26,26 +26,26 @@ not hosts.
 
 ## Probes
 
-One source file per import shape, each with its own novel consumer token
-(`src/tokens.ts`), so one probe's rules never back another's class. The
-renderer is the package whose runtime draws the probe (`renderer` in
-`src/probe.ts`); its published streams are the only systems allowed to back
+One probe per import shape, each with its own novel consumer token,
+so one probe's rules never back another's class. The
+renderer is the package whose runtime draws the probe (the probe's
+`renderer` field); its published streams are the only systems allowed to back
 the probe's stem.
 
-| File | Shape | Runtime prefix | Renderer's systems | Before provenance |
+| Probe | Shape | Runtime prefix | Renderer's systems | Before provenance |
 | --- | --- | --- | --- | --- |
-| `lib-button.tsx` | `import { Button } from '@reference-ui/lib/primitives'` | `reference-ui__` | lib: `reference-icons`, `reference-ui` | pass |
-| `namespace-button.tsx` | `import * as Acme from '@fixtures/…'; <Acme.Button>` | `primitive-named-library__` | `primitive-named-library` | pass |
-| `icon.tsx` | `ContentCopyIcon` from `@reference-ui/icons`, icons composed | `reference-icons__` | `reference-icons` | pass |
-| `chip.tsx` | `<Chip size="lg">`: owned prop, no class, no rule, no miss | none | none | pass |
-| `acme-button.tsx` | `import { Button } from '@fixtures/primitive-named-library'` | `primitive-named-library__` | `primitive-named-library` | red (probe 1) |
-| `ui/index.ts` + `barrel-button.tsx` | relative barrel re-exporting lib's `Button` | `reference-ui__` | lib: `reference-icons`, `reference-ui` | red (probe 2) |
-| `wrapper-button.tsx` | same-file `css` wrapper around lib's `Button` | `reference-ui__` | lib: `reference-icons`, `reference-ui` | red (probe 3) |
-| `tile.tsx` | `<Tile padding>`, a published `jsxElements` name | `primitive-named-library__` | `primitive-named-library` | red (probe 1b) |
+| `lib-button` | `import { Button } from '@reference-ui/lib/primitives'` | `reference-ui__` | lib: `reference-icons`, `reference-ui` | pass |
+| `namespace-button` | `import * as Acme from '@fixtures/…'; <Acme.Button>` | `primitive-named-library__` | `primitive-named-library` | pass |
+| `icon` | `ContentCopyIcon` from `@reference-ui/icons`, icons composed | `reference-icons__` | `reference-icons` | pass |
+| `chip` | `<Chip size="lg">`: owned prop, no class, no rule, no miss | none | none | pass |
+| `acme-button` | `import { Button } from '@fixtures/primitive-named-library'` | `primitive-named-library__` | `primitive-named-library` | red (probe 1) |
+| `barrel-button` | relative barrel re-exporting lib's `Button` | `reference-ui__` | lib: `reference-icons`, `reference-ui` | red (probe 2) |
+| `wrapper-button` | same-file `css` wrapper around lib's `Button` | `reference-ui__` | lib: `reference-icons`, `reference-ui` | red (probe 3) |
+| `tile` | `<Tile padding>`, a published `jsxElements` name | `primitive-named-library__` | `primitive-named-library` | red (probe 1b) |
 
 Lib publishes two streams because it layers icons, so a lib tag is backed
-under both (styling-across-packages plan §3: the price of not following lib's
-d.ts re-exports); every other renderer names one system.
+under both (styling-across-packages plan §3: the price of not following
+lib's type re-exports); every other renderer names one system.
 
 Before provenance the red probes were backed only as `chain-t18__<stem>`, so
 the runtime class (`primitive-named-library__c_t18AcmeInk`, …) was unbacked,
@@ -54,16 +54,16 @@ misleading `ATM-W-MISSING-STYLE-PLAN` warnings at sync. All of them pass now.
 
 ## Composition legs (sync level)
 
-`tests/unit/icons-composition.test.ts` syncs three tiny projects with the
+The icons-composition suite syncs three tiny projects with the
 installed `ref sync <dir> --json`:
 
-- `tests/sync/backed` layers `@reference-ui/icons/baseSystem`: the sheet backs
+- The backed sync project layers `@reference-ui/icons/baseSystem`: the sheet backs
   `.reference-icons__c_t18BackedInk` and nothing warns (pass).
-- `tests/sync/unbacked` composes nothing: sync must still succeed (pass), the
+- The unbacked sync project composes nothing: sync must still succeed (pass), the
   unstyled icon draws no warning (pass), and the styled icon must warn
   `ATM-W-EXTERNAL-UNBACKED` once, at its line, naming `@reference-ui/icons`
   (before plan S3 the batch was `[]`, the silent failure of plan probe 4).
-- `tests/sync/partial` is the app's partly-composed twin
+- The partial sync project is the app's partly-composed twin
   (styling-across-packages plan gap 2, slice S6): it extends lib but not the
   fixture, and styles the fixture's `<Tile padding>` and `<Button color>`
   beside lib's `<Button color>`. Each fixture tag warns
@@ -99,10 +99,10 @@ The tier was written red: the provenance tests were marked expected-fail
 marked test that starts passing, so a stale mark cannot hide.
 
 Both flips have landed: `PROVENANCE_LANDED = true` in
-`tests/e2e/T18-contract.spec.ts` (plan S1 + S5: the four provenance probes
+the browser contract spec (plan S1 + S5: the four provenance probes
 plus the two root-wide checks, every class backed and zero misses) and
-`EXTERNAL_UNBACKED_LANDED = true` in `tests/unit/icons-composition.test.ts`
-(plan S3). The probe `status` field in `src/probe.ts` and the contract's
+`EXTERNAL_UNBACKED_LANDED = true` in the icons-composition suite
+(plan S3). The probe `status` field in the probe module and the contract's
 check 5 now only guard against a regression and can go.
 
 ## Run

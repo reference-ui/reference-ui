@@ -1,4 +1,4 @@
-# matrix/chain/T3 — Hybrid: extend one library + layer another
+# chain-t3 — Hybrid: extend one library + layer another
 
 **Topology:**
 ```
@@ -23,7 +23,7 @@ Can one boundary use both composition modes simultaneously?
 
 ## Tests
 
-- `tests/unit/runtime.test.ts` — Verifies the component tree renders and the marker is correct.
-- `tests/e2e/T3-contract.spec.ts` — Browser assertions for both sides:
+- The node-side runtime suite verifies the component tree renders and the marker is correct.
+- The browser contract spec asserts both sides:
   - Extend side: `DemoComponent` resolves all three upstream tokens correctly.
   - Layer side: `LayerPrivateDemo` renders with its layer-scoped background color.

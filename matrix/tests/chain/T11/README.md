@@ -1,4 +1,4 @@
-# matrix/chain/T11 — Parallel chains
+# chain-t11 — Parallel chains
 
 ```
 extend-library    ──▶ extend ──▶ meta-extend-library    ──▶ extend ──┐

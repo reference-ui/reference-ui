@@ -19,7 +19,7 @@ generated runtime, so every style prop its components forward mints
 - `chipPaddingSm` / `chipPaddingLg`: the chip's own size values, for
   assertions.
 
-Its `ui.config.ts` carries no `jsxElements`: both wrappers reach the
+Its UI config carries no `jsxElements`: both wrappers reach the
 published roster by tracing alone.
 
 ## Usage

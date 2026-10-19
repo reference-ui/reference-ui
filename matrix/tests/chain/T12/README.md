@@ -1,4 +1,4 @@
-# matrix/chain/T12 — Diamond base, mixed branches
+# chain-t12 — Diamond base, mixed branches
 
 ```
 extend-library ──▶ extend ──▶ meta-extend-library         ──▶ layer  ──┐

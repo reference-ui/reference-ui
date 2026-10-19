@@ -1,4 +1,4 @@
-# matrix/chain/T7 — Diamond
+# chain-t7 — Diamond
 
 **Topology:** App extends two libraries that both extend the same base.
 
