@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FIELD-008",
+  "name": "Field CT FI-CSS-03: Field should embed Textarea and Select with the same descendant selector"
+}

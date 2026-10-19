@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-018",
+  "name": "Tree parity TR-DOM-09: Empty Tree should expose its role without inventing a sequential focus target"
+}

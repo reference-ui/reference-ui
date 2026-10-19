@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-162",
+  "name": "NumberField CT NF-COMMIT-01: Blur commits after the consumer handler and retries a candidate that differs from controlled value"
+}

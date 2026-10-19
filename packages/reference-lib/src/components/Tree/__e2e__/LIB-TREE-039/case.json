@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-039",
+  "name": "Tree parity TR-KEY-03: LTR Tree should request expansion on Right while keeping focus on a controlled collapsed branch"
+}

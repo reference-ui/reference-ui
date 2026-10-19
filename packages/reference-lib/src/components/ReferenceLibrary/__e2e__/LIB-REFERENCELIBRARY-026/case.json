@@ -1,0 +1,4 @@
+{
+  "id": "LIB-REFERENCELIBRARY-026",
+  "name": "ReferenceLibrary StrictMode elects one runtime and preserves queued work through rerender"
+}

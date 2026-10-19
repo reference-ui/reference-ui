@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-041",
+  "name": "Tree parity TR-KEY-05: LTR Tree should collapse an expanded branch or move a collapsed item to its parent on Left"
+}

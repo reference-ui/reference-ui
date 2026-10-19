@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-019",
+  "name": "Tree parity TR-DOM-10: Tree should expand and select through state when only expansion props are omitted"
+}

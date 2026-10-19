@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FIELD-020",
+  "name": "Field CT FI-COMP-03: NumberField.Group should consume the Field recipe without a nested Field"
+}

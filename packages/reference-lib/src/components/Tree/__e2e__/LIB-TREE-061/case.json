@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-061",
+  "name": "Tree parity TR-COMP-02: Tree should keep collapsed descendants out of a three-level composition's visible set"
+}

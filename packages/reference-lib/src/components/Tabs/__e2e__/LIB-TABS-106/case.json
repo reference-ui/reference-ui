@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TABS-106",
+  "name": "Canceled Tabs native press suppresses its click and allows the next gesture"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FIELD-026",
+  "name": "FI-FORM-01: enclosed native controls preserve validation, serialization and reset semantics"
+}

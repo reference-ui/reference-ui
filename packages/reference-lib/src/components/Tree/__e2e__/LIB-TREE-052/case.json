@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-052",
+  "name": "Tree parity TR-TYPE-03: Tree typeahead should use the current visible set when expansion changes mid-buffer"
+}

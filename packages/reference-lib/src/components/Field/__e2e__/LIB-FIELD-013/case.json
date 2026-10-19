@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FIELD-013",
+  "name": "Field CT FI-CSS-09: Field should match read-only chrome from [readonly] on the enclosed input"
+}

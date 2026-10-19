@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-058",
+  "name": "Tree parity TR-DYNAMIC-06: Tree should remove stale navigation targets when current or ancestor disabled state changes"
+}

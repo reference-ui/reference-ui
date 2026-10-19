@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-168",
+  "name": "NumberField CT NF-FORM-12: Implicit Enter submit after an unaccepted key commit stays blocked without a second submit"
+}

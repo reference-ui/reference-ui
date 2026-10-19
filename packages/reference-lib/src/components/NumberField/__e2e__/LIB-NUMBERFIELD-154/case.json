@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-154",
+  "name": "NumberField CT NF-FORMAT-03: Referentially new but effectively equal format options preserve a dirty session"
+}

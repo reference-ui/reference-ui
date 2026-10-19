@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-027",
+  "name": "Tree parity TR-SELECT-06: Tree should prevent disabled items from being selected by any modality"
+}

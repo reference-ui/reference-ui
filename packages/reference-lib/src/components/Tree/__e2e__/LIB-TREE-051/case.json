@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-051",
+  "name": "Tree parity TR-TYPE-02: Tree typeahead should ignore a matching descendant when its ancestor is collapsed"
+}

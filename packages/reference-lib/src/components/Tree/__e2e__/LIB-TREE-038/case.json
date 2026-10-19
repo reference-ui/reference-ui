@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-038",
+  "name": "Tree parity TR-EXPAND-09: Tree should keep a disabled branch expansion-controlled while allowing independently enabled descendants"
+}

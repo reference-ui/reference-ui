@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-024",
+  "name": "Tree parity TR-SELECT-03: Tree should treat activation of the already-selected item as idempotent"
+}

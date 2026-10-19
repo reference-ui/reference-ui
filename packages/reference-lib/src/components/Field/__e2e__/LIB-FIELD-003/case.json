@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FIELD-003",
+  "name": "Field CT FI-DOM-02: Field should not receive ARIA validity when the enclosed input is invalid"
+}

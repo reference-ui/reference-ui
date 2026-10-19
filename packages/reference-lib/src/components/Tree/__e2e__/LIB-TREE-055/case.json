@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-055",
+  "name": "Tree parity TR-DYNAMIC-03: Tree should recover focus predictably when the focused item is removed"
+}

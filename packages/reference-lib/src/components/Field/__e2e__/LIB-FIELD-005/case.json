@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FIELD-005",
+  "name": "Field CT FI-DOM-03: Field should set data-status=\"warning\" only when status is warning"
+}

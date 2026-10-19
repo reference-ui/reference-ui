@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-043",
+  "name": "Tree parity TR-KEY-07: Tree navigation should skip each disabled item without implicitly disabling its descendants"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-026",
+  "name": "Tree parity TR-SELECT-05: Tree should apply programmatic selection without moving focus or firing callbacks"
+}

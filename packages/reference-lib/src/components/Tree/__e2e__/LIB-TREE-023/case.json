@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-023",
+  "name": "Tree parity TR-SELECT-02: Tree should select a branch without implicitly changing its expansion"
+}

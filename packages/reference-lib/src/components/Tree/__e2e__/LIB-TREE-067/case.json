@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-067",
+  "name": "Tree Combobox Bridge (TR-CB / TR-COMP-03) TR-CB-04: Tree activation inside Combobox should route one scalar commit only through the Combobox root"
+}

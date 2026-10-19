@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FIELD-002",
+  "name": "Field CT FI-DOM-01: Field should render a wrapping div with no role and data-reference-field"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-062",
+  "name": "Tree parity TR-ENV-03: Tree should discover focus and traverse visible hierarchy inside a ShadowRoot"
+}
