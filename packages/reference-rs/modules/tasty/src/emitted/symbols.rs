@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Emitted symbol contract types.
+//! Defines serialized interfaces, type aliases, and the references between them, keyed by stable symbol id.
 
 use serde::Serialize;
 use ts_rs::TS;

@@ -1,6 +1,6 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Module specifier discovery.
+//! Extracts the import and export module specifiers of a file so the crawler can follow them.
+//! Syntax-level only; it never resolves.
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Statement;

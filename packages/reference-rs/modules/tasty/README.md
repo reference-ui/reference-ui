@@ -1,21 +1,65 @@
-# Tasty Module
+# Tasty
 
-Tasty is the TypeScript metadata, type projection, and ESM chunk artifact generation engine of Reference UI.
+TypeScript metadata, type projection, and ESM chunk artifact engine. It discovers
+TypeScript sources, parses them with OXC, models signatures as a first-class
+`TypeRef` graph, and emits manifest-first ESM chunk artifacts for the JS runtime
+to load lazily. Part of [reference-rs](../../README.md).
 
-It discovers TypeScript source files, parses them with OXC, models type signatures as a first-class `TypeRef` graph, lowers AST constructs into normalized IR, and emits manifest-first ESM chunk artifacts.
+## Pipeline
 
-## Architecture
+Scan → parse → resolve → emit. The scanner expands include globs into a reachable
+file set; the AST layer lowers OXC syntax into `TypeRef` IR and connects symbols
+into a graph; the generator serializes that graph into a manifest plus per-symbol
+chunks. The JS runtime (`js/`) loads chunks on demand and serves graph navigation
+plus bounded object-like member projection (`projectObjectLikeMembers`,
+`getDisplayMembers`).
 
-Tasty is structured as a self-contained module containing its Rust compiler, JavaScript runtime, and test cases:
+## Scan boundary
 
-- **Rust Domain Core (`tasty/src/`)**: High-performance AST analysis and type extraction engine built on OXC. Owns symbol extraction, type lowering, member discovery, JSDoc comment extraction, and multi-chunk ESM emission.
-- **JavaScript Runtime (`tasty/js/`)**: Developer-facing API (`@reference-ui/rust/tasty`) that lazily loads emitted chunk modules on demand, provides graph navigation, and evaluates bounded object-like member projections (`projectObjectLikeMembers`, `getDisplayMembers`).
-- **Test Suite (`tasty/tests/`)**: Case cases under `tests/cases/<ID>/`, each named by its raw case id (e.g. `TST-AUD-01`). `spec.ts` is the case specification, `input/` is the TypeScript project Tasty scans, and `output/` holds the committed goldens (`manifest.js`, `chunks.json`). Vitest entries live in `tests/suites/` and shared helpers in `tests/harness/`.
+User files enter through include globs. A user file bridges an external library
+into the name index by re-exporting from it; a scoped plain import is followed
+for resolution but not indexed; an unscoped plain import is not followed. Inside
+a library, discovery stays within the same package. Resolution is
+declaration-driven: packages that ship no types resolve through an installed
+declaration provider.
 
-## Key Invariants
+## Type lowering
 
-1. **First-Class Symbols**: Types and interfaces maintain identity, module boundaries, and stable canonical IDs rather than collapsing into opaque strings.
-2. **Deterministic Emission**: Eager manifests index symbols by ID and name; chunk modules load on demand to minimize memory overhead.
-3. **Bounded Projections**: Derived member projections expand aliases, resolve intersections, and apply `Omit`/`Pick` while strictly respecting recursive boundaries to prevent infinite loops.
+Every OXC `TSType` lowers deliberately into `TypeRef`. Useful shapes model
+structurally; the rest stay `Raw { summary }`, preserving source text — an IR
+choice, never an error or a diagnostic. Conditional types, `keyof`, indexed
+access, and template literals gain a `resolved` answer only when the bounded
+evaluator settles them as TypeScript does; budgets (50 nested alias expansions,
+10,000 steps, 1000 union members) fail closed to an absent `resolved`.
+
+## Artifacts
+
+The manifest is a small eager module (`version`, `symbolsByName`, `symbolsById`);
+chunk modules hold symbol payloads keyed by exported id. The serialized contract
+lives in `src/emitted/` with ts-rs derives for the runtime; bulk codegen stays
+string-based by design. Comments surface as `description`, `descriptionRaw`, and
+parsed `jsdoc` — a best-effort pass-through, not a TSDoc model.
+
+## Diagnostics
+
+Typed `TST-*` facts, not message strings: warnings ride the manifest `warnings`
+array, the one error (scan refusal) throws coded. Meanings and raise sites live
+in the shared [registry](../diagnostics/REGISTRY.md); codes a golden pins are
+wire contract.
+
+## Tests
+
+Rust tests are smoke-only. Correctness lives in Vitest: `tests/cases/TST-*/`
+cases (input project, `spec.ts`, committed `manifest.js` + `chunks.json`
+goldens), run on demand through the N-API addon with per-file scratch roots
+under `.scratch/`. Refresh goldens with `pnpm agentrs v tasty --update-goldens`.
+
+## Verify
+
+```bash
+pnpm agentrs c tasty
+pnpm agentrs v tasty
+pnpm agentrs q packages/reference-rs/modules/tasty
+```
 
 > Search terms: generics, mapped types, type metadata engine, ts extractor, tasty/symbols, tasty/projection, tasty/chunks, tasty/jsdoc, tasty/generics, export star, export map, barrel re-exports, symbol resolution, export resolution, tasty/resolve, rs:atlas, rs:typegen, rs:shared

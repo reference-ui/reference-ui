@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Workspace discovery tests.
+//! Pins traversal layout, library boundaries, dangling-link tolerance, and resolver memoization over temp-dir fixtures.
 
 mod dangling_links;
 mod discovery_layout;

@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Display formatting for tasty callable and inline types.
+ * Formats function and constructor signatures as text and collects the inline variant strings of unions, literals, booleans, and raw summaries.
  */
 import type { TastyFnParam, TastyTypeRef } from './api-types.js'
 import { normalizeTastyInlineValue } from './jsdoc.js'

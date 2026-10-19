@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Resolve layer wiring.
+//! Turns extracted parser output into a connected symbol graph and exposes its output type plus the resolve_ast entry point.
 
 mod graph;
 mod index;

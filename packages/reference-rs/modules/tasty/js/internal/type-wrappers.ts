@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Public TastyTypeRef wrappers over raw and structured type payloads.
  * Wraps a raw type reference or structured type for the public TastyTypeRef API. Parameters of
  * callable types are wrapped too, and descriptions are delegated to the type-description module.
  */

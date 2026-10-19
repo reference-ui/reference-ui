@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Scanner-wide filesystem constants.
+//! Holds the node_modules dir name, package.json filename, TypeScript suffix sets, and index basenames that discovery and resolution match on.
 
 /// Directory name used for installed package lookups.
 pub(crate) const NODE_MODULES_DIR: &str = "node_modules";

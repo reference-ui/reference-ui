@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Public API wrappers over raw tasty symbols, members, and docs.
  * Wraps symbols, symbol references, members and JSDoc tags for the public API. Type references
  * live in the type-wrappers module and are re-exported here so importers keep one path.
  */

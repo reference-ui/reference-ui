@@ -1,4 +1,5 @@
 //! Property tests for [`normalize_relative_path`](crate::scanner::normalize_relative_path).
+//! Pins idempotence over generated paths and preserves leading `..` escapes.
 
 use std::path::Path;
 

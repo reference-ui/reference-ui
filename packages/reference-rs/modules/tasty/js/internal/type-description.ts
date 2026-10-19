@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Human-readable rendering of tasty type references.
  * Renders the human-readable description of a type reference: a named reference with its
  * arguments, or a structured type such as a union, object literal or conditional.
  */

@@ -1,4 +1,5 @@
 //! Package entrypoint resolution from `node_modules` layout and `package.json` exports.
+//! Prefers entries that expose types and falls back to runtime-ish entries only when they map to declarations.
 
 use std::path::{Path, PathBuf};
 

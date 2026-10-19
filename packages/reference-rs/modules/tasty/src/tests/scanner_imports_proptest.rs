@@ -1,5 +1,6 @@
 //! Fuzz-style property test: [`extract_module_specifiers`](crate::scanner::extract_module_specifiers)
-//! must not panic on arbitrary source text (Oxc parse + span walks).
+//! must not panic on arbitrary source text (Oxc parse + span walks). Strategies generate
+//! adversarial inputs; every case must complete without panicking.
 
 use proptest::prelude::*;
 

@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Emitted manifest and chunk-envelope contract.
+//! Defines the manifest index, per-symbol index entries, and chunk module shapes the loader imports.
 
 use std::collections::BTreeMap;
 

@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Type guards over raw tasty symbols and type references.
  * Type guards that tell raw symbols, interfaces, type aliases and type references apart. This is
  * a leaf module with type-only imports, so every other internal module can depend on it safely.
  */

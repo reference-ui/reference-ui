@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Primitive literal inference.
+//! Infers boolean, number, and string TypeRefs from source spans, narrowing to literals under const assertion.
 
 use oxc_span::Span;
 

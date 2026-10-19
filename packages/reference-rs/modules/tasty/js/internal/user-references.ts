@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Dependency collection over a symbol's declared references.
  * Collects the symbol references a declaration depends on, so the resolver knows which symbols
  * to load. It walks heritage clauses, members, type parameters and every structured type node.
  * A type parameter or infer name is bound by its declaration, so it never counts as a dependency.

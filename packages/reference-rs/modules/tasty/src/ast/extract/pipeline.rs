@@ -1,4 +1,5 @@
 //! Per-file Oxc parse + statement walk that produces [`ParsedFileAst`](crate::ast::model::ParsedFileAst).
+//! Parses with Oxc and runs the statement loop; extract_files is the entry point.
 
 use std::collections::BTreeMap;
 

@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Recursive TypeRef walk.
+//! Walks structured types collecting reference nodes, with a hook for shell type parameters.
 
 mod helpers;
 mod variants;

@@ -1,4 +1,5 @@
 //! Breadth-first import graph crawler that builds the reachable file set.
+//! Holds pending work and discovered files while enforcing the scan boundary.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fs;

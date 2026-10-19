@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Inference through as and satisfies assertions.
+//! Narrows the operand's inferred TypeRef, including const-assertion literal narrowing.
 
 use oxc_ast::ast::{TSAsExpression, TSSatisfiesExpression};
 use oxc_span::GetSpan;

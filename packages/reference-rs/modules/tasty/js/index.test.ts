@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Exercises the manifest and chunk loaders plus the browser runtime against real and malformed artifacts.
  * Tests artifact emission and runtime loading: the manifest and chunk imports, the browser
  * runtime, and how each loader fails or retries on a malformed module or a transient error.
  */

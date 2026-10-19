@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Thin entry point for reachable-file discovery.
+//! Runs the workspace crawler from the user file ids to a Discovery set.
 
 use super::crawler::Crawler;
 use crate::scanner::model::Discovery;

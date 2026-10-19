@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Member extraction wiring.
+//! Declares the signature-dispatch, conversion, and accessor-fold passes that turn signatures into TsMember values.
 
 mod accessors;
 mod dispatch;

@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Emitted type-payload contract.
+//! Defines the serialized TypeRef graph shapes — references, structured variants, template parts, and modifiers — that chunks carry and the runtime wraps.
 
 use serde::Serialize;
 use ts_rs::TS;

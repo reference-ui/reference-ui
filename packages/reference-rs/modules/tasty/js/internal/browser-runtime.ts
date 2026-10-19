@@ -1,6 +1,7 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Browser entry point for the tasty runtime.
+ * Takes a caller-supplied module loader plus manifest URL, loads the runtime module once, and builds the shared TastyApi from its manifest.
+ * Caches both promises and clears them on failure so a retry reloads.
  */
 import type {
   CreateTastyBrowserRuntimeOptions,

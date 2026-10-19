@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Cached loader for emitted tasty chunk modules.
+ * Resolves each chunk path against the manifest, imports it once through the injected importer, and evicts failures so a retry re-imports.
  */
 import {
   normalizeModuleNamespace,

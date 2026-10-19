@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Interface symbol shells.
+//! Builds a lightweight shell — members, extends, and references — for an interface declaration ahead of resolution.
 
 use oxc_ast::ast::TSInterfaceDeclaration;
 use oxc_span::{GetSpan, Span};

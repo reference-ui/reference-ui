@@ -1,4 +1,5 @@
 //! Identity [`TypeRefMap`](crate::shared::type_ref_map::TypeRefMap) for round-trip tests.
+//! Rebuilds every node unchanged so round-trip tests pin mapper structure.
 
 use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
 use crate::shared::type_ref_map::{map_type_ref, ConditionalParts, ReferenceParts, TypeRefMap};

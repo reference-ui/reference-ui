@@ -1,6 +1,7 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Generic instantiation over raw tasty types.
+ * Builds parameter-to-argument substitution maps and rewrites type references, members, and alias definitions with them.
+ * Defaults instantiate where earlier parameters already hold their arguments, so `B = A` takes A's argument.
  */
 import type {
   RawTastyFnParam,

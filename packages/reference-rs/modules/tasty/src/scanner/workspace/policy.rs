@@ -1,4 +1,5 @@
 //! Discovery-phase import policy: which imports to follow and when.
+//! User re-exports bridge libraries into the name index; scoped plain imports resolve without indexing; unscoped ones stay local.
 
 use std::collections::BTreeSet;
 

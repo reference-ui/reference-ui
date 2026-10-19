@@ -1,6 +1,7 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Resolves manifest symbols to cached wrapper instances.
+ * Loads chunk-backed symbols by id, resolves bare names with library preference order, and searches the manifest.
+ * Ambiguous names raise an error listing every candidate.
  */
 import type {
   RawTastyManifest,

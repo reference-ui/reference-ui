@@ -1,6 +1,6 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Path normalization surface.
+//! Converts filesystem paths to Unix-style file ids, stable symbol ids, module specifiers, and package names.
+//! Never touches the filesystem.
 
 mod module_specifier;
 mod package;

@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Package resolution tests.
+//! Pins relative and external import resolution plus resolver memoization over temp-dir fixtures.
 
 use std::fs;
 

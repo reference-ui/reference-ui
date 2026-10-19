@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Const binding collection.
+//! Walks variable and export declarations in a statement and records the value bindings that feed inference.
 
 use std::collections::BTreeMap;
 

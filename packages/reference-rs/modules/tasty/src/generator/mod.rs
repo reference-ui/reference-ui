@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Generator surface: resolved graph to runtime artifacts.
+//! Builds the TypeScriptBundle from the resolved graph and re-exports artifact-bundle emission for the scan pipeline.
 
 mod bundle;
 mod symbols;

@@ -1,6 +1,6 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Emitted JSDoc contract types.
+//! Describes the serialized summary-plus-tags documentation payloads attached to symbols and members.
+//! ts-rs derives export these shapes to the JS runtime.
 
 use serde::Serialize;
 use ts_rs::TS;

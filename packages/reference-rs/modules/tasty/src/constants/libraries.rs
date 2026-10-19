@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Library-name sentinels shared across tasty modules.
+//! Names the user-owned source library so the scanner, extractor, and emitter agree on which files are user code.
 
 /// Sentinel library name used for user-owned source files that do not come from
 /// an external package.

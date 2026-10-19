@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Comment extraction surface.
+//! Finds leading comments on AST nodes and parses lightweight JSDoc metadata for symbol and member descriptions.
 
 mod leading;
 mod parse;

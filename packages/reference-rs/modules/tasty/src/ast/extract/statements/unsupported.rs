@@ -3,8 +3,8 @@
 //! `export =`, and `import x = require()` warn `TST-W-UNSUPPORTED-SYNTAX` with the construct named, and so does an `import x = <entity>`
 //! whose head the file never declares. An entity alias whose head the file declares is modelled, so it is not reported.
 //! Only user-owned and reference-ui files are reported, since a dependency's declarations are not fixable here.
-//! Bare-package ambient declarations stay silent, because a bare specifier may name a package nobody installed.
-//! The pass reads statements only, so it never changes what extraction keeps, and it reports each distinct module or construct once per file.
+//! Bare-package ambient declarations stay silent, because a bare specifier may name a package nobody installed, and the pass reads
+//! statements only, so it never changes what extraction keeps, reporting each distinct module or construct once per file.
 
 use std::collections::BTreeSet;
 

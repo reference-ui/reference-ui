@@ -1,4 +1,5 @@
 //! Unit tests for `ast::extract` — `ScannedWorkspace` → `ParsedTypeScriptAst` without resolve/scan.
+//! Builds workspaces from inline sources and pins interfaces, heritage, and member lowering.
 
 mod exports;
 mod lowering;

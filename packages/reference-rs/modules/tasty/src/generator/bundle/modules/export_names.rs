@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Deterministic export-name generation for emitted symbols.
+//! Maps each symbol id to a stable chunk export name so manifests, registries, and chunks agree without a shared table.
 
 use std::collections::BTreeMap;
 

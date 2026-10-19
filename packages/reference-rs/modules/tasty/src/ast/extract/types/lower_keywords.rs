@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Lowering for keyword and literal types.
+//! Maps intrinsic keywords and literal annotations to their TypeRef leaves, preserving keyword text for intrinsics.
 
 use oxc_ast::ast::TSType;
 use oxc_span::GetSpan;

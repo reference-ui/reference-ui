@@ -1,6 +1,6 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Scan pipeline orchestration.
+//! Runs workspace scan, AST extraction, resolution, and bundle building.
+//! The emit twin serializes artifact modules plus diagnostics to JSON for filesystem writing.
 
 use super::ast::{extract_ast, resolve_ast};
 use super::diagnostics::TastyDiagnostic;

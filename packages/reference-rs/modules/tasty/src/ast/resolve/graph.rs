@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Resolved graph output type.
+//! Holds the connected file, symbol, and export maps that later stages consume after reference resolution.
 
 use std::collections::{BTreeMap, BTreeSet};
 

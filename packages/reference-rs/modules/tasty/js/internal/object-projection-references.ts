@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Reference walking for object projection.
  * Walks type references during object projection: the walk context and its depth guard,
  * type-parameter bookkeeping, and loading the symbol a reference names.
  */

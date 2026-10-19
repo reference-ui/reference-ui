@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Artifact path resolution and module importing for the runtime.
  * Resolves artifact paths and specifiers and imports artifact modules. Each file import gets a
  * fresh query, so a rebuilt artifact is read again instead of the cached module.
  */

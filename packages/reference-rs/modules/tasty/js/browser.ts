@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Browser-safe re-export surface of the tasty API.
+ * Re-exports the manifest-based API factory, browser runtime, and pure member, callable, JSDoc, and semantic helpers without the Node build or filesystem paths.
  */
 export {
   createTastyApiFromManifest,

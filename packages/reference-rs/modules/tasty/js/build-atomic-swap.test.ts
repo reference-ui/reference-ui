@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Tests that artifact rebuilds swap atomically under concurrent readers.
  * Tests that a build swaps its artifacts atomically: a reader polling in a worker never sees the
  * manifest or runtime missing across rebuilds, and no temp directory from another process leaks.
  */

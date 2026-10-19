@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Import binding collection.
+//! Resolves import specifiers into the file's import bindings, including namespace and named forms.
 
 use std::collections::BTreeMap;
 

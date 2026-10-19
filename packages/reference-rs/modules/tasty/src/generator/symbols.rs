@@ -1,4 +1,5 @@
 //! JavaScript source emission for symbol descriptors and cross-references.
+//! Serializes symbol payload bodies; bundle decides how they lay out across modules.
 
 use std::collections::BTreeMap;
 

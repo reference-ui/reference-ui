@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! String emission for TypeRef collections.
+//! Serializes type-parameter lists, member lists, and type arrays into the JavaScript payload syntax the chunk modules embed.
 
 use std::collections::BTreeMap;
 

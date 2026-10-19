@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Lowering for composite type syntax.
+//! Lowers arrays, object literals, tuples, functions, constructors, and type operators into structured TypeRef values.
 
 use oxc_ast::ast::FormalParameters;
 use oxc_span::{GetSpan, Span};

@@ -1,6 +1,7 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Flattens an interface's inherited and declared members.
+ * Walks each extends clause under its type-argument bindings, projecting object-type aliases and recursing into parent interfaces.
+ * A path set of visited ids ends cycles instead of recursing.
  */
 import type { RawTastySymbolRef, TastyMember, TastySymbol } from '../api-types.js'
 import type { TastyApiRuntime } from './api-runtime.js'

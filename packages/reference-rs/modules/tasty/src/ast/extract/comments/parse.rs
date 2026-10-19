@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! JSDoc line and tag parsing.
+//! Turns a normalized leading comment into structured summary plus @tag metadata for descriptions.
 
 use crate::model::{JsDoc, JsDocTag};
 

@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Workspace scan pass.
+//! Expands include globs into user files, crawls reachable imports under the scan boundary, and returns the scanned file set.
 
 mod crawler;
 mod discovery;
