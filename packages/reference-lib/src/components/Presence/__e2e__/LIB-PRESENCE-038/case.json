@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-038",
+  "name": "Presence CSS transition exits PR-TRANSITION-03: Waits for the last property when a closing child transitions multiple properties"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-014",
+  "name": "Switch parity SW-DOM-03: Switch should expose disabled state natively without remaining activatable"
+}

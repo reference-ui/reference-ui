@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-043",
+  "name": "Presence CSS animation exits PR-ANIMATION-03: Waits for all finite animations when a closing child runs more than one"
+}

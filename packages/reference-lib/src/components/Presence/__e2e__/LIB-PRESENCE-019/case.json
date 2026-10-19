@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-019",
+  "name": "Presence PR-NEST-05: Exits a parent with an animated exit when a nested Presence was born closed"
+}

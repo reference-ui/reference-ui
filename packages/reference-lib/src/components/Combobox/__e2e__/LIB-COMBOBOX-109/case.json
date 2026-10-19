@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-109",
+  "name": "Combobox reconciliation CT CB-NAV-01: arrows wrap through enabled options, skipping disabled, focus stays"
+}

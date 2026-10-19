@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-196",
+  "name": "Combobox touch outside-dismiss CT CB-CLOSE-05: outside touch dismisses once with no compat-mouse replay"
+}

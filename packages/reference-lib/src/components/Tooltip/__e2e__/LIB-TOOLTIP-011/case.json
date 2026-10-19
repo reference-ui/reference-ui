@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TOOLTIP-011",
+  "name": "Tooltip Composition Gates & Browser Proofs TT-CLOSE-01: Tooltip should request one dismissal on Escape without closing a parent Overlay"
+}

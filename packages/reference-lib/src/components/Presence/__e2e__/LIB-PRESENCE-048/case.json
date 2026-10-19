@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-048",
+  "name": "Presence mixed and interrupted lifecycles PR-RACE-01: Waits for both effect types when a closing child runs a transition and an animation"
+}

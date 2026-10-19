@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-045",
+  "name": "Presence CSS animation exits PR-ANIMATION-05: Completes a suspended exit when the observed animation is canceled"
+}

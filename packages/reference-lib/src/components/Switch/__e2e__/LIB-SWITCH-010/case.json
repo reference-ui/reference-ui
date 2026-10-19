@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-010",
+  "name": "Switch CT renders button[role=switch] with default thumb and toggles checked state"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-123",
+  "name": "Combobox reconciliation CT CB-REVERT-07: closeOnBlur=false preserves open and text on blur; escape still closes"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-190",
+  "name": "Combobox virtual listbox and tree bridge CT CB-SELECT-06: select-only trigger never submits its form until type=submit"
+}

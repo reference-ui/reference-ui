@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-022",
+  "name": "Presence onExitComplete PR-EXIT-02: Fires onExitComplete for instant exits"
+}

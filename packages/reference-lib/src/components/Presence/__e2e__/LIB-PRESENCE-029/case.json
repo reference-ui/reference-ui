@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-029",
+  "name": "Presence DOM contract (browser re-proof) PR-DOM-04: Leaves consumer props and behavior untouched when it observes a present child"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FOCUSLOCK-021",
+  "name": "FocusLock Composition Gates & Browser Proofs FL-TAB-04: wrap emits blur then focus once"
+}

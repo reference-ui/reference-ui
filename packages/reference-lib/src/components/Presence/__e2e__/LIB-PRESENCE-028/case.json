@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-028",
+  "name": "Presence DOM contract (browser re-proof) PR-DOM-03: Renders no host when its child is empty or falsy"
+}

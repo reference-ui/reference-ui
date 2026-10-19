@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-055",
+  "name": "Presence composition gates PR-COMP-01: Retains a fading composition when it exits through CSS keyframes"
+}

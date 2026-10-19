@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-110",
+  "name": "Combobox reconciliation CT CB-NAV-05 hover half: pointer-hovered option goes active without focus or commit"
+}

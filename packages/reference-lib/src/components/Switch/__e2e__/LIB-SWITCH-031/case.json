@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-031",
+  "name": "Switch parity SW-COMP-02: A wrapping-label Switch should sit in a form without serializing"
+}

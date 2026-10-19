@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-021",
+  "name": "Presence onExitComplete PR-EXIT-01: Fires onExitComplete exactly once after a completed transition exit"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-182",
+  "name": "Combobox virtual listbox and tree bridge CT CB-ENV-02: strict mode issues one request per user action across the gate"
+}

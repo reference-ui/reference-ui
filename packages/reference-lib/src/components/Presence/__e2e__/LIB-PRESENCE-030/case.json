@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-030",
+  "name": "Presence DOM contract (browser re-proof) PR-DOM-05: Observes only the current keyed child when a present child is replaced"
+}

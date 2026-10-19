@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-025",
+  "name": "Switch parity SW-ACT-07: Switch should not emit onChange for programmatic checked updates"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-009",
+  "name": "SW-EVENT-01: canceled uncontrolled activation leaves no hidden state and consumer clicks precede change requests"
+}

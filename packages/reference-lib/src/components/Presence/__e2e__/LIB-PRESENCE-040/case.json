@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-040",
+  "name": "Presence CSS transition exits PR-TRANSITION-05: Completes a suspended exit when the observed transition is canceled"
+}
