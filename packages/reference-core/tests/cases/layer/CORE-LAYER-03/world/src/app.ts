@@ -1,3 +1,7 @@
+// Entry for the CORE-LAYER-03 world. It takes the generated css runtime and
+// paints the animation probe and the display-font probe. The spec proves the
+// keyframes and font face print once in the global layer and the animation
+// actually runs.
 import { css } from '@reference-ui/react'
 
 function el(id: string): HTMLElement {

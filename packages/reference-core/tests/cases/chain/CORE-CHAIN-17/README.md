@@ -5,8 +5,8 @@ workspace packages: a component a package exports renders the root's runtime, so
 In the second, the package runs its own sync and publishes its own system, and the app composes it like any installed
 package: the component renders the package's runtime, so its style props back under the package's system. Either way
 the app imports the component by its package name, through the workspace link, and the sync must follow that import to
-where it lands, not stop at its spelling (which once sent the first shape external and warned that `@acme/ui` had a
-system of its own).
+where it lands, not stop at its spelling (stopping there would send the first shape external and warn that `@acme/ui`
+has a system of its own).
 
 The world is the monorepo root:
 

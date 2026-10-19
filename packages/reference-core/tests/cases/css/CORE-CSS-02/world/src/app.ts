@@ -1,3 +1,8 @@
+// Entry for the CORE-CSS-02 world. It takes the generated css runtime and
+// paints two container-query probes: one written as a literal @container
+// rule, one as the responsive `r` sugar the runtime lowers to the identical
+// query. The spec compares the pair, so both spellings must mint the same
+// rule and paint.
 import { css } from '@reference-ui/react'
 
 function el(id: string): HTMLElement {
