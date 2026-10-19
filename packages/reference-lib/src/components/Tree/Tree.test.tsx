@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/** Unit proofs for Tree: deterministic deduplicated expansion emission
+ * in traversal order (TR-EXPAND-06), hydration and StrictMode
+ * registration (TR-ENV-01/02), fail-fast on omitted value — fully
+ * controlled, null is empty (TR-API-01) — and batch sibling emission
+ * in document order. */
 import * as React from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'

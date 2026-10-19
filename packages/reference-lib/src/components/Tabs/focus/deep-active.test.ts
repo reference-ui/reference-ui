@@ -1,4 +1,7 @@
 // @vitest-environment happy-dom
+/** Unit proof for the deep active-element lookup: light-DOM holders
+ * resolve from `document.activeElement`, and shadow-hosted tabs
+ * descend through open shadow roots to their true holder. */
 import { describe, expect, it } from 'vitest'
 import { getDeepActiveElement } from './deep-active'
 

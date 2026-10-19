@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Unit proof for the shadow destination rule: an explicit container
+ * wins (including null for Portal default-to-body), a missing or
+ * light-DOM trigger falls back to body, and a shadow-hosted trigger
+ * resolves its ShadowRoot. Pure resolution; no mount involved. */
 import { describe, expect, it } from 'vitest'
 import type { PortalProps } from '../../Portal'
 import type { OverlayContextValue } from '../context'

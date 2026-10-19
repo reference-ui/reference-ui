@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Proof that element-ref reads stay silent on every React major
+ * (PR-REF-05): ref accessors never invoke, props refs win over element
+ * accessors, and real renders — client, server, ref-less, ref-ful —
+ * log no ref warning. */
 import * as React from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { renderToString } from 'react-dom/server'

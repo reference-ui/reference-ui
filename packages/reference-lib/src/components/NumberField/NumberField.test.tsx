@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Numeric-contract proof for NumberField through mounted roots: public
+ * defaults resolve without truthiness coercion (NF-MATH-01), nonfinite
+ * props reject at runtime (NF-MATH-02), and decimal stepping, precision
+ * cleanup, and negative-zero canonicalization hold (NF-MATH-07/08/14). */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'

@@ -1,4 +1,7 @@
 // @vitest-environment happy-dom
+/** Proof for the Popover override seam through mounted parts: Trigger
+ * defaults `aria-haspopup` to dialog and Content defaults role to
+ * dialog, and consumer overrides win on both (PO-SEAM-01–04). */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'

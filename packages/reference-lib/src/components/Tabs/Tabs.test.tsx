@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Mounted proof for the Tabs optional-value contract: omitted value
+ * self-manages from the first enabled tab and sticks across
+ * re-renders, automatic arrows self-select through the same funnel,
+ * and a given value selects exactly that tab. */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'

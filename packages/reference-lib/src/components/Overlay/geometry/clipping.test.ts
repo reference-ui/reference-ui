@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Unit proof for the hide-flag solver: rects outside the padded
+ * viewport or a clip box report hidden, and the overflow-ancestor walk
+ * — through open ShadowRoots — decides the flags Content paints as
+ * `data-anchor-hidden` and `data-escaped`. */
 import { describe, expect, it } from 'vitest'
 import { getOverflowAncestors, hiddenByClipping, isFullyClipped, rectHidden } from './clipping'
 

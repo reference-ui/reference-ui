@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Unit proof for the tab-order solvers behind `useTabCycle`: visible
+ * tabbables list in order, disabled nodes and inert subtrees drop out,
+ * and next-tabbable skips an excluded subtree. Mounted cycling proves
+ * out in the Overlay CT suite. */
 import { describe, expect, it } from 'vitest'
 import { nextAfter, tabbables } from './tab-cycle'
 

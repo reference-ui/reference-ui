@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/** Unit proof for the ported auto-update: living position refreshes on
+ * ancestor scroll with no rAF loop, the animation-frame poll sleeps
+ * when idle and wakes only on related animations, and teardown
+ * disconnects every observer. Reference snapshots never include the
+ * floating element, so position writes cannot keep it awake. */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { autoUpdate } from './auto-update'
 import { MAX_IDLE_FRAMES } from '../../../core/measure'

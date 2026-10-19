@@ -1,4 +1,7 @@
 // @vitest-environment happy-dom
+/** Unit proof for the editable activation guards: presses and clicks
+ * starting in nested inputs, selects, textareas, or contenteditables
+ * never select the tab. Pure over DOM nodes. */
 import { describe, expect, it } from 'vitest'
 import { TAB_EDITABLE_SELECTOR, isEditableClickTarget } from './editable'
 

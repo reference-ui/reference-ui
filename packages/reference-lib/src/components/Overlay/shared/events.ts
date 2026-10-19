@@ -1,4 +1,8 @@
-/** Composed-path containment, primary pointer, and consumed-event flags. */
+/**
+ * Shared Overlay event helpers: composed-path containment, primary-pointer
+ * detection, and consumed-event flags. Pure over DOM events — dismissal,
+ * geometry, and isolation all ask these instead of re-reading events.
+ */
 
 export function eventPath(event: Event): EventTarget[] {
   if (typeof event.composedPath === 'function') {

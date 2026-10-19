@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Unit proof for the slider thumb registry order: mount ids rank by
+ * live document position with registration order as the incomparable
+ * fallback, and the count-mismatch diagnostic keeps singular/plural
+ * agreement. */
 import { describe, expect, it } from 'vitest'
 import { countMismatchMessage, sortThumbIdsByDomOrder } from './registry'
 

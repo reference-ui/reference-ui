@@ -1,3 +1,9 @@
+/**
+ * Button Book gallery: the generated Button primitive's visual review scenes.
+ * Renders the three first-class variants, the Normal/Hover/Pressed/Disabled
+ * state matrix with icons, file-upload alignment, and light/dark theme
+ * panels as section cards for screenshot and CT mounting.
+ */
 import * as React from 'react'
 import {
   Button,

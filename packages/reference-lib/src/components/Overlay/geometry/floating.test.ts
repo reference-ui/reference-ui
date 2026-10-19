@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Unit proof for the floating placement port: logical placements mirror
+ * to the physical end under RTL while physical left/right stay put,
+ * and container boundaries drive flip plus shift with nudged offsets.
+ * Middleware math only — Content owns the DOM writes. */
 import { describe, expect, it } from 'vitest'
 import { computeCoordsFromPlacement } from './floating'
 

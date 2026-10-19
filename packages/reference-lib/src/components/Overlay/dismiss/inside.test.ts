@@ -1,4 +1,7 @@
 // @vitest-environment happy-dom
+/** Unit proof for `dismiss/inside`: Content, Trigger, and ignore markers
+ * count as inside, and a descendant layer counts as inside its ancestor —
+ * so outside presses never dismiss a parent through a nested popup. */
 import { describe, expect, it, beforeEach } from 'vitest'
 import { overlayStackStore } from '../stack'
 import { isInsideLayer } from './inside'

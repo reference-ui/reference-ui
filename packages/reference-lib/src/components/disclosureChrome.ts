@@ -1,3 +1,9 @@
+/**
+ * Shared disclosure fixture chrome: accordion/collapsible titles render as
+ * a hairline divider, not a boxed button. Exports the trigger and content
+ * style triples (props, css, inline style) that stories and CT fixtures
+ * spread onto their disclosure parts for one consistent look.
+ */
 import type { CSSProperties } from 'react'
 
 /** Fixture chrome: accordion/collapsible titles are a hairline divider, not a boxed button. */

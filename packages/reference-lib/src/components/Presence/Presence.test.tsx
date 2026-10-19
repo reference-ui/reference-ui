@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/** Component-level contract proof for Presence: child-shape acceptance
+ * and descriptive rejection (PR-DOM-06–08), ref forwarding and composed
+ * identity stability (PR-REF-01–03), and the React 19 cleanup contract
+ * on final removal (PR-REF-04). Exit-effect verdicts pin down in
+ * `exit/`; retention end to end proves out in CT. */
 import * as React from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { renderToString } from 'react-dom/server'
