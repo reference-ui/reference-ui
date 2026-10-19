@@ -223,7 +223,10 @@ const ListboxOptionBase = React.forwardRef<HTMLDivElement, ListboxOptionProps>(
           >
             {children}
           </Span>
-          {isSelected && (
+          {/* The check column is always reserved: a slot that appeared only
+              on the selected row widened a shrink-to-fit popup whenever the
+              selection moved to a longer label. */}
+          {isSelected ? (
             <Span
               data-slot="check"
               display="inline-flex"
@@ -236,6 +239,8 @@ const ListboxOptionBase = React.forwardRef<HTMLDivElement, ListboxOptionProps>(
             >
               <CheckIcon />
             </Span>
+          ) : (
+            <Span aria-hidden="true" display="inline-flex" width="4r" height="4r" flexShrink={0} />
           )}
         </>
       ) : (
