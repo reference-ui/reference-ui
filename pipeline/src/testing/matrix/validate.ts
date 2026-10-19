@@ -1,8 +1,8 @@
 /**
  * Matrix bootstrap validation.
  *
- * This is the first pipeline-owned matrix entrypoint. Right now it only checks
- * matrix fixture discovery, but it is intentionally separate from the pipeline
+ * Runs first in matrix setup and execution: discovers matrix packages and
+ * requires each to define a `test` script. It stays separate from the pipeline
  * unit-test suite because it validates real workspace matrix inputs.
  */
 

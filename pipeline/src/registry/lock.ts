@@ -1,12 +1,10 @@
 /**
  * Cross-process mutex for registry-side shared state.
  *
- * Concurrent matrix runs share the tarball directory, the registry manifest,
- * the loaded-state file, and the Verdaccio lifecycle. Those phases stay
- * serialized through this lock while the Dagger test lanes run in parallel.
- * The mutex is a lock directory with an owner file; a lock whose owner PID is
- * dead is treated as stale and removed. Nested acquisition within one process
- * is a no-op via a reentrancy flag so staged helpers can share one section.
+ * Takes a label plus a section callback and runs it exclusively behind a lock
+ * directory with an owner file; a lock whose owner PID is dead is treated as
+ * stale and removed. Nested acquisition within one process is a no-op via a
+ * reentrancy flag so staged helpers can share one section.
  */
 
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
