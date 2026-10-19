@@ -18,6 +18,6 @@ Init is the one writer outside the generated folder: it drops a default
 
 Watch splits at the flag: cli owns `--watch` routing unconditionally,
 while the watch driver lives in `src/lib/watch/`.
-Output strings are pinned by the bin tests and the CLI cases, so the
-§3.12 one-line contract (glyph + command + stats) lands as a
-follow-up against those pins — never as a drive-by restyle.
+Output strings are pinned by the bin tests and the CLI cases, which
+is where the §3.12 one-line contract (glyph + command + stats) is
+checked.

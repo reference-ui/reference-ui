@@ -6,13 +6,10 @@ a directory up front, junctions behave differently from POSIX symlinks,
 and stale scope links survive renames — so every sharp edge lives here,
 behind three functions, instead of scattered as ad-hoc fs calls.
 
-Ported from the retired reference-core's `src/lib/symlink/` (file motion
-with renames, since removed): `prepare-link-path-for-symlink.ts` is now `prepare.ts`,
-and the `symlink-dir` call follows the v10 named export
-(`symlinkDirSync`) — legacy pins v9, whose default-export-plus-`.sync`
-shape no longer exists. `removeGeneratedLink` is new in Core: legacy's
-clean removes scope entries unconditionally, while Core's clean keeps
-hand-placed dirs, so the guard lives here instead of ad-hoc in the bin.
+The path-preparation helper is `prepare.ts`, and the `symlink-dir` call
+follows the v10 named export (`symlinkDirSync`). Core's clean keeps
+hand-placed dirs, so `removeGeneratedLink` guards the scope entry here
+instead of ad-hoc in the bin.
 
 ## What it owns
 

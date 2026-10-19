@@ -11,8 +11,7 @@ Core reference module. Only the two living roots cross the seam; the lib-owned
 shell, fixtures, and theme stay behind. Every copied file gains a provenance
 header naming its lib source, and package type imports are rewritten to the
 neighboring browser adapter so the mirror compiles against Core runtime types.
-Consumer-resolved design-system imports pass through untouched, exactly as the
-retired reference-core copy tool leaves them.
+Consumer-resolved design-system imports pass through untouched.
 
 Run it from the Core package directory whenever the lib source moves:
 
