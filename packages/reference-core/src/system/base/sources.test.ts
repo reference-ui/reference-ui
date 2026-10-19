@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { assembleBaseSystem } from './assemble.ts'
+import { getRhythm } from './rhythm.ts'
 import {
   baseSystemInterfaceSource,
   baseSystemMjsSource,
@@ -69,7 +70,8 @@ export interface BaseSystem {
 export declare const baseSystem: BaseSystem
 `
 
-const SYSTEM_ENTRY = `${HEADER}
+// The entry bytes before and after the emitted getRhythm line, which is pinned by the tests below.
+const SYSTEM_ENTRY_HEAD = `${HEADER}
 export function defineConfig(config) {
   return config
 }
@@ -91,16 +93,8 @@ export function font(name, options) {
 export function globalCss(config) {
   collect('__refGlobalCssCollector', config)
 }
-export function getRhythm(num, denom) {
-  if (denom !== undefined) {
-    return num === 1
-      ? \`calc(var(--spacing-root) / \${denom})\`
-      : \`calc(\${num} * var(--spacing-root) / \${denom})\`
-  }
-  if (num === 1) return 'var(--spacing-root)'
-  return \`calc(\${num} * var(--spacing-root))\`
-}
-export { baseSystem } from './baseSystem.mjs'
+`
+const SYSTEM_ENTRY_TAIL = `export { baseSystem } from './baseSystem.mjs'
 `
 
 const SYSTEM_TYPES = `${HEADER}
@@ -170,12 +164,41 @@ describe('system source builders', () => {
     expect(baseSystemTypesSource()).toBe(BASE_SYSTEM_TYPES)
   })
 
-  it('pins the system entry source', () => {
-    expect(systemEntrySource()).toBe(SYSTEM_ENTRY)
+  it('pins the system entry source around the emitted getRhythm', () => {
+    expect(systemEntrySource()).toBe(
+      `${SYSTEM_ENTRY_HEAD}export const getRhythm = ${getRhythm.toString()}\n${SYSTEM_ENTRY_TAIL}`
+    )
   })
 
   it('pins the system types source', () => {
     expect(systemTypesSource()).toBe(SYSTEM_TYPES)
+  })
+})
+
+// The emitted getRhythm is rhythm.ts's own source text. Evaluating that text here means a body that names a
+// module-level binding fails this check, instead of failing inside the generated runtime.
+describe('system entry getRhythm', () => {
+  const PREFIX = 'export const getRhythm = '
+  const CASES: [number, number?][] = [[1], [2], [-1], [0.5], [-2], [1, 3], [-1, 3], [2, 3], [1e21], [-0]]
+
+  // The emitted function, read from its text: after the prefix, up to the next export line.
+  function emittedGetRhythm(): typeof getRhythm {
+    const entry = systemEntrySource()
+    const start = entry.indexOf(PREFIX) + PREFIX.length
+    const text = entry.slice(start, entry.indexOf('\nexport ', start))
+    return new Function(`return (${text})`)() as typeof getRhythm
+  }
+
+  it('emits getRhythm from rhythm.ts as its source text', () => {
+    expect(systemEntrySource()).toContain(`${PREFIX}${getRhythm.toString()}`)
+  })
+
+  it('evaluates to the same CSS as the imported getRhythm', () => {
+    const emitted = emittedGetRhythm()
+    for (const args of CASES) {
+      expect(emitted(...args)).toBe(getRhythm(...args))
+    }
+    expect(emitted(1e21)).toBe(`calc(1${'0'.repeat(21)} * var(--spacing-root))`)
   })
 })
 

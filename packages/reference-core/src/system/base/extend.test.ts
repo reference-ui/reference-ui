@@ -1,6 +1,6 @@
 // Unit tests for extendSystem. They take a base system in the engine's Portable token
 // format and assert the one override block it appends: the selectors, the light and dark rules, the
-// untouched entries, chained merges, references, the named misuse, and the extends fragment node.
+// untouched entries, chained merges, references, rhythm units, the named misuse, and the extends fragment node.
 // The duplicate and self-name rules run through validateConfig, so they read the real config path.
 
 import { describe, expect, it } from 'vitest'
@@ -236,12 +236,6 @@ describe('extendSystem: named misuse', () => {
     ).toThrow('refers to unknown token colors.nope in reference-ui')
   })
 
-  it('rejects a rhythm value with a named error', () => {
-    expect(() => extendSystem(BASE, { tokens: { colors: { brand: { ink: { value: '2r' } } } } })).toThrow(
-      'rhythm value "2r", which extendSystem does not support yet'
-    )
-  })
-
   it('rejects a leaf with neither a value nor a light value', () => {
     expect(() => extendSystem(BASE, { tokens: { colors: { brand: { ink: { dark: '#fff' } } } } })).toThrow(
       'token colors.brand.ink needs a value or a light value'
@@ -250,6 +244,58 @@ describe('extendSystem: named misuse', () => {
 
   it('refuses a first argument that is not a base system', () => {
     expect(() => extendSystem(undefined as never, { tokens: {} })).toThrow(ExtendSystemError)
+  })
+})
+
+describe('extendSystem: rhythm', () => {
+  // A base whose own block declares the rhythm root, so a spacing.root override is checked against it.
+  const ROOTED_TOKENS = `${OWN_TOKENS}@layer tokens {\n  ${PORTABLE_LIGHT} {\n    --spacing-root: 1rem;\n  }\n}\n`
+  const ROOTED: BaseSystem = {
+    ...BASE,
+    streams: BASE.streams?.map((s) => (s.name === NAME ? { ...s, tokensPortable: ROOTED_TOKENS } : s)),
+  }
+
+  it('lowers a rhythm word, a compound value and a math function to the CSS the compiler prints', () => {
+    const cases: [string, string][] = [
+      ['1r', 'var(--spacing-root)'],
+      ['2r', 'calc(2 * var(--spacing-root))'],
+      ['-1/3r', 'calc(-1 * var(--spacing-root) / 3)'],
+      ['.5r', 'calc(0.5 * var(--spacing-root))'],
+      ['2r 1r', 'calc(2 * var(--spacing-root)) var(--spacing-root)'],
+      ['calc(100% - 2r)', 'calc(100% - calc(2 * var(--spacing-root)))'],
+    ]
+    for (const [value, css] of cases) {
+      const next = extendSystem(BASE, { tokens: { colors: { brand: { ink: { value } } } } })
+      expect(declsUnder(appendedOf(next), PORTABLE_LIGHT)).toEqual({ '--colors-brand-ink': css })
+    }
+  })
+
+  it('lowers a rhythm value on a light and a dark leaf, each in its own rule', () => {
+    const next = extendSystem(BASE, { tokens: { colors: { brand: { ink: { value: '1r', dark: '2r' } } } } })
+
+    expect(declsUnder(appendedOf(next), PORTABLE_LIGHT)).toEqual({ '--colors-brand-ink': 'var(--spacing-root)' })
+    expect(declsUnder(appendedOf(next), PORTABLE_DARK)).toEqual({
+      '--colors-brand-ink': 'calc(2 * var(--spacing-root))',
+    })
+  })
+
+  it('lowers a reference and a rhythm word in one value', () => {
+    const next = extendSystem(BASE, { tokens: { colors: { brand: { soft: { value: '{colors.gray.900} 2r' } } } } })
+
+    expect(declsUnder(appendedOf(next), PORTABLE_LIGHT)).toEqual({
+      '--colors-brand-soft': 'var(--colors-gray-900) calc(2 * var(--spacing-root))',
+    })
+  })
+
+  it('prints a plain spacing root, and refuses a rhythm value on the root', () => {
+    const plain = extendSystem(ROOTED, { tokens: { spacing: { root: { value: '1rem' } } } })
+
+    expect(declsUnder(ownTokens(plain).slice(ROOTED_TOKENS.length), PORTABLE_LIGHT)).toEqual({
+      '--spacing-root': '1rem',
+    })
+    expect(() => extendSystem(ROOTED, { tokens: { spacing: { root: { value: '2r' } } } })).toThrow(
+      'token spacing.root defines the rhythm root in rhythm units ("2r")'
+    )
   })
 })
 

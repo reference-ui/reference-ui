@@ -8,6 +8,7 @@
 import { isPlainObject, mergeTokenTree, tokenLeafPaths } from '../../collect/lib/merge.ts'
 import type { ReferenceTokenConfig } from '../../collect/surface/tokens.ts'
 import { extendedSystemsOf } from './extended.ts'
+import { lowerRhythm, SPACING_ROOT_VAR } from './rhythm.ts'
 import type { BaseSystem, FragmentNode, SystemStreams } from './types.ts'
 
 /** The overrides one call applies: a token tree shaped like the `tokens()` input. */
@@ -52,9 +53,6 @@ interface Decl {
 
 const EXTENDED_KEY = 'extended'
 const EXTEND_NODE_PREFIX = 'extend:'
-// A rhythm word: an optional signed number or fraction, then the `r` unit (`r`, `2r`, `-1/3r`).
-const RHYTHM_WORD = /^[+-]?(?:(?:\d+(?:\.\d+)?|\.\d+)(?:\/[+-]?(?:\d+(?:\.\d+)?|\.\d+))?)?r$/
-const WORD_BREAK = /[\s(),*]+/
 const BRACED_REF = /\{([^{}]*)\}/g
 const DECLARATION = /^\s*(--[^\s:]+)\s*:/gm
 
@@ -170,15 +168,6 @@ function valuesOf(
   return { light, dark: explicitDark ? scalarText(path, darkValue) : light, explicitDark }
 }
 
-// The v1 block prints token values as plain CSS, so a rhythm unit is refused rather than printed invalid.
-function rejectRhythm(path: string, raw: string): void {
-  const word = raw.split(WORD_BREAK).find((piece) => RHYTHM_WORD.test(piece))
-  if (word === undefined) return
-  throw new ExtendSystemError(
-    `extendSystem: token ${path} uses the rhythm value "${word}", which extendSystem does not support yet.`
-  )
-}
-
 function malformed(path: string): ExtendSystemError {
   return new ExtendSystemError(`extendSystem: token ${path} has a brace that is not a {token.path} reference.`)
 }
@@ -199,11 +188,18 @@ function referenceVar(inner: string, owner: Owner, ctx: LowerContext): string {
   return `var(${cssName})`
 }
 
+// Braces lower first, then rhythm units, as the compiler does. A rhythm value on the root would name the root
+// inside its own definition, so the root refuses it.
 function lowerValue(raw: string, owner: Owner, ctx: LowerContext): string {
-  rejectRhythm(owner.path, raw)
   const lowered = raw.replace(BRACED_REF, (_match, inner: string) => referenceVar(inner, owner, ctx))
   if (/[{}]/.test(lowered)) throw malformed(owner.path)
-  return lowered
+  const resolved = lowerRhythm(lowered)
+  if (resolved !== lowered && owner.cssName === SPACING_ROOT_VAR) {
+    throw new ExtendSystemError(
+      `extendSystem: token ${owner.path} defines the rhythm root in rhythm units ("${raw}"), which would reference itself.`
+    )
+  }
+  return resolved
 }
 
 function declOf(path: string, leaf: Record<string, unknown>, ctx: LowerContext): Decl {
@@ -268,8 +264,10 @@ function streamsWithBlock(streams: readonly SystemStreams[], name: string, block
  * Theme a published base system. The result keeps the base's name, fragments, jsxElements and
  * jsxOwned, and every stream entry is unchanged except the own entry, which gains one override block after its
  * tokens. A chained call merges its overrides with mergeTokenTree and re-emits from the original base, so
- * the result never stacks blocks. It throws ExtendSystemError for an unknown token, a self-reference, a
- * rhythm value, a leaf with no value, or a reference that the base does not declare.
+ * the result never stacks blocks. Braces and rhythm units lower to CSS as the compiler lowers them, so `2r`
+ * prints `calc(2 * var(--spacing-root))`. It throws ExtendSystemError for an unknown token, a self-reference
+ * (including a rhythm value on spacing.root), a leaf with no value, a malformed brace, or a reference that the
+ * base does not declare.
  */
 export function extendSystem(base: BaseSystem, overrides: ExtendSystemOverrides): BaseSystem {
   assertBaseSystem(base)
