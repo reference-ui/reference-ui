@@ -1,7 +1,7 @@
 /**
  * Chain T13 browser contract. Renders the chain-t13 root in Playwright and proves
  * chain 1 contributes its local + transitive tokens. The end-to-end proof of the T13 topology declared
- * in `../ui.config.ts`.
+ * in `../../ui.config.ts`.
  */
 
 import { expect, test } from '@playwright/test'

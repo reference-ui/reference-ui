@@ -1,7 +1,8 @@
 /**
  * T18 icons-composition suite: composed icons stay backed, uncomposed ones warn.
- * Spawns `ref sync` legs over composed and uncomposed icon usage and asserts
- * backed output when composed, warnings when not. Pure node/vitest; no browser.
+ * Spawns `ref sync` legs over composed, uncomposed, and partly-composed
+ * usage and asserts backed output when composed, warnings when not.
+ * Pure node/vitest; no browser.
  */
 
 import { spawnSync } from 'node:child_process'

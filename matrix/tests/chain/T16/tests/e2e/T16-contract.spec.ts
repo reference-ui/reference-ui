@@ -1,7 +1,7 @@
 /**
  * Chain T16 browser contract. Renders the chain-t16 root in Playwright and proves
  * the aliased-host shells are visible through both paths. The end-to-end proof of the T16 topology declared
- * in `../ui.config.ts`.
+ * in `../../ui.config.ts`.
  */
 
 import { expect, test } from '@playwright/test'

@@ -1,7 +1,7 @@
 /**
  * Chain T12 browser contract. Renders the chain-t12 root in Playwright and proves
  * the extend-side sibling branch contributes both local and shared-base tokens. The end-to-end proof of the T12 topology declared
- * in `../ui.config.ts`.
+ * in `../../ui.config.ts`.
  */
 
 import { expect, test } from '@playwright/test'

@@ -5,9 +5,7 @@ import { Button } from '@reference-ui/lib/primitives'
  * Package import of a primitive name: lib's `./primitives` subpath is lib's
  * generated runtime bound to `reference-ui`, so this `Button` mints
  * `reference-ui__c_*`. The import lands in lib's installed directory, which
- * published its system, so provenance keeps the tag lib's, not the app's. (It
- * once stayed external only because a foreign-runtime allowlist named
- * `@reference-ui/lib`; that list is gone.)
+ * published its system, so provenance keeps the tag lib's, not the app's.
  */
 export function LibButtonProbe(): React.ReactElement {
   return (
