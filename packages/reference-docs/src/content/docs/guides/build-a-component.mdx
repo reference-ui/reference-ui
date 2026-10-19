@@ -1,0 +1,102 @@
+---
+title: Build a component
+section: Guides
+order: 7
+slug: build-a-component
+description: Make your own component from a primitive and a recipe.
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { CardDemo } from './build-a-component-demo'
+
+# Build a component
+
+A component is a primitive plus a recipe. The recipe holds the component's
+looks, and the primitive still takes style props.
+
+<Step n={1}>Write a recipe</Step>
+
+`recipe()` takes base styles and named variants, and returns a function
+that gives you the class names for one selection.
+
+```tsx
+// src/components/Card.tsx
+import { recipe } from '@reference-ui/react'
+
+const card = recipe({
+  className: 'card',
+  base: {
+    padding: '4r',
+    borderRadius: 'md',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+  },
+  variants: {
+    tone: {
+      outline: { borderColor: 'design.accent.border' },
+      filled: { bg: 'design.bg.muted', borderColor: 'transparent' },
+    },
+  },
+  defaultVariants: { tone: 'outline' },
+})
+```
+
+`className` names the recipe. It must be unique in your system.
+
+<Step n={2}>Build the component</Step>
+
+Start from a primitive's props and add the recipe's variants with
+`RecipeVariantProps`. Pass the variant to the recipe and everything else to
+the primitive:
+
+```tsx
+// src/components/Card.tsx
+import { Div, type DivProps, type RecipeVariantProps } from '@reference-ui/react'
+
+type CardProps = DivProps & RecipeVariantProps<typeof card>
+
+export function Card({ tone, className, ...props }: CardProps) {
+  return <Div className={`${card({ tone })} ${className ?? ''}`} {...props} />
+}
+```
+
+`tone` is typed to `'outline' | 'filled'`.
+
+<Step n={3}>Run sync</Step>
+
+Sync compiles the recipe into the stylesheet. If `npx ref sync --watch` is
+running, saving the file is enough.
+
+## Use it
+
+```tsx
+<Card>Outline by default</Card>
+<Card tone="filled">Filled</Card>
+<Card tone="filled" padding="6r">Filled, more padding</Card>
+```
+
+<Preview>
+  <CardDemo />
+</Preview>
+
+Style props override the recipe, because recipe rules sit in an earlier
+cascade layer. Here `padding="6r"` replaces the recipe's `4r`.
+
+## Style a component from another library
+
+`css()` returns a class name, so you can style any component that takes
+`className`:
+
+```tsx
+import { css } from '@reference-ui/react'
+
+<DatePicker className={css({ padding: '2r', borderRadius: 'md' })} />
+```
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/css" title="css() and recipe()">Compound variants, `raw()` and the full recipe config.</LinkCard>
+  <LinkCard href="/style-props" title="Style props">Every prop a primitive takes.</LinkCard>
+  <LinkCard href="/share-a-design-system" title="Share a design system">Publish your components for other apps.</LinkCard>
+</LinkCards>

@@ -3,16 +3,16 @@ title: Popover
 section: Components
 order: 12
 slug: popover
+description: Interactive content in a panel anchored to a trigger.
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { PopoverDemo } from './popover-demo'
+import { PopoverDemo, PopoverHoverDemo } from './popover-demo'
 
 # Popover
 
-Popover shows interactive content anchored to a trigger without trapping
-focus or blocking the page. It is an [Overlay](/overlay) with isolation off,
-plus optional hover opening.
+Popover opens a panel from a button. Focus can move freely in and out of
+it, and the rest of the page stays usable.
 
 <Preview>
   <PopoverDemo />
@@ -23,13 +23,15 @@ import { Popover } from '@reference-ui/lib'
 
 <Popover>
   <Popover.Trigger>Open filters</Popover.Trigger>
-  <Popover.Content placement="bottom-start">
+  <Popover.Content>
     Interactive content anchored to the trigger.
     <Popover.Close>Close</Popover.Close>
-    <Popover.Arrow />
   </Popover.Content>
 </Popover>
 ```
+
+Popover is an [Overlay](/overlay) with isolation off. For a panel that
+traps focus and blocks the page, use Overlay.
 
 ## Import
 
@@ -37,37 +39,190 @@ import { Popover } from '@reference-ui/lib'
 import { Popover } from '@reference-ui/lib'
 ```
 
-Parts: `Popover.Trigger` (`button`), `Popover.Content` (`div`),
-`Popover.Arrow`, `Popover.Close` (`button`), and `Popover.Portal`.
+## Anatomy
 
-## Props
+```tsx
+<Popover>
+  <Popover.Trigger />
+  <Popover.Portal>
+    <Popover.Content>
+      <Popover.Close />
+      <Popover.Arrow />
+    </Popover.Content>
+  </Popover.Portal>
+</Popover>
+```
+
+`Popover` renders no element of its own. `Popover.Trigger` and
+`Popover.Close` render a `button`, and `Popover.Content` a `div`.
+
+Content has no panel style of its own. Give it a background, border and
+padding with style props or a class.
+
+## Examples
+
+### Hover card
+
+With `openOnHover`, the popover also opens when the pointer rests on the
+trigger, and when the trigger gets keyboard focus.
+
+<Preview>
+  <PopoverHoverDemo />
+</Preview>
+
+```tsx
+<Popover openOnHover>
+  <Popover.Trigger>@reference-ui</Popover.Trigger>
+  <Popover.Content>Components and a design system compiled at build time.</Popover.Content>
+</Popover>
+```
+
+It closes when both the pointer and focus have left the trigger and the
+content. The pointer can cross the gap between them without closing it.
+
+### Controlled
+
+Pass `open` and `onOpenChange` to own the state.
+
+```tsx
+const [open, setOpen] = React.useState(false)
+
+<Popover open={open} onOpenChange={setOpen}>
+  <Popover.Trigger>Open filters</Popover.Trigger>
+  <Popover.Content>…</Popover.Content>
+</Popover>
+```
+
+### Placement
+
+Content sits below the trigger, aligned to its start edge. Pass `placement`
+and `offset` to move it. It flips and shifts to stay in the viewport.
+
+```tsx
+<Popover.Content placement="top" offset={12}>…</Popover.Content>
+```
+
+### Custom anchor
+
+Pass `anchor` to position against another element, a ref, or a point
+instead of the trigger.
+
+```tsx
+const rowRef = React.useRef<HTMLDivElement>(null)
+
+<Div ref={rowRef}>
+  <Popover anchor={rowRef}>
+    <Popover.Trigger>Details</Popover.Trigger>
+    <Popover.Content>…</Popover.Content>
+  </Popover>
+</Div>
+```
+
+### Keep open on outside press
+
+Call `preventDefault()` in `onOutsidePress` or `onEscape` to keep the
+popover open.
+
+```tsx
+<Popover onOutsidePress={event => event.preventDefault()}>…</Popover>
+```
+
+## API reference
 
 ### Popover
+
+Holds the open state. Renders only its children.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `open` | `boolean` | — | Controlled open state. Omit it to let Popover manage its own. |
-| `defaultOpen` | `boolean` | `false` | Initial state when `open` is omitted. |
-| `onOpenChange` | `(open: boolean) => void` | — | Called on every open or dismiss request. |
-| `onOpen` / `onDismiss` | `() => void` | — | Separate open and dismiss requests. |
-| `openOnHover` | `boolean` | `false` | Open on pointer hover as well as click (a hover card). |
-| `openDelay` | `number` | `700` | Hover-open delay in milliseconds. |
-| `closeDelay` | `number` | `300` | Hover-close delay in milliseconds. |
-| `anchor` | element, ref, or `{ x, y }` | — | Position against this reference instead of the Trigger. |
-| `closeOnScroll` | `boolean` | `false` | Dismiss when a scrolling ancestor moves the anchor. |
+| `defaultOpen` | `boolean` | `false` | Open state on first render when `open` is omitted. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called on every open and close request. |
+| `onOpen` | `() => void` | — | Called when the popover opens. |
+| `onDismiss` | `() => void` | — | Called when the popover closes. |
+| `openOnHover` | `boolean` | `false` | Also open on pointer hover and keyboard focus. |
+| `openDelay` | `number` | `700` | Milliseconds of hover before it opens, with `openOnHover`. |
+| `closeDelay` | `number` | `300` | Milliseconds before it closes after the pointer leaves, with `openOnHover`. |
+| `anchor` | element, ref, or `{ x, y, width?, height? }` | trigger | What Content is positioned against. |
+| `closeOnScroll` | `boolean` | `false` | Close when an ancestor of the anchor scrolls. Otherwise Content follows it. |
+| `presence` | `boolean` | `true` | When `false`, Content unmounts as soon as it closes. |
+| `onEscape` | `(event: KeyboardEvent) => void` | — | Called on Escape. `preventDefault()` keeps it open. |
+| `onOutsidePress` | `(event: PointerEvent) => void` | — | Called on a press outside. `preventDefault()` keeps it open. |
+| `onInteractOutside` | `(event: PointerEvent \| FocusEvent) => void` | — | Called with the same outside press. `preventDefault()` keeps it open. |
 
-`Popover.Content` takes the same geometry props as
-[`Overlay.Content`](/overlay#overlaycontent): `placement`, `offset`,
-`collisionPadding`, `initialFocus`, `restoreFocus`.
+### Popover.Trigger
 
-## Behaviour
+The button that opens and closes the popover. Takes `button` props and style
+props. A click toggles; calling `preventDefault()` in your `onClick` stops
+it.
 
-- Escape and an outside press dismiss the popover.
-- Tab from an open Trigger moves into Content; tabbing past the last control
-  leaves and dismisses. Focus is not trapped.
-- Closing with focus inside Content, by Escape or `Popover.Close`, returns
-  focus to the Trigger, or to the `restoreFocus` target. `restoreFocus={false}`
-  leaves focus where it is.
-- With `openOnHover`, the pointer can travel diagonally from trigger to
-  content without closing it.
-- For text that only describes the trigger, use [Tooltip](/tooltip).
+### Popover.Content
+
+The panel. Takes `div` props and style props, plus the positioning props of
+[`Overlay.Content`](/overlay). Outside a `Popover` it renders nothing.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `placement` | placement | `'bottom-start'` | Side and alignment against the anchor. |
+| `offset` | `number` | `8` | Distance from the anchor in pixels. |
+| `collisionPadding` | `number` | `8` | Space kept between Content and the viewport edge. |
+| `flip` | `boolean` | `true` | Move to the opposite side when there is no room. |
+| `shift` | `boolean` | `true` | Slide along the side to stay in view. |
+| `initialFocus` | focus target or `boolean` | — | Where focus goes when it opens. |
+| `restoreFocus` | `boolean` or focus target | trigger | Where focus returns when it closes with focus inside. `false` leaves focus where it is. |
+| `role` | `string` | `'dialog'` | The content's role. |
+| `id` | `string` | generated | Replaces the generated id the trigger points to. |
+
+| Data attribute | Values |
+| --- | --- |
+| `data-state` | `open`, `closed` |
+| `data-side` | `top`, `right`, `bottom`, `left` |
+| `data-align` | `start`, `center`, `end` |
+
+| CSS variable | Description |
+| --- | --- |
+| `--reference-overlay-anchor-width` | Width of the anchor. |
+| `--reference-overlay-anchor-height` | Height of the anchor. |
+| `--reference-overlay-available-width` | Width of the viewport, less `collisionPadding` on each side. |
+| `--reference-overlay-available-height` | Height of the viewport, less `collisionPadding` on each side. |
+| `--reference-overlay-transform-origin` | Origin for an open or close animation. |
+
+### Popover.Close
+
+A button that closes the popover. Takes `button` props and style props.
+Calling `preventDefault()` in your `onClick` keeps it open.
+
+### Popover.Portal
+
+Optional. Sets where Content is portalled.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `container` | element, ref, or function | trigger's root | Element to render Content into. |
+
+### Popover.Arrow
+
+An optional box positioned against the anchor. Takes `div` props and style
+props. Give it a shape with your own styles.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `edgePadding` | `number` | `4` | Smallest distance in pixels between the arrow and a corner of Content. |
+
+## Accessibility
+
+- Content has `role="dialog"`. Give it a label with `aria-label` or
+  `aria-labelledby`.
+- The trigger has `aria-haspopup="dialog"`. Pass `aria-haspopup` to change
+  it, for example to `"menu"`.
+- A hover card does not open on touch.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Space` | On the trigger, opens or closes the popover. |
+| `Enter` | On the trigger, opens or closes the popover. |
+| `Tab` | From the open trigger, moves focus into Content. From the last control in Content, closes the popover and moves on to the next control after the trigger. |
+| `Shift + Tab` | From the first control in Content, moves focus back to the trigger. |
+| `Escape` | Closes the popover. If focus was inside, it returns to the trigger. |

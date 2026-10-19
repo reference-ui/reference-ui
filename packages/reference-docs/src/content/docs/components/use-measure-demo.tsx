@@ -5,7 +5,7 @@ import { demoNote, demoStack } from './demo-surface'
 /** Reports the settled size of a resizable textarea. */
 export function UseMeasureDemo() {
   const { ref, rect, isSettled } = useMeasure<HTMLTextAreaElement>()
-  const size = rect ? `${Math.round(rect.width)} × ${Math.round(rect.height)}px` : '—'
+  const size = rect ? `${Math.round(rect.width)} × ${Math.round(rect.height)}px` : 'Not measured'
   return (
     <Div className={demoStack}>
       <Textarea ref={ref} aria-label="Resize me" placeholder="Drag the corner to resize" />

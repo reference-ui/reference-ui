@@ -1,0 +1,95 @@
+---
+title: Configuration
+section: MCP
+order: 3
+slug: mcp-configuration
+description: Choose what the MCP server shows your agent, and how it runs.
+---
+
+# Configuration
+
+Set what the server shows in `ui.config.ts`, and how it runs with
+command-line options.
+
+## Config options
+
+```ts {7-11}
+// ui.config.ts
+import { defineConfig } from '@reference-ui/core'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  useReferenceIcons: false,
+  mcp: {
+    include: ['@acme/design-system'],
+    exclude: ['@acme/design-system:LegacyButton'],
+  },
+})
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `useReferenceLibrary` | `true` | Show `@reference-ui/lib` components to your agent. |
+| `useReferenceIcons` | `true` | Search `@reference-ui/icons` with `list_icons`. Turn it off when you use your own icons. |
+| `mcp.include` | None | Packages and files to scan alongside your own source. |
+| `mcp.exclude` | None | Components and files to leave out. |
+
+`use_reference_library` and `use_reference_icons` are accepted as the same
+flags.
+
+The server reads these options when it builds its model. Restart the server
+after changing them.
+
+### Include and exclude
+
+`mcp.include` and `mcp.exclude` take these entries:
+
+| Entry | Example | Meaning |
+| --- | --- | --- |
+| A package | `@acme/design-system` | Every component the package exports. Include only. |
+| A package component | `@acme/design-system:Button` | One component from a package. |
+| A file glob | `legacy/**` | Files matched from the project root. |
+
+Packages must be scoped (start with `@`). Without `mcp.include`, the server
+scans only your own source files.
+
+## Command-line options
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `[project]` | None | The project to serve, as a path. |
+| `--project <path>` | None | The same, as an option. Wins over the positional path. |
+| `--transport <stdio\|http>` | `stdio` | How the server talks to your agent. |
+| `--http` | None | Shorthand for `--transport http`. |
+| `--host <host>` | `127.0.0.1` | The HTTP host. |
+| `--port <port>` | `3697` | The HTTP port. |
+| `-v, --version` | None | Print the version. |
+
+Passing `--host` or `--port` without `--transport` starts the HTTP server.
+Over HTTP the server answers `POST` requests at `/mcp`.
+
+## Environment variables
+
+| Variable | Description |
+| --- | --- |
+| `REF_PROJECT` | The project to serve, used when no path is passed. |
+| `REF_REGISTRY_PATH` | Where the project registry lives. Defaults to `~/.reference-ui/registry.json`. |
+| `REF_DEBUG` | Print debug logs to stderr. `DEBUG` works too. |
+
+## Choosing a project
+
+Each session works on one active project. A project you pass with
+`--project` or `REF_PROJECT` is used even when it isn't synced, so your agent
+gets the sync message. Otherwise the server picks the first synced project it
+finds, in this order:
+
+1. The folder it was started in.
+2. A parent folder with a `ui.config.ts`.
+3. A workspace package with a `ui.config.ts`, from `pnpm-workspace.yaml` or
+   the `workspaces` field in `package.json`, first by path.
+4. A project from the registry. The most recently used wins.
+
+A project selected with `select_project` is added to the registry, so other
+sessions can find it. Your agent can switch projects with `select_project`, or
+pass `project` to a single tool call. See [Tools](/mcp-tools).

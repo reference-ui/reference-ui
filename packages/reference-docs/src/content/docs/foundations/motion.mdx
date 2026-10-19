@@ -1,0 +1,94 @@
+---
+title: Motion
+section: Foundations
+order: 5
+slug: motion
+description: Lib's animation presets and keyframes.
+---
+
+import { EntrancePresets, LoopingPresets } from './motion-demo'
+
+# Motion
+
+Lib ships animation presets and the keyframes behind them. Run a preset by
+name with the `animation` prop.
+
+```tsx
+import { Div } from '@reference-ui/react'
+
+<Div animation="fadeIn.quick" />
+```
+
+## Presets
+
+A preset is an `animations` token: keyframes with a duration, an easing and,
+for loops, `infinite`.
+
+### Entrances and exits
+
+These run once, when the element renders.
+
+<EntrancePresets />
+
+| Token | Value |
+| --- | --- |
+| `fadeIn.quick` | `fadeIn 0.2s ease-out` |
+| `fadeIn.normal` | `fadeIn 0.5s ease-out` |
+| `fadeIn.slow` | `fadeIn 1s ease-out` |
+| `fadeOut.quick` | `fadeOut 0.2s ease-out` |
+| `fadeOut.normal` | `fadeOut 0.5s ease-out` |
+| `scaleIn.quick` | `scaleIn 0.2s ease-out` |
+| `scaleIn.normal` | `scaleIn 0.3s ease-out` |
+| `slideUp.quick` | `slideUp 0.3s ease-out` |
+| `slideUp.normal` | `slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1)` |
+| `slideDown.quick` | `slideDown 0.3s ease-out` |
+| `slideDown.normal` | `slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1)` |
+
+### Loops
+
+These repeat until the element goes away.
+
+<LoopingPresets />
+
+| Token | Value |
+| --- | --- |
+| `spin.slow` | `spin 4s linear infinite` |
+| `spin.normal` | `spin 2s linear infinite` |
+| `spin.fast` | `spin 1s linear infinite` |
+| `pulse.slow` | `pulse 2s ease-in-out infinite` |
+| `pulse.normal` | `pulse 1s ease-in-out infinite` |
+| `pulse.fast` | `pulse 0.5s ease-in-out infinite` |
+| `bounce.normal` | `bounce 1s ease-in-out infinite` |
+| `bounce.fast` | `bounce 0.5s ease-in-out infinite` |
+| `ping.normal` | `ping 1s cubic-bezier(0, 0, 0.2, 1) infinite` |
+| `ping.fast` | `ping 0.5s cubic-bezier(0, 0, 0.2, 1) infinite` |
+
+## Keyframes
+
+Lib also ships keyframes with no preset. Use one in an `animation` shorthand:
+
+```tsx
+<Div animation="shake 0.5s ease-in-out" />
+```
+
+| Group | Keyframes |
+| --- | --- |
+| Fade | `fadeIn`, `fadeOut`, `fadeInUp`, `fadeInDown`, `fadeInLeft`, `fadeInRight` |
+| Slide | `slideUp`, `slideDown`, `slideLeft`, `slideRight`, `slideUpOut`, `slideDownOut` |
+| Scale | `scaleIn`, `scaleOut`, `scaleUp`, `scaleDown`, `pulse`, `heartbeat` |
+| Bounce | `bounce`, `bounceIn`, `bounceOut`, `shake` |
+| Rotate | `spin`, `spinReverse`, `rotate90`, `rotate180`, `wigglewiggle` |
+| Attention | `ping`, `flash`, `glow`, `shimmer` |
+
+## Reduced motion
+
+Lib's presets don't stop for reduced motion on their own. Turn a loop off with
+the `_motionReduce` condition:
+
+```tsx
+<Div animation="spin.slow" _motionReduce={{ animation: 'none' }} />
+```
+
+## Related
+
+- [Animation](/animation): define your own keyframes and presets.

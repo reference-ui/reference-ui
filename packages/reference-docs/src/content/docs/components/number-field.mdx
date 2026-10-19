@@ -3,16 +3,16 @@ title: NumberField
 section: Components
 order: 23
 slug: number-field
+description: A text input for numbers, with locale formatting and optional stepper buttons.
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { NumberFieldDemo } from './number-field-demo'
+import { NumberFieldDemo, NumberFieldFormatDemo } from './number-field-demo'
 
 # NumberField
 
-NumberField edits a number as locale-formatted text, with optional stepper
-buttons. It accepts partial input while you type and commits one plain
-number.
+A text input for numbers, formatted for a locale, with optional increment
+and decrement buttons.
 
 <Preview>
   <NumberFieldDemo />
@@ -40,41 +40,218 @@ export function Quantity() {
 }
 ```
 
+NumberField is always controlled. `value` is a number, or `null` when the
+field is empty, and `locale` is required.
+
 ## Import
 
 ```tsx
 import { NumberField } from '@reference-ui/lib'
 ```
 
-Parts: `NumberField.Group` (the [Field](/field) bezel, `role="group"`),
-`NumberField.Input` (`input type="text"`), and the optional
-`NumberField.Increment` and `NumberField.Decrement` buttons.
+## Anatomy
 
-## Props
+```tsx
+<NumberField>
+  <NumberField.Group>
+    <NumberField.Decrement />
+    <NumberField.Input />
+    <NumberField.Increment />
+  </NumberField.Group>
+</NumberField>
+```
+
+- `NumberField` holds the state and renders a `div`.
+- `NumberField.Group` draws the [Field](/field) bezel. It must be the one
+  direct child of NumberField.
+- `NumberField.Input` is the text input. Group needs exactly one, as a
+  direct child.
+- `NumberField.Decrement` and `NumberField.Increment` are optional, at most
+  one of each, as direct children of Group.
+
+Other elements, such as a unit label, can sit in Group beside the parts.
+Wrong nesting throws an error that names the part.
+
+If you leave out the children, NumberField renders the full anatomy with
+the steppers named "Decrement" and "Increment".
+
+## Examples
+
+### Formatting
+
+`formatOptions` takes `Intl.NumberFormat` options. The display follows the
+locale; the value stays a plain number. With `style: 'percent'`, `0.15`
+shows as `15%` and `step` defaults to `0.01`.
+
+<Preview>
+  <NumberFieldFormatDemo />
+</Preview>
+
+```tsx
+<NumberField
+  value={price}
+  onChange={setPrice}
+  locale="en-GB"
+  formatOptions={{ style: 'currency', currency: 'GBP' }}
+>
+  <NumberField.Group>
+    <NumberField.Input id="price" />
+  </NumberField.Group>
+</NumberField>
+```
+
+Compact notation and `signDisplay: 'never'` can't be edited and throw.
+
+### Typing and committing
+
+While you type, each new number the text parses to goes to `onChange` as
+typed, before bounds or step apply. Partial text such as `-` sends nothing,
+and clearing the input sends `null`.
+
+Blur, Enter and each step commit the value. Text that doesn't parse
+reverts, and the field is marked invalid until the next edit.
+
+### Snap to step
+
+`commitBehavior` decides what a commit does with a value off the step or
+out of bounds.
+
+| Value | On commit |
+| --- | --- |
+| `'none'` | Clamps to `min` and `max`. |
+| `'snap'` | Rounds to the nearest step, then clamps. |
+| `'validate'` | Keeps the value and marks the field invalid. |
+
+```tsx
+<NumberField value={value} onChange={setValue} locale="en-GB" min={0} max={100} step={5} commitBehavior="snap">
+  <NumberField.Group>
+    <NumberField.Input aria-label="Volume" />
+  </NumberField.Group>
+</NumberField>
+```
+
+### Validate
+
+With `commitBehavior="validate"`, `onInvalidCommit` reports each invalid
+commit with the value and a reason, `'out-of-range'` or `'off-step'`. It is
+called after `onChange` and does not change the value.
+
+```tsx
+<NumberField
+  value={value}
+  onChange={setValue}
+  onInvalidCommit={(attempted, reason) => setError(reason)}
+  locale="en-GB"
+  min={1}
+  max={10}
+  commitBehavior="validate"
+>
+  <NumberField.Group>
+    <NumberField.Input aria-label="Seats" />
+  </NumberField.Group>
+</NumberField>
+```
+
+### Forms
+
+Set `name` and NumberField adds a hidden input holding the plain number,
+or an empty string for `null`. Submitting commits any typed text first.
+Submit is blocked while the text doesn't parse or, in `snap` and `validate`
+modes, while the value is off the step or out of bounds. `invalid` alone
+does not block submit.
+
+```tsx
+<NumberField name="quantity" value={quantity} onChange={setQuantity} locale="en-GB" required>
+  <NumberField.Group>
+    <NumberField.Input aria-label="Quantity" />
+  </NumberField.Group>
+</NumberField>
+```
+
+### Warning
+
+Pass `status="warning"` to Group for the warning bezel. It does not mark
+the field invalid.
+
+## API reference
+
+### NumberField
+
+Renders a `div` and takes `div` props and style props.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `value` | `number \| null` | — | Required. Controlled value; `null` is empty. |
-| `onChange` | `(value: number \| null) => void` | — | Called with each new number as you type, and again when the value commits. |
+| `value` | `number \| null` | — | Required. The current value; `null` is empty. |
+| `onChange` | `(value: number \| null) => void` | — | Called with each new value. |
 | `locale` | `string` | — | Required. BCP 47 locale for parsing and display. |
-| `min` / `max` | `number` | — | Bounds. |
-| `step` | `number` | `1` (`0.01` for percent) | Step for arrows and steppers. |
-| `formatOptions` | `Intl.NumberFormatOptions` | `{}` | Display format: currency, percent, units. |
-| `commitBehavior` | `'none' \| 'snap' \| 'validate'` | `'none'` | `none` clamps to bounds; `snap` also rounds to the step; `validate` keeps the value and marks it invalid. |
-| `name` | `string` | — | Submits the value with a form. |
-| `disabled`, `readOnly`, `required`, `invalid` | `boolean` | `false` | Form state. |
+| `min` | `number` | — | Lowest value. |
+| `max` | `number` | — | Highest value. |
+| `step` | `number` | `1`, or `0.01` for percent | Amount each step adds. Must be greater than 0. |
+| `formatOptions` | `Intl.NumberFormatOptions` | `{}` | Display format: currency, percent, units, digits. |
+| `commitBehavior` | `'none' \| 'snap' \| 'validate'` | `'none'` | What a commit does with an off-step or out-of-range value. |
+| `onInvalidCommit` | `(attempted: number, reason: 'off-step' \| 'out-of-range') => void` | — | Reports invalid commits in `validate` mode. |
+| `name` | `string` | — | Adds a hidden input for form submission. |
+| `form` | `string` | — | `id` of the form the hidden input belongs to. |
+| `disabled` | `boolean` | `false` | Stops interaction and leaves the value out of the form. |
+| `readOnly` | `boolean` | `false` | Stops editing and stepping. The value still submits. |
+| `required` | `boolean` | `false` | Sets `required` on the input. |
+| `invalid` | `boolean` | `false` | Marks the field invalid. |
 
-`Increment` and `Decrement` each require an `aria-label` or
-`aria-labelledby`; there is no built-in English label.
+### NumberField.Group
 
-## Behaviour
+Renders a `div` with `role="group"` and takes `div` props and style props.
 
-- Arrow Up and Down step by `step`; with Shift held they step by
-  `10 × step`. Home and End go to `min` and `max`.
-- While you type, each new number the text parses to goes to `onChange` as
-  typed, before any clamping. Partial text such as `-` sends nothing, and
-  clearing the input sends `null`.
-- Blur, Enter, and each step commit the value. A commit applies
-  `commitBehavior` and calls `onChange` when the result differs from
-  `value`; text that does not parse reverts.
-- There is no uncontrolled mode.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `status` | `'warning'` | — | Paints the warning bezel. |
+
+### NumberField.Input
+
+Renders an `input type="text"` and takes `input` props. NumberField sets
+`value`, `type`, `inputMode`, `name`, `min`, `max`, `step`, `disabled`,
+`readOnly`, `required` and `aria-invalid`. `autoComplete` and `autoCorrect`
+default to `'off'` and `spellCheck` to `false`.
+
+### NumberField.Increment and NumberField.Decrement
+
+Render a `button` and take `button` props. Each needs `aria-label` or
+`aria-labelledby`; without a name it renders nothing. Children replace the
+default plus or minus icon.
+
+A stepper is disabled at its bound, and when the field is disabled or
+read-only.
+
+### Data attributes
+
+| Attribute | On | Present when |
+| --- | --- | --- |
+| `[data-disabled]` | root, Group, Input, steppers | Disabled. A stepper also has it at its bound. |
+| `[data-readonly]` | root, Group, Input | Read-only. |
+| `[data-required]` | root, Group, Input | Required. |
+| `[data-invalid]` | root, Group, Input | Invalid. |
+| `[data-empty]` | root, Group, Input | The field is empty. |
+| `[data-editing]` | root, Group, Input | Typed text is not yet committed. |
+| `[data-focused]` | Group | The input has focus. |
+| `[data-status]` | Group | `'warning'` when `status="warning"`. |
+| `[data-pressed]` | steppers | The stepper is held down. |
+
+## Accessibility
+
+The input is a plain text box, so screen readers read the formatted text.
+Label it with `htmlFor`, a wrapping `label`, `aria-label` or
+`aria-labelledby`. The steppers are out of the tab order; use the arrow
+keys instead.
+
+Holding a stepper repeats the step. A touch press on a stepper does not
+focus the input, so the on-screen keyboard stays closed.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `ArrowUp` | Adds one step. |
+| `ArrowDown` | Subtracts one step. |
+| `Shift` + `ArrowUp` / `ArrowDown` | Steps by ten times `step`. Shift-clicking a stepper does the same. |
+| `Home` | Sets the value to `min`, when `min` is set. |
+| `End` | Sets the value to `max`, when `max` is set. |
+| `Enter` | Commits typed text. With nothing typed, Enter submits the form as usual. |

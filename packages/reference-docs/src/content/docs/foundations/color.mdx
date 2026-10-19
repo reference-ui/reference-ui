@@ -3,6 +3,7 @@ title: Color
 section: Foundations
 order: 2
 slug: color
+description: Lib's colour palette, tones, semantic tokens and light and dark mode.
 ---
 
 import { IntensityGrid, RoleSpecimens, ShadesAndTones } from './color-sections'
@@ -11,27 +12,17 @@ import { PaletteDemo } from './palette-demo'
 
 # Color
 
-`@reference-ui/lib` ships three layers of color tokens:
+Lib ships a colour palette, four tones and a set of semantic tokens for light
+and dark mode.
 
-- **A palette** of 19 color families, each a ramp of 11 shades from `50` to
-  `950`.
-- **Four tones**, `ghost`, `medium`, `firm` and `strong`, that put any shade at a
-  named strength.
-- **Semantic tokens**, such as `design.background` and `design.text.base`, that
-  hold one value for light mode and one for dark mode.
-
-You write all three as plain values in color props: `bg="blue.500"`,
-`bg="blue.500/medium"`, `color="design.text.base"`. Each is defined with
-`tokens()`, which [Tokens](/tokens) explains.
+All three work in any colour prop: `bg="blue.500"`, `bg="blue.500/medium"`,
+`color="design.text.base"`.
 
 ## Palette
 
-Each family is a ramp of fixed steps: `50`, `100`, then every hundred to `900`,
-then `950`. `50` is the lightest step and `950` the darkest. A step is a
-**shade**. Every value is an `oklch()` color, and a shade is the same in light
-and dark mode.
-
-Name a shade by family and step. The name works in every color prop.
+The palette has 19 families. Each is a ramp of 11 shades: `50`, `100`, every
+hundred to `900`, then `950`. `50` is the lightest and `950` the darkest. Every
+shade is an `oklch()` colour, and it is the same in light and dark mode.
 
 ```tsx
 import { Div, P } from '@reference-ui/react'
@@ -43,25 +34,24 @@ import { Div, P } from '@reference-ui/react'
 
 ### Neutrals
 
-`slate` and `gray` are the neutrals. Lib builds most of its own surfaces, borders and
-text from `gray`.
+`slate` and `gray` are the neutrals. Most of lib's surfaces, borders and text
+use `gray`.
 
 <PaletteDemo group="neutrals" />
 
 ### Hues
 
-Seventeen families, in this order: `red`, `orange`, `amber`, `yellow`, `lime`,
-`green`, `emerald`, `teal`, `cyan`, `sky`, `blue`, `indigo`, `violet`,
-`purple`, `magenta`, `pink` and `rose`.
+`red`, `orange`, `amber`, `yellow`, `lime`, `green`, `emerald`, `teal`,
+`cyan`, `sky`, `blue`, `indigo`, `violet`, `purple`, `magenta`, `pink` and
+`rose`.
 
 <PaletteDemo group="hues" />
 
 ## Tones
 
-A **tone** is a shade at a named strength, written `shade/tone`:
-`blue.500/medium` is `blue.500` at the medium strength. The tone mixes the shade
-with transparency, so the result takes on whatever sits behind it: a pale wash
-on a light page and a dim glow on a dark one, with no separate dark value.
+A tone is a shade at a named strength, written `shade/tone`. The tone mixes
+the shade with transparency, so it takes on whatever sits behind it. It needs
+no separate dark value.
 
 <ShadesAndTones />
 
@@ -71,14 +61,12 @@ import { Div } from '@reference-ui/react'
 // A shade: the solid step.
 <Div bg="blue.500" />
 
-// A tone: the same shade at the medium strength.
+// A tone: the same shade at medium strength.
 <Div bg="blue.500/medium" />
 ```
 
-### Tone values
-
-Each tone holds two amounts. The **surface** amount paints areas. The **line**
-amount is stronger, so edges and text stay visible.
+Each tone holds two amounts. The surface amount paints areas. The line amount
+is stronger, so edges and text stay visible.
 
 | Tone | Surface | Line |
 | --- | --- | --- |
@@ -89,41 +77,21 @@ amount is stronger, so edges and text stay visible.
 
 <IntensityGrid />
 
-### Surface and line
-
-The prop you set decides which amount a tone draws. Border and outline props,
+The prop decides which amount it draws. `border*` and `outline*` props,
 `color`, text decoration, strokes and shadows draw the line amount. Every other
-color prop, including `bg` and `fill`, draws the surface amount.
-[Tokens](/tokens) covers how roles resolve.
+colour prop, including `bg` and `fill`, draws the surface amount.
 
 <RoleSpecimens />
 
-```tsx
-import { Div, Span } from '@reference-ui/react'
-
-// Surface: bg takes the 18% amount.
-<Div bg="blue.500/strong" />
-
-// Line: borderColor takes the 58% amount.
-<Div borderWidth="2px" borderStyle="solid" borderColor="blue.500/strong" />
-
-// Line: text takes the 58% amount too.
-<Span color="blue.500/strong">Accent label</Span>
-```
-
-Start at `medium`. Move up when a surface has to stand out, and down when it
-competes with the content around it. Use a shade such as `blue.700`, not a tone,
-for body text.
-
-To add a tone or change these amounts, define `tones` in your own `tokens()`
-call; see [Tokens](/tokens).
+Start at `medium`. Go up when a surface has to stand out, and down when it
+competes with the content around it. For body text, use a shade such as
+`blue.700`, not a tone.
 
 ## Semantic tokens
 
-Semantic tokens name a job rather than a color. Each one points at a palette
-shade in light mode and another in dark mode, so components that use them
-follow the active [color mode](#light-and-dark-mode). Lib's components read
-these tokens, and you can use them in your own styles.
+A semantic token names a job, not a colour. Each one has a light value and a
+dark value, so it follows the [colour mode](#light-and-dark-mode). Lib's
+components use these tokens, and so can your styles.
 
 | Token | Light | Dark |
 | --- | --- | --- |
@@ -148,29 +116,25 @@ these tokens, and you can use them in your own styles.
 import { Div, P } from '@reference-ui/react'
 
 <Div bg="design.background" color="design.text.base">
-  <P color="design.text.light">Secondary copy that follows the color mode.</P>
+  <P color="design.text.light">Secondary copy that follows the colour mode.</P>
 </Div>
 ```
 
-Lib also defines two narrower groups:
+Lib also defines `ui.*`, one group per element, such as `ui.link.default`,
+`ui.button.hover` and `ui.focus.ring`. Lib's primitives and components style
+themselves with these. Prefer `design.*` in your own code.
 
-- `text.*`: `text.primary`, `text.secondary`, `text.disabled`, `text.accent`
-  and `text.highlight`.
-- `ui.*`: one group per element, such as `ui.link.default`, `ui.button.hover`
-  and `ui.focus.ring`. Lib's primitives and components style themselves with
-  these. Each is named for one element, so prefer `design.*` in your own code.
-
-TODO: say whether `text.*` is kept alongside `design.text.*` or due to retire.
-Its dark `text.accent` value is `red.800`, darker than its light value.
+`text.*` (`text.primary`, `text.secondary` and three more) is defined too, but
+nothing in lib reads it. Use `design.text.*`.
 
 ## Light and dark mode
 
-Light mode is the default. Dark mode applies when an element, or one of its
-ancestors, carries `data-color-mode="dark"`. Lib's stylesheet does not read the
-operating system's `prefers-color-scheme` setting; your app decides the mode.
+Light mode is the default. Dark mode applies inside an element that carries
+`data-color-mode="dark"`. Lib's tokens don't read the operating system's
+`prefers-color-scheme` setting: your app picks the mode.
 
 Set the mode for a subtree with the `colorMode` prop on any primitive. The
-markup and token names stay the same; only the resolved values change.
+token names stay the same and only their values change.
 
 <ColorModeDemo />
 
@@ -182,14 +146,14 @@ import { Div, P } from '@reference-ui/react'
 </Div>
 ```
 
-To switch the whole page, set `colorMode` on your root element, or set
-`data-color-mode="dark"` on `<html>` or `<body>`.
+To switch the whole page, set `colorMode` on your root primitive.
+[Dark mode](/dark-mode) covers following the system setting and adding a
+toggle, and [Server-side rendering](/ssr) covers setting the mode from the request.
 
-Only semantic tokens change between modes. Shades are fixed, and a tone adapts
-because it is see-through, not because it has a dark value.
+Only semantic tokens change between modes. Shades are fixed, and a tone
+adapts because it is see-through.
 
 ## Related
 
-- [Tokens](/tokens): define colors, tones and light and dark values.
-- [Foundations](/foundations): what lib ships and how to use its tokens in your
-  own code.
+- [Tokens](/tokens): define colours, tones and light and dark values.
+- [Theming](/theming): replace lib's colours with your own.

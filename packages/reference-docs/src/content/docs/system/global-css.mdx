@@ -1,19 +1,15 @@
 ---
 title: Global CSS
 section: System
-order: 7
+order: 12
 slug: global-css
+description: Style any selector with your tokens.
 ---
 
 # Global CSS
 
-`globalCss()` writes rules for selectors you choose: `body`, `:root`, a class
-of your own, or an attribute selector. Use it for page-wide defaults, custom
-properties, and styles keyed on markup rather than on a `css()` class. The
-rules take the same values as style props (tokens, rhythm, conditions), and
-they compile into the `global` layer of the one stylesheet.
-
-## Write global rules
+`globalCss()` writes rules for selectors you choose, such as `body`, `:root`
+or a class of your own.
 
 ```ts
 // src/theme/global.ts
@@ -24,10 +20,9 @@ globalCss({
     '--header-height': '16r',
   },
   body: {
-    fontFamily: 'body', // a family defined with font()
+    fontFamily: 'body',
     color: 'text',
     backgroundColor: 'surface',
-    containerType: 'inline-size',
   },
   'a:focus-visible': {
     outline: '2px solid {colors.brand}',
@@ -36,27 +31,21 @@ globalCss({
 })
 ```
 
-Each key is a selector, written as you would in CSS: comma lists, `:has()`,
-`:is()` and vendor pseudo-elements such as `::-webkit-scrollbar` pass through
-unchanged. Call `globalCss()` from as many files as you like; sync collects
-every call.
+Each key is a selector, written as in CSS. Comma lists, `:has()`, `:is()` and
+vendor pseudo-elements such as `::-webkit-scrollbar` pass through unchanged.
+Call `globalCss()` in any file your `include` globs match, as often as you
+like.
 
 ## Values
 
-Values resolve exactly as they do in `css()`:
+Values work as they do in [`css()`](/css#values): token names, `{colors.brand}`
+references, rhythm units such as `4r`, and plain CSS. A key set to
+`undefined` is dropped, which helps when you spread a shared object.
 
-- a bare token name resolves through the property's category, so
-  `borderRadius: 'card'` prints `var(--radii-card)`;
-- `{colors.brand}` references expand inside any string, including
-  `color-mix()` and shadows;
-- rhythm units such as `4r` become `calc()` against `--spacing-root`;
-- `undefined` removes a key, which helps when you spread a shared object and
-  want to drop one of its properties.
+## Nesting and conditions
 
-## Nested selectors and conditions
-
-Inside a rule, `&` stands for the rule's selector, and named conditions work
-as they do on style props:
+Inside a rule, `&` stands for the rule's selector. Named conditions such as
+`_hover` work as they do on [style props](/style-props#conditions):
 
 ```ts
 globalCss({
@@ -64,22 +53,15 @@ globalCss({
     borderColor: 'line',
     '& > [data-slot="icon"]': { color: 'muted' },
     _hover: { borderColor: 'brand' },
-    _focusVisible: { outlineColor: 'brand', outlineWidth: '2px', outlineStyle: 'solid' },
     _disabled: { opacity: 0.5 },
     _placeholder: { color: 'muted' },
-  },
-  '.tag': {
-    _before: { content: '"#"', color: 'muted' },
   },
 })
 ```
 
-Interaction conditions match both the native state and a data attribute:
-`_hover` covers `:hover` and `[data-hover]`, so a script can force the state.
-
 ## Media and container queries
 
-Nest at-rules as keys. `@media` and `@container` wrap the rule:
+`@media` and `@container` keys wrap the rule:
 
 ```ts
 globalCss({
@@ -87,44 +69,42 @@ globalCss({
     display: 'none',
     '@media (min-width: 900px)': { display: 'block' },
   },
-  '.chip': {
-    '@container (min-width: 400px)': { paddingInline: '4r' },
-  },
 })
 ```
 
-Breakpoint names such as `md` and ranges such as `mdDown` also work here. In
-global CSS they print `@media` queries with the scale's widths, where
-`css()` and style props print `@container` queries (see
-[Responsive](/responsive)).
+Breakpoint keys such as `md` and `mdDown` work too. In global CSS they print
+`@media` queries, where style props and `css()` print `@container` queries.
+See [Responsive](/responsive).
 
-## Where global rules sit in the cascade
+## Where global rules sit
 
-The stylesheet declares its cascade layers in this order, and a later layer
-always wins over an earlier one, whatever the selector specificity:
-
-| Layer | Contents |
-| --- | --- |
-| `reset` | The CSS reset, when `normalizeCss` is on |
-| `global` | `globalCss()` rules, `@keyframes` and `@font-face` |
-| `base` | Base rules |
-| `tokens` | Token custom properties and their light and dark blocks |
-| `recipes` | `recipe()` classes |
-| `utilities` | `css()` classes and style props |
-
-A `css()` class or style prop therefore overrides a global rule for the same
-element without `!important`. Use global CSS for defaults and markup-driven
-styles, and utilities for anything an element should be able to override.
+Global rules live in the `global` layer, below recipes and utilities. A style
+prop or `css()` class on the same element always wins, with no `!important`.
+See [Cascade layers](/cascade-layers).
 
 ## The reset
 
-`normalizeCss` in `ui.config.ts` turns the built-in reset on or off. It is on
-by default:
+When `normalizeCss` is on, which is the default, the stylesheet starts with a
+small reset in the `reset` layer. It:
+
+- sets `box-sizing: border-box` on every element and pseudo-element;
+- removes the default margin from `body`, `h1` to `h4`, `p`, `figure`,
+  `blockquote`, `dl` and `dd`;
+- removes list markers from `ul` and `ol` with `role="list"`;
+- gives `body` a `min-height` of `100vh`, a `line-height` of `1.5` and
+  `text-rendering: optimizeSpeed`;
+- sets `text-decoration-skip-ink: auto` on links without a class;
+- makes `img` and `picture` block elements with `max-width: 100%`;
+- makes `input`, `button`, `textarea` and `select` inherit the font;
+- turns on smooth scrolling when focus is inside the page;
+- cuts animations, transitions and smooth scrolling to almost nothing when
+  the user prefers reduced motion.
+
+The reduced-motion rules use `!important`, so they win over your own
+animations. Turn the reset off in `ui.config.ts`:
 
 ```ts
 // ui.config.ts
-import { defineConfig } from '@reference-ui/core'
-
 export default defineConfig({
   name: 'my-app',
   include: ['src/**/*.{ts,tsx}'],
@@ -132,16 +112,12 @@ export default defineConfig({
 })
 ```
 
-TODO: document what the reset contains, and what the `base` layer holds.
-
-## `globalCss()` reference
+## Reference
 
 ```ts
-function globalCss(css: GlobalCssConfig): void
-
-type GlobalCssConfig = Record<string, GlobalCssRule>
+function globalCss(rules: GlobalCssConfig): void
 ```
 
-A `GlobalCssRule` holds CSS properties in camelCase, custom properties
-(`--name`), nested `&` selectors, named conditions (`_hover`, …), breakpoint
-keys, and at-rule keys (`@media …`, `@container …`).
+`GlobalCssConfig` maps selectors to rules. A rule holds CSS properties in
+camelCase, custom properties (`--name`), nested `&` selectors, named
+conditions, breakpoint keys, and `@media` or `@container` keys.

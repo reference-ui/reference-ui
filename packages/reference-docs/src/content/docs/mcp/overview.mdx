@@ -1,0 +1,55 @@
+---
+title: Overview
+section: MCP
+order: 1
+slug: mcp
+description: What the Reference UI MCP server tells your coding agent about your project.
+---
+
+# MCP
+
+The Reference UI MCP server gives your coding agent facts about your project:
+its components, their props, how your code uses them, your tokens and the
+icons you can import.
+
+## What your agent can ask
+
+| Your agent asks | The server answers with |
+| --- | --- |
+| Which components does this project have? | Your components, the library components and the primitives your JSX uses. |
+| What props does `Card` take? | Each prop's type, default and description. |
+| How is `Card` used? | Call sites captured from your code. |
+| Which colours can I use? | Your token paths and values. |
+| Is there a trash icon? | Matching icons from `@reference-ui/icons`. |
+
+Each question maps to one tool. See [Tools](/mcp-tools) for the full list.
+
+## Where the answers come from
+
+The server reads two things:
+
+- The generated types that `ref sync` writes to `.reference-ui/`. See [Sync](/sync).
+- A scan of your source, made with Atlas, Reference UI's component analyzer.
+
+Atlas finds the components your files export and records every JSX call site.
+It reads your project's own files and any design packages you
+[include](/mcp-configuration#config-options), never the rest of
+`node_modules`. When it can't work out a component's props type, the component
+carries a warning instead of a guess.
+
+The server joins the two into one model when it first loads a project.
+
+## Before you sync
+
+Without a synced project, the server still answers with the built-in
+primitives, the library components and the style props guide. Each answer
+carries a notice. When the server found a `ui.config.ts` that isn't synced,
+the notice tells your agent to run `ref sync` there.
+
+## Next steps
+
+<LinkCards>
+  <LinkCard href="/mcp-setup" title="Setup">Connect the server to your agent.</LinkCard>
+  <LinkCard href="/mcp-configuration" title="Configuration">Choose what the server shows.</LinkCard>
+  <LinkCard href="/mcp-tools" title="Tools">Every tool and its inputs.</LinkCard>
+</LinkCards>

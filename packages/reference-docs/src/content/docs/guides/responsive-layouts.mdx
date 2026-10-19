@@ -1,0 +1,89 @@
+---
+title: Responsive layouts
+section: Guides
+order: 8
+slug: responsive-layouts
+description: Lay out a page that adapts to the space it has.
+---
+
+# Responsive layouts
+
+Responsive styles follow the width of the nearest container, not the
+viewport. A layout built this way adapts the same in a full page, a sidebar
+or a dialog.
+
+<Step n={1}>Check the page is a container</Step>
+
+The library makes `body` a container, so with `@reference-ui/lib` in
+`extends` there is nothing to do. Without it, add one rule:
+
+```ts
+// src/theme/global.ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  body: { containerType: 'inline-size' },
+})
+```
+
+<Step n={2}>Change values at breakpoints</Step>
+
+Pass an object with a value per breakpoint. `base` applies at every width:
+
+```tsx
+<Div
+  display="grid"
+  gap={{ base: '3r', md: '6r' }}
+  gridTemplateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', xl: 'repeat(4, 1fr)' }}
+>
+  <Card />
+  <Card />
+  <Card />
+  <Card />
+</Div>
+```
+
+One column on narrow screens, two from `md` (768px), four from `xl`
+(1280px). The full scale is on [Responsive](/responsive).
+
+<Step n={3}>Show and hide by width</Step>
+
+```tsx
+<Nav display={{ base: 'none', md: 'flex' }}>…</Nav>
+<Button display={{ md: 'none' }}>Menu</Button>
+```
+
+## Respond to a panel, not the page
+
+Mark any element with `container`, and responsive styles inside it follow
+that element's width instead:
+
+```tsx
+<Div display="grid" gridTemplateColumns="16rem 1fr">
+  <Aside container>
+    <ProfileCard />
+  </Aside>
+  <Main container>
+    <ProfileCard />
+  </Main>
+</Div>
+```
+
+`ProfileCard` takes its narrow layout in the sidebar and its wide layout in
+the main column, from the same code.
+
+To skip past nearer containers, name one and target it in `r`:
+
+```tsx
+<Main container="content">
+  {/* … */}
+  <Div r={{ 'content/md': { padding: '8r' } }} />
+</Main>
+```
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/responsive" title="Responsive">Breakpoints, ranges, `r` keys and viewport queries.</LinkCard>
+  <LinkCard href="/spacing" title="Spacing">The rhythm unit and spacing tokens.</LinkCard>
+</LinkCards>

@@ -3,15 +3,15 @@ title: Switch
 section: Components
 order: 21
 slug: switch
+description: An on/off control with a sliding thumb.
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { SwitchDemo } from './switch-demo'
+import { SwitchDemo, SwitchVariantsDemo } from './switch-demo'
 
 # Switch
 
-Switch is an on/off control with a sliding thumb. It renders a
-`button` with `role="switch"` and draws a default thumb for you.
+A control that turns a setting on or off.
 
 <Preview>
   <SwitchDemo />
@@ -39,31 +39,110 @@ export function AirplaneMode() {
 import { Switch } from '@reference-ui/lib'
 ```
 
-## Props
+## Anatomy
 
-Switch renders the track as a `button` and takes its props, plus:
+```tsx
+<Switch>
+  <Switch.Thumb />
+</Switch>
+```
+
+`Switch` is the track, a `button`. `Switch.Thumb` is optional: when you
+leave it out, Switch renders a default thumb.
+
+## Examples
+
+<Preview>
+  <SwitchVariantsDemo />
+</Preview>
+
+### Uncontrolled
+
+Pass `defaultChecked` and leave out `checked`. Switch keeps its own state
+and still calls `onChange`.
+
+```tsx
+<Label>
+  <Switch defaultChecked />
+  Notifications
+</Label>
+```
+
+### Disabled
+
+```tsx
+<Switch disabled aria-label="Sync" />
+```
+
+### Custom thumb
+
+Author `Switch.Thumb` to style it. It replaces the default thumb, so there
+is always exactly one.
+
+```tsx
+<Switch defaultChecked borderRadius="md" aria-label="Compact mode">
+  <Switch.Thumb borderRadius="sm" />
+</Switch>
+```
+
+The thumb moves `1.25rem` when checked, through an inline `transform`. If
+you change the track width, set your own `transform` in the thumb's
+`style`.
+
+### Forms
+
+Switch does not submit with a form. Add a hidden input for the value:
+
+```tsx
+<Switch checked={enabled} onChange={setEnabled} aria-label="Airplane mode" />
+<Input type="hidden" name="airplane" value={enabled ? 'on' : 'off'} />
+```
+
+### Cancelling a change
+
+Your `onClick` runs before Switch changes. Call `event.preventDefault()` in
+it and Switch neither changes nor calls `onChange`.
+
+## API reference
+
+### Switch
+
+Renders a `button` and takes `button` props and style props, except
+`role`, `type`, `aria-checked` and `aria-pressed`, which Switch sets.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `checked` | `boolean` | — | Controlled state. |
-| `defaultChecked` | `boolean` | `false` | Initial state when `checked` is omitted. |
-| `onChange` | `(checked: boolean, event) => void` | — | Called with the requested state on click. |
-| `disabled` | `boolean` | `false` | Disables the control. |
+| `defaultChecked` | `boolean` | `false` | Initial state when `checked` is left out. |
+| `onChange` | `(checked: boolean, event: MouseEvent) => void` | — | Called with the new state on each click, Space or Enter. Not called when `checked` changes from outside. |
+| `disabled` | `boolean` | `false` | Stops interaction. |
 
-To style the thumb, author it yourself: `<Switch.Thumb />` renders a `span`
-and replaces the default thumb.
+| Data attribute | Values |
+| --- | --- |
+| `[data-state]` | `'checked'` or `'unchecked'` |
+| `[data-disabled]` | Present when disabled. |
 
-```tsx
-const thumb = css({ width: '2r' })
+### Switch.Thumb
 
-<Switch checked={enabled} onChange={setEnabled}>
-  <Switch.Thumb className={thumb} />
-</Switch>
-```
+Renders a `span` and takes `span` props and style props.
 
-## Behaviour
+| Data attribute | Values |
+| --- | --- |
+| `[data-state]` | `'checked'` or `'unchecked'` |
+| `[data-disabled]` | Present when disabled. |
 
-- Space and Enter toggle it, as on any button.
-- Label it with a `label` element, either with `htmlFor` or by wrapping the
-  Switch.
-- Switch does not submit with a form; serialize the value yourself.
+## Accessibility
+
+Switch is a `button` with `role="switch"` and `aria-checked`. Name it with
+a `label` (`htmlFor` or wrapping), `aria-label` or `aria-labelledby`.
+There is no default name.
+
+Text inside the track becomes part of its accessible name, even where the
+track hides it. Mark any extra children `aria-hidden`.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Space` | Toggles the switch. |
+| `Enter` | Toggles the switch. |

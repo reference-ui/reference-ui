@@ -24,3 +24,53 @@ export function TabsDemo() {
     </Div>
   )
 }
+
+/** The pill variant. */
+export function TabsPillDemo() {
+  return (
+    <Div width="100%" maxWidth="100r">
+      <Tabs variant="pill">
+        <Tabs.List aria-label="Period">
+          <Tabs.Tab value="day">Day</Tabs.Tab>
+          <Tabs.Tab value="week">Week</Tabs.Tab>
+          <Tabs.Tab value="month">Month</Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="day">
+          <P>Today's totals.</P>
+        </Tabs.Panel>
+        <Tabs.Panel value="week">
+          <P>This week's totals.</P>
+        </Tabs.Panel>
+        <Tabs.Panel value="month">
+          <P>This month's totals.</P>
+        </Tabs.Panel>
+      </Tabs>
+    </Div>
+  )
+}
+
+/** Vertical tabs: Up and Down arrows move between tabs. */
+export function TabsVerticalDemo() {
+  return (
+    <Div width="100%" maxWidth="100r" display="flex" gap="6r">
+      <Tabs orientation="vertical">
+        <Tabs.List aria-label="Account">
+          <Tabs.Tab value="profile">Profile</Tabs.Tab>
+          <Tabs.Tab value="email">Email</Tabs.Tab>
+          <Tabs.Tab value="password" disabled>
+            Password
+          </Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="profile">
+          <P>Name and photo.</P>
+        </Tabs.Panel>
+        <Tabs.Panel value="email">
+          <P>Addresses and notifications.</P>
+        </Tabs.Panel>
+        <Tabs.Panel value="password">
+          <P>Change your password.</P>
+        </Tabs.Panel>
+      </Tabs>
+    </Div>
+  )
+}

@@ -7,7 +7,7 @@ export function PopoverDemo() {
   return (
     <Popover>
       <Popover.Trigger>Open filters</Popover.Trigger>
-      <Popover.Content placement="bottom-start" className={floatingSurface}>
+      <Popover.Content className={floatingSurface}>
         <Div display="flex" flexDirection="column" gap="2r">
           <Span fontWeight="600">Filters</Span>
           <Span>Interactive content anchored to the trigger.</Span>
@@ -15,7 +15,21 @@ export function PopoverDemo() {
             <Popover.Close>Close</Popover.Close>
           </Div>
         </Div>
-        <Popover.Arrow />
+      </Popover.Content>
+    </Popover>
+  )
+}
+
+/** A hover card: opens on pointer hover or keyboard focus. */
+export function PopoverHoverDemo() {
+  return (
+    <Popover openOnHover>
+      <Popover.Trigger>@reference-ui</Popover.Trigger>
+      <Popover.Content className={floatingSurface}>
+        <Div display="flex" flexDirection="column" gap="1r">
+          <Span fontWeight="600">Reference UI</Span>
+          <Span>Components and a design system compiled at build time.</Span>
+        </Div>
       </Popover.Content>
     </Popover>
   )

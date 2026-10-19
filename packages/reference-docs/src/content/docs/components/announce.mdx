@@ -3,13 +3,14 @@ title: announce
 section: Components
 order: 54
 slug: announce
+description: Send a message to screen readers without showing anything on screen.
 ---
 
 # announce
 
-`announce()` sends a message to screen readers through a live region,
-without showing anything on screen. Use it for status changes that have no
-visible text, such as "3 results".
+`announce()` sends a message to screen readers through a live region. Nothing
+appears on screen. Use it for status changes that have no visible text, such
+as "3 results".
 
 ```tsx
 import { announce } from '@reference-ui/lib'
@@ -18,16 +19,16 @@ announce('3 results')
 announce('Connection lost', { politeness: 'assertive' })
 ```
 
-The live region is rendered by [ReferenceLibrary](/reference-library);
-mount it once near your app root.
+The live region is rendered by [ReferenceLibrary](/reference-library). Mount
+it once near your app root.
 
 ## Import
 
 ```tsx
-import { announce } from '@reference-ui/lib'
+import { announce, type AnnounceOptions } from '@reference-ui/lib'
 ```
 
-## Signature
+## API
 
 ```ts
 announce(message: string, options?: AnnounceOptions): void
@@ -35,10 +36,22 @@ announce(message: string, options?: AnnounceOptions): void
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `politeness` | `'polite' \| 'assertive'` | `'polite'` | `assertive` interrupts the screen reader; keep it for urgent messages. |
+| `politeness` | `'polite' \| 'assertive'` | `'polite'` | `assertive` interrupts the screen reader. Keep it for urgent messages. |
 | `document` | `Document` | current document | The document whose live region speaks. |
 
 ## Behaviour
 
+- The same message sent twice is spoken twice.
 - A blank message is ignored.
-- [Toast](/toast) uses the same live region through its `announce` option.
+- Messages sent before ReferenceLibrary mounts are kept and spoken once it
+  mounts.
+- If more than one document has a ReferenceLibrary mounted, such as a page
+  and a same-origin iframe, pass `document`. Without it the call is dropped.
+- [Toast](/toast) speaks through the same live region with its `announce`
+  option.
+
+## Accessibility
+
+The polite message goes into a `role="status"` region and the assertive one
+into a `role="alert"` region. Both stay audible while an
+[Overlay](/overlay) dialog makes the rest of the page inert.

@@ -1,0 +1,96 @@
+---
+title: Customization
+section: Guides
+order: 5
+slug: customization
+description: Put your brand on the components in @reference-ui/lib.
+---
+
+# Customization
+
+Library components style themselves with the library's tokens. Override
+those tokens to restyle every component at once.
+
+## Override library tokens
+
+`extendSystem()` takes the library's base system and your token values, and
+returns a branded copy. Put it in `extends`, where `ref init` put the
+library:
+
+```ts
+// ui.config.ts
+import { defineConfig, extendSystem } from '@reference-ui/core'
+import { baseSystem } from '@reference-ui/lib/baseSystem'
+
+const brandedLib = extendSystem(baseSystem, {
+  tokens: {
+    colors: {
+      ui: {
+        button: {
+          background: { light: '#0f766e', dark: '#5eead4' },
+          foreground: { light: '#ffffff', dark: '{colors.gray.950}' },
+        },
+        focus: {
+          ring: { light: '#0f766e', dark: '#5eead4' },
+        },
+      },
+    },
+    radii: {
+      md: { value: '0.75rem' },
+    },
+  },
+})
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [brandedLib],
+})
+```
+
+Run `ref sync`. Every component that reads an overridden token picks up your
+value, so `<Button variant="primary">` turns teal and every focus ring
+follows.
+
+A token takes `value`, or `light` and `dark`. A token with no `dark` value
+uses its light value in both modes. A value can point at another library
+token with `{colors.gray.950}`.
+
+## Tokens worth overriding
+
+| Tokens | What they style |
+| --- | --- |
+| `colors.design.*` | Page background, text and accent colours. See [Color](/color). |
+| `colors.ui.*` | One group per element, such as `ui.button.*`, `ui.field.*`, `ui.dialog.*` and `ui.focus.ring`. |
+| `radii.sm`, `radii.md`, `radii.lg` | Corner radii used across the library. |
+
+Many `ui.*` tokens point at `design.*` tokens, so overriding a `design.*`
+token reaches every element that uses it.
+
+## Limits
+
+`extendSystem()` checks each override when `ref sync` loads your config, and
+fails with a message that names the token when:
+
+- the library doesn't declare the token,
+- a value uses a rhythm unit such as `2r`,
+- a value points at a token the library doesn't declare.
+
+It overrides tokens only, not the library's global CSS.
+
+## Style one instance
+
+Style props on a library component land on its outermost element, so you
+can change one instance without touching the tokens:
+
+```tsx
+<Switch borderRadius="sm" aria-label="Compact mode" />
+```
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/theming" title="Theming">Define your own tokens, fonts and animations.</LinkCard>
+  <LinkCard href="/color" title="Color">The library's palette and semantic tokens.</LinkCard>
+  <LinkCard href="/share-a-design-system" title="Share a design system">How `extends` and `layers` differ.</LinkCard>
+</LinkCards>

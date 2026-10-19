@@ -20,5 +20,9 @@ const frame = css({
 })
 
 export function Preview({ children }: { children: ReactNode }) {
-  return <Div className={frame}>{children}</Div>
+  return (
+    <Div className={frame} data-preview="">
+      {children}
+    </Div>
+  )
 }

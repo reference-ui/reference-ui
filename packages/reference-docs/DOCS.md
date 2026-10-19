@@ -22,10 +22,17 @@ Flat and quiet, in the spirit of shadcn/ui:
 - No heading dividers — vertical space carries the typographic hierarchy.
 - Page header: the H1 title, then the frontmatter `description` as a muted
   one-line lead. Any page with a `description` gets it.
-- Tutorials use numbered step headings (`### 1. Install the packages`): step
+- Tutorial steps use `<Step n={1}>Install the packages</Step>`: an h3 with the
+  number in a small `sm`-radius badge on a muted fill. The id, `#` anchor and
+  outline entry use the heading text without the number. Each step is the
   heading, one short sentence, then the code panel.
+- `<InstallPrompt />` is the AI-agent install card: a label, a primary
+  "Copy prompt" button and a disclosure (collapsed by default) that shows the
+  prompt read-only. The prompt is the repo-root `INSTALL.md`, imported with
+  `?raw` at build time; edit it there, not in a page. (`.md` files are not
+  compiled as MDX; pages are `.mdx` only.)
 - Code panels have a 1px `docsBorder` hairline on a fill one shade off the page
-  (darker in dark mode) and an `md` radius. Highlighted lines
+  (lighter than the page in dark mode) and an `md` radius. Highlighted lines
   (```` ```tsx {4,8-10} ````) are full-width rows tinted with the accent. A
   copy action sits top-right; a centered "View Code" reveal appears only when
   the source is tall and has no highlighted lines.

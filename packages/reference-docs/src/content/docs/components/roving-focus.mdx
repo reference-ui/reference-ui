@@ -3,6 +3,7 @@ title: RovingFocus
 section: Components
 order: 53
 slug: roving-focus
+description: Make a group of controls one Tab stop and move between them with the arrow keys.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -11,9 +12,8 @@ import { RovingFocusDemo } from './roving-focus-demo'
 # RovingFocus
 
 RovingFocus makes a group of controls one Tab stop and moves focus between
-them with the arrow keys. Use it for toolbars, toggle groups, and grids of
-your own. [Listbox](/listbox), [Menu](/menu), [Tabs](/tabs), and
-[Tree](/tree) are built on it.
+them with the arrow keys. Use it for toolbars, toggle groups and grids you
+build yourself.
 
 <Preview>
   <RovingFocusDemo />
@@ -35,14 +35,29 @@ import { RovingFocus } from '@reference-ui/lib'
 </RovingFocus.Root>
 ```
 
+[Menu](/menu), [Menubar](/menubar) and [Tabs](/tabs) are built on it.
+
 ## Import
 
 ```tsx
 import { RovingFocus } from '@reference-ui/lib'
 ```
 
-`RovingFocus.Root` and `RovingFocus.Item` each take exactly one element child
-and add their behaviour to it; neither renders a wrapper.
+## Anatomy
+
+```tsx
+<RovingFocus.Root>
+  <Div>
+    <RovingFocus.Item>
+      <Button />
+    </RovingFocus.Item>
+  </Div>
+</RovingFocus.Root>
+```
+
+Root and Item each take one element child and add their behaviour to it.
+Neither renders a wrapper. Other props, such as event handlers, ARIA
+attributes and style props, pass through to the child, and a `ref` reaches it.
 
 ## Props
 
@@ -50,18 +65,41 @@ and add their behaviour to it; neither renders a wrapper.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `orientation` | `'horizontal' \| 'vertical' \| 'both'` | `'horizontal'` | Arrow-key axis; `both` moves in two dimensions by layout. |
-| `loop` | `boolean` | `false` | Wrap from the last item to the first. |
-| `typeahead` | `boolean` | `false` | Typing a letter jumps to a matching item. |
+| `orientation` | `'horizontal' \| 'vertical' \| 'both'` | `'horizontal'` | Which arrow keys move focus. `both` moves through a grid by layout. |
+| `loop` | `boolean` | `false` | Wrap from the last item to the first and back. |
+| `typeahead` | `boolean` | `false` | Typing moves focus to the next item whose text starts with the typed characters. |
 
 ### RovingFocus.Item
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `disabled` | `boolean` | — | Skipped by arrow keys. |
-| `textValue` | `string` | text content | Text used for typeahead. |
+| `disabled` | `boolean` | `false` | Removes the item from arrow-key movement and the Tab stop. |
+| `textValue` | `string` | text content | Text matched by typeahead. |
+| `id` | `string` | generated | Stable identity for the item within the group. |
+| `getNode` | `() => HTMLElement \| null` | — | Returns the item's element when its child can't take a ref. |
 
 ## Behaviour
 
-- Home and End jump to the first and last items.
+- The first enabled item is the Tab stop until another item takes focus.
+  Tab back into the group lands on the last focused item.
 - Clicking an item makes it the Tab stop without moving focus.
+- Items that are natively disabled, `aria-disabled`, hidden or
+  `display: none` are skipped as well as those with `disabled`.
+- Horizontal arrows reverse when the item's text direction is right to left.
+- With `orientation="both"`, items group into rows by position on screen.
+  Up and Down move to the nearest item in the next row.
+- Typeahead ignores keys typed into inputs, text areas and editable
+  content.
+
+## Accessibility
+
+RovingFocus manages `tabIndex` only. Give the container a role such as
+`toolbar`, `grid` or `radiogroup` and an accessible name.
+
+| Key | Description |
+| --- | --- |
+| `Tab` | Moves focus into the group, to the current item, and out again. |
+| `ArrowRight` / `ArrowLeft` | Moves to the next or previous item when `orientation` is `horizontal` or `both`. |
+| `ArrowDown` / `ArrowUp` | Moves to the next or previous item when `orientation` is `vertical`, or to the next or previous row with `both`. |
+| `Home` / `PageUp` | Moves to the first item. |
+| `End` / `PageDown` | Moves to the last item. |

@@ -6,58 +6,164 @@ slug: accordion
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { AccordionDemo } from './accordion-demo'
+import { AccordionDemo, AccordionMultipleDemo } from './accordion-demo'
 
 # Accordion
 
-Accordion groups [Collapsibles](/collapsible) so that one, or several, can
-be open at a time, with arrow-key movement between their headers.
+Accordion is a stack of [Collapsibles](/collapsible) where one, or several,
+can be open at a time.
 
 <Preview>
   <AccordionDemo />
 </Preview>
 
 ```tsx
-import { Accordion, Collapsible } from '@reference-ui/lib'
+import { Accordion } from '@reference-ui/lib'
 
 <Accordion>
-  <Collapsible id="billing">
-    <Collapsible.Trigger>Billing</Collapsible.Trigger>
-    <Collapsible.Content>Invoices and payment methods.</Collapsible.Content>
-  </Collapsible>
-  <Collapsible id="team">
-    <Collapsible.Trigger>Team</Collapsible.Trigger>
-    <Collapsible.Content>Members and roles.</Collapsible.Content>
-  </Collapsible>
+  <Accordion.Item id="billing">
+    <Accordion.Trigger>Billing</Accordion.Trigger>
+    <Accordion.Content>Invoices and payment methods.</Accordion.Content>
+  </Accordion.Item>
+  <Accordion.Item id="team">
+    <Accordion.Trigger>Team</Accordion.Trigger>
+    <Accordion.Content>Members and roles.</Accordion.Content>
+  </Accordion.Item>
 </Accordion>
 ```
-
-Each child Collapsible needs an `id`; the Accordion value is made of those
-ids.
 
 ## Import
 
 ```tsx
-import { Accordion, Collapsible } from '@reference-ui/lib'
+import { Accordion } from '@reference-ui/lib'
 ```
 
-## Props
+## Anatomy
 
-Accordion renders a `div` and takes its props and style props, plus:
+```tsx
+<Accordion>
+  <Accordion.Item>
+    <Accordion.Trigger />
+    <Accordion.Content />
+  </Accordion.Item>
+</Accordion>
+```
+
+`Accordion` renders a `div`. Each item is a Collapsible:
+`Accordion.Trigger` and `Accordion.Content` are
+[`Collapsible.Trigger`](/collapsible#collapsibletrigger) and
+[`Collapsible.Content`](/collapsible#collapsiblecontent). A `Collapsible`
+with an `id` also works as an item.
+
+Every item needs a unique `id`. The Accordion's value is made of these ids.
+
+## Examples
+
+### Multiple items open
+
+Set `expansion="multiple"` to let items open and close independently.
+
+<Preview>
+  <AccordionMultipleDemo />
+</Preview>
+
+```tsx
+<Accordion expansion="multiple">
+  <Accordion.Item id="shipping">…</Accordion.Item>
+  <Accordion.Item id="returns">…</Accordion.Item>
+  <Accordion.Item id="warranty" disabled>…</Accordion.Item>
+</Accordion>
+```
+
+### Controlled
+
+Pass `value` and `onChange` to own the state. In single mode the value is
+an id or `null`. In multiple mode it is an array of ids.
+
+```tsx
+import { Accordion, type AccordionValue } from '@reference-ui/lib'
+
+const [value, setValue] = React.useState<AccordionValue>('billing')
+
+<Accordion value={value} onChange={setValue}>
+  <Accordion.Item id="billing">…</Accordion.Item>
+  <Accordion.Item id="team">…</Accordion.Item>
+</Accordion>
+```
+
+Without `value`, every item starts closed. To start with an item open,
+control the value.
+
+### Findable content
+
+With `hiddenUntilFound` on an item, its closed content stays in the page.
+When the browser's find-in-page matches text inside it, the item opens. In
+single mode, that closes the item that was open.
+
+```tsx
+<Accordion.Item id="billing" hiddenUntilFound>…</Accordion.Item>
+```
+
+## API reference
+
+### Accordion
+
+Holds the open items. Takes `div` props and style props.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `expansion` | `'single' \| 'multiple'` | `'single'` | One open item, or any number. |
-| `value` | `string \| null`, or `string[]` when multiple | `null` / `[]` | Open item ids. Omit it to let Accordion manage its own. |
-| `onChange` | `(value) => void` | — | Called when an item opens or closes, in both modes. |
-| `keyboard` | `'headers' \| 'none'` | `'headers'` | Arrow-key movement between headers; `none` leaves it to you. |
+| `expansion` | `'single' \| 'multiple'` | `'single'` | One open item at a time, or any number. |
+| `value` | `string \| null` in single mode, `string[]` in multiple mode | — | Controlled open ids. Omit it to let Accordion manage its own. |
+| `onChange` | `(value: AccordionValue) => void` | — | Called when an item opens or closes, controlled or not. |
 | `disabled` | `boolean` | `false` | Disables every item. |
+| `keyboard` | `'headers' \| 'none'` | `'headers'` | Arrow-key movement between triggers. `'none'` turns it off. `'arrows'` is accepted as `'headers'`. |
+
+`AccordionValue` is `string | string[] | null`. In multiple mode, ids in
+the value follow the order of the items.
+
+### Accordion.Item
+
+One item. Renders no element of its own.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | — | Required. Unique within the Accordion. |
+| `disabled` | `boolean` | `false` | Disables this item. |
+| `hiddenUntilFound` | `boolean` | `false` | Keep closed content findable by the browser's find-in-page. |
+
+### Accordion.Trigger and Accordion.Content
+
+The same components as [`Collapsible.Trigger`](/collapsible#collapsibletrigger)
+and [`Collapsible.Content`](/collapsible#collapsiblecontent), with the same
+props, data attributes and CSS variables.
 
 ## Behaviour
 
-- In single mode, opening one item closes the others, and the open item can
-  be closed so none is open.
-- Arrow keys, Home, and End move between headers; every header also stays
-  in the normal Tab order.
-- Do not pass `open` or `onChange` to the child Collapsibles; the Accordion
-  owns their state.
+- In single mode, opening an item closes the open one. Clicking the open
+  item closes it, so none is open.
+- Accordion owns the open state of its items. Don't pass `open` or
+  `onChange` to an item.
+- In development, a missing or duplicate item `id` throws.
+- A Collapsible placed inside an item's content is independent. It doesn't
+  join the Accordion.
+
+## Accessibility
+
+Each trigger is a button with `aria-expanded` and `aria-controls`, and
+stays in the normal Tab order.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Space` | Opens or closes the focused item. |
+| `Enter` | Opens or closes the focused item. |
+| `Tab` | Moves focus to the next focusable element. |
+| `Shift + Tab` | Moves focus to the previous focusable element. |
+| `ArrowDown` | Moves focus to the next trigger, wrapping from last to first. |
+| `ArrowUp` | Moves focus to the previous trigger, wrapping from first to last. |
+| `Home` | Moves focus to the first trigger. |
+| `End` | Moves focus to the last trigger. |
+
+Arrow keys, `Home` and `End` skip disabled triggers and do nothing while
+focus is inside an item's content.

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Div, Label } from '@reference-ui/react'
-import { DateField, type ISODate } from '@reference-ui/lib'
+import { DateField, type DateRangeValue, type ISODate } from '@reference-ui/lib'
 
 /** A typed date field with a labelled calendar trigger and the default picker. */
 export function DateFieldDemo() {
@@ -14,5 +14,18 @@ export function DateFieldDemo() {
         <DateField.Picker />
       </DateField>
     </Div>
+  )
+}
+
+/** A start and end pair sharing one range picker. */
+export function DateFieldRangeDemo() {
+  const [stay, setStay] = useState<DateRangeValue | null>(null)
+  return (
+    <DateField.Range value={stay} onChange={setStay} locale="en-GB">
+      <DateField.Start aria-label="Check-in" />
+      <DateField.End aria-label="Check-out" />
+      <DateField.Trigger aria-label="Open calendar" />
+      <DateField.Picker />
+    </DateField.Range>
   )
 }

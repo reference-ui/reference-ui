@@ -1,0 +1,60 @@
+---
+title: Server-side rendering
+section: Guides
+order: 10
+slug: ssr
+description: Render Reference UI on the server, with no style setup.
+---
+
+# Server-side rendering
+
+Reference UI renders on the server with no extra setup, because its CSS is
+built ahead of time. Static rendering works the same way.
+
+## How it works
+
+`ref sync` writes one stylesheet, and components only add class names.
+Nothing generates or injects CSS at runtime, so there is:
+
+- no style registry to collect on the server,
+- no style tags to stream or hydrate,
+- no flash of unstyled content.
+
+The server and the browser render the same class names against the same
+stylesheet, so the HTML hydrates as it is.
+
+## Load the stylesheet
+
+Import the stylesheet once, from the module that renders your app's root,
+so your framework links it in the server HTML:
+
+```tsx
+import '@reference-ui/react/styles.css'
+```
+
+## Set the colour mode
+
+The server can't read the browser's settings or storage. Save the user's
+choice in a cookie, read it from the request, and pass it to `colorMode` on
+your root element:
+
+```tsx
+<Div colorMode={mode}>
+  <App />
+</Div>
+```
+
+The server and the browser then render the same mode, and the page doesn't
+flash when it hydrates. See [Dark mode](/dark-mode) for the toggle.
+
+Don't set `data-color-mode` on `<html>` yourself. Primitives read it in the
+browser but not on the server, so the first render won't match.
+
+## Library components
+
+- Content that exists only while open, such as Tooltip and Popover
+  content, renders nothing on the server. It mounts in the browser when it
+  opens. Triggers and the rest of the page are in the server HTML.
+- A [Portal](/portal) renders its children in the browser, after hydration.
+- [ReferenceLibrary](/reference-library) renders only its children on the
+  server. The toast host and the live region mount in the browser.

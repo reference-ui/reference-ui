@@ -3,16 +3,15 @@ title: Listbox
 section: Components
 order: 30
 slug: listbox
+description: A list of options on the page that the user can pick one or more of.
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { ListboxDemo } from './listbox-demo'
+import { ListboxDemo, ListboxMultipleDemo } from './listbox-demo'
 
 # Listbox
 
-Listbox is a list of selectable options with single or multiple selection,
-keyboard navigation, and typeahead. It is also the list inside a
-[Combobox](/combobox).
+The arrow keys move between options, and typing jumps to the next match.
 
 <Preview>
   <ListboxDemo />
@@ -36,42 +35,195 @@ export function FrameworkList() {
 }
 ```
 
+Listbox is controlled: pass `value` and update it in `onChange`. It is
+always visible. For a list in a popup, use [Combobox](/combobox), which
+uses Listbox for its options.
+
 ## Import
 
 ```tsx
 import { Listbox } from '@reference-ui/lib'
 ```
 
-Parts: `Listbox.Option`, `Listbox.Section` (a titled group),
-`Listbox.Header`, and `Listbox.Empty` (shown when there are no options).
+## Anatomy
 
-## Props
+```tsx
+<Listbox>
+  <Listbox.Header />
+  <Listbox.Section>
+    <Listbox.Option />
+  </Listbox.Section>
+  <Listbox.Empty />
+</Listbox>
+```
+
+## Examples
+
+### Multiple selection
+
+Set `selection="multiple"`. `value` is then an array, and activating an
+option adds or removes it.
+
+<Preview>
+  <ListboxMultipleDemo />
+</Preview>
+
+```tsx
+const [value, setValue] = useState<string[]>(['apple'])
+
+<Listbox aria-label="Produce" selection="multiple" value={value} onChange={setValue}>
+  <Listbox.Option value="apple">Apple</Listbox.Option>
+  <Listbox.Option value="banana">Banana</Listbox.Option>
+</Listbox>
+```
+
+`onChange` receives the values in the order the options appear in the list.
+
+### Sections
+
+`Listbox.Section` groups options under a `title`. Arrow keys and typeahead
+move across sections as one list.
+
+```tsx
+<Listbox aria-label="Produce" value={value} onChange={setValue}>
+  <Listbox.Section title="Fruit">
+    <Listbox.Option value="apple">Apple</Listbox.Option>
+  </Listbox.Section>
+  <Listbox.Section title="Vegetables">
+    <Listbox.Option value="carrot">Carrot</Listbox.Option>
+  </Listbox.Section>
+</Listbox>
+```
+
+### Empty state
+
+Render `Listbox.Empty` when there are no options. Its text defaults to
+"No results found".
+
+```tsx
+<Listbox aria-label="Results" value={value} onChange={setValue}>
+  {results.length === 0 ? (
+    <Listbox.Empty />
+  ) : (
+    results.map(r => (
+      <Listbox.Option key={r.id} value={r.id}>
+        {r.name}
+      </Listbox.Option>
+    ))
+  )}
+</Listbox>
+```
+
+### Horizontal
+
+Set `orientation="horizontal"` to lay options out in a row and move with
+Left and Right.
+
+```tsx
+<Listbox aria-label="Size" orientation="horizontal" value={size} onChange={setSize}>
+  <Listbox.Option value="s">S</Listbox.Option>
+  <Listbox.Option value="m">M</Listbox.Option>
+  <Listbox.Option value="l">L</Listbox.Option>
+</Listbox>
+```
+
+### Virtualized lists
+
+For long lists, render only the visible rows with your own virtualizer and
+pass `virtual`. `items` describes every option, mounted or not, and
+`scrollToIndex` brings a row into view. Give each mounted option its
+`index` in `items`.
+
+```tsx
+<Listbox
+  aria-label="Country"
+  value={value}
+  onChange={setValue}
+  virtual={{ items, scrollToIndex: index => virtualizer.scrollToIndex(index) }}
+>
+  {visibleRows.map(row => (
+    <Listbox.Option key={items[row.index].value} value={items[row.index].value} index={row.index}>
+      {items[row.index].textValue}
+    </Listbox.Option>
+  ))}
+</Listbox>
+```
+
+Each item is `{ value, textValue, disabled? }`. A mounted option's `value`
+and `disabled` must match its item, or Listbox throws. Keyboard navigation
+and typeahead run over all items.
+
+## API reference
 
 ### Listbox
 
-Listbox renders a `div` and takes its props and style props, plus:
+Renders a `div` with `role="listbox"`. Takes `div` props and style props.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `selection` | `'single' \| 'multiple'` | `'single'` | Selection mode. |
-| `value` | `string \| null`, or `string[]` when multiple | `null` / `[]` | Selected value. Listbox is controlled: pass `onChange` to update it. |
-| `onChange` | `(value) => void` | — | Called with the next selection. |
-| `orientation` | `'vertical' \| 'horizontal'` | `'vertical'` | Arrow-key axis. |
-| `disabled` | `boolean` | — | Disables every option. |
-| `virtual` | `{ items, scrollToIndex }` | — | Adapter for virtualized lists you render yourself. |
+| `value` | `string \| null`, or `string[]` when multiple | `null`, or `[]` | The selected value. |
+| `onChange` | `(value: string \| null) => void`, or `(value: string[]) => void` when multiple | — | Called with the next selection. |
+| `orientation` | `'vertical' \| 'horizontal'` | `'vertical'` | Layout direction and arrow-key axis. |
+| `disabled` | `boolean` | `false` | Disables every option. |
+| `virtual` | `{ items, scrollToIndex }` | — | Adapter for a virtualized list. |
+
+Option values narrow to their literal types, so `onChange` is typed by the
+values you pass. A `value` that matches no option selects nothing.
 
 ### Listbox.Option
+
+Renders a `div` with `role="option"` and `aria-selected`.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `value` | `string` | — | Required. The option's value. |
-| `disabled` | `boolean` | — | Skipped by the keyboard and not selectable. |
-| `textValue` | `string` | text content | Text used for typeahead. |
+| `disabled` | `boolean` | `false` | Skipped by the keyboard and not selectable. |
+| `textValue` | `string` | — | Text used for typeahead. Defaults to the children when they are a string, else `value`. |
+| `index` | `number` | — | The option's position in `virtual.items`. Virtualized lists only. |
 
-## Behaviour
+| Data attribute | Values |
+| --- | --- |
+| `data-state` | `selected`, `unselected` |
+| `data-selected` | Present when selected. |
+| `data-disabled` | Present when disabled. |
 
-- One Tab stop: arrow keys move between options, Home and End jump to the
-  ends, and typing a letter jumps to a matching option.
-- Disabled options are skipped.
-- Give the listbox an accessible name with `aria-label` or
-  `aria-labelledby`.
+### Listbox.Section
+
+Renders a `div` with `role="group"`, labelled by its title.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `title` | `ReactNode` | — | The group's heading. |
+
+### Listbox.Header
+
+Renders a `span` styled as a group heading, for a label outside a section.
+
+### Listbox.Empty
+
+Renders a `div` with `role="status"` and `aria-live="polite"`. Children
+default to "No results found".
+
+## Accessibility
+
+Listbox follows the WAI-ARIA Listbox pattern. The list is one Tab stop, and
+focus moves between options with a roving tab index. Tab lands on the
+selected option, or on the first enabled option when none is selected.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `ArrowDown` / `ArrowUp` | Moves to the next or previous option, wrapping at the ends. Horizontal lists use `ArrowRight` and `ArrowLeft`, mirrored right to left. |
+| `Home` / `End` | Moves to the first or last option. |
+| `Enter` / `Space` | Selects the focused option. In multiple mode, toggles it. |
+| Letters | Focus the next option whose text starts with the typed characters. |
+
+- Moving focus never changes the selection.
+- In single mode, activating the selected option does nothing; the user
+  cannot clear the selection.
+- Space typed during a typeahead search is part of the search and does not
+  select.
+
+Give the listbox a name with `aria-label` or `aria-labelledby`.

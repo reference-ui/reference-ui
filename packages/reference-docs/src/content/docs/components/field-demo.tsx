@@ -1,6 +1,6 @@
-import { Button, Div, Input, Label, Span, css } from '@reference-ui/react'
+import { Button, Div, Input, Label, P, Span, css } from '@reference-ui/react'
 import { Field } from '@reference-ui/lib'
-import { demoStack } from './demo-surface'
+import { demoNote, demoStack } from './demo-surface'
 
 const fullWidth = css({ width: '100%' })
 
@@ -16,6 +16,37 @@ export function FieldDemo() {
           ×
         </Button>
       </Field>
+    </Div>
+  )
+}
+
+/** An invalid input and a warning input, side by side. */
+export function FieldStatusDemo() {
+  return (
+    <Div className={demoStack}>
+      <Label htmlFor="field-demo-email">Email</Label>
+      <Field className={fullWidth}>
+        <Input
+          id="field-demo-email"
+          defaultValue="ada@"
+          aria-invalid="true"
+          aria-describedby="field-demo-email-error"
+        />
+      </Field>
+      <P id="field-demo-email-error" className={demoNote}>
+        Enter a full email address.
+      </P>
+      <Label htmlFor="field-demo-username">Username</Label>
+      <Field className={fullWidth} status="warning">
+        <Input
+          id="field-demo-username"
+          defaultValue="ada"
+          aria-describedby="field-demo-username-hint"
+        />
+      </Field>
+      <P id="field-demo-username-hint" className={demoNote}>
+        Short usernames are easy to guess.
+      </P>
     </Div>
   )
 }

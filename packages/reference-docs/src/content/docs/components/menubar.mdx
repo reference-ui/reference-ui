@@ -3,6 +3,7 @@ title: Menubar
 section: Components
 order: 32
 slug: menubar
+description: A row of menus that stays on screen, like an application's File and Edit menus.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -10,9 +11,7 @@ import { MenubarDemo } from './menubar-demo'
 
 # Menubar
 
-Menubar is a horizontal row of menu triggers, like an application's File
-and Edit menus. One value names the open menu, so opening one closes the
-others.
+Each trigger opens a [Menu](/menu) in a popover, and the arrow keys move along the row.
 
 <Preview>
   <MenubarDemo />
@@ -28,9 +27,16 @@ export function EditorMenubar() {
     <Menubar aria-label="Editor" value={open} onChange={setOpen}>
       <Menubar.Menu value="file">
         <Menubar.Trigger>File</Menubar.Trigger>
-        <Menubar.Content aria-label="File">
+        <Menubar.Content>
           <Menu.Item>New</Menu.Item>
           <Menu.Item>Open</Menu.Item>
+        </Menubar.Content>
+      </Menubar.Menu>
+      <Menubar.Menu value="edit">
+        <Menubar.Trigger>Edit</Menubar.Trigger>
+        <Menubar.Content>
+          <Menu.Item>Undo</Menu.Item>
+          <Menu.Item>Redo</Menu.Item>
         </Menubar.Content>
       </Menubar.Menu>
     </Menubar>
@@ -38,28 +44,114 @@ export function EditorMenubar() {
 }
 ```
 
+Menubar is controlled. `value` names the open menu, so opening one closes
+the others.
+
 ## Import
 
 ```tsx
-import { Menubar, Menu } from '@reference-ui/lib'
+import { Menu, Menubar } from '@reference-ui/lib'
 ```
 
-`Menubar.Content` hosts a [Menu](/menu): put `Menu.Item` and the other menu
-items directly inside it.
+## Anatomy
 
-## Props
+```tsx
+<Menubar>
+  <Menubar.Menu>
+    <Menubar.Trigger />
+    <Menubar.Content>
+      <Menu.Item />
+    </Menubar.Content>
+  </Menubar.Menu>
+</Menubar>
+```
+
+`Menubar.Content` renders a [Menu](/menu) around its children. Put any menu
+part inside it: `Menu.Item`, `Menu.CheckboxItem`, `Menu.RadioGroup`,
+`Menu.LinkItem`, `Menu.Separator`, or a nested `Menu` for a submenu.
+
+## Examples
+
+### Submenus
+
+Nest a `Menu` inside `Menubar.Content`, as on the [Menu](/menu#submenus)
+page.
+
+```tsx
+const [recentOpen, setRecentOpen] = useState(false)
+
+<Menubar.Content>
+  <Menu.Item>New</Menu.Item>
+  <Menu open={recentOpen} onOpen={() => setRecentOpen(true)} onDismiss={() => setRecentOpen(false)}>
+    <Menu.Trigger>Open recent</Menu.Trigger>
+    <Menu.Content>
+      <Menu.Item>notes.md</Menu.Item>
+    </Menu.Content>
+  </Menu>
+</Menubar.Content>
+```
+
+### Wrapping at the ends
+
+By default the arrow keys stop at the first and last trigger. Pass `loop`
+to wrap around.
+
+```tsx
+<Menubar aria-label="Editor" value={open} onChange={setOpen} loop>
+```
+
+## API reference
+
+### Menubar
+
+Renders a `div` with `role="menubar"`. Takes `div` props and style props.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `value` | `string \| null` | — | Required. The open menu's value; `null` when none is open. |
-| `onChange` | `(value: string \| null) => void` | — | Required. Called when the user opens, switches, or closes a menu. |
-| `loop` | `boolean` | `false` | Wrap arrow-key movement at the ends of the bar. |
+| `value` | `string \| null` | — | Required. The open menu's value, or `null` when none is open. |
+| `onChange` | `(value: string \| null) => void` | — | Required. Called when the user opens, switches or closes a menu. |
+| `loop` | `boolean` | `false` | Wrap arrow-key movement and menu switching at the ends of the bar. |
 
-`Menubar.Menu` takes a `value` (generated when omitted).
-`Menubar.Trigger` and `Menubar.Content` take the props of
-`Popover.Trigger` and `Popover.Content`.
+### Menubar.Menu
 
-## Behaviour
+Binds one trigger to one content panel. Renders no element.
 
-- The bar is one Tab stop; Left and Right arrows move between triggers.
-- While a menu is open, Left and Right switch to the neighbouring menu.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | generated | The menu's value in the bar. Must be unique. |
+
+### Menubar.Trigger
+
+Renders a `Popover.Trigger` button with `role="menuitem"`. Takes the props
+of [`Popover.Trigger`](/popover).
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | The menu cannot open, and the arrow keys skip it. |
+| `variant` | button variant | `'ghost'` | The trigger's button style. |
+| `aria-haspopup` | `string` | `'menu'` | Announced popup type. |
+
+It sets `data-state` to `open` or `closed`.
+
+### Menubar.Content
+
+Renders a `Popover.Content` with a `Menu` inside. Takes the props of
+[`Popover.Content`](/popover), including `placement`.
+
+## Accessibility
+
+Menubar follows the WAI-ARIA Menubar pattern. The bar is one Tab stop, and
+focus moves between triggers with a roving tab index. Inside an open menu
+the keys are the same as [Menu](/menu#keyboard-interactions).
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Enter` / `Space` / `ArrowDown` | On a trigger, opens its menu and focuses the first item. |
+| `ArrowUp` | On a trigger, opens its menu and focuses the last item. |
+| `ArrowRight` / `ArrowLeft` | On a trigger, moves to the next or previous trigger. If a menu is open, that trigger's menu opens in its place. Mirrored right to left. |
+| `ArrowRight` / `ArrowLeft` | In an open menu, switches to the next or previous menu. On a submenu trigger, `ArrowRight` opens the submenu instead. |
+| `Escape` | Closes the open menu and returns focus to its trigger. |
+
+Disabled triggers are skipped. Give the bar a name with `aria-label`.

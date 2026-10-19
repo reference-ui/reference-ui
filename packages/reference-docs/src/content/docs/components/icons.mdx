@@ -3,6 +3,7 @@ title: Icons
 section: Components
 order: 56
 slug: icons
+description: The Material Symbols icon set, one React component per icon.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -10,58 +11,125 @@ import { IconsDemo } from './icons-demo'
 
 # Icons
 
-`@reference-ui/lib` exports the Material Symbols icon set as one React
-component per icon, named `<Name>Icon`.
+The Material Symbols icon set, one React component per icon, in an outline
+and a filled variant.
 
 <Preview>
   <IconsDemo />
 </Preview>
 
 ```tsx
-import { HomeIcon, SearchIcon, SettingsIcon } from '@reference-ui/lib'
+import { HomeIcon, SearchIcon } from '@reference-ui/lib'
 
-<SearchIcon aria-label="Search" />
-<SettingsIcon size="lg" aria-label="Settings" />
-<HomeIcon variant="filled" size="lg" aria-label="Home" />
+<SearchIcon />
+<HomeIcon variant="filled" size="lg" />
 ```
 
 ## Import
 
+Icons are named after their Material Symbols name in PascalCase, followed by
+`Icon`: `search` is `SearchIcon` and `account_circle` is
+`AccountCircleIcon`. Names that start with a digit take an `Icon` prefix, so
+`10k` is `Icon10kIcon`.
+
 ```tsx
-import { SearchIcon } from '@reference-ui/lib'
+import { AccountCircleIcon, SearchIcon } from '@reference-ui/lib'
 ```
 
-Unused icons are removed by tree-shaking in production builds.
+The same components ship on their own in `@reference-ui/icons`, for projects
+that don't use the library:
 
-## Props
+```tsx
+import { SearchIcon } from '@reference-ui/icons'
+```
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `size` | `'sm' \| 'md' \| 'lg'`, a number of pixels, an `r` value, or a CSS length | `'md'` (20px) | Width and height. `sm` is 16px and `lg` 24px. |
-| `variant` | `'outline' \| 'filled'` | `'outline'` | Glyph style. |
-| `color` | CSS colour | `'inherit'` | Glyph colour; follows the text colour by default. |
+## Examples
 
-Icons render a `div` and accept its DOM props, such as `aria-label`.
+### Size
 
-## Styling
+`size` sets width and height. It takes `sm` (16px), `md` (20px) or `lg`
+(24px), a number of pixels, an `r` value, or any CSS length.
+
+```tsx
+<SearchIcon size="sm" />
+<SearchIcon size={32} />
+<SearchIcon size="8r" />
+<SearchIcon size="1.5rem" />
+```
+
+### Variant
+
+```tsx
+<HomeIcon />
+<HomeIcon variant="filled" />
+```
+
+### Colour
+
+Icons follow the text colour. Set `color` to change it.
+
+```tsx
+<Span color="red.600">
+  <WarningIcon /> Payment failed
+</Span>
+<CheckIcon color="green.600" />
+```
+
+### Style props
 
 Icons take style props like any other component, and resolve them against
 your tokens:
 
 ```tsx
-<CheckIcon marginLeft="3r" />
+<CheckIcon marginLeft="3r" _hover={{ opacity: 0.7 }} />
 ```
 
-Style props on an icon compile when lib's `baseSystem` is in `extends` or
-`layers` in `ui.config.ts`, as `ref init` sets up; it carries the icons' own
-system. When neither holds lib's or the icons' `baseSystem`, `ref sync` warns
-`ATM-W-EXTERNAL-UNBACKED` at the icon and the props do not paint.
+This needs the icons' system in `extends` or `layers` in `ui.config.ts`.
+The library's `baseSystem` carries it, and `ref init` puts that in `extends`.
+Without `@reference-ui/lib`, add the icons' own system to `layers`:
 
-`size`, `variant`, `style` and `className` work either way, and so does
-wrapping the icon in your own element:
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem as iconsSystem } from '@reference-ui/icons/baseSystem'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  layers: [iconsSystem],
+})
+```
+
+With neither, `ref sync` warns `ATM-W-EXTERNAL-UNBACKED` at the icon and its
+style props do not paint. `size`, `variant`, `style` and `className` work
+either way.
+
+## API reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `size` | `'sm' \| 'md' \| 'lg' \| number \| string` | `'md'` | Width and height. Numbers are pixels. `small`, `base` and `large` also work. |
+| `variant` | `'outline' \| 'filled'` | `'outline'` | Glyph style. |
+| `color` | colour token or CSS colour | `'inherit'` | Glyph colour. |
+
+An icon renders an inline-flex `div` around an `svg`, and takes the `div`'s
+props, style props and a `ref`.
+
+## Accessibility
+
+The `svg` is hidden from screen readers. An icon beside text, or inside a
+button with a text label, needs nothing more.
+
+An icon that carries meaning on its own needs a role and a label:
 
 ```tsx
-<Span marginLeft="3r">
-  <CheckIcon />
-</Span>
+<WarningIcon role="img" aria-label="Warning" />
+```
+
+In an icon-only button, label the button:
+
+```tsx
+<Button aria-label="Search">
+  <SearchIcon />
+</Button>
 ```

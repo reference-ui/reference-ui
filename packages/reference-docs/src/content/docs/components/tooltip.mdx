@@ -3,15 +3,16 @@ title: Tooltip
 section: Components
 order: 13
 slug: tooltip
+description: A short description of a control, shown on hover or keyboard focus.
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { TooltipDemo } from './tooltip-demo'
+import { TooltipDemo, TooltipGroupDemo } from './tooltip-demo'
 
 # Tooltip
 
-Tooltip shows a short, non-interactive description of a control on hover or
-keyboard focus, and links it with `aria-describedby`.
+Tooltip shows when the pointer rests on a control or keyboard focus reaches
+it, and is linked to the control with `aria-describedby`.
 
 <Preview>
   <TooltipDemo />
@@ -35,31 +36,150 @@ import { Tooltip } from '@reference-ui/lib'
 import { Tooltip } from '@reference-ui/lib'
 ```
 
-`Tooltip.Trigger` renders no element of its own: it takes exactly one child
-and adds its props to that child. `Tooltip.Content` renders a `div` with
-`role="tooltip"`. `Tooltip.Arrow` and `Tooltip.Portal` are optional.
+## Anatomy
 
-## Props
+```tsx
+<Tooltip>
+  <Tooltip.Trigger />
+  <Tooltip.Portal>
+    <Tooltip.Content>
+      <Tooltip.Arrow />
+    </Tooltip.Content>
+  </Tooltip.Portal>
+</Tooltip>
+```
+
+`Tooltip` renders no element of its own. `Tooltip.Trigger` renders no element
+either: it adds its behaviour to the one element you pass it.
+`Tooltip.Content` renders a `div`.
+
+## Examples
+
+### Neighbouring tooltips
+
+Hover one button, then move to the next. Once a tooltip has shown, the next
+one opens without waiting.
+
+<Preview>
+  <TooltipGroupDemo />
+</Preview>
+
+The window lasts 300ms after a tooltip closes. Change it with
+`tooltip.skipDelay` on [ReferenceLibrary](/reference-library).
+
+### Placement
+
+Content sits above the trigger by default. Pass `placement` and `offset` to
+move it.
+
+```tsx
+<Tooltip.Content placement="right" offset={4}>
+  Save the document
+</Tooltip.Content>
+```
+
+### Delays
+
+```tsx
+<Tooltip openDelay={300} closeDelay={0}>…</Tooltip>
+```
+
+### Controlled
+
+Pass `open` and `onOpenChange` to own the state.
+
+```tsx
+const [open, setOpen] = React.useState(false)
+
+<Tooltip open={open} onOpenChange={setOpen}>
+  <Tooltip.Trigger>
+    <Button>Save</Button>
+  </Tooltip.Trigger>
+  <Tooltip.Content>Save the document</Tooltip.Content>
+</Tooltip>
+```
+
+## API reference
+
+### Tooltip
+
+Holds the open state and the hover timers. Renders only its children.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `open` | `boolean` | — | Controlled open state. Omit it to let Tooltip manage its own. |
-| `defaultOpen` | `boolean` | `false` | Initial state when `open` is omitted. |
-| `onOpenChange` | `(open: boolean) => void` | — | Called on every open or close request. |
-| `openDelay` | `number` | `700` | Hover delay before showing, in milliseconds. |
-| `closeDelay` | `number` | `300` | Delay before hiding, in milliseconds. |
+| `defaultOpen` | `boolean` | `false` | Open state on first render when `open` is omitted. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called on every open and close request. |
+| `onOpen` | `() => void` | — | Called when the tooltip opens. |
+| `onDismiss` | `() => void` | — | Called when the tooltip closes. |
+| `openDelay` | `number` | `700` | Milliseconds the pointer must rest on the trigger before it opens. |
+| `closeDelay` | `number` | `300` | Milliseconds after the pointer leaves before it closes. |
+| `onEscape` | `(event: KeyboardEvent) => void` | — | Called on Escape. `preventDefault()` keeps it open. |
+| `onOutsidePress` | `(event: PointerEvent) => void` | — | Called on a press outside. `preventDefault()` keeps it open. |
+| `onInteractOutside` | `(event: PointerEvent \| FocusEvent) => void` | — | Called with the same outside press. |
 
-`Tooltip.Content` takes `placement` (default `'top'`) and `offset` (default
-`8`), as on [`Overlay.Content`](/overlay#overlaycontent).
+### Tooltip.Trigger
+
+Takes exactly one element as its child and passes no props of its own. It
+adds the pointer and focus handlers, keeps the child's own handlers and ref,
+and appends the content id to the child's `aria-describedby` while open.
+Any other child throws an error.
+
+### Tooltip.Content
+
+The tooltip itself. Takes `div` props and style props, plus the positioning
+props of [`Overlay.Content`](/overlay). Outside a `Tooltip` it renders
+nothing.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `placement` | placement | `'top'` | Side and alignment against the trigger, such as `'top'` or `'bottom-start'`. |
+| `offset` | `number` | `8` | Distance from the trigger in pixels. |
+| `id` | `string` | generated | Replaces the generated id the trigger points to. |
+
+Content has a small dark style by default. Style props you pass override it.
+
+| Data attribute | Values |
+| --- | --- |
+| `data-state` | `open`, `closed` |
+| `data-side` | `top`, `right`, `bottom`, `left` |
+| `data-align` | `start`, `center`, `end` |
+
+### Tooltip.Portal
+
+Optional. Sets where Content is portalled.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `container` | element, ref, or function | trigger's root | Element to render Content into. |
+
+### Tooltip.Arrow
+
+An optional box positioned against the trigger. Takes `div` props and style
+props. Give it a shape with your own styles.
 
 ## Behaviour
 
-- Keyboard focus opens the tooltip immediately; hover waits for `openDelay`.
-- After one tooltip shows, neighbouring tooltips open without delay for a
-  short window (300ms by default; set it on
-  [ReferenceLibrary](/reference-library)).
-- Escape hides the tooltip without closing a parent overlay.
-- Content unmounts as soon as it closes; there is no exit animation. For an
-  interactive or animated panel, use [Popover](/popover) with `openOnHover`.
-- If Content has no `id`, Tooltip generates one and wires
-  `aria-describedby` onto the trigger.
+- Only one tooltip is open at a time.
+- Content unmounts as soon as it closes. There is no exit animation.
+- Pressing the trigger closes the tooltip, and it stays closed until the
+  pointer leaves.
+- Scrolling an ancestor of the trigger closes the tooltip.
+- Touch does not open a tooltip. Content must not hold the only copy of
+  information.
+- Content is not interactive. For links or buttons in floating content, use
+  [Popover](/popover), with `openOnHover` for a hover card.
+
+## Accessibility
+
+- Content has `role="tooltip"`.
+- The pointer can move onto Content without closing it.
+- Escape closes the tooltip without moving focus. Inside a dialog, the first
+  Escape closes only the tooltip.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Tab` | Focusing the trigger with the keyboard opens the tooltip at once. Moving focus away closes it. |
+| `Escape` | Closes the tooltip. |

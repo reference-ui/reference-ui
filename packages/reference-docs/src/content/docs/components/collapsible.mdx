@@ -31,34 +31,132 @@ import { Collapsible } from '@reference-ui/lib'
 import { Collapsible } from '@reference-ui/lib'
 ```
 
-`Collapsible` renders no element. `Collapsible.Trigger` renders a `button`
-and `Collapsible.Content` a `div`.
+## Anatomy
 
-## Props
+```tsx
+<Collapsible>
+  <Collapsible.Trigger />
+  <Collapsible.Content />
+</Collapsible>
+```
+
+`Collapsible` renders no element of its own. `Collapsible.Trigger` renders a
+`button` and `Collapsible.Content` a `div`.
+
+## Examples
+
+### Controlled
+
+Pass `open` and `onOpenChange` to own the state.
+
+```tsx
+const [open, setOpen] = React.useState(false)
+
+<Collapsible open={open} onOpenChange={setOpen}>
+  <Collapsible.Trigger>Order details</Collapsible.Trigger>
+  <Collapsible.Content>Shipped on 12 October.</Collapsible.Content>
+</Collapsible>
+```
+
+### Open by default
+
+Use `defaultOpen` to start open while Collapsible manages its own state.
+
+```tsx
+<Collapsible defaultOpen>…</Collapsible>
+```
+
+### Custom icon
+
+The trigger ends with a chevron that turns when the content opens. Pass
+`icon` to replace it, or `hideIcon` to remove it.
+
+```tsx
+<Collapsible.Trigger icon={<AddIcon />}>Order details</Collapsible.Trigger>
+<Collapsible.Trigger hideIcon>Order details</Collapsible.Trigger>
+```
+
+### Findable content
+
+With `hiddenUntilFound`, closed content stays in the page as
+`hidden="until-found"`. When the browser's find-in-page matches text inside
+it, the Collapsible opens. Cancel the `beforematch` event to keep it closed.
+
+```tsx
+<Collapsible hiddenUntilFound>
+  <Collapsible.Trigger>Order details</Collapsible.Trigger>
+  <Collapsible.Content>Tracking number 1Z 999 AA1 01.</Collapsible.Content>
+</Collapsible>
+```
+
+## API reference
 
 ### Collapsible
 
+Holds the open state. Renders only its children.
+
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `open` | `boolean` | — | Controlled state. Omit it to let Collapsible manage its own. |
-| `defaultOpen` | `boolean` | `false` | Initial state when `open` is omitted. |
-| `onOpenChange` | `(open: boolean) => void` | — | Called when the trigger toggles. `onChange` is an alias. |
+| `open` | `boolean` | — | Controlled open state. Omit it to let Collapsible manage its own. |
+| `defaultOpen` | `boolean` | `false` | Open state on first render when `open` is omitted. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called when the trigger toggles. |
+| `onChange` | `(open: boolean) => void` | — | Same as `onOpenChange`. If you pass both, `onChange` runs first. |
 | `disabled` | `boolean` | `false` | Disables the trigger. |
-| `id` | `string` | — | Identity inside an [Accordion](/accordion). |
-| `hiddenUntilFound` | `boolean` | `false` | Keep closed content in the page so the browser's find can reveal it. |
+| `hiddenUntilFound` | `boolean` | `false` | Default for `Content`'s `hiddenUntilFound`. |
+| `id` | `string` | — | The item's id inside an [Accordion](/accordion). |
 
 ### Collapsible.Trigger
 
+The button that toggles the content. Takes `button` props and style props.
+
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `icon` | `ReactNode` | chevron | Replaces the default indicator icon. |
-| `hideIcon` | `boolean` | — | Hides the indicator icon. |
+| `icon` | `ReactNode` | chevron | Replaces the indicator icon. |
+| `hideIcon` | `boolean` | `false` | Removes the indicator icon. |
+| `disabled` | `boolean` | from root | Overrides the root's `disabled`. |
 
-## Behaviour
+Only a primary-button click toggles. Calling `preventDefault()` in your
+`onClick` stops the toggle.
 
-- The trigger carries `aria-expanded` and `aria-controls`.
-- Content stays mounted until its close animation ends. It publishes
-  `--reference-collapsible-content-height` and
-  `--reference-collapsible-content-width` for height animations.
-- Inside an Accordion, the Accordion owns open state: do not pass `open` to
-  the Collapsible.
+| Data attribute | Values |
+| --- | --- |
+| `data-state` | `open`, `closed` |
+| `data-disabled` | present when disabled |
+
+### Collapsible.Content
+
+The region that opens and closes. Takes `div` props and style props.
+Outside a `Collapsible` it renders nothing.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `hiddenUntilFound` | `boolean` | root's value | Keep closed content mounted as `hidden="until-found"`. Wins over `forceMount`. |
+| `forceMount` | `boolean` | `false` | Keep closed content mounted and interactive, with no collapse motion. |
+| `id` | `string` | generated | Replaces the generated id the trigger points to. |
+
+| Data attribute | Values |
+| --- | --- |
+| `data-state` | `open`, `closed` |
+| `data-disabled` | present when disabled |
+
+| CSS variable | Description |
+| --- | --- |
+| `--reference-collapsible-content-height` | Height of the open content. |
+| `--reference-collapsible-content-width` | Width of the open content. |
+
+Content animates its height open and closed over 320ms, and skips the
+animation when the user prefers reduced motion. It stays mounted until the
+close animation ends, then unmounts, unless `forceMount` or
+`hiddenUntilFound` keeps it.
+
+## Accessibility
+
+If focus is inside the content when it closes, focus moves to the
+trigger.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Space` | Opens or closes the content. |
+| `Enter` | Opens or closes the content. |

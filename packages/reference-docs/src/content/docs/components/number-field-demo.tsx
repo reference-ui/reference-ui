@@ -18,3 +18,39 @@ export function NumberFieldDemo() {
     </Div>
   )
 }
+
+/** A currency field and a percent field: the value stays a plain number. */
+export function NumberFieldFormatDemo() {
+  const [price, setPrice] = useState<number | null>(1250)
+  const [discount, setDiscount] = useState<number | null>(0.15)
+  return (
+    <Div display="flex" flexDirection="column" gap="2r">
+      <Label htmlFor="number-field-demo-price">Price</Label>
+      <NumberField
+        value={price}
+        onChange={setPrice}
+        locale="en-GB"
+        formatOptions={{ style: 'currency', currency: 'GBP' }}
+      >
+        <NumberField.Group>
+          <NumberField.Input id="number-field-demo-price" />
+        </NumberField.Group>
+      </NumberField>
+      <Label htmlFor="number-field-demo-discount">Discount</Label>
+      <NumberField
+        value={discount}
+        onChange={setDiscount}
+        locale="en-GB"
+        min={0}
+        max={1}
+        formatOptions={{ style: 'percent' }}
+      >
+        <NumberField.Group>
+          <NumberField.Decrement aria-label="Decrease discount" />
+          <NumberField.Input id="number-field-demo-discount" />
+          <NumberField.Increment aria-label="Increase discount" />
+        </NumberField.Group>
+      </NumberField>
+    </Div>
+  )
+}

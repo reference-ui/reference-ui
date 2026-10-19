@@ -3,52 +3,39 @@ title: Introduction
 section: Foundations
 order: 1
 slug: foundations
+description: The design values Reference UI ships with its component library.
 ---
 
 # Introduction
 
-The foundations are the design choices `@reference-ui/lib` makes on top of the
-core system: its colors, its fonts, its sizes. The core system gives you the
-APIs, such as `tokens()` and `font()`, and ships no values of its own. Lib uses
-those APIs to define one complete look, and its components are built from it.
+Foundations are the design values `@reference-ui/lib` ships: colour, type,
+radius and motion. Lib's components are built from them, and your own styles
+can use them by name.
 
-This section documents what lib ships. To learn how to define tokens or fonts
-for your own system, see [System](/system).
+## What lib ships
 
-## Design tokens
+`@reference-ui/core` provides the APIs, such as `tokens()` and `font()`, and
+ships no values of its own. Lib calls those APIs to define one complete look.
 
-A design token is a named value, such as `blue.500` or `md`, that you write in
-a style prop instead of a raw CSS value. Lib defines these tokens:
-
-| Category | Tokens | Page |
+| Foundation | Tokens | Page |
 | --- | --- | --- |
-| Colors | A 19-family palette (`blue.500`), semantic tokens with light and dark values (`design.text.base`) | [Color](/color) |
-| Tones | `ghost`, `medium`, `firm` and `strong`, written after a color (`blue.500/medium`) | [Color](/color) |
-| Fonts | `sans`, `serif` and `mono`, each with five weights | [Typography](/typography) |
-| Radii | `sm` (`0.27rem`), `md` (`0.4rem`), `lg` (`0.6rem`), `full` (`9999px`) | — |
-| Animations | Named presets such as `fadeIn.quick` and `spin.slow` | [Animation](/animation) |
+| Colour | A 19-family palette (`blue.500`), four tones (`blue.500/medium`), semantic tokens with light and dark values (`design.text.base`) | [Color](/color) |
+| Typography | `sans`, `serif` and `mono`, each with five named weights | [Typography](/typography) |
+| Radius | `sm`, `md`, `lg` and `full` | [Radius](/radius) |
+| Motion | Animation presets such as `fadeIn.quick`, and the keyframes behind them | [Motion](/motion) |
 
 Lib also sets the spacing unit: `1r` is `0.25rem`, so `4r` is 16px at the
 browser's default font size. See [Spacing](/spacing).
 
-## Using lib's tokens
+Lib defines no shadow, z-index or breakpoint tokens. Add your own with
+`tokens()`, as [Theming](/theming) shows.
 
-Write a token's name as the value of a style prop:
+## Use lib's tokens
 
-```tsx
-import { Div, P } from '@reference-ui/react'
-
-<Div bg="design.background" borderRadius="md" padding="4r">
-  <P font="serif" color="design.text.light">Lib's tokens, by name.</P>
-</Div>
-```
-
-Lib's components already use these tokens, so they need no setup.
-
-To use the tokens in your own styles, build your system on lib's. Add lib's
-`baseSystem` to `extends` in `ui.config.ts`, then run `ref sync`:
+The config that `ref init` writes already extends lib's `baseSystem`:
 
 ```ts
+// ui.config.ts
 import { defineConfig } from '@reference-ui/core'
 import { baseSystem } from '@reference-ui/lib/baseSystem'
 
@@ -59,16 +46,23 @@ export default defineConfig({
 })
 ```
 
-`ref sync` compiles a stylesheet for the values your code uses and gives your
-style props lib's token names as types. Without it, you can only rely on values
-lib uses itself: lib's shipped stylesheet has no rules for anything else, so
-other values paint nothing and warn in development.
+After `ref sync`, every style prop accepts lib's token names and type-checks
+them. Write a token's name as the value:
 
-Your own tokens extend lib's. Where you define a token at the same path, yours
-wins, which is how you retheme lib with your brand.
+```tsx
+import { Div, P } from '@reference-ui/react'
+
+<Div bg="design.background" borderRadius="md" padding="4r">
+  <P font="serif" color="design.text.light">Lib's tokens, by name.</P>
+</Div>
+```
+
+## Override a value
+
+Your tokens extend lib's. Define a token at the same path and yours wins, in
+your styles and in lib's components. See [Theming](/theming).
 
 ## Related
 
-- [Color](/color): the palette, tones, semantic tokens and color modes.
-- [Typography](/typography): the font families, weights and type scale.
-- [Tokens](/tokens): how to define tokens in your own system.
+- [Theming](/theming): define your own tokens, fonts and animations.
+- [Tokens](/tokens): references, tones and light and dark values.

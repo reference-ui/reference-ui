@@ -3,10 +3,11 @@ title: Slider
 section: Components
 order: 22
 slug: slider
+description: Pick a number, or a range of numbers, along a track.
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { SliderDemo } from './slider-demo'
+import { SliderDemo, SliderRangeDemo, SliderVerticalDemo } from './slider-demo'
 
 # Slider
 
@@ -34,45 +35,178 @@ export function Volume() {
 }
 ```
 
-For a range, pass an array and author one `Slider.Thumb` per value:
-`value={[20, 80]}`.
-
 ## Import
 
 ```tsx
 import { Slider } from '@reference-ui/lib'
 ```
 
-## Props
+## Anatomy
+
+```tsx
+<Slider>
+  <Slider.Track>
+    <Slider.Range />
+    <Slider.Thumb />
+  </Slider.Track>
+</Slider>
+```
+
+Without children, Slider renders this structure with one thumb per value.
+
+## Examples
+
+### Range
+
+Pass an array to `value` and author one `Slider.Thumb` per entry. Thumbs
+take their value by the order they appear in. `minStepsBetweenThumbs` keeps
+them a number of steps apart.
+
+<Preview>
+  <SliderRangeDemo />
+</Preview>
+
+```tsx
+const [price, setPrice] = useState([20, 80])
+
+<Slider value={price} onChange={setPrice} minStepsBetweenThumbs={5}>
+  <Slider.Track>
+    <Slider.Range />
+    <Slider.Thumb aria-label="Minimum price" />
+    <Slider.Thumb aria-label="Maximum price" />
+  </Slider.Track>
+</Slider>
+```
+
+Thumbs stop at their neighbours and never pass each other.
+
+### Vertical
+
+Set `orientation="vertical"`. The slider fills the height of its container,
+so give the container a height.
+
+<Preview>
+  <SliderVerticalDemo />
+</Preview>
+
+```tsx
+<Div height="40r">
+  <Slider value={level} onChange={setLevel} orientation="vertical">
+    <Slider.Track>
+      <Slider.Range />
+      <Slider.Thumb aria-label="Level" />
+    </Slider.Track>
+  </Slider>
+</Div>
+```
+
+### Save when the user lets go
+
+`onChange` fires on every step of a drag. `onChangeEnd` fires once, with the
+last value, when the pointer is released or the key comes up.
+
+```tsx
+<Slider value={volume} onChange={setVolume} onChangeEnd={saveVolume} />
+```
+
+### Forms
+
+Slider does not submit with a form. Put the value in a hidden input
+yourself:
+
+```tsx
+<input type="hidden" name="volume" value={volume} />
+```
+
+## API reference
 
 ### Slider
 
-Slider renders a `div` and takes its props and style props, plus:
+Contains the parts. Renders a `div` and takes its props and style props.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `value` | `number \| number[]` | — | Required. Controlled value; an array gives one thumb per entry. |
-| `onChange` | `(value) => void` | — | Called with every change while dragging or stepping. |
-| `onChangeEnd` | `(value) => void` | — | Called once when a drag or key press ends. |
+| `value` | `number \| number[]` | — | Required. The controlled value. An array gives one thumb per entry. |
+| `onChange` | `(value) => void` | — | Called with every new value while dragging or stepping. |
+| `onChangeEnd` | `(value) => void` | — | Called once, with the last value, when a drag or key press ends. |
 | `min` | `number` | `0` | Lowest value. |
 | `max` | `number` | `100` | Highest value. |
-| `step` | `number` | `1` | Increment between values. |
-| `minStepsBetweenThumbs` | `number` | `0` | Minimum gap between thumbs, in steps. |
+| `step` | `number` | `1` | Distance between values. |
+| `minStepsBetweenThumbs` | `number` | `0` | Smallest gap between neighbouring thumbs, in steps. |
 | `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Direction of the track. |
-| `disabled` | `boolean` | `false` | Disables the slider. |
+| `disabled` | `boolean` | `false` | Stops all interaction and ends any drag in progress. |
+
+`onChange` and `onChangeEnd` receive a number when `value` is a number, and
+an array when it is an array. Neither fires when you change `value` yourself.
+
+Slider throws on an invalid `min`, `max`, `step` or array `value`. A value
+outside `min` and `max` is drawn at the nearest end.
+
+| Data attribute | Values |
+| --- | --- |
+| `[data-orientation]` | `horizontal`, `vertical` |
+| `[data-disabled]` | Present when disabled. |
+| `[data-dragging]` | Present while a thumb is being dragged. |
+
+### Slider.Track
+
+The rail the thumbs ride on. Pressing it moves the nearest thumb to that
+point. Renders a `div`. A slider has exactly one track.
+
+| Data attribute | Values |
+| --- | --- |
+| `[data-orientation]` | `horizontal`, `vertical` |
+
+### Slider.Range
+
+The filled part of the track: from `min` to the value, or between the
+outer thumbs of a range. Renders a `div`. A slider has at most one.
+
+| CSS variable | Value |
+| --- | --- |
+| `--reference-slider-range-start` | Start of the fill, as a percentage of the track. |
+| `--reference-slider-range-end` | End of the fill, as a percentage of the track. |
 
 ### Slider.Thumb
 
+The handle for one value. Renders a `div` with `role="slider"`.
+
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `valueText` | `string` | — | Text read by screen readers instead of the number. |
-| `formatValue` | `(value: number) => string` | — | Formats the value for screen readers. |
+| `valueText` | `string` | — | Text screen readers announce instead of the number. |
+| `formatValue` | `(value: number) => string` | — | Builds that text from the value. |
 
-`Slider.Track` and `Slider.Range` take `div` props and style props.
+| Data attribute | Values |
+| --- | --- |
+| `[data-orientation]` | `horizontal`, `vertical` |
+| `[data-disabled]` | Present when disabled. |
+| `[data-active]` | Present while the thumb is pressed or dragged. |
+| `[data-dragging]` | Present while the thumb is dragged. |
+| `[data-focus-visible]` | Present when the thumb has keyboard focus. |
 
-## Behaviour
+| CSS variable | Value |
+| --- | --- |
+| `--reference-slider-thumb-position` | The thumb's position, as a percentage of the track. |
 
-- Each thumb has `role="slider"`. Give it an `aria-label`.
-- Arrow keys move by `step`; Page Up and Page Down move further; Home and End
-  jump to `min` and `max`.
-- Thumbs in a range do not pass each other.
+## Accessibility
+
+Give every thumb a name with `aria-label`. A single thumb has no default
+name. When you leave the label off, two thumbs are named "Minimum" and
+"Maximum", and three or more "Value 1 of 3" and so on.
+
+For units or words, pass `formatValue`, for example
+`` formatValue={(v) => `${v}%`} ``.
+
+Slider follows the inherited `dir`. In a right-to-left horizontal slider,
+Arrow Left increases the value.
+
+### Keyboard interactions
+
+| Key | Action |
+| --- | --- |
+| `ArrowRight` / `ArrowUp` | Increases the value by `step`. |
+| `ArrowLeft` / `ArrowDown` | Decreases the value by `step`. |
+| `PageUp` | Increases the value by about a tenth of the range, rounded up to whole steps. |
+| `PageDown` | Decreases the value by the same amount. |
+| `Home` | Moves to the lowest value the thumb can reach. |
+| `End` | Moves to the highest value the thumb can reach. |

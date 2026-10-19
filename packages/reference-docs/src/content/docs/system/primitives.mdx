@@ -1,8 +1,9 @@
 ---
 title: Primitives
 section: System
-order: 9
+order: 4
 slug: primitives
+description: Typed components for every HTML element, with style props.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -10,10 +11,8 @@ import { PrimitiveCard } from './primitives-sections'
 
 # Primitives
 
-Primitives are typed React components for HTML elements: `Div` renders a
-`div`, `Button` renders a `button`, `H2` renders an `h2`. Each one takes the
-element's normal props plus [style props](/style-props), so you style an
-element where you write it, and the compiler turns those props into classes.
+A primitive renders one HTML element and takes [style props](/style-props):
+`Div` renders a `div`, `Button` a `button`, `H2` an `h2`.
 
 <Preview>
   <PrimitiveCard />
@@ -34,29 +33,28 @@ export function Card() {
 ```
 
 `ref sync` generates the primitives into `@reference-ui/react`, typed against
-your own tokens.
+your tokens.
 
 ## One component per element
 
-There is no generic `Box` and no `as` prop. You pick the element by picking
-the component, so the HTML stays semantic and the props are typed for that
-element: `A` accepts `href`, `Input` accepts `value`, and `ref` gives you the
-real `HTMLAnchorElement` or `HTMLInputElement`.
+There is no generic `Box` and no `as` prop. You choose the element by
+choosing the component, so each one is typed for its element: `A` takes
+`href`, `Input` takes `value`, and `ref` gives you the real
+`HTMLAnchorElement` or `HTMLInputElement`.
 
-Passing `as` does not change the element; it is not a primitive prop.
-
-## Primitive props
+## Props
 
 | Prop | Description |
 | --- | --- |
-| Native props | Everything the element accepts in React: `id`, `className`, `aria-*`, `data-*`, event handlers, `children`. They reach the DOM unchanged. |
-| `ref` | The underlying DOM element. Primitives take `ref` as a plain prop (React 19). |
-| Style props | Every CSS property and the Reference shorthands, values and conditions. See [Style props](/style-props). Style props never reach the DOM as attributes. |
-| `css` | A style object, or an array of them, applied like [`css()`](/css). It wins over a sibling style prop for the same property. |
-| `colorMode` | `'light'` or `'dark'`. Sets `data-color-mode` on the element, so tokens inside it resolve in that mode. See [Tokens](/tokens#light-and-dark-values). |
+| Element props | Everything the element accepts: `id`, `className`, `aria-*`, `data-*`, event handlers, `children`, `ref`. They reach the DOM unchanged. |
+| Style props | CSS properties as props. See [Style props](/style-props). They never reach the DOM. |
+| `css` | A style object, or an array of them, applied like [`css()`](/css). It wins over a style prop for the same property. |
+| `colorMode` | `'light'` or `'dark'`. Sets `data-color-mode` on the element. |
 | `variant` | Sets `data-variant` on the element, for `globalCss()` rules that select on it. |
 
-`className` combines with the classes the primitive generates.
+Your `className` is added to the classes the primitive generates. Every
+primitive also carries a class named after its tag, such as `ref-div` or
+`ref-button`, which `globalCss()` rules can select.
 
 ```tsx
 <Div
@@ -65,56 +63,52 @@ Passing `as` does not change the element; it is not a primitive prop.
   onClick={handleClick}
   padding="4r"
   css={{ _hover: { bg: 'raised' } }}
-  colorMode="dark"
 />
 ```
 
 ## Colour mode
 
-`colorMode` makes an element an island: it and its children resolve light and
-dark tokens in that mode, whatever the page uses. Islands nest. Read the
-current mode in a component with `useColorMode()`:
+`colorMode` sets the mode for an element and everything inside it, whatever
+the page uses. Modes nest. Tokens with [light and dark values](/tokens#light-and-dark-values)
+resolve in the nearest mode.
+
+Read the current mode with `useColorMode()`. It returns the nearest
+primitive's mode, or the `data-color-mode` of `html` or `body`:
 
 ```tsx
 import { useColorMode } from '@reference-ui/react'
 
 function ModeLabel() {
-  const mode = useColorMode() // 'light', 'dark', or undefined
+  const mode = useColorMode() // 'light', 'dark' or undefined
   return <span>{mode ?? 'page default'}</span>
 }
 ```
 
 ## `data-layer`
 
-The first primitive in a React tree sets `data-layer` to your system's `name`
-from `ui.config.ts`. Primitives nested inside it inherit the scope without
-repeating the attribute; a separately mounted React tree sets it again. The
-stylesheet uses the attribute to keep two Reference systems on one page from
-overriding each other.
+The outermost primitive sets `data-layer` to your system's
+[`name`](/config#name). Primitives inside it inherit it. A primitive with
+`colorMode`, or one from another system, sets it again. The stylesheet uses
+the attribute to keep two systems on one page apart.
 
 ## Your own components
 
-A component that forwards style props to a primitive works as a style host
-too, so `<Card padding="4r" />` compiles when `Card` passes its props to a
-`Div`. The compiler finds these wrappers itself: it follows the props through
-spreads, other wrappers, re-exports and barrel files. There is nothing to
-register.
+A component that passes style props on to a primitive takes style props
+too. `<Card padding="4r" />` compiles when `Card` spreads its props onto a
+`Div`. The compiler follows props through spreads, other components,
+re-exports and barrel files, so there is nothing to register.
 
-A prop the component reads for itself and does not pass on, such as a `size`
-it turns into `data-size`, stays the component's own prop and is never
-treated as a style prop.
+A prop the component keeps for itself, such as a `size` it turns into
+`data-size`, stays the component's own prop.
 
-Components you import from a package, such as those in `@reference-ui/lib`,
-take style props too. They render with the package's own system, so their
-style props compile when that package's `baseSystem` is in `extends` or
-`layers`. Another system there does not stand in for it: without the
-package's own, `ref sync` warns `ATM-W-EXTERNAL-UNBACKED` at the component
-and names the package.
+Components from a package, such as those in `@reference-ui/lib`, take style
+props when that package's system is in `extends` or `layers`. Otherwise
+`ref sync` warns `ATM-W-EXTERNAL-UNBACKED` and names the package.
 
 ## Types
 
-Every primitive exports its props type: `DivProps`, `ButtonProps`, and so on.
-`PrimitiveProps<'div'>` is the same shape by tag name, and `StyleProps` is the
+Each primitive exports its props type: `DivProps`, `ButtonProps`, and so on.
+`PrimitiveProps<'div'>` is the same type by tag name, and `StyleProps` is the
 style props alone:
 
 ```ts
@@ -125,8 +119,8 @@ type PanelProps = PrimitiveProps<'section'> & { title: string }
 
 ## All primitives
 
-There are 101, one per HTML element, named after the tag in PascalCase. The
-one exception is `Obj`, which renders `object`.
+There are 101, one per HTML element, named after the tag in PascalCase.
+`Obj` renders `object`.
 
 `A`, `Abbr`, `Address`, `Area`, `Article`, `Aside`, `Audio`, `B`, `Bdi`,
 `Bdo`, `Blockquote`, `Br`, `Button`, `Canvas`, `Caption`, `Cite`, `Code`,

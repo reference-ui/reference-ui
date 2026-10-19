@@ -3,16 +3,16 @@ title: Overlay
 section: Components
 order: 11
 slug: overlay
+description: Puts content above the page, such as dialogs, drawers, sheets and anchored panels.
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { OverlayDemo } from './overlay-demo'
+import { OverlayAnchoredDemo, OverlayDemo, OverlaySheetDemo } from './overlay-demo'
 
 # Overlay
 
-Overlay puts content above the page: dialogs, drawers, sheets, and anchored
-panels. It owns layering, dismissal, focus containment, and positioning; role,
-copy, and appearance stay in your markup.
+Overlay handles layering, dismissal, focus and positioning. You supply the
+role, the copy and the styles.
 
 <Preview>
   <OverlayDemo />
@@ -57,70 +57,258 @@ export function DeleteDialog() {
 import { Overlay } from '@reference-ui/lib'
 ```
 
-## Parts
+## Anatomy
 
-| Part | Renders | Purpose |
-| --- | --- | --- |
-| `Overlay` | nothing | Owns open state, isolation, and geometry. |
-| `Overlay.Trigger` | `button` | Requests open while closed and dismiss while open. Optional. |
-| `Overlay.Backdrop` | `div` (portalled) | The dismiss surface behind isolating content. |
-| `Overlay.Content` | `div` (portalled) | The layer itself. |
-| `Overlay.Arrow` | `div` | Points at the anchor in anchored mode. |
-| `Overlay.Handle` | `div` | Drag-to-dismiss affordance; valid only with `edge`. |
-| `Overlay.Portal` | nothing | Sets the portal `container`. Optional. |
+Every part except `Overlay.Content` is optional.
 
-## Props
+```tsx
+<Overlay>
+  <Overlay.Trigger />
+  <Overlay.Portal container={element} />
+  <Overlay.Backdrop />
+  <Overlay.Content>
+    <Overlay.Handle />
+    <Overlay.Arrow />
+  </Overlay.Content>
+</Overlay>
+```
 
-### Overlay
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `open` | `boolean` | — | Controlled open state. Omit it to let Overlay manage its own. |
-| `defaultOpen` | `boolean` | `false` | Initial state when `open` is omitted. |
-| `onOpenChange` | `(open: boolean) => void` | — | Called on every open or dismiss request. |
-| `onOpen` | `() => void` | — | Called when the Trigger requests open. |
-| `onDismiss` | `() => void` | — | Called on Escape, outside press, or Trigger toggle, unless a granular handler prevents it. |
-| `onEscape` | `(event: KeyboardEvent) => void` | — | Runs before `onDismiss`; `preventDefault()` keeps the layer open. |
-| `onOutsidePress` | `(event: PointerEvent) => void` | — | Runs before `onDismiss` on an outside press; `preventDefault()` cancels. |
-| `isolation` | `boolean \| { focus?, inert?, scroll? }` | `true` | Focus lock, inert background, and scroll lock. An object patches the all-on bundle. |
-| `anchor` | element, ref, or `{ x, y, width?, height? }` | — | Positions Content against this reference. |
-| `edge` | `'top' \| 'right' \| 'bottom' \| 'left'` | — | Binds Content to a viewport edge (drawer, sheet). |
-| `closeOnScroll` | `boolean` | `false` | Dismiss once when a scrolling ancestor moves the anchor. |
-
-### Overlay.Content
-
-Content takes every `div` prop and style prop, plus:
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `placement` | `'bottom-start'`, `'top'`, … | `'bottom-start'` | Side and alignment in anchored mode. |
-| `offset` | `number` | `8` | Gap in pixels from the anchor or edge. |
-| `collisionPadding` | `number` | `8` | Space kept from the viewport when flipping and shifting. |
-| `initialFocus` | ref, element, function, or `boolean` | first tabbable | Where focus goes on open; `false` skips the move. |
-| `restoreFocus` | ref, element, function, or `boolean` | `true` | Where focus returns after close. |
+`Overlay` renders no element. Backdrop and Content render into a portal at the
+end of `document.body`. Each part may appear at most once.
 
 ## Geometry
 
-Overlay picks its geometry from the props you pass:
+Overlay picks where Content goes from the props you pass.
 
-| You pass | Result |
+| You pass | Content is |
 | --- | --- |
-| Trigger, default isolation | Unbound dialog; position it with your own CSS. |
-| Trigger and `isolation={false}` | Panel anchored to the Trigger. |
-| `anchor` | Panel anchored to that reference. |
-| `edge` | Panel bound to a viewport edge. |
+| Trigger, default `isolation` | Unbound. Overlay writes no position; place it with your own CSS. |
+| Trigger and `isolation={false}` | Anchored to the Trigger. |
+| `anchor` | Anchored to that reference. `anchor` wins over Trigger. |
+| `edge` | Bound to that viewport edge. |
 
-## Behaviour
+`edge` and `anchor` can't be combined: Content logs a warning and renders
+nothing.
 
-- Isolation is on by default: Tab stays inside Content, the rest of the page
-  is inert, and the document does not scroll.
-- Escape closes only the topmost layer when overlays nest.
-- `open={false}` keeps Backdrop and Content mounted until their exit
-  animation finishes. Style the animation against `data-state="open"` and
-  `data-state="closed"`.
-- Overlay does not add `role="dialog"`; set the role and label yourself.
+## Examples
 
-## Related
+### Sheet
 
-- [Popover](/popover) and [Tooltip](/tooltip) are policies on this component.
-- [FocusLock](/focus-lock) is the containment it uses for isolation.
+Pass `edge` to bind Content to a side of the viewport. Add `Overlay.Handle` to
+let people drag it away.
+
+<Preview>
+  <OverlaySheetDemo />
+</Preview>
+
+```tsx
+<Overlay open={open} onOpenChange={setOpen} edge="bottom">
+  <Overlay.Trigger>Open sheet</Overlay.Trigger>
+  <Overlay.Backdrop className={backdrop} />
+  <Overlay.Content role="dialog" aria-modal="true" aria-label="Share" offset={0}>
+    <Overlay.Handle />
+    <Button onClick={() => setOpen(false)}>Done</Button>
+  </Overlay.Content>
+</Overlay>
+```
+
+A drag dismisses once it covers 25% of the sheet, or on a fast flick.
+Otherwise the sheet springs back.
+
+### Anchored panel
+
+Turn isolation off and Content positions itself against the Trigger. The
+page stays interactive, and a press outside closes the panel.
+
+<Preview>
+  <OverlayAnchoredDemo />
+</Preview>
+
+```tsx
+<Overlay open={open} onOpenChange={setOpen} isolation={false}>
+  <Overlay.Trigger>Show details</Overlay.Trigger>
+  <Overlay.Content placement="bottom-start">
+    Anchored below the trigger.
+  </Overlay.Content>
+</Overlay>
+```
+
+For a ready-made anchored panel, use [Popover](/popover).
+
+### Alert dialog
+
+Call `preventDefault()` in `onEscape` or `onOutsidePress` to keep the layer
+open. The person then has to choose an action.
+
+```tsx
+<Overlay
+  open={open}
+  onOpenChange={setOpen}
+  onEscape={event => event.preventDefault()}
+  onOutsidePress={event => event.preventDefault()}
+>
+  <Overlay.Content role="alertdialog" aria-modal="true" aria-labelledby="title">
+    …
+  </Overlay.Content>
+</Overlay>
+```
+
+### Isolation
+
+`isolation` is three settings: `focus` keeps Tab inside Content, `inert`
+makes the rest of the page unreachable, and `scroll` locks page scroll. All
+three are on by default. Pass an object to turn one off:
+
+```tsx
+<Overlay isolation={{ scroll: false }}>…</Overlay>
+```
+
+### Animating
+
+Closing does not unmount Backdrop and Content straight away. Both carry
+`data-state="open"` or `data-state="closed"`, and stay in the DOM until a CSS
+animation or transition on them finishes.
+
+```tsx
+const fade = css({
+  transition: 'opacity 0.2s',
+  '&[data-state="closed"]': { opacity: '0' },
+})
+
+<Overlay.Content className={fade}>…</Overlay.Content>
+```
+
+See [Presence](/presence) for what counts as an exit.
+
+## API reference
+
+### Overlay
+
+Holds the open state and the settings every part reads.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open` | `boolean` | — | Controlled open state. |
+| `defaultOpen` | `boolean` | `false` | Open state on first render, when `open` is omitted. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called with the requested state on every open or close request. |
+| `onOpen` | `() => void` | — | Called when the Trigger asks to open. |
+| `onDismiss` | `() => void` | — | Called when Overlay asks to close an open layer: Trigger, Escape, outside press, Handle, or scroll. |
+| `onEscape` | `(event: KeyboardEvent) => void` | — | Runs before closing on Escape. `preventDefault()` keeps the layer open. |
+| `onOutsidePress` | `(event: PointerEvent) => void` | — | Runs before closing on a press outside. `preventDefault()` keeps the layer open. |
+| `onInteractOutside` | `(event: PointerEvent \| FocusEvent) => void` | — | Runs after `onOutsidePress`. `preventDefault()` keeps the layer open. |
+| `isolation` | `boolean \| { focus?, inert?, scroll? }` | `true` | Focus lock, inert page, and scroll lock. An object turns single settings off. |
+| `anchor` | element, ref, `{ x, y, width?, height? }`, or `{ getBoundingClientRect }` | — | Positions Content against this reference. |
+| `edge` | `'top' \| 'right' \| 'bottom' \| 'left'` | — | Binds Content to a viewport edge. |
+| `closeOnScroll` | `boolean` | `false` | Close when a scrolling ancestor moves the anchor. |
+| `presence` | `boolean` | `true` | `false` unmounts Content as soon as it closes, with no exit animation. |
+
+### Overlay.Trigger
+
+A `button` that opens the layer when closed and closes it when open. Takes
+every `button` prop and style prop. If your `onClick` calls
+`preventDefault()`, the Trigger does nothing.
+
+| Attribute | Values |
+| --- | --- |
+| `aria-expanded` | `true`, `false` |
+
+### Overlay.Backdrop
+
+A fixed, full-viewport `div` behind Content. A press on it closes the
+layer. Takes every `div` prop and style prop.
+
+| Attribute | Values |
+| --- | --- |
+| `data-state` | `open`, `closed` |
+
+### Overlay.Content
+
+The layer itself. Takes every `div` prop and style prop, plus:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `placement` | `'top' \| 'right' \| 'bottom' \| 'left'`, each with an optional `-start` or `-end` | `'bottom-start'` | Side and alignment when anchored. |
+| `offset` | `number` | `8` | Gap in pixels from the anchor, or from the edge. |
+| `collisionPadding` | `number` | `8` | Space in pixels kept from the boundary. |
+| `boundary` | element, ref, `'viewport'`, or `null` | `'viewport'` | Area Content flips and shifts to stay inside. |
+| `flip` | `boolean` | `true` | Move to the opposite side when there is no room. |
+| `shift` | `boolean` | `true` | Slide along the side to stay in the boundary. |
+| `fallbackPlacements` | `Placement[]` | — | Placements to try, in order, when flipping. |
+| `strategy` | `'absolute' \| 'fixed'` | `'absolute'` | CSS position used when anchored. |
+| `animationFrame` | `boolean` | `false` | Reposition every frame. Only for anchors moved by `transform`. |
+| `onPositionChange` | `(data) => void` | — | Called with `{ placement, side, align, nudgedLeft, nudgedTop }` when the position changes. |
+| `initialFocus` | element, ref, `() => element`, or `boolean` | first tabbable | Where focus goes on open. `false` leaves focus where it is. |
+| `restoreFocus` | element, ref, `() => element`, or `boolean` | `true` | Where focus goes after close. `true` returns it to where it was before opening. |
+
+`initialFocus` and `restoreFocus` apply while `isolation.focus` is on.
+Placement props apply only when Content is anchored; `offset` also applies
+with `edge`.
+
+| Attribute | Values |
+| --- | --- |
+| `data-state` | `open`, `closed` |
+| `data-side` | `top`, `right`, `bottom`, `left` (anchored) |
+| `data-align` | `start`, `center`, `end` (anchored) |
+| `data-anchor-hidden` | Present when the anchor is clipped out of view. |
+| `data-escaped` | Present when Content has left the anchor's clipping area. |
+| `data-edge` | The bound edge (`edge`). |
+| `data-dragging` | Present while the Handle is dragged. |
+
+| CSS variable | Description |
+| --- | --- |
+| `--reference-overlay-available-width` | Width Content can use. |
+| `--reference-overlay-available-height` | Height Content can use. |
+| `--reference-overlay-anchor-width` | Width of the anchor. |
+| `--reference-overlay-anchor-height` | Height of the anchor. |
+| `--reference-overlay-transform-origin` | Origin facing the anchor, for scale animations. |
+| `--reference-overlay-swipe-progress` | `0` to `1` while the Handle is dragged. |
+| `--reference-overlay-index` | Position among open edge layers, `0` for the topmost. |
+| `--reference-overlay-count` | Number of open edge layers. |
+
+### Overlay.Arrow
+
+A `div` that Overlay moves to point at the anchor. It renders a 2r square
+with no shape; draw the arrow with your own styles. Takes every `div` prop
+and style prop, plus:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `edgePadding` | `number` | `4` | Closest the arrow gets to a corner of Content, in pixels. |
+
+### Overlay.Handle
+
+A drag handle for edge layers. It only works with `edge`. Its default look
+is a small grey pill; style props override it. Takes every `div` prop and
+style prop.
+
+### Overlay.Portal
+
+Sets where Backdrop and Content render. It renders only its children.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `container` | element, ref, `() => element`, or `null` | `document.body` | Destination. See [Portal](/portal). |
+
+## Accessibility
+
+Overlay adds no role. Set `role="dialog"` (or `alertdialog`), `aria-modal`,
+and a label on Content yourself. The Trigger gets `aria-expanded`.
+
+While `isolation.inert` is on, everything outside the open layers gets the
+`inert` attribute. Live regions, [Toast](/toast) and
+[announce](/announce) stay reachable.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Space`, `Enter` | On the Trigger, opens or closes the layer. |
+| `Tab` | With focus isolation, moves focus within Content and wraps. Without it, moves from the Trigger into Content; past the last item it closes the layer and moves on. |
+| `Shift + Tab` | With focus isolation, moves back within Content. Without it, moves from the first item back to the Trigger. |
+| `Esc` | Closes the topmost open layer. |
+
+## Nesting
+
+An Overlay inside another's Content is its child. Escape and outside presses
+reach the topmost layer only, a press inside a child is not an outside press
+for its parent, and closing a parent closes its children.

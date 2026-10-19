@@ -3,6 +3,7 @@ title: useMeasure
 section: Components
 order: 55
 slug: use-measure
+description: Read an element's size once its layout settles.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -10,20 +11,25 @@ import { UseMeasureDemo } from './use-measure-demo'
 
 # useMeasure
 
-`useMeasure` reports an element's size and position once its layout has
-stopped changing. It is a hook, not a wrapper component.
+`useMeasure` reports an element's size and position once its layout stops
+changing.
 
 <Preview>
   <UseMeasureDemo />
 </Preview>
 
 ```tsx
-import { Textarea } from '@reference-ui/react'
+import { Div, Textarea } from '@reference-ui/react'
 import { useMeasure } from '@reference-ui/lib'
 
 export function Notes() {
   const { ref, rect, isSettled } = useMeasure<HTMLTextAreaElement>()
-  return <Textarea ref={ref} />
+  return (
+    <Div>
+      <Textarea ref={ref} aria-label="Notes" />
+      {rect && isSettled ? `${rect.width} × ${rect.height}` : null}
+    </Div>
+  )
 }
 ```
 
@@ -33,23 +39,71 @@ export function Notes() {
 import { useMeasure } from '@reference-ui/lib'
 ```
 
-## Signature
+## Usage
+
+Attach the returned `ref` to the element you want to measure. The hook
+renders nothing of its own.
+
+`rect` is the element's border box, read with `getBoundingClientRect`. It
+is `null` until the first measurement, including during server rendering.
+It updates when the element's size changes.
+
+`isSettled` turns `true` once the size has stopped changing for 20
+milliseconds. Sizes measured mid-transition are not final, so wait for
+`isSettled` before acting on them.
+
+## Examples
+
+### Measuring an element you already have a ref to
+
+Pass the ref as `target` when the element's ref is already taken.
+
+```tsx
+const panelRef = useRef<HTMLDivElement>(null)
+const { rect } = useMeasure({ target: panelRef })
+
+return <Div ref={panelRef}>…</Div>
+```
+
+### Pausing during a drag
+
+Set `paused` while something else is resizing the element, such as a
+[Splitter](/splitter) drag or a CSS animation. Observation stops, `rect`
+keeps its last value and `isSettled` is `false`. Measurement starts again
+when `paused` turns `false`.
+
+```tsx
+const [dragging, setDragging] = useState(false)
+const { ref, rect } = useMeasure({ paused: dragging })
+```
+
+## API reference
 
 ```ts
-useMeasure<E extends HTMLElement>(options?: UseMeasureOptions): {
-  ref: RefCallback<E>
-  rect: { width: number; height: number; top: number; left: number } | null
-  isSettled: boolean
-}
+function useMeasure<E extends HTMLElement = HTMLElement>(
+  options?: UseMeasureOptions
+): UseMeasureResult<E>
 ```
+
+### Options
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `paused` | `boolean` | `false` | Stop observing (during a drag, for example); the last `rect` is kept. |
-| `settleTimeoutMs` | `number` | `20` | Quiet time in milliseconds before `isSettled` turns true. |
-| `target` | `RefObject<HTMLElement>` | — | Measure an element you already hold a ref to, instead of attaching `ref`. |
+| `paused` | `boolean` | `false` | Stop observing. The last `rect` is kept. |
+| `settleTimeoutMs` | `number` | `20` | Quiet time in milliseconds before `isSettled` turns `true`. |
+| `target` | `RefObject<HTMLElement \| null>` | — | Measure the element this ref holds instead of attaching `ref`. |
 
-## Behaviour
+### Return value
 
-- Sizes are border-box, read with a `ResizeObserver`.
-- `rect` is `null` until the first measurement.
+| Field | Type | Description |
+| --- | --- | --- |
+| `ref` | `RefCallback<E>` | Attach to the element to measure. |
+| `rect` | `MeasureBox \| null` | `{ width, height, top, left }` in pixels, or `null` before the first measurement. |
+| `isSettled` | `boolean` | `true` once `rect` has not changed for `settleTimeoutMs`. |
+
+The default quiet time is also exported as `MEASUREMENT_SETTLE_TIMEOUT_MS`.
+The types `MeasureBox`, `UseMeasureOptions` and `UseMeasureResult` are
+exported from `@reference-ui/lib`.
+
+`top` and `left` are relative to the viewport at the last measurement.
+Scrolling does not update them.

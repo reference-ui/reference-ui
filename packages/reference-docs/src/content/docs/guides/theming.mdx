@@ -1,0 +1,172 @@
+---
+title: Theming
+section: Guides
+order: 3
+slug: theming
+description: Give Reference UI your colours, spacing and fonts.
+---
+
+# Theming
+
+Reference UI gives you a set of tools for theming. What you define reaches every style prop, `css()` call
+and library component.
+
+## Design tokens
+
+Tokens name your design values, grouped by category.
+
+```ts
+// src/theme/tokens.ts
+import { tokens } from '@reference-ui/system'
+
+tokens({
+  colors: {
+    surface: { value: '#ffffff' },
+  },
+  radii: {
+    card: { value: '0.5rem' },
+  },
+  shadows: {
+    raised: { value: '0 1px 3px rgb(0 0 0 / 0.2)' },
+  },
+})
+```
+
+### Usage
+
+#### Primitive
+
+```tsx
+<Div bg="surface" borderRadius="card" boxShadow="raised" />
+```
+
+#### css()
+
+```tsx
+const card = css({
+  bg: 'surface',
+  borderRadius: 'card',
+  boxShadow: 'raised',
+})
+```
+
+## Fonts
+
+`font()` defines a family: its stack, files and weights.
+
+```ts
+// src/theme/fonts.ts
+import { font } from '@reference-ui/system'
+
+font('display', {
+  value: '"Playfair Display", Georgia, serif',
+  fontFace: {
+    src: 'url(/fonts/playfair-display.woff2) format("woff2")',
+    fontWeight: '400 900',
+  },
+  weights: { normal: '420', bold: '700' },
+})
+```
+
+### Usage
+
+`font` applies the family; `weight` picks from its weights.
+
+#### Primitive
+
+```tsx
+<H1 font="display" weight="bold">Set in Playfair Display</H1>
+```
+
+#### css()
+
+```tsx
+const heading = css({
+  font: 'display',
+  weight: 'bold',
+})
+```
+
+## Animations
+
+`keyframes()` defines the motion; an `animations` token names it with a
+duration and easing.
+
+```ts
+// src/theme/motion.ts
+import { keyframes, tokens } from '@reference-ui/system'
+
+keyframes({
+  fadeIn: {
+    from: { opacity: '0' },
+    to: { opacity: '1' },
+  },
+})
+
+tokens({
+  animations: {
+    fade: { in: { value: 'fadeIn 0.2s ease-out both' } },
+  },
+})
+```
+
+### Usage
+
+#### Primitive
+
+```tsx
+<Div animation="fade.in" />
+```
+
+#### css()
+
+```tsx
+const panel = css({ animation: 'fade.in' })
+```
+
+## Global CSS
+
+`globalCss()` styles any selector with your tokens.
+
+```ts
+// src/theme/global.ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  '.card': {
+    backgroundColor: 'surface',
+    borderRadius: 'card',
+    boxShadow: 'raised',
+  },
+})
+```
+
+## Strict
+
+A strict category accepts only your tokens, so a raw value such as
+`color="#ff0000"` fails to type-check. Colors, radii and spacing can be strict.
+
+```ts
+// ui.config.ts
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  strict: ['colors', 'spacing'],
+})
+```
+
+## Your base system
+
+Everything on this page becomes part of your base system when you run
+`ref sync`. Other projects can build on it: see
+[Share a design system](/share-a-design-system).
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/tokens" title="Tokens">References, tones and private tokens.</LinkCard>
+  <LinkCard href="/fonts" title="Fonts">Font files, weight scales and loading.</LinkCard>
+  <LinkCard href="/spacing" title="Spacing">Rescale every rhythm unit at once.</LinkCard>
+  <LinkCard href="/animation" title="Animation">Keyframes and reduced motion.</LinkCard>
+  <LinkCard href="/global-css" title="Global CSS">Selectors, layers and the CSS reset.</LinkCard>
+</LinkCards>

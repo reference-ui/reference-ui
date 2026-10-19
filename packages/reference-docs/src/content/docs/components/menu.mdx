@@ -3,6 +3,7 @@ title: Menu
 section: Components
 order: 31
 slug: menu
+description: A pop-up list of commands, toggles and submenus.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -10,8 +11,7 @@ import { MenuDemo } from './menu-demo'
 
 # Menu
 
-Menu is a list of commands with keyboard navigation, typeahead, checkable
-items, and submenus. Wrap it in a [Popover](/popover) for a dropdown menu.
+It opens from a button or a context press, and the arrow keys move through the items.
 
 <Preview>
   <MenuDemo />
@@ -35,8 +35,8 @@ export function ActionsMenu() {
       <ActionsTrigger />
       <Popover.Content placement="bottom-start">
         <Menu aria-label="Actions">
-          <Menu.Item onSelect={cut}>Cut</Menu.Item>
-          <Menu.Item onSelect={copy}>Copy</Menu.Item>
+          <Menu.Item onSelect={() => console.log('cut')}>Cut</Menu.Item>
+          <Menu.Item onSelect={() => console.log('copy')}>Copy</Menu.Item>
           <Menu.Separator />
           <Menu.Item disabled>Delete</Menu.Item>
         </Menu>
@@ -46,52 +46,297 @@ export function ActionsMenu() {
 }
 ```
 
-`useMenuTriggerKeys()` connects the trigger to the menu, so Enter, Space,
-and Arrow Down open it on the first item and Arrow Up on the last.
+Menu owns the items and the keyboard. The surrounding [Popover](/popover)
+owns open state and position.
 
 ## Import
 
 ```tsx
-import { Menu, useMenuTriggerKeys } from '@reference-ui/lib'
+import { Menu, useMenuTriggerKeys, useMenuContextKeys } from '@reference-ui/lib'
 ```
 
-## Parts
+## Anatomy
 
-| Part | Purpose |
-| --- | --- |
-| `Menu.Item` | A command. |
-| `Menu.CheckboxItem` | A toggle: `checked` (`boolean \| 'mixed'`) and `onChange`. |
-| `Menu.RadioGroup` / `Menu.RadioItem` | One choice from a set: `value` and `onChange` on the group. |
-| `Menu.LinkItem` | A link: takes `href`. |
-| `Menu.Separator` | A divider. |
-| `Menu.Trigger` / `Menu.Content` | Open a submenu from a nested `Menu`. |
+```tsx
+<Popover>
+  <Popover.Trigger />
+  <Popover.Content>
+    <Menu>
+      <Menu.Item />
+      <Menu.LinkItem />
+      <Menu.CheckboxItem />
+      <Menu.RadioGroup>
+        <Menu.RadioItem />
+      </Menu.RadioGroup>
+      <Menu.Separator />
+      <Menu>
+        <Menu.Trigger />
+        <Menu.Content />
+      </Menu>
+    </Menu>
+  </Popover.Content>
+</Popover>
+```
 
-## Props
+A `Menu` inside another `Menu` is a submenu. It renders no element of its
+own: `Menu.Trigger` is its row in the parent menu and `Menu.Content` is its
+panel.
+
+## Examples
+
+### Submenus
+
+Nest a `Menu` and give it `open`, `onOpen` and `onDismiss`. A submenu is
+always controlled; without `open` it stays closed.
+
+```tsx
+const [shareOpen, setShareOpen] = useState(false)
+
+<Menu aria-label="File">
+  <Menu.Item>New</Menu.Item>
+  <Menu open={shareOpen} onOpen={() => setShareOpen(true)} onDismiss={() => setShareOpen(false)}>
+    <Menu.Trigger>Share</Menu.Trigger>
+    <Menu.Content>
+      <Menu.Item>Email</Menu.Item>
+      <Menu.Item>Copy link</Menu.Item>
+    </Menu.Content>
+  </Menu>
+</Menu>
+```
+
+### Checkbox items
+
+`Menu.CheckboxItem` is controlled. Activating it calls `onChange` with the
+opposite of `checked`; a `'mixed'` item becomes `true`.
+
+```tsx
+const [grid, setGrid] = useState(true)
+
+<Menu.CheckboxItem checked={grid} onChange={setGrid}>
+  Show grid
+</Menu.CheckboxItem>
+```
+
+### Radio items
+
+Put `Menu.RadioItem`s in a `Menu.RadioGroup`. The group holds the value.
+
+```tsx
+const [sort, setSort] = useState('name')
+
+<Menu.RadioGroup aria-label="Sort by" value={sort} onChange={setSort}>
+  <Menu.RadioItem value="name">Name</Menu.RadioItem>
+  <Menu.RadioItem value="date">Date</Menu.RadioItem>
+</Menu.RadioGroup>
+```
+
+Checkbox and radio items keep the menu open after selection. Pass
+`closeOnSelect` to close it.
+
+### Links
+
+`Menu.LinkItem` renders an `a`. A plain click navigates and closes the menu.
+Modified clicks and middle clicks keep their native behaviour.
+
+```tsx
+<Menu.LinkItem href="/settings">Settings</Menu.LinkItem>
+```
+
+### Keeping the menu open
+
+Call `preventDefault()` on the event passed to `onSelect`. The menu stays
+open and, for choice items, `onChange` is not called.
+
+```tsx
+<Menu.Item onSelect={event => event.preventDefault()}>Refresh</Menu.Item>
+```
+
+### Context menus
+
+Open the menu from an [Overlay](/overlay) anchored at the pointer, and spread
+`useMenuContextKeys()` on the target so a keyboard opening focuses the first
+item.
+
+```tsx
+import { useState } from 'react'
+import { Menu, Overlay, useMenuContextKeys } from '@reference-ui/lib'
+
+export function Canvas() {
+  const [open, setOpen] = useState(false)
+  const [anchor, setAnchor] = useState<{ x: number; y: number }>()
+  const keys = useMenuContextKeys()
+  return (
+    <>
+      <div
+        role="button"
+        tabIndex={0}
+        onKeyDown={keys.onKeyDown}
+        onContextMenu={event => {
+          if (!open) keys.onContextMenu(event)
+          event.preventDefault()
+          setAnchor({ x: event.clientX, y: event.clientY })
+          setOpen(true)
+        }}
+      >
+        Right-click here
+      </div>
+      <Overlay open={open} onDismiss={() => setOpen(false)} anchor={anchor}>
+        <Overlay.Content placement="bottom-start">
+          <Menu aria-label="Canvas">
+            <Menu.Item>Edit</Menu.Item>
+            <Menu.Item>Delete</Menu.Item>
+          </Menu>
+        </Overlay.Content>
+      </Overlay>
+    </>
+  )
+}
+```
+
+`useMenuContextKeys()` also returns an `onKeyDown` that marks the
+ContextMenu key and Shift+F10. Your handler still opens the overlay for
+those keys.
+
+## API reference
+
+Every part takes the props of the element it renders, plus style props.
+
+### Menu
+
+Renders a `div` with `role="menu"`. The root menu's open state lives on the
+Popover or Overlay around it.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open` | `boolean` | `false` | Submenu only. Whether the submenu is open. |
+| `onOpen` | `() => void` | — | Submenu only. Called when the submenu asks to open. |
+| `onDismiss` | `() => void` | — | Submenu only. Called when the submenu asks to close. |
 
 ### Menu.Item
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `onSelect` | `(event: Event) => void` | — | Runs on click, Enter, or Space. `preventDefault()` keeps the menu open. |
-| `disabled` | `boolean` | — | Skipped by the keyboard and not selectable. |
-| `closeOnClick` | `boolean` | `true` | Close the menu after selection. |
-| `textValue` | `string` | text content | Text used for typeahead. |
-
-Checkbox and radio items stay open after selection by default
-(`closeOnSelect` is `false`).
-
-### Menu (nested submenu only)
+Renders a `div` with `role="menuitem"`.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `open` | `boolean` | `false` | Whether the submenu is open. |
-| `onOpen` / `onDismiss` | `() => void` | — | Submenu open and close requests. |
+| `onSelect` | `(event: Event) => void` | — | Called on click, Enter or Space. `preventDefault()` keeps the menu open. |
+| `closeOnClick` | `boolean` | `true` | Close the whole menu after selection. |
+| `disabled` | `boolean` | `false` | Skipped by the keyboard and not selectable. |
+| `selected` | `boolean` | `false` | Highlights the item and sets `data-state="selected"`. |
+| `textValue` | `string` | — | Text used for typeahead. Defaults to the item's text. |
 
-The root menu's open state lives on the surrounding Popover.
+`closeOnSelect` is a deprecated alias for `closeOnClick`.
 
-## Behaviour
+### Menu.CheckboxItem
 
-- Arrow keys move between items, typing jumps to a matching item, and
-  Escape closes one level.
-- A submenu is a nested `Menu` with `Menu.Trigger` and `Menu.Content`.
-- For a row of always-visible menus, use [Menubar](/menubar).
+Renders a `div` with `role="menuitemcheckbox"` and `aria-checked`.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `checked` | `boolean \| 'mixed'` | — | Required. The checked state. |
+| `onChange` | `(checked: boolean) => void` | — | Called with the next state. |
+| `onSelect` | `(event: Event) => void` | — | Called before `onChange`. `preventDefault()` cancels it. |
+| `closeOnSelect` | `boolean` | `false` | Close the whole menu after selection. |
+| `disabled` | `boolean` | `false` | Skipped by the keyboard and not selectable. |
+| `textValue` | `string` | — | Text used for typeahead. |
+
+### Menu.RadioGroup
+
+Renders a `div` with `role="group"`.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string \| null` | — | The checked item's value. |
+| `onChange` | `(value: string) => void` | — | Called with the activated item's value, even if it is already checked. |
+
+### Menu.RadioItem
+
+Renders a `div` with `role="menuitemradio"` and `aria-checked`. Use it only
+inside `Menu.RadioGroup`.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | — | Required. The item's value. |
+| `onSelect` | `(event: Event) => void` | — | Called before the group's `onChange`. `preventDefault()` cancels it. |
+| `closeOnSelect` | `boolean` | `false` | Close the whole menu after selection. |
+| `disabled` | `boolean` | `false` | Skipped by the keyboard and not selectable. |
+| `textValue` | `string` | — | Text used for typeahead. |
+
+### Menu.LinkItem
+
+Renders an `a` with `role="menuitem"`.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `href` | `string` | — | Required. The link target. |
+| `onSelect` | `(event: Event) => void` | — | Called on a plain click. `preventDefault()` cancels navigation and closing. |
+| `closeOnSelect` | `boolean` | `true` | Close the whole menu after selection. |
+| `disabled` | `boolean` | `false` | Not navigable, skipped by the keyboard. |
+| `textValue` | `string` | — | Text used for typeahead. |
+
+### Menu.Separator
+
+Renders a `div` with `role="separator"`. It is never focused.
+
+### Menu.Trigger
+
+The submenu's row in its parent menu. Renders a `div` with
+`role="menuitem"` and `aria-haspopup="menu"`. Use it only inside a nested
+`Menu`.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | The submenu cannot open. |
+| `textValue` | `string` | — | Text used for typeahead. |
+
+### Menu.Content
+
+The submenu panel. Renders a `div` with `role="menu"`. Use it only inside a
+nested `Menu`. It takes the geometry props of
+[`Overlay.Content`](/overlay); `placement` defaults to `'right-start'`
+(`'left-start'` right to left).
+
+### useMenuTriggerKeys
+
+Returns `{ onKeyDown, onClick }`. Spread both on the `Popover.Trigger` that
+opens a root menu. A keyboard opening focuses the first or last item; a
+pointer opening focuses the menu itself.
+
+### useMenuContextKeys
+
+Returns `{ onContextMenu, onKeyDown }`. Spread both on a context-menu
+target so the next opening focuses the first item.
+
+## Accessibility
+
+Menu follows the WAI-ARIA Menu and Menu Button patterns. Focus moves between
+items with a roving tab index.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Enter` / `Space` | On the trigger, opens the menu and focuses the first item. On an item, activates it. On a submenu trigger, opens the submenu. |
+| `ArrowDown` | On the trigger, opens the menu and focuses the first item. In the menu, moves to the next item, wrapping at the end. |
+| `ArrowUp` | On the trigger, opens the menu and focuses the last item. In the menu, moves to the previous item, wrapping at the start. |
+| `Home` / `PageUp` | Moves to the first item. |
+| `End` / `PageDown` | Moves to the last item. |
+| `ArrowRight` | On a submenu trigger, opens the submenu and focuses its first item. Mirrored right to left. |
+| `ArrowLeft` | In a submenu, closes it and returns focus to its trigger. Mirrored right to left. |
+| `Escape` | Closes one level: the open submenu, or the menu itself, returning focus to its trigger. |
+| `Tab` | Closes the menu and moves focus to the next control after the trigger. |
+| Letters | Focus the next item whose text starts with the typed characters. |
+
+Disabled items are skipped. Space typed during a typeahead search is part
+of the search and does not activate the item.
+
+### Pointer
+
+Hovering a submenu trigger opens it after 100 ms. Moving the pointer
+diagonally toward the open submenu keeps it open.
+
+### Labelling
+
+Give the root menu a name with `aria-label` or `aria-labelledby`, and give
+each `Menu.RadioGroup` an `aria-label`.
+
+For a row of always-visible menus, use [Menubar](/menubar).

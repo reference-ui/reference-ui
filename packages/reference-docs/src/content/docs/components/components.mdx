@@ -3,55 +3,37 @@ title: Overview
 section: Components
 order: 1
 slug: components
+description: Every component and utility that @reference-ui/lib ships.
 ---
 
 # Overview
 
-`@reference-ui/lib` ships components for the behaviour that is hard to get
-right by hand: focus, keyboard navigation, layering, dismissal, selection,
-and value editing. Layout, markup, and appearance stay in your code, written
-with [primitives](/primitives) and [style props](/style-props).
+`@reference-ui/lib` ships components for behaviour that is hard to build by
+hand: focus, keyboard navigation, layering, dismissal, selection and value
+editing. Markup and appearance stay in your code.
+[Library components](/library-components) explains why the set is this
+small.
 
-Each page in this section is a reference: what the component is for, a live
-example, the import, its props, and the behaviour that changes how you use
-it.
-
-## Using a component
-
-Install the package, import its stylesheet once at your app root, and import
-components by name from the package root:
-
-```bash
-npm install @reference-ui/lib react react-dom
-```
+Import components by name from the package root, and mount
+[ReferenceLibrary](/reference-library) once near your app root:
 
 ```tsx
-// main.tsx
-import '@reference-ui/lib/styles.css'
-import { ReferenceLibrary } from '@reference-ui/lib'
-
-// anywhere
-import { Tabs } from '@reference-ui/lib'
+import { ReferenceLibrary, Tabs } from '@reference-ui/lib'
 ```
 
-Mount [ReferenceLibrary](/reference-library) once near the root if you use
-toasts, `announce()`, or tooltips.
+Each part renders a fixed native element and takes that element's props and
+style props. There is no `as` prop.
 
-Most components are compound: parts hang off the root, as in `Tabs.List` and
-`Tabs.Panel`. Every part renders a fixed native element, takes that
-element's props and style props, and has no `as` prop. State is passed in
-through props such as `value` and `onChange`; where a component can also
-manage its own state, its props table says so.
-
-## Overlays and layers
+## Foundation
 
 | Component | Use it for |
 | --- | --- |
-| [ReferenceLibrary](/reference-library) | Mounting the toast host, live region, and tooltip timing. |
-| [Overlay](/overlay) | Dialogs, drawers, sheets, and anchored panels. |
-| [Popover](/popover) | Interactive content anchored to a trigger, including hover cards. |
+| [ReferenceLibrary](/reference-library) | Mounting the toast host, the live region and tooltip timing. |
+| [Overlay](/overlay) | Dialogs, drawers, sheets and anchored panels. |
+| [Popover](/popover) | Interactive content anchored to a trigger. |
 | [Tooltip](/tooltip) | A short description of a control on hover or focus. |
 | [Toast](/toast) | Brief notifications that dismiss themselves. |
+| [Portal](/portal) | Rendering content elsewhere in the DOM. |
 
 ## Form controls
 
@@ -60,20 +42,17 @@ manage its own state, its props table says so.
 | [Field](/field) | The bezel around an input, with prefix and suffix content. |
 | [Switch](/switch) | An on/off toggle. |
 | [Slider](/slider) | Choosing a number or range by dragging. |
-| [NumberField](/number-field) | Typing a locale-formatted number, with steppers. |
-| [DateField](/date-field) | Typing a date, with an optional calendar picker. |
-| [Calendar](/calendar) | Picking a date, range, month, or year from a grid. |
-| [Combobox](/combobox) | Autocomplete, searchable selects, and selects. |
-
-Checkboxes, radios, and plain inputs are native elements: use the `Input`
-and `Select` primitives.
+| [NumberField](/number-field) | Typing a formatted number, with steppers. |
+| [DateField](/date-field) | Typing a date. |
+| [Calendar](/calendar) | Picking a date, range, month or year from a grid. |
+| [Combobox](/combobox) | Autocomplete and selects. |
 
 ## Collections
 
 | Component | Use it for |
 | --- | --- |
 | [Listbox](/listbox) | A list of selectable options. |
-| [Menu](/menu) | Dropdown and context menus of commands. |
+| [Menu](/menu) | Dropdown and context menus. |
 | [Menubar](/menubar) | A row of application menus. |
 | [Tabs](/tabs) | Switching between panels. |
 | [Tree](/tree) | A nested, collapsible list. |
@@ -88,14 +67,18 @@ and `Select` primitives.
 
 ## Building blocks
 
-Lower-level pieces the components above are made of, for building your own.
+| Export | Use it for |
+| --- | --- |
+| [Presence](/presence) | Keeping an element mounted through its exit animation. |
+| [FocusLock](/focus-lock) | Keeping focus inside a container. |
+| [RovingFocus](/roving-focus) | Arrow-key movement in a toolbar or grid. |
+| [Slot](/slot) | Named regions in your own compound components. |
+| [announce](/announce) | Speaking a message to screen readers. |
+| [useMeasure](/use-measure) | Reading an element's settled size. |
+
+## Content
 
 | Export | Use it for |
 | --- | --- |
-| [Portal](/portal) | Rendering content elsewhere in the DOM. |
-| [Presence](/presence) | Keeping an element mounted through its exit animation. |
-| [FocusLock](/focus-lock) | Keeping focus inside a container. |
-| [RovingFocus](/roving-focus) | Arrow-key movement inside a toolbar or grid. |
-| [announce](/announce) | Speaking a message to screen readers. |
-| [useMeasure](/use-measure) | Reading an element's settled size. |
 | [Icons](/icons) | The Material Symbols icon set. |
+| [Reference](/reference) | Rendering the API reference for a type. |

@@ -26,6 +26,14 @@ const card = css({
     outlineColor: 'docsRing',
     outlineOffset: '2px',
   },
+  '&:hover [data-pager-arrow="next"]': { color: 'docsText', transform: 'translateX(2px)' },
+  '&:hover [data-pager-arrow="prev"]': { color: 'docsText', transform: 'translateX(-2px)' },
+})
+
+const arrow = css({
+  display: 'inline-flex',
+  color: 'docsMuted',
+  transition: 'color 0.15s ease, transform 0.15s ease',
 })
 
 const eyebrow = css({
@@ -60,9 +68,17 @@ function PagerCard({ direction, doc }: { direction: 'prev' | 'next'; doc: DocLin
         justifyContent={isPrev ? 'flex-start' : 'flex-end'}
         className={title}
       >
-        {isPrev ? <ArrowBackIcon /> : null}
+        {isPrev ? (
+          <span data-pager-arrow="prev" className={arrow}>
+            <ArrowBackIcon size="sm" />
+          </span>
+        ) : null}
         {doc.title}
-        {isPrev ? null : <ArrowForwardIcon />}
+        {isPrev ? null : (
+          <span data-pager-arrow="next" className={arrow}>
+            <ArrowForwardIcon size="sm" />
+          </span>
+        )}
       </Span>
     </>
   )

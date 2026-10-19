@@ -1,0 +1,66 @@
+---
+title: CLI
+section: System
+order: 3
+slug: cli
+description: The ref commands and their options.
+---
+
+# CLI
+
+The `ref` command comes with `@reference-ui/core`. It creates your config,
+syncs your system and removes what sync generated.
+
+| Command | What it does |
+| --- | --- |
+| `ref init` | Writes a default `ui.config.ts`. |
+| `ref sync` | Compiles your stylesheet and types into `.reference-ui/`. |
+| `ref clean` | Removes `.reference-ui/` and the links sync made. |
+
+Every command takes an optional project directory, `[dir]`, which defaults to
+the current directory.
+
+## init
+
+```bash
+npx ref init [dir]
+```
+
+Writes `ui.config.ts` into the project directory. The config takes its `name`
+from `package.json`, falling back to `my-app`, includes `src/**/*.{ts,tsx}`,
+and extends the `@reference-ui/lib` base system.
+
+If the directory already has a `ui.config.ts`, `ui.config.js` or
+`ui.config.mjs`, init writes nothing and exits with code 1.
+
+## sync
+
+```bash
+npx ref sync [dir]
+npx ref sync --watch [dir]
+```
+
+Reads the config and your source, then writes the generated packages to
+`.reference-ui/` and links them into `node_modules/@reference-ui/`. See
+[Sync](/sync).
+
+| Option | Description |
+| --- | --- |
+| `--watch` | Stay running and resync when a matched file or the config changes. |
+| `--verbose` | List every warning with its location and a fix hint. |
+| `--quiet` | Print nothing on success. Errors still print. |
+| `--json` | Print diagnostics as a JSON array on stdout. Other output moves to stderr. |
+| `--break-lock` | Take the sync lock from another process unconditionally. |
+| `--debug` | Trace the file events watch mode receives. |
+
+Only one sync runs per project at a time. A one-off sync that finds a watch
+session already running hands the work to it and exits with code 0.
+
+## clean
+
+```bash
+npx ref clean [dir]
+```
+
+Removes `.reference-ui/` and the `node_modules/@reference-ui/` links sync
+created. Run `ref sync` afterwards to generate them again.

@@ -1,0 +1,110 @@
+---
+title: Setup
+section: MCP
+order: 2
+slug: mcp-setup
+description: Connect the Reference UI MCP server to your coding agent.
+---
+
+{/* TODO: @reference-ui/mcp is not on npm yet; these commands work once it is published. */}
+
+# Setup
+
+## 1. Sync your project
+
+Run `ref sync` in the folder with your `ui.config.ts`. The server reads the
+types it writes.
+
+```bash
+npx ref sync
+```
+
+## 2. Add the server
+
+Your agent starts the server itself. Add it to your agent's MCP config:
+
+<CodeTabs labels={['Claude Code', 'Cursor', 'VS Code', 'Codex', 'Other']}>
+
+```bash
+claude mcp add reference-ui -- npx -y @reference-ui/mcp
+```
+
+```json
+// .cursor/mcp.json
+{
+  "mcpServers": {
+    "reference-ui": { "command": "npx", "args": ["-y", "@reference-ui/mcp"] }
+  }
+}
+```
+
+```json
+// .vscode/mcp.json
+{
+  "servers": {
+    "reference-ui": { "type": "stdio", "command": "npx", "args": ["-y", "@reference-ui/mcp"] }
+  }
+}
+```
+
+```bash
+codex mcp add reference-ui -- npx -y @reference-ui/mcp
+```
+
+```json
+{
+  "mcpServers": {
+    "reference-ui": { "command": "npx", "args": ["-y", "@reference-ui/mcp"] }
+  }
+}
+```
+
+</CodeTabs>
+
+The server looks for your project starting from the folder your agent runs
+in. If your agent runs somewhere else, pass the project path:
+
+```bash
+npx -y @reference-ui/mcp --project ./apps/web
+```
+
+## 3. Try it
+
+Ask your agent *"Which components does this project have?"* It should list
+your components, read from the server.
+
+## Over HTTP
+
+For agents that connect to a URL instead of starting a command, run the server
+yourself:
+
+```bash
+npx -y @reference-ui/mcp --http
+```
+
+It prints the address when it is ready:
+
+```txt
+[ref mcp] ready http://127.0.0.1:3697/mcp
+```
+
+Point your agent at that URL. Change the host and port with `--host` and
+`--port` (see [Configuration](/mcp-configuration#command-line-options)).
+
+## Common failures
+
+### "has not been synced yet"
+
+The project has a `ui.config.ts` but no generated types. Run `ref sync` in
+that project. Your agent can then load it with `select_project`, or you can
+restart the server.
+
+### Answers miss a new component
+
+The server builds its model when it first loads a project. Restart the server
+to pick up components and call sites added since.
+
+### The tools don't appear
+
+Restart your agent after changing its MCP config, and check the config file
+is where your agent expects it.

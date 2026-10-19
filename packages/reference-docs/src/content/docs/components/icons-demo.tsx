@@ -1,12 +1,15 @@
+import { Div } from '@reference-ui/react'
 import { HomeIcon, SearchIcon, SettingsIcon } from '@reference-ui/lib'
 
-/** Three icons: default size, a size token, and the filled variant. */
+/** The three size names, then the filled variant. */
 export function IconsDemo() {
   return (
-    <>
-      <SearchIcon aria-label="Search" />
-      <SettingsIcon size="lg" aria-label="Settings" />
-      <HomeIcon variant="filled" size="lg" aria-label="Home" />
-    </>
+    <Div display="flex" alignItems="center" gap="4r">
+      <SearchIcon size="sm" role="img" aria-label="Search" />
+      <SearchIcon role="img" aria-label="Search" />
+      <SearchIcon size="lg" role="img" aria-label="Search" />
+      <SettingsIcon size="lg" role="img" aria-label="Settings" />
+      <HomeIcon variant="filled" size="lg" role="img" aria-label="Home" />
+    </Div>
   )
 }

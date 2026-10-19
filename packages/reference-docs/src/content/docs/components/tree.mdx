@@ -3,6 +3,7 @@ title: Tree
 section: Components
 order: 34
 slug: tree
+description: A nested, collapsible list with single selection.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -10,8 +11,8 @@ import { TreeDemo } from './tree-demo'
 
 # Tree
 
-Tree is a nested, collapsible list with single selection, such as a file
-outline.
+Tree shows items in a hierarchy, such as a file outline. Branches open and
+close, and one item can be selected.
 
 <Preview>
   <TreeDemo />
@@ -33,7 +34,7 @@ export function Files() {
       onExpandedChange={setExpanded}
     >
       <Tree.Item value="src">
-        <Tree.Expander aria-label="Toggle src" />
+        <Tree.Expander />
         src
         <Tree.Group>
           <Tree.Item value="src/index">index.ts</Tree.Item>
@@ -51,27 +52,151 @@ export function Files() {
 import { Tree } from '@reference-ui/lib'
 ```
 
-Parts: `Tree.Item` (`role="treeitem"`), `Tree.Group` (the nested items of a
-branch), and `Tree.Expander` (a toggle button). An item with a `Tree.Group`
-child is a branch.
+## Anatomy
 
-## Props
+```tsx
+<Tree>
+  <Tree.Item>
+    <Tree.Expander />
+    <Tree.Group>
+      <Tree.Item />
+    </Tree.Group>
+  </Tree.Item>
+</Tree>
+```
+
+An Item with a `Tree.Group` child is a branch. The Group holds the
+branch's children and renders only while the branch is expanded, so
+collapsed items are not in the keyboard order.
+
+Selection is controlled. `value` is the selected item, or `null` for none,
+and `onChange` receives the next one. Tree throws if either is missing.
+
+## Examples
+
+### Uncontrolled expansion
+
+Leave out `expanded` and Tree tracks expansion itself. `defaultExpanded`
+sets the branches open on first render, and `onExpandedChange` still
+reports each change.
+
+```tsx
+<Tree aria-label="Files" value={selected} onChange={setSelected} defaultExpanded={['src']}>
+  …
+</Tree>
+```
+
+### Disabled items
+
+`disabled` on an Item stops it from being selected, focused or expanded.
+`disabled` on the Tree does this for every Item.
+
+```tsx
+<Tree.Item value="dist" disabled>dist</Tree.Item>
+```
+
+### Typeahead text
+
+Typing moves focus to the next visible item whose text starts with the
+typed characters. Set `textValue` when the row's text is not what users
+would type.
+
+```tsx
+<Tree.Item value="readme" textValue="readme">
+  <FileIcon /> README.md
+</Tree.Item>
+```
+
+### Branches without children yet
+
+Set `isBranch` on an Item whose children are not rendered yet, such as
+while they load. It is then treated as a branch, with `aria-expanded`.
+
+### Inside a Combobox
+
+A Tree inside a [Combobox](/combobox) popup leaves selection to the
+Combobox. Drop `onChange` and `value`: the Combobox's own value is shown
+as selected, and focus stays in its input while the arrow keys move through
+the Tree.
+
+## API reference
+
+### Tree
+
+The root. Renders a `div` with `role="tree"`.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `value` | `string \| null` | — | Required. Selected item; `null` for none. |
-| `onChange` | `(value: string \| null) => void` | — | Required. Called on selection. |
+| `value` | `string \| null` | — | Required. The selected item; `null` for none. |
+| `onChange` | `(value: string \| null) => void` | — | Required. Called when an item is selected. |
 | `expanded` | `string[]` | — | Controlled expanded branches. |
-| `defaultExpanded` | `string[]` | `[]` | Initial expanded branches when `expanded` is omitted. |
+| `defaultExpanded` | `string[]` | `[]` | Branches expanded on first render when `expanded` is omitted. |
 | `onExpandedChange` | `(expanded: string[]) => void` | — | Called when a branch opens or closes. |
-| `disabled` | `boolean` | `false` | Disables the tree. |
+| `disabled` | `boolean` | `false` | Disables every item. |
 
-`Tree.Item` takes `value`, `disabled`, and `textValue` (for typeahead).
+| Attribute | Values |
+| --- | --- |
+| `[data-disabled]` | Present when `disabled`. |
 
-## Behaviour
+### Tree.Item
 
-- Up and Down move between visible items; Right expands or moves to the
-  first child; Left collapses or moves to the parent.
-- Enter and Space select the focused item; typing jumps to a matching item.
-- Clicking `Tree.Expander` toggles the branch without selecting it.
-- Tree throws if `value` or `onChange` is missing.
+One row. Renders a `div` with `role="treeitem"`. A branch wraps its row
+content in a `[data-slot="row"]` element, followed by its Group.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | — | The item's id, used by `value` and `expanded`. Also set as its DOM `id`. |
+| `disabled` | `boolean` | `false` | Disables the item. |
+| `textValue` | `string` | — | Text used for typeahead instead of the item's content. |
+| `isBranch` | `boolean` | `false` | Treat the item as a branch without a Group child. |
+
+| Attribute | Values |
+| --- | --- |
+| `[data-state]` | `selected`, `unselected` |
+| `[data-selected]` | Present when selected. |
+| `[data-expanded]` | Present when an expanded branch. |
+| `[data-disabled]` | Present when disabled. |
+| `[data-active]` | Present on the item that holds the tab stop. |
+| `[data-level]` | Nesting depth, starting at `1`. |
+
+### Tree.Group
+
+The children of a branch. Renders a `div` with `role="group"`, indented,
+only while its branch is expanded.
+
+### Tree.Expander
+
+A button that opens and closes its branch. Clicking it does not select the
+item. It is skipped by Tab, since the arrow keys expand from the item.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `children` | `ReactNode` | chevron | Replaces the default chevron icon. |
+| `aria-label` | `string` | `'Expand'` / `'Collapse'` | Accessible name. Defaults follow the branch state. |
+
+## Accessibility
+
+Adheres to the [Tree View WAI-ARIA design pattern](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/).
+
+Give the Tree an accessible name with `aria-label` or `aria-labelledby`.
+
+One item is in the tab order at a time: the selected item when it is
+visible, otherwise the first one. Collapsing a branch that holds focus
+moves focus to the branch.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `ArrowDown` | Moves focus to the next visible item. |
+| `ArrowUp` | Moves focus to the previous visible item. |
+| `ArrowRight` | Opens a closed branch. On an open branch, moves focus to its first child. |
+| `ArrowLeft` | Closes an open branch. Otherwise, moves focus to the parent. |
+| `Home` | Moves focus to the first visible item. |
+| `End` | Moves focus to the last visible item. |
+| `Enter` / `Space` | Selects the focused item. |
+| `*` | On a closed branch, opens it. On an open branch, opens every closed sibling branch. On a leaf, opens the first closed sibling branch. |
+| Characters | Moves focus to the next visible item whose text starts with the typed characters. Typing the same letter again cycles through matches. |
+
+In right-to-left layouts `ArrowRight` and `ArrowLeft` are swapped. Disabled
+items are skipped.

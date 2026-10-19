@@ -1,0 +1,158 @@
+---
+title: Slot
+section: Components
+order: 57
+slug: slot
+description: Named regions for compound components, filled by parts in any order.
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { SlotDemo } from './slot-demo'
+
+# Slot
+
+Named regions for your own compound components. A part registers an
+element under a slot id, and the component's layout renders it where that
+region belongs.
+
+<Preview>
+  <SlotDemo />
+</Preview>
+
+```tsx
+import type { ReactNode } from 'react'
+import { Div, H3 } from '@reference-ui/react'
+import { createSlotRootContext } from '@reference-ui/lib'
+
+const CardSlots = createSlotRootContext()
+
+function Card({ children }: { children: ReactNode }) {
+  return (
+    <CardSlots.Provider>
+      {children}
+      <CardLayout />
+    </CardSlots.Provider>
+  )
+}
+
+function CardTitle({ children }: { children: ReactNode }) {
+  CardSlots.useSlotRegistration({ slotId: 'title', element: <H3>{children}</H3> })
+  return null
+}
+
+function CardActions({ children }: { children: ReactNode }) {
+  CardSlots.useSlotRegistration({ slotId: 'actions', element: <Div>{children}</Div> })
+  return null
+}
+
+function CardLayout() {
+  const title = CardSlots.useSlot('title')
+  const actions = CardSlots.useSlot('actions')
+  return (
+    <Div>
+      {title?.element}
+      {actions?.element}
+    </Div>
+  )
+}
+```
+
+The parts can be written in any order. The layout decides where each one
+goes:
+
+```tsx
+<Card>
+  <CardActions>
+    <Button>Publish</Button>
+  </CardActions>
+  <CardTitle>Publish this draft?</CardTitle>
+</Card>
+```
+
+Slot renders no element of its own, and it does not move DOM nodes. To
+render content elsewhere in the DOM, use [Portal](/portal).
+
+## Import
+
+```tsx
+import { createSlotRootContext } from '@reference-ui/lib'
+```
+
+## Usage
+
+1. Call `createSlotRootContext()` once per component, at module scope.
+   Each call gets its own registry, so two components never share slots.
+2. Wrap the component in its `Provider`, and render the layout after
+   `children`.
+3. In each part, call `useSlotRegistration` with a `slotId` and the
+   element to show. Return `null`: the layout renders the element.
+4. In the layout, read regions with `useSlot(id)` or `useSlots(filter)`.
+
+Content stays live. When a part re-renders with new children, the layout
+shows them without a remount.
+
+### Meta
+
+Pass `meta` to attach data to a registration, and type it on the root:
+
+```tsx
+const ToolbarSlots = createSlotRootContext<{ align: 'start' | 'end' }>()
+
+ToolbarSlots.useSlotRegistration({ slotId: 'item', element, meta: { align: 'end' } })
+
+const endItems = ToolbarSlots.useSlots(slot => slot.meta?.align === 'end')
+```
+
+### Visibility
+
+A registration can carry `visibility`. `resolveSlotVisibility` turns it
+into `'visible'`, `'hidden'` or `'unmounted'`, and the layout decides what
+to render. Hiding a region does not unregister it. Pass the flags in
+`deps` so the layout updates when they change.
+
+```tsx
+CardSlots.useSlotRegistration(
+  { slotId: 'footer', element, visibility: { hidden: collapsed } },
+  [collapsed],
+)
+
+const footer = CardSlots.useSlot('footer')
+const state = resolveSlotVisibility(footer?.visibility)
+```
+
+## API reference
+
+### createSlotRootContext
+
+`createSlotRootContext<TMeta>()` returns:
+
+| Member | Type | Description |
+| --- | --- | --- |
+| `Provider` | `ComponentType<{ children?, root? }>` | Scopes a registry to one component tree. Renders no element. |
+| `useSlotRegistration` | `(options, deps?) => void` | Registers an element while the calling part is mounted. |
+| `useSlot` | `(slotId) => SlotRegistration \| undefined` | The first registration with that id. |
+| `useSlots` | `(filter?) => SlotRegistration[]` | Every registration that matches, in registration order. |
+| `useRoot` | `() => SlotRoot` | The registry itself. |
+
+The hooks throw outside their `Provider`.
+
+### useSlotRegistration options
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `slotId` | `string` | — | The region to fill. |
+| `element` | `ReactElement` | — | What the layout renders. |
+| `meta` | `TMeta` | — | Data for the layout to read. |
+| `visibility` | `{ visible?: boolean, hidden?: boolean }` | — | `hidden: true` resolves to `'hidden'`; `visible: false` to `'unmounted'`. |
+
+`deps` defaults to `[]`. A change to `slotId` or `deps` re-registers in
+place; content changes never need a dep.
+
+### Helpers
+
+| Export | Description |
+| --- | --- |
+| `resolveSlotVisibility(visibility?)` | Returns `'visible'`, `'hidden'` or `'unmounted'`. `hidden` wins. |
+| `transformSlotElements(slots, createProps)` | Clones each slot's element with props from `createProps(slot)`. |
+| `createSlotCacheKey(slots)` | A string key built from the sorted slot ids. |
+| `SlotRoot` | The registry class, for passing a custom `root` to `Provider`. |

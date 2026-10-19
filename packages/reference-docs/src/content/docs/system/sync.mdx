@@ -1,0 +1,142 @@
+---
+title: Sync
+section: System
+order: 0
+slug: sync
+description: Compile your styles and types, once or in watch mode.
+---
+
+# Sync
+
+`ref sync` compiles your stylesheet and types from `ui.config.ts` and the
+files its `include` globs match.
+
+Sync writes four packages to `.reference-ui/` and links each one into
+`node_modules/@reference-ui/`, so you import them like any other package.
+
+| Package | What you use it for |
+| --- | --- |
+| `@reference-ui/react` | Primitives such as `Div`, `css()`, `recipe()`, and `styles.css` |
+| `@reference-ui/system` | `tokens()`, `font()`, `keyframes()`, `globalCss()`, and your `baseSystem` |
+| `@reference-ui/styled` | Token and style prop types |
+| `@reference-ui/types` | Type metadata about your components |
+
+Sync compiles only the style values it finds in your source. A value you add
+after the last sync has no CSS until the next one.
+
+## Usage
+
+Run sync from the directory that holds `ui.config.ts`.
+
+<Step n={1}>Run sync once</Step>
+
+```bash
+npx ref sync
+```
+
+Sync prints the time it took and the size of the stylesheet:
+
+```text
+  REF  v0.0.0  ready in 840 ms
+
+  ➜  CSS:       41.2 KB
+```
+
+When there are warnings, a `Warnings:` row shows the count. Run
+`npx ref sync --verbose` to list each one with its location and a fix hint.
+
+<Step n={2}>Sync before every build</Step>
+
+Add sync to your build script so a build never ships a stale stylesheet.
+
+```json {4}
+{
+  "scripts": {
+    "sync": "ref sync",
+    "build": "ref sync && vite build"
+  }
+}
+```
+
+Sync again after you install or upgrade `@reference-ui/lib`. Its tokens and
+types reach your project through sync.
+
+<Step n={3}>Watch during development</Step>
+
+```bash
+npx ref sync --watch
+```
+
+Watch mode syncs once and keeps running. It resyncs when a matched file
+changes, and when `ui.config.ts` or a file it imports changes. Each resync
+prints one line:
+
+```text
+⎔ ref sync ⫶ 38 ms ⫶ 41.3 KB
+```
+
+<Step n={4}>Run it beside your dev server</Step>
+
+Reference UI has no bundler plugin. Run watch mode next to your dev server,
+for example with the `concurrently` package:
+
+```json {3}
+{
+  "scripts": {
+    "dev": "ref sync && concurrently --kill-others \"ref sync --watch\" \"vite\""
+  }
+}
+```
+
+The first `ref sync` makes sure the generated packages exist before the dev
+server starts.
+
+## Verify the output
+
+1. `.reference-ui/` holds `react`, `styled`, `system` and `types` folders.
+2. `node_modules/@reference-ui/react` points to `.reference-ui/react`.
+3. With watch mode running, add `padding="6r"` to a `Div`. A resync line
+   appears and the page picks up the padding.
+
+To start over, run `npx ref clean`, then `npx ref sync`. The
+[CLI](/cli) page lists every option.
+
+## Common errors
+
+**`No ui.config.ts, ui.config.js or ui.config.mjs found in <dir>`**
+
+Sync looks only in the directory it runs in. Run it from the project root, or
+pass the root: `npx ref sync ./apps/web`.
+
+**`Config must have a non-empty 'name'`** or
+**`Config must have an 'include' array`**
+
+Add `name` and `include` to `defineConfig`. See [Config](/config).
+
+**`include matched no files`**
+
+A warning. Nothing under that pattern is compiled. Fix the glob, or add the
+files it should reach.
+
+**`[ref] already watching this project`**
+
+A watch session already owns the project, so this sync hands the work to it
+and exits with code 0. Expected while your dev script runs.
+
+**`the lock is held by pid <pid> on host <host>`**
+
+Another machine is syncing the same `.reference-ui/` folder over a shared
+filesystem. Stop that sync, or rerun with `--break-lock`.
+
+**`BSS-W-SLOW-CONFIG`**
+
+`ui.config.ts` took over 750 ms to load, usually because it imports
+`@reference-ui/lib` instead of `@reference-ui/lib/baseSystem`. Import the
+subpath the warning names.
+
+**`ATM-W-EXTERNAL-UNBACKED`**
+
+You set style props on a component from a package, such as
+`<SearchIcon marginLeft="2r" />`, but that package's system is in neither
+`extends` nor `layers`. The props do not paint. Add the `baseSystem` the
+warning names to `extends` or `layers`.

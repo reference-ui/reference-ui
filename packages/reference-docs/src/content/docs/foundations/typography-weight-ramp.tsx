@@ -4,10 +4,10 @@ import { Div, Span } from '@reference-ui/react'
 /**
  * Weight ramps for the Typography page, grouped by weight name so the three
  * families sit directly on top of each other for the same weight. Families and
- * weights are written out literally — the style engine extracts `font` and
+ * weights are written out literally: the style engine extracts `font` and
  * `weight` from literal JSX, so a loop over data would drop them. The number
  * beside each family is the value that weight resolves to in that family.
- * `bold` is the heaviest shipped weight — none of the families ship `black`.
+ * `bold` is the heaviest shipped weight. None of the families ship `black`.
  */
 
 const specStyle = {

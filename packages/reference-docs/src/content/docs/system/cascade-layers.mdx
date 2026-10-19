@@ -1,0 +1,80 @@
+---
+title: Cascade layers
+section: System
+order: 13
+slug: cascade-layers
+description: How the stylesheet orders its rules, and how your own CSS fits in.
+---
+
+# Cascade layers
+
+The stylesheet puts every rule in a CSS cascade layer, so which rule wins
+depends on its layer, not on selector specificity or file order.
+
+## Layer order
+
+Inside your system, rules sit in six layers. A later layer wins over an
+earlier one:
+
+```css
+@layer reset, global, base, tokens, recipes, utilities;
+```
+
+| Layer | Contents |
+| --- | --- |
+| `reset` | The CSS reset, when [`normalizeCss`](/config#normalizecss) is on. |
+| `global` | `globalCss()` rules, `@keyframes` and `@font-face`. |
+| `base` | Reserved. Sync writes nothing to it. |
+| `tokens` | Token custom properties, with their light and dark values. |
+| `recipes` | `recipe()` classes. |
+| `utilities` | Style props and `css()` classes. |
+
+So a style prop always overrides a recipe or a global rule on the same
+element, with no `!important`.
+
+## One layer per system
+
+All six layers sit inside a layer named after your system's
+[`name`](/config#name). Each system in `extends` and `layers` gets its own
+layer too, ordered before yours:
+
+```css
+@layer root { :root { --spacing-root: 0.25rem } }
+@layer reference-ui, my-app;
+@layer reference-ui {
+  @layer reset, global, base, tokens, recipes, utilities;
+  /* … */
+}
+@layer my-app {
+  @layer reset, global, base, tokens, recipes, utilities;
+  /* … */
+}
+```
+
+Systems in `extends` come first, then systems in `layers`, then yours, each
+group in config order. Your rules win over theirs.
+
+The `root` layer comes before everything. It holds only the default
+`--spacing-root`, so any `--spacing-root` you set wins. See
+[Spacing](/spacing#set-the-root).
+
+## Your own CSS
+
+CSS that is not in a layer wins over every layered rule. A stylesheet you
+import beside `@reference-ui/react/styles.css` therefore overrides Reference
+UI styles for the same property, whatever the selectors.
+
+To rank your CSS below Reference UI instead, put it in a layer declared
+before the stylesheet:
+
+```css
+/* app.css, imported before @reference-ui/react/styles.css */
+@layer legacy;
+
+@layer legacy {
+  .button { padding: 8px; }
+}
+```
+
+Prefer `globalCss()` for new rules: it puts them in your system's `global`
+layer and lets them use your tokens.

@@ -12,3 +12,25 @@ export function SwitchDemo() {
     </Div>
   )
 }
+
+/** An uncontrolled switch, a disabled one, and one with an authored square thumb. */
+export function SwitchVariantsDemo() {
+  return (
+    <Div display="flex" flexDirection="column" gap="3r">
+      <Label display="flex" alignItems="center" gap="3r">
+        <Switch defaultChecked />
+        Notifications
+      </Label>
+      <Label display="flex" alignItems="center" gap="3r">
+        <Switch disabled />
+        Sync (unavailable)
+      </Label>
+      <Label display="flex" alignItems="center" gap="3r">
+        <Switch defaultChecked borderRadius="md">
+          <Switch.Thumb borderRadius="sm" />
+        </Switch>
+        Compact mode
+      </Label>
+    </Div>
+  )
+}

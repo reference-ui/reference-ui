@@ -1,8 +1,9 @@
 ---
 title: Animation
 section: System
-order: 8
+order: 11
 slug: animation
+description: Keyframes, animation tokens and reduced motion.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -10,10 +11,8 @@ import { AnimationDemo } from './animation-demo'
 
 # Animation
 
-Define a motion once and apply it by name. `keyframes()` declares the steps
-of an animation, and an `animations` token bundles those keyframes with a
-duration, an easing and an iteration count. An element then runs it with one
-prop: `animation="fade.in"`.
+`keyframes()` defines the steps of an animation. An `animations` token gives
+it a name, a duration and an easing, so an element runs it with one prop.
 
 <Preview>
   <AnimationDemo />
@@ -21,8 +20,8 @@ prop: `animation="fade.in"`.
 
 ## Define keyframes
 
-Call `keyframes()` with one entry per animation name. Each entry maps steps
-(`from`, `to`, or percentages) to declarations:
+Call `keyframes()` with one entry per animation. Each entry maps steps
+(`from`, `to` or percentages) to declarations:
 
 ```ts
 // src/theme/motion.ts
@@ -40,14 +39,13 @@ keyframes({
 })
 ```
 
-The engine prints each one as an `@keyframes` rule, once, in the `global`
-layer. Values inside a step resolve like any style value, so token names,
-`{colors.brand}` references and rhythm units such as `2r` all work.
+Each entry becomes one `@keyframes` rule in the `global`
+[cascade layer](/cascade-layers). Token names, `{colors.brand}` references and
+rhythm units work inside the steps.
 
 ## Name an animation
 
-Add an `animations` token whose value is a CSS `animation` shorthand that uses
-your keyframes:
+Add an `animations` token whose value is a CSS `animation` shorthand:
 
 ```ts
 import { tokens } from '@reference-ui/system'
@@ -66,8 +64,7 @@ tokens({
 
 ## Run an animation
 
-The `animation` prop and the `animation` key in `css()` look token names up
-in the `animations` category:
+`animation` looks up names in the `animations` category:
 
 ```tsx
 import { Div, css } from '@reference-ui/react'
@@ -77,28 +74,22 @@ import { Div, css } from '@reference-ui/react'
 const loading = css({ animation: 'pulse.slow' })
 ```
 
-The utility uses the token's variable, `var(--animations-pulse-slow)`, so
-retuning the token's duration or easing changes every element that uses it.
+The class uses the token's variable, so changing the token's duration or
+easing changes every element that uses it.
 
-You can skip the token and write the shorthand directly, as in plain CSS:
-`animation="fadeIn 0.2s ease-out"`. The keyframes still come from
-`keyframes()`.
+You can also write the shorthand directly: `animation="fadeIn 0.2s ease-out"`.
 
-## Respect reduced motion
+## Reduced motion
 
-The `_motionReduce` condition matches when the user asks for less motion:
+`_motionReduce` applies when the user asks for less motion, and
+`_motionSafe` when they do not:
 
 ```tsx
 <Div animation="pulse.slow" _motionReduce={{ animation: 'none' }} />
 ```
 
-`_motionSafe` is its opposite.
-
-## Replay a one-shot animation
-
-An animation that runs once (no `infinite`) runs when the element first
-renders. To run it again, remount the element, for example by changing its
-React `key`. The demo above does this for `example.fade`.
+With the [reset](/global-css#the-reset) on, animations and transitions
+already shrink to almost nothing for these users.
 
 ## Reference
 
@@ -106,15 +97,13 @@ React `key`. The demo above does this for `example.fade`.
 function keyframes(config: KeyframesConfig): void
 
 type KeyframesConfig = Record<
-  string,                                    // animation name
-  Record<string, Record<string, string | number>>  // step -> declarations
+  string,                                         // animation name
+  Record<string, Record<string, string | number>> // step: declarations
 >
 ```
 
-| Token category | Value | Read by |
+| Token category | Value | Used by |
 | --- | --- | --- |
 | `animations` | A CSS `animation` shorthand | `animation`, `animationName` |
-
-Related token categories for transitions: `durations` (read by
-`transitionDuration`) and `easings` (read by `transitionTimingFunction`). See
-[Tokens](/tokens#categories).
+| `durations` | A time, such as `150ms` | `transitionDuration` |
+| `easings` | A timing function | `transitionTimingFunction` |

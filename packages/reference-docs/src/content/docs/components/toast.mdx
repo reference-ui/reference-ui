@@ -3,6 +3,7 @@ title: Toast
 section: Components
 order: 14
 slug: toast
+description: Brief notifications that stack in a corner of the screen and dismiss themselves.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -10,9 +11,8 @@ import { ToastDemo } from './toast-demo'
 
 # Toast
 
-Toasts are brief notifications that appear in a corner of the screen and
-dismiss themselves. Call `toast()` from anywhere; the queue renders inside
-[ReferenceLibrary](/reference-library).
+A brief notification that appears in a corner of the screen and dismisses
+itself.
 
 <Preview>
   <ToastDemo />
@@ -22,58 +22,210 @@ dismiss themselves. Call `toast()` from anywhere; the queue renders inside
 import { Button } from '@reference-ui/react'
 import { toast } from '@reference-ui/lib'
 
-<Button
-  onClick={() =>
-    toast('Changes saved', {
-      description: 'Your settings were updated.',
-      closeButton: true,
-    })
-  }
->
+<Button onClick={() => toast('Changes saved', { description: 'Your settings were updated.' })}>
   Show toast
 </Button>
 ```
 
-Mount `ReferenceLibrary` once near your app root; without it, no toast host
-renders.
+Toasts render inside [ReferenceLibrary](/reference-library). Mount it once
+near your app root; without it, `toast()` queues records but nothing shows.
 
 ## Import
 
 ```tsx
-import { toast } from '@reference-ui/lib'
+import { Toast, toast } from '@reference-ui/lib'
 ```
 
-## API
+`Toast` holds the parts, for custom markup.
+
+## Anatomy
+
+A toast is a call, not an element. `toast()` renders the default card. For
+your own markup, pass a render function to `toast.custom()` and compose the
+parts.
+
+```tsx
+toast.custom(() => (
+  <Toast.Root>
+    <Toast.Title />
+    <Toast.Description />
+    <Toast.Action />
+    <Toast.Cancel />
+    <Toast.Close />
+  </Toast.Root>
+))
+```
+
+## Examples
+
+### Types
+
+`success`, `error`, `warning` and `info` show the matching status icon.
+
+```tsx
+toast.success('Invite sent')
+toast.error('Upload failed')
+toast.warning('Storage almost full')
+toast.info('A new version is available')
+```
+
+### Action and cancel
+
+`action` and `cancel` take a label and a click handler. Both dismiss the
+toast after the click unless the handler calls `event.preventDefault()`.
+
+```tsx
+toast('File deleted', {
+  action: { label: 'Undo', onClick: () => restore(file) },
+})
+```
+
+### Promise
+
+`toast.promise` shows a loading toast, then updates the same toast when the
+promise settles. `success` and `error` take content or a function of the
+result. The settled toast stays for 4 seconds.
+
+```tsx
+toast.promise(saveReport(), {
+  loading: 'Saving report',
+  success: report => `${report.name} saved`,
+  error: 'Could not save the report',
+})
+```
+
+### Updating a toast
+
+Every call returns the toast's id. Pass it to `toast.update` to change the
+toast in place, or reuse it as the `id` option.
+
+```tsx
+const id = toast.loading('Uploading')
+// later
+toast.update(id, 'Upload complete', { type: 'success', duration: 3000 })
+```
+
+A loading toast stays until it is updated or dismissed.
+
+### Custom toasts
+
+`toast.custom` takes a render function that receives the toast's id. The
+parts read the toast from context, so `Toast.Close` and `Toast.Action`
+dismiss the right toast.
+
+```tsx
+toast.custom(id => (
+  <Toast.Root>
+    <Toast.Title>Draft saved</Toast.Title>
+    <Toast.Description>Saved to your workspace.</Toast.Description>
+    <Toast.Action onClick={() => openDraft(id)}>Open</Toast.Action>
+    <Toast.Close />
+  </Toast.Root>
+))
+```
+
+### Defined toasts
+
+`toast.define` returns a reusable toast. Call it with its props to show it.
+`render` also receives `close`, which dismisses that toast.
+
+```tsx
+const ProjectSaved = toast.define<{ name: string }>({
+  duration: 4000,
+  render: ({ name }, { close }) => (
+    <Toast.Root>
+      <Toast.Title>{name} was saved</Toast.Title>
+      <Button onClick={close}>Dismiss</Button>
+    </Toast.Root>
+  ),
+})
+
+const id = ProjectSaved({ name: 'Atlas' }, { announce: 'Atlas was saved' })
+ProjectSaved.update(id, { name: 'Atlas v2' })
+```
+
+## API reference
+
+### toast
 
 | Call | Returns | Description |
 | --- | --- | --- |
-| `toast(message, options?)` | `string` id | Show a default toast. |
-| `toast.success / error / warning / info (message, options?)` | `string` id | Show a typed toast. |
-| `toast.loading(message, options?)` | `string` id | Show a toast that stays until updated or dismissed. |
-| `toast.promise(promise, { loading, success, error })` | the promise | Show loading, then success or error when the promise settles. |
-| `toast.define({ duration?, position?, render })` | definition | Define a toast with your own markup. Call the definition with its props to show it. |
-| `toast.update(id, message, options?)` | — | Replace the content of a visible toast. |
-| `toast.dismiss(id?)` | — | Dismiss one toast, or every toast when `id` is omitted. `toast.dismissAll()` does the same. |
+| `toast(message, options?)` | `string` | Shows a default toast. `toast.message` and `toast.show` are the same call. |
+| `toast.success / error / warning / info(message, options?)` | `string` | Shows a typed toast. |
+| `toast.loading(message, options?)` | `string` | Shows a loading toast with no duration. |
+| `toast.promise(promise, data, options?)` | the promise | Shows `data.loading`, then `data.success` or `data.error`. `data.finally` runs once after. |
+| `toast.custom(render, options?)` | `string` | Shows `render(id)` as the toast. |
+| `toast.define({ render, duration?, position? })` | definition | Returns a callable toast with `update(id, props)` and `dismiss(id)`. |
+| `toast.update(id, message, options?)` | `void` | Replaces a visible toast's content and options. |
+| `toast.dismiss(id?)` | `void` | Dismisses one toast, or all of them when `id` is omitted. |
+| `toast.dismissAll()` | `void` | Dismisses every toast. |
+| `toast.getToasts()` | records | The toasts in the queue. |
 
-## Options
+### Options
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `description` | `ReactNode` | — | Secondary text under the message. |
-| `duration` | `number \| false` | `5000` | Milliseconds before auto-dismiss; `false` keeps it open. |
-| `position` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | `'bottom-end'` | Screen corner or edge. |
-| `closeButton` | `boolean` | — | Show a close button. |
-| `action` / `cancel` | `{ label, onClick? }` | — | Buttons on the toast. Both dismiss unless `onClick` calls `preventDefault()`. |
-| `id` | `string` | generated | Reuse an id to update a toast in place. |
-| `announce` | `string` | — | Text for screen readers when the toast appears. |
+| `duration` | `number \| false` | `5000` | Milliseconds before it dismisses. `false` keeps it open. |
+| `position` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | `'bottom-end'` | Where it appears. |
+| `id` | `string` | generated | Reuse an id to replace a toast in place. |
+| `type` | `'default' \| 'success' \| 'error' \| 'warning' \| 'info' \| 'loading'` | `'default'` | Status icon. The typed calls set it. |
+| `action` / `cancel` | `{ label, onClick? }` or `ReactNode` | — | Buttons on the default card. |
+| `closeButton` | `boolean` | `false` | Shows a close button. |
+| `icon` | `ReactNode` | — | Replaces the status icon. |
+| `dismissible` | `boolean` | `true` | `false` stops swipe and button dismissal. |
+| `announce` | `string` | — | Text for screen readers. See [Accessibility](#accessibility). |
+| `onDismiss` | `(id) => void` | — | Called when the toast is dismissed. |
+| `onAutoClose` | `(id) => void` | — | Called when its duration runs out. |
+| `richColors` | `boolean` | `false` | Coloured backgrounds for typed toasts. |
+| `unstyled` | `boolean` | `false` | Drops the card's own styling. |
+| `className` / `classNames` / `style` | | — | Class and inline style hooks for the card and its parts. |
 
-Toaster-wide defaults (position, duration, visible limit) are set on
-[ReferenceLibrary](/reference-library) with the `toaster` prop.
+Defaults for every toast (position, duration, visible limit, theme, hotkey)
+are set with the `toaster` prop on [ReferenceLibrary](/reference-library).
+
+### Parts
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Toast.Root` | `div` | The card. Takes `unstyled`. |
+| `Toast.Title` | `div` | The headline. |
+| `Toast.Description` | `div` | Secondary text. |
+| `Toast.Action` | `button` | Primary button. Dismisses its toast after `onClick`. |
+| `Toast.Cancel` | `button` | Secondary button. Dismisses its toast after `onClick`. |
+| `Toast.Close` | `button` | Close button, labelled `Close`, with an X icon by default. |
+| `Toast.Loader` | `div` | The loading spinner. |
+
+`Toast.Root`, `Toast.Title` and `Toast.Description` take style props. The
+buttons take native button props.
 
 ## Behaviour
 
-- At most four toasts are visible by default; extra toasts wait and do not
-  expire unseen.
-- Timers pause while the pointer or keyboard focus is inside a toast, and
-  while an isolating [Overlay](/overlay) is open.
-- Toast does not trap focus or block the page.
+- At most four toasts show at once. Extra toasts wait in order, and their
+  timers do not start until they show.
+- A toast's timer pauses while the pointer or keyboard focus is inside it,
+  while the tab is hidden, and while an isolating [Overlay](/overlay) is
+  open. It resumes with the time that was left.
+- Toasts can be swiped away. Loading toasts cannot.
+- Toast does not trap focus, block the page, or close on `Escape`.
+
+## Accessibility
+
+The toasts sit in a region labelled "Notifications". Toast content is not
+announced on its own: pass `announce` to speak a message to screen readers
+through the same polite live region as [`announce()`](/announce).
+
+```tsx
+toast.success('Invite sent', { announce: 'Invite sent to Sam' })
+```
+
+If focus is inside a toast when it closes, focus returns to the control
+that had it before.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Alt` + `T` | Moves focus to the front toast. Change it with `toaster.hotkey`. |
+| `Tab` | Moves focus through the buttons in a toast. |
+| `Space` / `Enter` | On an action, cancel or close button, runs it and dismisses the toast. |

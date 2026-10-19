@@ -1,0 +1,151 @@
+---
+title: Config
+section: System
+order: 2
+slug: config
+description: Every option in ui.config.ts.
+---
+
+# Config
+
+`ui.config.ts` tells `ref sync` what your system is called, which files to
+read, and which systems it builds on.
+
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem } from '@reference-ui/lib/baseSystem'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [baseSystem],
+})
+```
+
+`ref init` writes this file for you. Sync looks for `ui.config.ts`,
+`ui.config.js` or `ui.config.mjs`, in that order, in the directory it runs in.
+It does not search parent directories.
+
+Import only data modules into the config. Import a base system from its
+`baseSystem` subpath, not from the package root: when the config takes more
+than 750 ms to load, sync warns `BSS-W-SLOW-CONFIG` and names the slow import.
+
+## Required
+
+### name
+
+**Type**: `string`
+
+The name of your system. It names your cascade layer in the stylesheet, and
+primitives write it to the DOM as `data-layer`. It must not be empty or
+contain double quotes, backslashes or newlines.
+
+### include
+
+**Type**: `string[]`
+
+Glob patterns for the files sync reads. Sync finds style props and `css()`
+calls in these files, and runs the ones that call `tokens()`, `font()`,
+`keyframes()` or `globalCss()`. A style value in a file outside `include`
+gets no CSS. `.mdx` files can be included too.
+
+```ts
+include: ['src/**/*.{ts,tsx}', 'content/**/*.mdx']
+```
+
+A pattern that matches no files is a warning, not an error.
+
+## Composing systems
+
+### extends
+
+**Type**: `BaseSystem[]`
+
+Systems to build on. Their tokens, fonts and styles become part of yours, and
+you can use their token names. Later entries win over earlier ones, and your
+own definitions win over all of them.
+
+### layers
+
+**Type**: `BaseSystem[]`
+
+Systems whose styles you ship without adopting their tokens. Their CSS joins
+your stylesheet, but their token names are not part of your types.
+
+Both options take the `baseSystem` export of another synced package. See
+[Share a design system](/share-a-design-system) for when to use each.
+
+## Output
+
+### strict
+
+**Type**: `('colors' | 'radii' | 'spacing')[]`
+
+**Default**: `[]`
+
+Token categories that accept only your tokens. A raw value such as
+`color="#ff0000"` in a strict category is a type error. See
+[Tokens](/tokens#restrict-values-to-tokens).
+
+### staticCss
+
+**Type**: `Record<string, string[]>`
+
+**Default**: `{}`
+
+Style values to generate even though no source file uses them. Each key is a
+property, optionally with a condition prefix. Each value lists token names,
+or `'*'` for every token in the property's category.
+
+```ts
+staticCss: {
+  color: ['*'],
+  '_hover:bg': ['brand', 'surface'],
+}
+```
+
+Sync fails if an entry names a token that does not exist. See
+[CSS](/css#generate-values-ahead-of-time).
+
+### normalizeCss
+
+**Type**: `boolean`
+
+**Default**: `true`
+
+Adds the CSS reset to the stylesheet. See
+[Global CSS](/global-css#the-reset).
+
+### jsxElements
+
+**Type**: `string[]`
+
+Component names to treat as style prop hosts. You rarely need it: sync finds
+every component that passes style props on to a primitive. See
+[Primitives](/primitives#your-own-components).
+
+## Diagnostics
+
+### logs
+
+**Type**: `'compiler'[]`
+
+**Default**: `[]`
+
+Adds the compiler's own diagnostics to sync's output: values it could not
+read, spreads it could not follow, and similar. They count toward the warning
+total, and `ref sync --verbose` lists them.
+
+### debug
+
+**Type**: `boolean`
+
+**Default**: `false`
+
+Turns on debug logging for sync itself.
+
+## MCP
+
+`mcp`, `useReferenceLibrary` and `useReferenceIcons` are read by the
+Reference MCP server, not by sync. See [MCP configuration](/mcp-configuration).

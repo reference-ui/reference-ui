@@ -3,15 +3,16 @@ title: Splitter
 section: Components
 order: 42
 slug: splitter
+description: Resizable panels with a draggable handle between them.
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { SplitterDemo } from './splitter-demo'
+import { SplitterDemo, SplitterNestedDemo } from './splitter-demo'
 
 # Splitter
 
-Splitter divides space between resizable panels along one axis, with a
-draggable, keyboard-operable handle between each pair.
+Splitter divides space between panels along one axis. Users resize them
+by dragging the handle between each pair, or with the arrow keys.
 
 <Preview>
   <SplitterDemo />
@@ -19,15 +20,12 @@ draggable, keyboard-operable handle between each pair.
 
 ```tsx
 import { useState } from 'react'
-import { css } from '@reference-ui/react'
 import { Splitter } from '@reference-ui/lib'
-
-const fill = css({ height: '100%' })
 
 export function Layout() {
   const [sizes, setSizes] = useState([40, 60])
   return (
-    <Splitter value={sizes} onChange={setSizes} className={fill}>
+    <Splitter value={sizes} onChange={setSizes}>
       <Splitter.Panel min="20r">Sidebar</Splitter.Panel>
       <Splitter.Handle aria-label="Resize sidebar" />
       <Splitter.Panel>Main</Splitter.Panel>
@@ -42,37 +40,184 @@ export function Layout() {
 import { Splitter } from '@reference-ui/lib'
 ```
 
-Anatomy is always Panel, then Handle and Panel pairs. For two axes, nest a
-vertical Splitter inside a Panel.
+## Anatomy
 
-## Props
+```tsx
+<Splitter>
+  <Splitter.Panel />
+  <Splitter.Handle>
+    <Splitter.Thumb />
+  </Splitter.Handle>
+  <Splitter.Panel />
+</Splitter>
+```
+
+A Splitter is always a Panel, then one or more Handle and Panel pairs. It
+needs at least two Panels, and `value` needs one entry per Panel. Any other
+shape throws an error that names the problem.
+
+Splitter is controlled. `value` holds the panel sizes as percentages in
+Panel order, summing to 100. Store what `onChange` gives you and pass it
+back.
+
+## Examples
+
+### Size limits
+
+`min` and `max` limit a Panel's size. A number is a percentage of the
+group. A string is a length: `px`, `rem`, `em`, `r` (the spacing unit), or
+`%`. Lengths are measured against the space the Panels share, without the
+Handles.
+
+```tsx
+<Splitter.Panel min="60r" max={50}>Sidebar</Splitter.Panel>
+```
+
+Without a `min`, a Panel stops at 5%.
+
+### Collapsible panels
+
+Add `collapsible` to let a Panel collapse to `collapsedSize` (0 by
+default). Dragging it more than halfway below its `min` collapses it.
+Pressing Enter on the Handle collapses the Panel before it, and pressing
+Enter again restores its last size.
+
+### Vertical and nested
+
+Set `orientation="vertical"` to stack Panels in a column. For a layout
+that splits both ways, put a vertical Splitter inside a Panel.
+
+<Preview>
+  <SplitterNestedDemo />
+</Preview>
+
+```tsx
+<Splitter value={columns} onChange={setColumns}>
+  <Splitter.Panel min={20} collapsible>Sidebar</Splitter.Panel>
+  <Splitter.Handle aria-label="Resize sidebar" />
+  <Splitter.Panel>
+    <Splitter orientation="vertical" value={rows} onChange={setRows}>
+      <Splitter.Panel min="10r">Editor</Splitter.Panel>
+      <Splitter.Handle aria-label="Resize console" />
+      <Splitter.Panel min="10r">Console</Splitter.Panel>
+    </Splitter>
+  </Splitter.Panel>
+</Splitter>
+```
+
+### Saving the layout
+
+`onChange` fires on every step of a drag. `onChangeEnd` fires once, with
+the final sizes, when the pointer is released or the key is let go. Save
+the layout there.
+
+```tsx
+<Splitter
+  value={sizes}
+  onChange={setSizes}
+  onChangeEnd={(next) => localStorage.setItem('layout', JSON.stringify(next))}
+>
+  <Splitter.Panel>Sidebar</Splitter.Panel>
+  <Splitter.Handle aria-label="Resize sidebar" />
+  <Splitter.Panel>Main</Splitter.Panel>
+</Splitter>
+```
+
+Changing `value` yourself fires neither callback.
+
+### Reading sizes in CSS
+
+Each Panel sets `--reference-splitter-panel-size` to its own size. The root
+sets `--reference-splitter-1` through `--reference-splitter-N`, one per
+Panel in order, for content inside that wants to follow the split.
+
+## API reference
 
 ### Splitter
+
+The root. Renders a `div` that fills its parent and lays the Panels out
+with flexbox.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `value` | `number[]` | — | Required. Panel sizes as percentages, in order, summing to 100. |
-| `onChange` | `(value: number[]) => void` | — | Called as a handle moves. |
+| `onChange` | `(value: number[]) => void` | — | Called with the new sizes as a Handle moves. |
 | `onChangeEnd` | `(value: number[]) => void` | — | Called once when a drag or key press ends. |
-| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Row or column layout. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Lay Panels out in a row or a column. |
+
+| Attribute | Values |
+| --- | --- |
+| `[data-orientation]` | `horizontal`, `vertical` |
+| `[data-resizing]` | Present while a Handle is dragged. |
 
 ### Splitter.Panel
 
+One resizable region. Renders a `div` that scrolls its overflow.
+
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `min` / `max` | `number \| string` | — | Size limits: a number is a percentage, a string a CSS length such as `'20r'`. |
-| `collapsible` | `boolean` | `false` | Allow collapsing the panel. |
+| `min` | `number \| string` | — | Smallest size: a percentage, or a CSS length. |
+| `max` | `number \| string` | — | Largest size: a percentage, or a CSS length. |
+| `collapsible` | `boolean` | `false` | Allow the Panel to collapse. |
 | `collapsedSize` | `number` | `0` | Size in percent when collapsed. |
+| `id` | `string` | generated | The Handle before it points at this id. Collapse memory is kept per id. |
+
+| Attribute | Values |
+| --- | --- |
+| `[data-orientation]` | `horizontal`, `vertical` |
+| `[data-collapsed]` | Present while a collapsible Panel is at its collapsed size. |
+| `[data-resizing]` | Present while any Handle in the group is dragged. |
 
 ### Splitter.Handle
 
+The separator between two Panels. Renders a focusable `div` with a line
+and a `Splitter.Thumb`. Children without a Thumb replace both.
+
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | Locks the handle. |
-| `withThumb` | `boolean` | `true` | Draws the default grip dots. |
+| `disabled` | `boolean` | `false` | Stops the Handle from resizing. It stays focusable. |
+| `withThumb` | `boolean` | `true` | Draw the grip. |
 
-## Behaviour
+| Attribute | Values |
+| --- | --- |
+| `[data-orientation]` | `horizontal`, `vertical` |
+| `[data-state]` | `idle`, `hover`, `active` |
+| `[data-hover]` | Present while hovered. |
+| `[data-resizing]` | Present while this Handle is dragged. |
+| `[data-disabled]` | Present when `disabled`. |
 
-- Each handle has `role="separator"`; give it an `aria-label`.
-- Arrow keys resize from a focused handle.
-- A `value` whose length does not match the panel count is an error.
+### Splitter.Thumb
+
+The grip a Handle centres on itself. It shows while the Handle is hovered,
+focused or dragged.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dots` | `number` | `3` | Number of grip dots. |
+| `dotHoverColor` | `string` | — | Dot colour while not dragged. |
+| `dotActiveColor` | `string` | — | Dot colour while dragged. |
+
+| Attribute | Values |
+| --- | --- |
+| `[data-state]` | `idle`, `hover`, `active` |
+| `[data-disabled]` | Present when the Handle is `disabled`. |
+
+## Accessibility
+
+Adheres to the [Window Splitter WAI-ARIA design pattern](https://www.w3.org/WAI/ARIA/apg/patterns/windowsplitter/).
+
+Each Handle has `role="separator"` and reports the size of the Panel before
+it. Give every Handle an `aria-label`.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `ArrowLeft` / `ArrowRight` | In a horizontal Splitter, moves the focused Handle by 1%. |
+| `ArrowUp` / `ArrowDown` | In a vertical Splitter, moves the focused Handle by 1%. |
+| `Shift` + arrow | Moves the Handle by 10%. |
+| `Home` | Shrinks the Panel before the Handle as far as its limits allow. |
+| `End` | Grows the Panel before the Handle as far as its limits allow. |
+| `Enter` | Collapses or restores the Panel before the Handle, when it is `collapsible`. |
+
+In right-to-left layouts the horizontal arrows are mirrored.

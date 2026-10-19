@@ -3,16 +3,16 @@ title: Field
 section: Components
 order: 20
 slug: field
+description: The bezel around a text control, with room for prefixes, suffixes and buttons.
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { FieldDemo } from './field-demo'
+import { FieldDemo, FieldStatusDemo } from './field-demo'
 
 # Field
 
-Field is the visual bezel around a form control: background, border, radius,
-prefix and suffix layout, and the focus ring. The control inside keeps its
-own label, validity, and disabled state.
+Field draws one bezel around a text control and the things beside it, such
+as a prefix, a unit or a clear button.
 
 <Preview>
   <FieldDemo />
@@ -30,26 +30,120 @@ import { Field } from '@reference-ui/lib'
 </Field>
 ```
 
+Field is chrome only. The control inside keeps its own label, validity and
+disabled state, and Field paints whatever state the control already has.
+
 ## Import
 
 ```tsx
 import { Field } from '@reference-ui/lib'
 ```
 
-## Props
+## Anatomy
 
-Field renders a `div` and takes every `div` prop and style prop, plus:
+Field is a single part. Its children are ordinary elements laid out in a
+row.
+
+```tsx
+<Field>
+  {/* prefix */}
+  <Input />
+  {/* suffix or buttons */}
+</Field>
+```
+
+## Examples
+
+### Invalid and warning
+
+Set `aria-invalid` on the control, not on Field. The bezel turns red while
+the control is invalid. For a warning that should not mark the value
+invalid, set `status="warning"` on Field. Invalid wins when both apply.
+
+<Preview>
+  <FieldStatusDemo />
+</Preview>
+
+```tsx
+<Label htmlFor="email">Email</Label>
+<Field>
+  <Input id="email" aria-invalid="true" aria-describedby="email-error" />
+</Field>
+<P id="email-error">Enter a full email address.</P>
+
+<Label htmlFor="username">Username</Label>
+<Field status="warning">
+  <Input id="username" aria-describedby="username-hint" />
+</Field>
+<P id="username-hint">Short usernames are easy to guess.</P>
+```
+
+### Disabled and read-only
+
+Set `disabled` or `readOnly` on the control. Field dims for a disabled
+control and changes its background for a read-only one. A disabled button
+beside the control does not dim the bezel.
+
+```tsx
+<Field>
+  <Input id="account" value="ACME-001" readOnly />
+</Field>
+```
+
+### Textarea and select
+
+`Textarea` and `Select` sit in Field the same way as `Input`. With a
+textarea, Field grows to its height and aligns children to the top.
+
+```tsx
+<Label htmlFor="notes">Notes</Label>
+<Field>
+  <Textarea id="notes" rows={3} />
+</Field>
+```
+
+### Width and spacing
+
+Field is an inline row with a gap between children. Style props on Field
+change its width, padding, gap, radius and background.
+
+```tsx
+<Field width="100%" gap="1r">
+  <Input id="search" />
+</Field>
+```
+
+## API reference
+
+Field renders a `div` and takes `div` props and style props, except
+`role`, `aria-invalid`, `aria-disabled`, `aria-readonly`, `aria-required`
+and `aria-errormessage`. Those belong on the control and are removed if
+passed.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `status` | `'warning'` | — | Paints the warning bezel. It does not mark the control invalid. |
 
-## Behaviour
+| Data attribute | Values |
+| --- | --- |
+| `[data-reference-field]` | Always present. |
+| `[data-status]` | `'warning'` when `status="warning"`. |
 
-- `Input`, `Textarea`, and `Select` drop their standalone chrome inside a
-  Field, so the bezel is drawn once.
-- Field reacts to the state already on the control: set `aria-invalid`,
-  `disabled`, or `readOnly` on the input, not on Field.
+## Accessibility
+
+Field has no role and adds no ARIA. Label the control with `htmlFor` or
+a wrapping `label`, and put descriptions and errors on the control with
+`aria-describedby`. Hide decorative prefixes with `aria-hidden`; if the
+prefix carries meaning, put it in the label instead. Buttons inside Field
+need their own accessible names.
+
+Focus goes to the control and buttons in document order. The bezel shows
+the focus ring only while the control has visible focus, so a focused
+button keeps its own ring.
+
 - Put the label above Field, never inside it.
-- [NumberField](/number-field) and [DateField](/date-field) use the same
-  bezel.
+- Use Field for text controls. Switch, checkboxes and radios do not go in a
+  Field.
+- `NumberField.Group` and a [DateField](/date-field) with parts already
+  draw this bezel. Do not wrap them in Field. A DateField without children
+  renders a bare input, which Field can wrap like any other.

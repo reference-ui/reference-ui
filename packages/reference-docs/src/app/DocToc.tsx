@@ -49,7 +49,8 @@ const indent = css({ paddingLeft: '3r' })
 function readItems(root: Element): TocItem[] {
   return Array.from(root.querySelectorAll<HTMLElement>('h2[id], h3[id]')).map(node => ({
     id: node.id,
-    text: (node.textContent ?? '').replace(/#$/, '').trim(),
+    // A step heading carries its label apart from its number badge.
+    text: node.dataset.tocLabel ?? (node.textContent ?? '').replace(/#$/, '').trim(),
     level: node.tagName.toLowerCase() as 'h2' | 'h3',
   }))
 }

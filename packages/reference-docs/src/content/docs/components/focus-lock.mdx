@@ -3,13 +3,20 @@ title: FocusLock
 section: Components
 order: 52
 slug: focus-lock
+description: Keep keyboard focus inside one element and return it when the lock ends.
 ---
+
+import { Preview } from '../../../mdx/Preview'
+import { FocusLockDemo } from './focus-lock-demo'
 
 # FocusLock
 
-FocusLock keeps keyboard focus inside one element: Tab cycles within it,
-and focus returns to where it was when the lock ends. [Overlay](/overlay)
-uses it for isolating dialogs; use it directly only for your own containers.
+FocusLock keeps keyboard focus inside one element. Tab cycles within it, and
+focus returns to where it was when the lock ends.
+
+<Preview>
+  <FocusLockDemo />
+</Preview>
 
 ```tsx
 import { Div } from '@reference-ui/react'
@@ -22,6 +29,9 @@ import { FocusLock } from '@reference-ui/lib'
 </FocusLock>
 ```
 
+[Overlay](/overlay) locks focus for you when it isolates a dialog. Use
+FocusLock directly for containers you build yourself.
+
 ## Import
 
 ```tsx
@@ -30,18 +40,41 @@ import { FocusLock } from '@reference-ui/lib'
 
 ## Props
 
-FocusLock takes exactly one element child and adds no wrapper.
+FocusLock takes one element child and adds no wrapper. A `ref` passes through
+to that child.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `disabled` | `boolean` | `false` | Turns the lock off. |
-| `initialFocus` | ref, element, function, or `boolean` | first tabbable | Where focus goes when the lock starts; `false` skips the move. |
-| `restoreFocus` | ref, element, function, or `boolean` | `true` | Where focus returns when the lock ends; `false` leaves it. |
-| `shards` | `Array<HTMLElement \| RefObject>` | — | Elements outside the child that also belong to the lock, such as a portalled popover. |
+| `initialFocus` | `FocusTarget \| boolean` | first tabbable | Where focus goes when the lock starts. `false` leaves focus where it is. |
+| `restoreFocus` | `FocusTarget \| boolean` | `true` | Where focus goes when the lock ends. `false` leaves it. |
+| `defaultRestoreTarget` | `FocusTarget` | — | Where focus returns if nothing outside the lock had focus when it started. |
+| `shards` | `Array<HTMLElement \| RefObject>` | — | Elements outside the child that belong to the lock, such as a portalled popover. |
+
+A `FocusTarget` is an element, a ref to one, or a function that returns one.
 
 ## Behaviour
 
-- Focus that moves outside by script is pulled back.
-- FocusLock does not handle Escape, inert backgrounds, or scroll locking;
-  [Overlay](/overlay) does.
-- For arrow-key movement within a widget, use [RovingFocus](/roving-focus).
+- On start, focus moves to `initialFocus` if it is inside the lock. If focus
+  is already inside, it stays. Otherwise the first tabbable element gets it,
+  or the child itself when nothing inside is tabbable.
+- Only Tab and Shift+Tab without modifier keys loop. Focus moved outside by
+  script is pulled back.
+- The lock ends when it unmounts or `disabled` turns on. Focus then returns to the element that had it before. If that element is
+  gone, focus goes to its nearest remaining neighbour.
+- When locks nest, the most recent one wins. The one below pauses until it
+  ends.
+- FocusLock does not handle Escape, outside clicks, inert backgrounds or
+  scroll locking. [Overlay](/overlay) does.
+
+## Accessibility
+
+FocusLock moves focus but adds no roles or labels. Give the child a role such
+as `dialog` and an accessible name.
+
+| Key | Description |
+| --- | --- |
+| `Tab` | Moves to the next tabbable element in the lock, wrapping from last to first. |
+| `Shift + Tab` | Moves to the previous tabbable element, wrapping from first to last. |
+
+For arrow-key movement inside a widget, use [RovingFocus](/roving-focus).

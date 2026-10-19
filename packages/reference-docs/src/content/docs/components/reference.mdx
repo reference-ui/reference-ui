@@ -1,0 +1,54 @@
+---
+title: Reference
+section: Components
+order: 58
+slug: reference
+description: Render the API reference for a TypeScript type by name.
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { ReferenceDemo } from './reference-demo'
+
+# Reference
+
+Renders the API reference for a TypeScript type: its members, their types and
+JSDoc, and what it extends.
+
+<Preview>
+  <ReferenceDemo />
+</Preview>
+
+```tsx
+import { Reference } from '@reference-ui/lib'
+
+<Reference name="ToastActionOption" />
+```
+
+## Import
+
+There are two, and they read different types.
+
+```tsx
+// The library's own types, such as ToastOptions or SwitchProps
+import { Reference } from '@reference-ui/lib'
+
+// Your project's types
+import { Reference } from '@reference-ui/types'
+```
+
+`ref sync` writes `@reference-ui/types` from the files in your config's
+`include`, so any interface or type alias there can be named.
+
+## API reference
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `name` | `string` | The type's name. |
+
+## Behaviour
+
+- Type data loads lazily in the browser, so the component shows a loading
+  state first.
+- On the server it renders the loading state and fetches nothing.
+- When the type cannot be loaded, it shows the error in place of the
+  reference.

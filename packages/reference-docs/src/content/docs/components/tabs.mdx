@@ -6,7 +6,7 @@ slug: tabs
 ---
 
 import { Preview } from '../../../mdx/Preview'
-import { TabsDemo } from './tabs-demo'
+import { TabsDemo, TabsPillDemo, TabsVerticalDemo } from './tabs-demo'
 
 # Tabs
 
@@ -35,27 +35,192 @@ import { Tabs } from '@reference-ui/lib'
 import { Tabs } from '@reference-ui/lib'
 ```
 
-Parts: `Tabs.List` (`role="tablist"`), `Tabs.Tab` (a `button` with
-`role="tab"`), and `Tabs.Panel` (`role="tabpanel"`). `Tabs` itself renders
-no element.
+## Anatomy
 
-## Props
+```tsx
+<Tabs>
+  <Tabs.List>
+    <Tabs.Tab />
+  </Tabs.List>
+  <Tabs.Panel />
+</Tabs>
+```
+
+`Tabs` renders no element of its own. Render one `Tabs.List`, and one
+`Tabs.Panel` for each `Tabs.Tab`, matched by `value`.
+
+## Examples
+
+### Controlled
+
+Pass `value` and `onChange` to own the selection.
+
+```tsx
+const [tab, setTab] = React.useState('billing')
+
+<Tabs value={tab} onChange={setTab}>…</Tabs>
+```
+
+Without `value`, the first enabled tab starts selected.
+
+### Pill variant
+
+<Preview>
+  <TabsPillDemo />
+</Preview>
+
+```tsx
+<Tabs variant="pill">…</Tabs>
+```
+
+### Vertical
+
+Set `orientation="vertical"` to move between tabs with the Up and Down
+arrows. Lay the list and panels out side by side yourself.
+
+<Preview>
+  <TabsVerticalDemo />
+</Preview>
+
+```tsx
+<Div display="flex" gap="6r">
+  <Tabs orientation="vertical">
+    <Tabs.List aria-label="Account">
+      <Tabs.Tab value="profile">Profile</Tabs.Tab>
+      <Tabs.Tab value="email">Email</Tabs.Tab>
+      <Tabs.Tab value="password" disabled>Password</Tabs.Tab>
+    </Tabs.List>
+    <Tabs.Panel value="profile">…</Tabs.Panel>
+    <Tabs.Panel value="email">…</Tabs.Panel>
+    <Tabs.Panel value="password">…</Tabs.Panel>
+  </Tabs>
+</Div>
+```
+
+### Manual activation
+
+By default a tab is selected as soon as it gets focus. With
+`activation="manual"`, arrow keys only move focus, and `Enter` or `Space`
+selects.
+
+```tsx
+<Tabs activation="manual">…</Tabs>
+```
+
+### Keeping panels mounted
+
+Inactive panels unmount their children. Set `keepMounted` on `Tabs`, or on
+one `Tabs.Panel`, to keep them mounted and hidden, so their state survives
+switching tabs.
+
+```tsx
+<Tabs.Panel value="billing" keepMounted>
+  <BillingForm />
+</Tabs.Panel>
+```
+
+### Your own variant
+
+`variant` also takes a name of your own. A name other than `line` or `pill`
+keeps the base styles, such as the focus ring and the disabled look, but
+none of the variant styles, so you style the list and tabs with
+`className`. The built-in recipes are exported
+as `tabsListRecipe` and `tabsTabRecipe`.
+
+```tsx
+<Tabs variant="underline">
+  <Tabs.List className={myList}>
+    <Tabs.Tab value="general" className={myTab}>General</Tabs.Tab>
+  </Tabs.List>
+  …
+</Tabs>
+```
+
+## API reference
 
 ### Tabs
 
+Holds the selected value. Renders only its children.
+
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `value` | `string` | first tab | Selected tab. Omit it to let Tabs manage selection. |
-| `onChange` | `(value: string) => void` | — | Called when the user selects a tab. |
-| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Arrow-key axis. |
-| `activation` | `'automatic' \| 'manual'` | `'automatic'` | `automatic` selects on focus; `manual` waits for Enter or Space. |
-| `variant` | `'line' \| 'pill'` or your own recipe name | `'line'` | Built-in look. |
-| `keepMounted` | `boolean` | `false` | Keep inactive panels' content mounted (hidden). |
+| `value` | `string` | first enabled tab | Controlled selection. Omit it to let Tabs manage its own. |
+| `onChange` | `(value: string) => void` | — | Called when the user selects a different tab, controlled or not. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Which arrow keys move between tabs. |
+| `activation` | `'automatic' \| 'manual'` | `'automatic'` | `automatic` selects a tab on focus. `manual` waits for `Enter` or `Space`. |
+| `variant` | `'line' \| 'pill' \| string` | `'line'` | Built-in look, or your own variant name. |
+| `keepMounted` | `boolean` | `false` | Keep every inactive panel's children mounted. |
 
-`Tabs.Tab` and `Tabs.Panel` each require a matching `value`. `Tabs.Panel`
-also takes `keepMounted`.
+### Tabs.List
+
+The row of tabs. Renders a `div` and takes its props and style props.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `'line' \| 'pill' \| string` | from `Tabs` | Overrides the root's variant for the list. |
+
+| Data attribute | Values |
+| --- | --- |
+| `data-orientation` | `horizontal`, `vertical` |
+| `data-variant` | the variant name |
+
+### Tabs.Tab
+
+One tab. Renders a `button` and takes its props and style props.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | — | Required. Unique within the Tabs; matches a `Tabs.Panel`. |
+| `disabled` | `boolean` | `false` | Can't be selected, and arrow keys skip it. |
+| `variant` | `'line' \| 'pill' \| string` | from `Tabs` | Overrides the root's variant for this tab. |
+
+| Data attribute | Values |
+| --- | --- |
+| `data-state` | `active`, `inactive` |
+| `data-disabled` | present when disabled |
+| `data-value` | the tab's `value` |
+| `data-variant` | the variant name |
+
+### Tabs.Panel
+
+The content for one tab. Renders a `div` and takes its props and style
+props.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | — | Required. Matches a `Tabs.Tab`. |
+| `keepMounted` | `boolean` | `false` | Keep this panel's children mounted while inactive. |
+
+| Data attribute | Values |
+| --- | --- |
+| `data-state` | `active`, `inactive` |
+| `data-value` | the panel's `value` |
 
 ## Behaviour
 
-- The tab list is one Tab stop; arrow keys move between tabs.
-- Inactive panels carry the native `hidden` attribute.
+- Selecting the tab that is already selected does not call `onChange`.
+- Two tabs, or two panels, with the same `value` throw.
+
+## Accessibility
+
+- Give `Tabs.List` an `aria-label`. Each panel is labelled by its tab.
+- Inactive panels have the `hidden` attribute.
+- If focus is inside a panel when the value changes and hides it, focus
+  moves to the newly selected tab.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Tab` | Moves focus into the list, onto the selected tab, then out of the list. |
+| `ArrowRight` | Horizontal: moves focus to the next tab, wrapping from last to first. |
+| `ArrowLeft` | Horizontal: moves focus to the previous tab, wrapping from first to last. |
+| `ArrowDown` | Vertical: moves focus to the next tab, wrapping from last to first. |
+| `ArrowUp` | Vertical: moves focus to the previous tab, wrapping from first to last. |
+| `Home` | Moves focus to the first tab. `PageUp` does the same. |
+| `End` | Moves focus to the last tab. `PageDown` does the same. |
+| `Enter` | Selects the focused tab in manual activation. |
+| `Space` | Selects the focused tab in manual activation. |
+
+Arrow keys skip disabled tabs. In automatic activation, moving focus also
+selects the tab. In right-to-left text, `ArrowLeft` and `ArrowRight` swap.

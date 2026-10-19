@@ -1,0 +1,150 @@
+---
+title: Tools
+section: MCP
+order: 4
+slug: mcp-tools
+description: Every tool and resource the Reference UI MCP server gives your agent.
+---
+
+# Tools
+
+Your agent picks the tools itself. Every input is optional unless marked
+required. Each tool returns JSON text.
+
+## Projects
+
+### list_projects
+
+Lists the Reference UI projects the server can find, and which one is active.
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `scanPath` | `string` | A folder to search as well, such as `~/Developer`. |
+| `maxDepth` | `number` | How deep to search `scanPath`, from 1 to 5. Defaults to 3. |
+
+### select_project
+
+Sets the active project for the session and starts loading its model.
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `path` | `string` | The project folder, relative or absolute. Required unless you pass `project`. |
+| `project` | `string` | The same as `path`. |
+
+## Components
+
+The component tools take `project`, a project path, to query another project
+for one call without changing the active one.
+
+### list_components
+
+Lists your components, the library components and the primitives your JSX
+uses, most used first.
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `query` | `string` | Matches the name, source or props interface. |
+| `source` | `string` | Only components from this import source, such as `@reference-ui/lib`. |
+| `limit` | `number` | Up to 100. Defaults to 25. |
+| `project` | `string` | The project to query. |
+
+### get_component
+
+Returns one component: up to 30 of its props, call sites, the components it's
+used with and the style props it takes.
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `name` | `string` | Required. The component name. |
+| `source` | `string` | The import source, when two components share a name. |
+| `project` | `string` | The project to query. |
+
+### get_component_props
+
+Returns every prop with its type, default and description.
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `name` | `string` | Required. The component name. |
+| `source` | `string` | The import source. |
+| `includeUnused` | `boolean` | Include props your code never passes. Defaults to `true`. |
+| `includeStyleProps` | `boolean` | Include style props. Defaults to `true`. |
+| `query` | `string` | Matches the prop name, type or description. |
+| `limit` | `number` | Up to 500. |
+| `project` | `string` | The project to query. |
+
+### get_component_examples
+
+Returns call sites for a component, captured from your code.
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `name` | `string` | Required. The component name. |
+| `source` | `string` | The import source. |
+| `project` | `string` | The project to query. |
+
+## Styling
+
+### get_style_props
+
+Returns the style props guide: the style prop categories and the token
+categories each one takes. It is the same for every project.
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `query` | `string` | Matches a category or prop name. |
+| `includeProps` | `boolean` | List every prop in each category. Defaults to `false`, which lists up to 8. |
+| `project` | `string` | Accepted, but doesn't change the result. |
+
+### get_tokens
+
+Returns your token paths, categories, values and descriptions. Over 200 tokens,
+the result drops descriptions; query a token path to see them. Tokens under a
+`_private` path are left out unless your query matches them.
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `category` | `string` | One token category, such as `colors`. |
+| `query` | `string` | Matches the token path, category or description. |
+| `limit` | `number` | Up to 1000. |
+| `project` | `string` | The project to query. |
+
+## Icons
+
+### list_icons
+
+Searches `@reference-ui/icons` by name, tags and description. When
+`useReferenceIcons` is `false`, it returns a notice and no icons.
+
+| Input | Type | Description |
+| --- | --- | --- |
+| `query` | `string` | A keyword, a sentence, or a comma-separated list of needs. |
+| `demands` | `string[]` | Several searches in one call, such as `["trash", "settings"]`. |
+| `category` | `string` | One icon category, such as `navigation`. |
+| `limit` | `number` | Up to 100. Defaults to 25. |
+| `verbose` | `boolean` | Add the import line and a JSX example to each icon. Defaults to `false`. |
+| `project` | `string` | The project whose config to check. |
+
+## Resources
+
+The server also offers three resources your agent can read:
+
+| URI | Content |
+| --- | --- |
+| `reference-ui://component-model` | The whole component model for the active project, as JSON. |
+| `reference-ui://instructions` | Guidance for writing Reference UI code, as Markdown. |
+| `reference-ui://getting-started` | The same as `reference-ui://instructions`. |
+
+The server also sends the instructions to your agent when it connects.
+
+## Before sync
+
+Without a synced project, the tools answer with what doesn't need one:
+
+- `list_components`, `get_component`, `get_component_props` and
+  `get_component_examples` cover the built-in primitives and the library
+  components.
+- `get_style_props` and `list_icons` work as usual.
+- `get_tokens` returns no tokens.
+
+Each answer carries a notice explaining why.

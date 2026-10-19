@@ -1,0 +1,42 @@
+---
+title: Radius
+section: Foundations
+order: 4
+slug: radius
+description: Lib's border radius tokens.
+---
+
+import { RadiusScale } from './radius-demo'
+
+# Radius
+
+Lib ships four radius tokens for rounding corners.
+
+<RadiusScale />
+
+| Token | Value |
+| --- | --- |
+| `sm` | `0.27rem` |
+| `md` | `0.4rem` |
+| `lg` | `0.6rem` |
+| `full` | `9999px` |
+
+## Usage
+
+Write the token name in `borderRadius` or any other radius prop:
+
+```tsx
+import { Div, css } from '@reference-ui/react'
+
+<Div borderRadius="md" padding="4r" bg="design.bg.muted" />
+
+const avatar = css({ borderRadius: 'full' })
+```
+
+To change a value or add a radius, define `radii` with `tokens()`. See
+[Theming](/theming).
+
+## Related
+
+- [Theming](/theming): define your own radii.
+- [Tokens](/tokens): how token names resolve.

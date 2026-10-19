@@ -3,6 +3,7 @@ title: Typography
 section: Foundations
 order: 3
 slug: typography
+description: Lib's font families, weights and type scale.
 ---
 
 import { FontFamilies, InlineSamples, TypeScale } from './typography-sections'
@@ -10,17 +11,16 @@ import { WeightRamp } from './typography-weight-ramp'
 
 # Typography
 
-`@reference-ui/lib` ships three font families, five named weights for each, and
-a type scale for its text primitives. Body text is `sans` at 16px. You pick a
-family with the `font` prop and a weight with the `weight` prop:
+Lib ships three font families, five named weights for each, and a type scale
+for its text primitives. Body text is `sans` at 16px.
+
+Pick a family with the `font` prop and a weight with the `weight` prop:
 
 ```tsx
 import { P } from '@reference-ui/react'
 
 <P font="serif" weight="semibold">Set in Literata at its semibold weight.</P>
 ```
-
-Lib defines its families with `font()`, which [Fonts](/fonts) explains.
 
 ## Font families
 
@@ -33,17 +33,16 @@ Lib defines its families with `font()`, which [Fonts](/fonts) explains.
 <FontFamilies />
 
 Each family loads one variable `woff2` file from Google Fonts with
-`font-display: swap`, so text shows in the fallback font until the file
-arrives.
+`font-display: swap`. Text shows in the fallback font until the file arrives.
 
-`font="mono"` sets the family, its default weight and its letter spacing. To
-change only the family and keep the element's own size and weight, use
-`fontFamily="mono"`. [Fonts](/fonts) covers the difference.
+`font="mono"` sets the family, its default weight and its letter spacing.
+`fontFamily="mono"` sets only the stack. See [Fonts](/fonts) for the
+difference.
 
 ## Weights
 
-Every family has the same five weight names. A name resolves to a different
-number in each family, tuned so the families look equally heavy side by side.
+Every family has the same five weight names. Each name maps to a different
+number per family, so the families look equally heavy side by side.
 
 | Weight | `sans` | `serif` | `mono` |
 | --- | --- | --- | --- |
@@ -53,14 +52,13 @@ number in each family, tuned so the families look equally heavy side by side.
 | `semibold` | 550 | 550 | 590 |
 | `bold` | 650 | 633 | 700 |
 
-`normal` is each family's default. `bold` is the heaviest weight lib ships.
-
 <WeightRamp />
 
 ## Type scale
 
-Lib's text primitives set these sizes. Sizes are in `r`, the spacing unit:
-lib sets `1r` to `0.25rem`, which is 4px at the browser's default font size.
+Lib's text primitives use these sizes. Sizes are in `r`, the
+[spacing unit](/spacing): `1r` is `0.25rem`, 4px at the browser's default font
+size.
 
 | Element | Size | Line height | Weight |
 | --- | --- | --- | --- |
@@ -72,20 +70,22 @@ lib sets `1r` to `0.25rem`, which is 4px at the browser's default font size.
 | `H6` | `3.5r` (14px), uppercase | `8r` (32px) | `semibold` |
 | `P` | `4r` (16px) | `1.6` | inherited |
 | `Blockquote` | `4.5r` (18px), italic | `1.6` | inherited |
-| `Small` | the CSS `small` keyword | `1.4` | inherited |
+| `Small` | `small` | `1.4` | inherited |
 
 <TypeScale />
 
-All of them use `sans`. Most use the `design.text.base` color; `Small`,
-`Blockquote` and `Cite` use the lighter `design.text.light` (see
-[Color](/color)). Override any of these with style props, as in
-`<H2 fontSize="8r">`.
+All of them use `sans` and the `design.text.base` colour, except `Small`,
+`Blockquote` and `Cite`, which use `design.text.light`. Override any value with
+a style prop:
+
+```tsx
+<H2 fontSize="8r">A larger section heading</H2>
+```
 
 ## Inline text and code
 
-Lib also styles inline elements. `Code`, `Kbd`, `Samp` and `Pre` use `mono`;
-`Code` is `0.9em` and `Kbd` is `0.85em` of the surrounding text, so they sit in
-a line at any size.
+`Code`, `Kbd`, `Samp` and `Pre` use `mono`. `Code` is `0.9em` and `Kbd` is
+`0.85em` of the surrounding text, so they fit a line at any size.
 
 <InlineSamples />
 
@@ -100,5 +100,4 @@ import { Code, Kbd, P } from '@reference-ui/react'
 ## Related
 
 - [Fonts](/fonts): define a family, its weights and its font files.
-- [Spacing](/spacing): the `r` unit.
-- [Color](/color): the text color tokens.
+- [Theming](/theming): replace lib's fonts with your own.

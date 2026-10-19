@@ -1,0 +1,76 @@
+---
+title: Add to an existing app
+section: Guides
+order: 9
+slug: existing-app
+description: Bring Reference UI into an app that already has its own CSS.
+---
+
+# Add to an existing app
+
+Reference UI runs beside your existing CSS, so you can move an app over one
+screen at a time.
+
+<Step n={1}>Install and initialize</Step>
+
+Follow steps 1 and 2 of [Getting started](/initialize): install the
+packages, run `ref init`, then `ref sync`.
+
+<Step n={2}>Start with one feature</Step>
+
+Sync compiles only the files `include` matches. Point it at the first
+feature you move:
+
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem } from '@reference-ui/lib/baseSystem'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/features/settings/**/*.{ts,tsx}'],
+  extends: [baseSystem],
+  normalizeCss: false,
+})
+```
+
+`normalizeCss: false` turns off the CSS reset, so screens you haven't moved
+keep their look.
+
+<Step n={3}>Import the stylesheet</Step>
+
+```tsx
+// src/main.tsx
+import '@reference-ui/react/styles.css'
+```
+
+## How the two stylesheets meet
+
+Every Reference UI rule sits in a cascade layer. In CSS, any unlayered rule
+beats every layered rule, whatever its specificity or load order. Most
+existing CSS is unlayered, so where both style the same element, your
+existing styles win.
+
+The library's global CSS targets primitives by their `ref-` classes, such
+as `ref-button`, so it leaves your existing markup alone. The exception is
+`body`, where it sets the font, the font size and `container-type`. A
+`body` rule of your own still wins for each property it sets.
+
+If a converted screen still shows its old styles, an old selector is
+reaching it. Delete that rule once nothing else needs it.
+
+## Move over
+
+1. Convert a screen to primitives and library components.
+2. Widen `include` to cover it, and run `ref sync`.
+3. Delete the old CSS it no longer uses.
+
+Once nothing depends on the old styles, remove `normalizeCss: false` to turn
+the reset back on.
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/cascade-layers" title="Cascade layers">How the stylesheet orders its rules.</LinkCard>
+  <LinkCard href="/sync" title="Sync">What `include` reads and what sync writes.</LinkCard>
+</LinkCards>

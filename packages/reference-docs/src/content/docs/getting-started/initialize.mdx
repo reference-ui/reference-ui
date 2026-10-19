@@ -1,6 +1,6 @@
 ---
 title: Getting started
-section: Overview
+section: Guides
 order: 1
 slug: initialize
 description: Install Reference UI and start building in minutes.
@@ -9,64 +9,42 @@ description: Install Reference UI and start building in minutes.
 
 # Getting started
 
+## Prompt
+Guided install with your agent.
+<InstallPrompt />
 
-## Installation
+## Quick start
 
-### 1. Install and initialize
+<Step n={1}>Install and initialize</Step>
 
-Reference UI is both a library and a CLI. Install both, then initialize your
-project.
+Reference UI is both a library and a CLI. 
 
 <Install packages="@reference-ui/lib react react-dom" devPackages="@reference-ui/core" />
 
+`ref init` creates a `ui.config.ts` at the project root, next to `package.json`.
 ```bash
 npx ref init
 ```
 
-`ref init` writes `ui.config.ts` at the project root, next to `package.json`.
 
-```ts
-// ui.config.ts
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem } from '@reference-ui/lib/baseSystem'
 
-export default defineConfig({
-  name: 'my-app',
-  include: ['src/**/*.{ts,tsx}'],
-  extends: [baseSystem],
-})
-```
-
-`name` identifies your design system; init takes it from the `name` in
-`package.json`, or uses `my-app` when that name is not valid. `include` lists
-the files the engine scans; change it if your source is not under `src/`.
-`extends` brings in the library's tokens. Import `baseSystem` from the
-`@reference-ui/lib/baseSystem` subpath, not from `@reference-ui/lib`: the full
-barrel evaluates thousands of icon modules on every sync. If a `ui.config`
-file already exists, init leaves it unchanged.
-
-### 2. Run sync
+<Step n={2}>Run sync</Step>
 
 Compile your styles and types from the project root.
 
 ```bash
-npx ref sync
+npx ref sync --watch
 ```
 
-`ref` prints a ready line and the stylesheet size. The version, time and size
-differ in your project.
+Sync writes generated packages to `.reference-ui/`
 
-```text
-  REF  v0.0.0  ready in 840 ms
+<Step n={3}>Connect your agent</Step>
 
-  ➜  CSS:       41.2 KB
-```
+Add the Reference UI MCP server to your agent, so it works from your real
+components and tokens. [MCP setup](/mcp-setup) has the config for Claude Code,
+Cursor, VS Code and Codex.
 
-Sync writes four generated packages to `.reference-ui/` (`system`, `styled`,
-`react` and `types`) and links them into `node_modules/@reference-ui/`. Add
-`.reference-ui` to `.gitignore`: sync regenerates it.
-
-### 3. Import the CSS file
+<Step n={4}>Start building</Step>
 
 Import the generated stylesheet once, before your app code.
 
@@ -75,91 +53,27 @@ Import the generated stylesheet once, before your app code.
 import '@reference-ui/react/styles.css'
 ```
 
-### 4. Start building
+Primitives such as `Div` and `Button` come from `@reference-ui/react` and take
+style props. 
+Components and icons such as `SearchIcon` come from `@reference-ui/lib`.
 
-Render a primitive with style props.
-
-```tsx {4,8-10}
+```tsx {4-5,11-13}
 // src/main.tsx
 import '@reference-ui/react/styles.css'
 import { createRoot } from 'react-dom/client'
-import { Div } from '@reference-ui/react'
+import { Button, Div } from '@reference-ui/react'
+import { SearchIcon } from '@reference-ui/lib'
 
 function App() {
   return (
-    <Div display="grid" gap="3r" padding="4r">
+    <Div display="grid" justifyItems="start" gap="3r" padding="4r">
       Hello from Reference UI
+      <Button display="flex" alignItems="center" gap="2r">
+        <SearchIcon /> Search
+      </Button>
     </Div>
   )
 }
 
 createRoot(document.getElementById('root')!).render(<App />)
 ```
-
-Run `npx ref sync` again after this edit. The engine compiles only the style
-values it finds in your source, so a new value needs a sync before it paints.
-The `Div` then renders with padding and a gap, its element carries generated
-class names, and your type check passes: sync wrote your tokens' types into
-`@reference-ui/react`.
-
-## Install with an AI agent
-
-Paste this prompt into your coding agent, such as Claude Code, from the root
-of your project.
-
-```text
-Install and configure Reference UI in this project. Follow these steps exactly
-and do not invent commands, flags or config keys beyond the ones listed here.
-
-Context: Reference UI is a React authoring surface (style props, primitives,
-tokens, CSS) compiled at build time by a Rust engine. The `ref sync` command
-reads ui.config.ts and the source files it includes, and writes generated
-packages to .reference-ui/, linked into node_modules/@reference-ui/
-(system, styled, react, types).
-
-Requirements: Node.js 22.18.0 or later. Use the project's existing
-package manager (npm, pnpm or yarn); the commands below use npm.
-
-1. Install the packages:
-   npm install @reference-ui/lib react react-dom
-   npm install --save-dev @reference-ui/core
-
-2. Run `npx ref init` at the project root. It writes ui.config.ts next to
-   package.json, with `name` taken from package.json, `include` set to
-   'src/**/*.{ts,tsx}' and `extends: [baseSystem]`. Adjust `include` so it
-   covers every file that uses Reference UI style props. If a ui.config file
-   already exists, init changes nothing: keep that file, and check that its
-   `include` covers those files and its `extends` contains baseSystem,
-   imported from '@reference-ui/lib/baseSystem', never from '@reference-ui/lib'.
-
-3. Add `.reference-ui` to .gitignore.
-
-4. Add package.json scripts that run sync before the dev server and the
-   build, and keep it running in watch mode during development:
-   "sync": "ref sync"
-   Prefix the existing "build" script with "ref sync && ".
-   Run "ref sync --watch" alongside the existing dev server (for example
-   with the `concurrently` package), after one "ref sync".
-
-5. In the app entry file (for example src/main.tsx), import the generated
-   stylesheet once, before any other app import:
-   import '@reference-ui/react/styles.css'
-
-6. Render one primitive to prove the setup, for example:
-   import { Div } from '@reference-ui/react'
-   <Div display="grid" gap="3r" padding="4r">Hello from Reference UI</Div>
-
-7. Verify, and report the output of each check:
-   - `npx ref sync` exits 0 and prints a ready line with a CSS size.
-   - .reference-ui/ contains system, styled, react and types folders.
-   - The project's type check passes.
-   - The dev server renders the Div with padding applied.
-
-If `ref sync` fails, report its full error message and stop. Do not work
-around the error by editing files inside .reference-ui/ or node_modules/.
-```
-
-## Next steps
-
-- [Sync](/sync): watch mode, build scripts and common failures.
-- [System](/system): how style props, tokens and CSS fit together.

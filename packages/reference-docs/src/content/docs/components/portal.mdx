@@ -3,13 +3,20 @@ title: Portal
 section: Components
 order: 50
 slug: portal
+description: Renders children in a different part of the DOM.
 ---
+
+import { Preview } from '../../../mdx/Preview'
+import { PortalDemo } from './portal-demo'
 
 # Portal
 
-Portal renders its children somewhere else in the DOM, by default at the end
-of `document.body`, while they stay in place in the React tree. It adds no
-wrapper element and manages nothing else: no stacking, focus, or dismissal.
+By default the children render at the end of `document.body`. In the React
+tree they stay where you wrote them.
+
+<Preview>
+  <PortalDemo />
+</Preview>
 
 ```tsx
 import { Div } from '@reference-ui/react'
@@ -20,8 +27,10 @@ import { Portal } from '@reference-ui/lib'
 </Portal>
 ```
 
-[Overlay](/overlay), [Popover](/popover), and [Tooltip](/tooltip) portal
-their content already; reach for Portal only for your own layers.
+Portal only moves content. It adds no wrapper element and handles no
+stacking, focus or dismissal. [Overlay](/overlay), [Popover](/popover) and
+[Tooltip](/tooltip) already portal their content; use Portal for your own
+layers.
 
 ## Import
 
@@ -29,16 +38,42 @@ their content already; reach for Portal only for your own layers.
 import { Portal } from '@reference-ui/lib'
 ```
 
-## Props
+## Examples
+
+### Custom container
+
+Pass `container` to render somewhere other than `document.body`. A ref works
+even when its element mounts after the Portal.
+
+```tsx
+const destination = useRef<HTMLDivElement>(null)
+
+<>
+  <Portal container={destination}>
+    <Div>Rendered through a portal.</Div>
+  </Portal>
+  <Div ref={destination} />
+</>
+```
+
+Inside an Overlay, set the container with
+[`Overlay.Portal`](/overlay#overlayportal) instead.
+
+## API reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `children` | `ReactNode` | — | Content to move. |
-| `container` | element, ref, `() => element`, or `null` | `document.body` | Destination. A ref or function can resolve later; until it does, nothing renders. |
+| `children` | `ReactNode` | — | Content to render in the container. |
+| `container` | element, `DocumentFragment`, ref, `() => element`, or `null` | `document.body` | Where the children render. `null` means `document.body`. |
 
 ## Behaviour
 
-- Portal renders on the client after mount; nothing is moved during server
-  rendering.
-- React events and context still flow through the React tree, not the DOM
-  position.
+- Portal renders nothing on the server or on the first client render. The
+  children appear once it has mounted.
+- A ref or function that returns `null` renders nothing until it returns a
+  node.
+- Changing `container` moves the children to the new node. Don't rely on
+  their local state surviving the move.
+- React context and events follow the React tree, not the DOM position.
+- The first Reference UI element inside the portal reapplies the color mode,
+  so portalled content keeps light or dark mode.

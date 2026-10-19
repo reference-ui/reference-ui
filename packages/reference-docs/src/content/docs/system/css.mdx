@@ -1,17 +1,18 @@
 ---
 title: CSS
 section: System
-order: 5
+order: 6
 slug: css
+description: css() for class names, recipe() for variants.
 ---
 
 # CSS
 
-`css()` turns a style object into a class name you can put on any element.
-`recipe()` turns a set of named variants into a function that returns the
-class names for one choice of variants. Both are plain JavaScript calls; the
-compiler reads them from your source and writes their rules into the
-stylesheet ahead of time, so nothing is injected at runtime.
+`css()` turns a style object into a class name for any element. `recipe()`
+turns a set of variants into a function that returns class names.
+
+Both are compiled ahead of time: the compiler reads the calls from your
+source and writes their rules into the stylesheet.
 
 ## `css()`
 
@@ -21,7 +22,6 @@ import { css } from '@reference-ui/react'
 const card = css({
   padding: '4r',
   bg: 'surface',
-  color: 'text',
   borderRadius: 'card',
   _hover: { bg: 'surface/80' },
 })
@@ -29,15 +29,13 @@ const card = css({
 <article className={card}>…</article>
 ```
 
-A style object takes the same keys and values as [style props](/style-props):
-CSS properties in camelCase, their shorthands, token names, rhythm units,
-conditions and breakpoints. Each property and value becomes one atomic class,
-so two calls that share a declaration share its class.
+A style object takes the same keys and values as
+[style props](/style-props).
 
 ### Combine styles
 
-`css()` takes any number of style objects, or arrays of them. A later object
-wins for the same property; `null`, `false` and `undefined` are skipped:
+`css()` takes any number of style objects, or arrays of them. For the same
+property, the later object wins. `null`, `false` and `undefined` are skipped:
 
 ```ts
 const button = css(
@@ -50,35 +48,30 @@ const button = css(
 A `null`, `false` or `undefined` value inside an object is skipped too, so
 `{ color: undefined }` never overrides an earlier `color`.
 
-### Signature
-
 ```ts
 function css(...styles: Array<CssStyles | CssStyles[]>): string
 
 type CssStyles = SystemStyleObject | undefined | null | false
 ```
 
-Returns a space-separated class string, or `''` when every input is empty.
-
 ## Values
 
 | Value | Example | Result |
 | --- | --- | --- |
-| Token name | `color: 'brand'` | `var(--colors-brand)` (see [Tokens](/tokens)) |
-| Token reference | `border: '1px solid {colors.line}'` | references expand inside any string |
-| Opacity or tone | `bg: 'brand/40'`, `bg: 'brand/soft'` | `color-mix(…)` |
-| Rhythm | `gap: '3r'` | `calc(3 * var(--spacing-root))` (see [Spacing](/spacing)) |
-| Number | `width: 42`, `opacity: 0.5` | `42px` on length properties, bare otherwise |
-| Any CSS | `bg: 'linear-gradient(…)'` | printed as written |
-| Important | `color: 'brand !important'` or `'brand!'` | marks the declaration `!important` |
-| Custom property | `'--card-gap': '2r'` | the property keeps its casing |
+| Token name | `color: 'brand'` | `var(--colors-brand)`. See [Tokens](/tokens). |
+| Token reference | `border: '1px solid {colors.line}'` | Expands inside any string. |
+| Opacity or tone | `bg: 'brand/40'`, `bg: 'brand/soft'` | A `color-mix()` of the colour. |
+| Rhythm | `gap: '3r'` | `calc(3 * var(--spacing-root))`. See [Spacing](/spacing). |
+| Number | `width: 42`, `opacity: 0.5` | `42px` on lengths, bare otherwise. |
+| Any CSS | `bg: 'linear-gradient(…)'` | Printed as written. |
+| Important | `color: 'brand !important'` or `'brand!'` | Marks the declaration `!important`. |
+| Custom property | `'--card-gap': '2r'` | Keeps its casing. |
 
-## Conditions
+## Selectors and at-rules
 
-Keys that start with `_` are named conditions such as `_hover`, `_focusVisible`
-and `_dark`; [Style props](/style-props#conditions) lists them. Keys that start
-with `&` are selectors relative to the element, and keys that start with `@`
-are at-rules:
+Keys that start with `_` are [named conditions](/style-props#conditions).
+Keys that start with `&` are selectors relative to the element. Keys that
+start with `@media`, `@container` or `@supports` are at-rules:
 
 ```ts
 css({
@@ -90,28 +83,25 @@ css({
 })
 ```
 
-Breakpoint keys (`md`, `lgDown`, `r`) are covered in
-[Responsive](/responsive). Conditions nest, and a rule applies only when every
-condition around it holds.
+Breakpoint keys such as `md` are covered in [Responsive](/responsive).
+Conditions nest, and a nested rule applies only when every condition around
+it matches.
 
 ## What the compiler can read
 
-The compiler finds style values by reading your source, without running it.
-It reads:
+The compiler reads your source without running it. It can read:
 
-- literal objects and values in a `css()` call, a `css` prop or a style prop;
+- literal objects and values in a `css()` call or a style prop;
 - `const` objects and values, in the same file or imported from another;
-- both branches of a ternary such as `active ? 'brand' : 'text'`;
+- both branches of a ternary, such as `active ? 'brand' : 'text'`;
 - spreads of objects it can read, including `...(flag && extra)`.
 
-A value it cannot read, such as the result of a function call or a string
-built at runtime, gets no rule. `css()` still returns a class for it, but the
-class paints nothing, and in development the browser console warns once,
-naming the property, the value and the call site. `ref sync` also warns at the
-call site.
+A value it cannot read, such as the result of a function call, gets no CSS.
+`ref sync` warns at the call site, and in development the browser console
+names the property and value that missed.
 
-When the choice is only known at runtime, write each option as its own
-`css()` call and pick between the class names:
+When the choice is made at runtime, write each option as its own `css()`
+call and pick between the class names:
 
 ```ts
 const toneClass = {
@@ -122,16 +112,14 @@ const toneClass = {
 <p className={toneClass[kind]}>…</p>
 ```
 
-### Pre-generate values with `staticCss`
+### Generate values ahead of time
 
-For values that never appear in source, list them in `ui.config.ts`.
-`staticCss` maps a property, optionally with a condition prefix, to the token
-names to generate. `'*'` generates every token of the property's category:
+For values that appear nowhere in your source, list them under `staticCss`
+in `ui.config.ts`. Each key is a property, optionally with a condition
+prefix. Each value lists token names, or `'*'` for the whole category:
 
 ```ts
 // ui.config.ts
-import { defineConfig } from '@reference-ui/core'
-
 export default defineConfig({
   name: 'my-app',
   include: ['src/**/*.{ts,tsx}'],
@@ -142,13 +130,12 @@ export default defineConfig({
 })
 ```
 
-A `staticCss` entry that names a token that does not exist fails `ref sync`.
+Sync fails if an entry names a token that does not exist.
 
 ## `recipe()`
 
-A recipe is a component's closed set of looks. You describe the base styles,
-the variant axes, and their defaults once; the recipe function returns the
-classes for one selection:
+A recipe describes a component's variants once. The function it returns
+gives the class names for one choice of variants:
 
 ```tsx
 import { recipe } from '@reference-ui/react'
@@ -175,20 +162,32 @@ const button = recipe({
 
 | Option | Type | Description |
 | --- | --- | --- |
-| `className` | `string` | Names the recipe. Its classes are `<system name>__<className>…`; two recipes with the same name in one system fail sync. |
-| `base` | style object | Styles every selection gets. |
-| `variants` | `Record<axis, Record<value, style object>>` | One style object per value of each axis. Use `true` / `false` keys for a boolean axis. |
-| `defaultVariants` | `Record<axis, value>` | The value used when a call omits an axis. |
-| `compoundVariants` | `Array<{ [axis]: value, css: style object }>` | Styles that apply only when every listed axis matches. |
+| `className` | `string` | Names the recipe. Two recipes with the same name in one system fail sync. |
+| `base` | style object | Styles every choice gets. |
+| `variants` | `Record<string, Record<string, StyleObject>>` | One style object per value of each variant. Use `true` and `false` keys for a boolean variant. |
+| `defaultVariants` | `Record<string, string>` | The value used when a call leaves a variant out. |
+| `compoundVariants` | `Array<{ [variant]: value, css: StyleObject }>` | Styles that apply only when every listed variant matches. |
 
-The returned function also has `raw(props)`, which returns the merged style
-object instead of class names, plus `variantKeys`, `variantMap` and
-`splitVariantProps(props)`. A variant value can be responsive:
-`button({ size: { base: 'sm', md: 'lg' } })`.
+A variant value can be responsive: `button({ size: { base: 'sm', md: 'lg' } })`.
 
-Recipe rules live in the `recipes` layer, before `utilities`. A `css()` class
-or style prop on the same element therefore always beats the recipe, whatever
-the selector specificity.
+The returned function also has:
 
-Pass the recipe an object literal: the compiler reads the configuration from
-source, and a recipe it cannot read fails sync.
+- `raw(props)`, which returns the merged style object instead of class names;
+- `variantKeys` and `variantMap`, which list the variants and their values;
+- `splitVariantProps(props)`, which splits variant props from the rest.
+
+`RecipeVariantProps` gives the props type of a recipe:
+
+```ts
+import type { RecipeVariantProps } from '@reference-ui/react'
+
+type ButtonVariants = RecipeVariantProps<typeof button>
+// { tone?: 'primary' | 'quiet'; size?: 'sm' | 'lg' }
+```
+
+Recipe classes live in the `recipes` [cascade layer](/cascade-layers),
+below utilities. A style prop or `css()` class on the same element always
+wins over the recipe.
+
+Pass `recipe()` an object literal. A recipe the compiler cannot read fails
+sync.

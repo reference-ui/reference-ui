@@ -35,7 +35,7 @@ export function ComboboxDemo() {
         onInputValueChange={setQuery}
       >
         <Field className={fullWidth}>
-          <Combobox.Input aria-label="Framework" placeholder="Search frameworks…" />
+          <Combobox.Input aria-label="Framework" placeholder="Search frameworks" />
         </Field>
         <Combobox.Popover>
           <Listbox>
@@ -48,6 +48,30 @@ export function ComboboxDemo() {
             ) : (
               <Listbox.Empty>No frameworks found</Listbox.Empty>
             )}
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+      <Span className={demoNote}>Selected: {value ?? 'none'}</Span>
+    </Div>
+  )
+}
+
+/** A select-only combobox: a button opens the list, there is no text input. */
+export function ComboboxSelectDemo() {
+  const [value, setValue] = useState<string | null>('react')
+  return (
+    <Div className={demoStack}>
+      <Combobox value={value} onChange={setValue}>
+        <Combobox.Trigger aria-label="Framework" className={fullWidth}>
+          {labelOf(value) || 'Select a framework'}
+        </Combobox.Trigger>
+        <Combobox.Popover>
+          <Listbox>
+            {frameworks.map(item => (
+              <Listbox.Option key={item.value} value={item.value}>
+                {item.label}
+              </Listbox.Option>
+            ))}
           </Listbox>
         </Combobox.Popover>
       </Combobox>

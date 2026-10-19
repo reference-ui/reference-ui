@@ -1,0 +1,77 @@
+---
+title: Library components
+section: Guides
+order: 4
+slug: library-components
+description: Why the library has the components it has, and how they stay transparent.
+---
+
+{/* Source: packages/reference-lib/src/components/components.md (the component manifesto). */}
+
+# Library components
+
+Older component libraries were built to save keystrokes. One widget took a
+configuration object and rendered a whole feature, so you wrote less code.
+That worked until your product needed something the widget didn't plan for.
+After that, every change was a workaround.
+
+`@reference-ui/lib` addresses this by favouring patterns over widgets. It is a
+small set of transparent components, designed to be easily understood by both
+humans and agents.
+
+## What's in the library
+
+A component joins the library only when the browser has no native equivalent,
+the behaviour is hard to rebuild (focus trapping, date math, positioning) and
+many products need the same API. Anything else is a composition of smaller parts.
+
+That keeps the set small:
+
+| Group | Components |
+| --- | --- |
+| Foundation | `ReferenceLibrary`, `Portal`, `Overlay`, `Popover`, `Toast` |
+| Widgets | `Listbox`, `Combobox`, `Menu`, `Tabs`, `Slider`, `Switch`, `Tree`, `NumberField`, `DateField`, `Calendar`, `Collapsible`, `Accordion`, `Splitter`, `Tooltip` |
+| Form chrome | `Field` |
+| Building blocks | `Slot`, `Presence`, `RovingFocus`, `FocusLock` |
+
+## What we left out
+
+Every omission is deliberate. Checkbox, radio, `<progress>` and `<meter>` are
+native elements with built-in behaviour, so the library doesn't wrap them.
+Carousels and scroll areas are CSS: scroll snap and `overflow` cover them.
+
+A new pattern name is not a reason for a new component. If it brings no new
+hard behaviour, it would only bloat the API.
+
+## Patterns are compositions
+
+Dialogs, drawers, selects and menus are not separate components. Each is a
+documented composition of the components above. A dialog is an `Overlay`
+with `role="dialog"`:
+
+```tsx
+<Overlay open={open} onOpenChange={setOpen}>
+  <Overlay.Trigger>Delete project</Overlay.Trigger>
+  <Overlay.Backdrop />
+  <Overlay.Content role="dialog" aria-modal="true" aria-labelledby="delete-title">
+    <H2 id="delete-title">Delete project?</H2>
+    <Button onClick={() => setOpen(false)}>Cancel</Button>
+  </Overlay.Content>
+</Overlay>
+```
+
+| Pattern | Built from |
+| --- | --- |
+| Dialog, alert dialog | `Overlay` with a dialog role |
+| Drawer, sheet | `Overlay` with `edge` |
+| Select, autocomplete | `Combobox` with a `Listbox` popup |
+| Menu button | `Popover` with a `Menu` |
+| Command palette | `Overlay` with a `Combobox` |
+| Toolbar, toggle group | `RovingFocus` over your buttons |
+| FAQ | `Accordion` |
+
+## Stability
+
+A small set is one we can keep stable. Patterns may change over time, but the
+components underneath them are built to last. We are committed to never
+shipping a version 2 that breaks them.

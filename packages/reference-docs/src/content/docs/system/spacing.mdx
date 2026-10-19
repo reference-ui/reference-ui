@@ -1,8 +1,9 @@
 ---
 title: Spacing
 section: System
-order: 3
+order: 9
 slug: spacing
+description: Rhythm units, the spacing root and named spacing tokens.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -10,11 +11,13 @@ import { RhythmRamp } from './spacing-demo'
 
 # Spacing
 
-Spacing in Reference UI is measured in rhythm units. Write `4r` for four
-units of padding, `0.5r` for half a unit, `-2r` for a negative margin. Every
-rhythm value is a multiple of one CSS variable, so changing that variable
-rescales the spacing of the whole interface at once. Named spacing tokens sit
-beside the rhythm unit when you want words instead of numbers.
+Spacing is measured in rhythm units: `4r` is four units, `0.5r` is half a
+unit. Every unit is a multiple of one CSS variable, so changing it rescales
+the whole interface.
+
+<Preview>
+  <RhythmRamp />
+</Preview>
 
 ## The `r` unit
 
@@ -26,32 +29,22 @@ import { Div } from '@reference-ui/react'
 <Div padding="4r" gap="2r" marginTop="-1r" />
 ```
 
-The compiler turns each value into a `calc()` against the root variable:
-
 | You write | CSS |
 | --- | --- |
 | `1r` | `var(--spacing-root)` |
 | `4r` | `calc(4 * var(--spacing-root))` |
-| `0.5r`, `3.5r` | `calc(0.5 * var(--spacing-root))`, … |
-| `1/2r`, `1/3r` | `calc(var(--spacing-root) / 2)`, … |
+| `0.5r` | `calc(0.5 * var(--spacing-root))` |
+| `1/2r` | `calc(var(--spacing-root) / 2)` |
 | `-4r` | `calc(-4 * var(--spacing-root))` |
 
-There is no fixed scale: `137.5r` works as well as `4r`. Rhythm is not limited
-to spacing properties either. It works in any length value, including
-`width`, `fontSize` and `maxWidth`, and inside multi-part values such as
+Any number works, not only steps on a scale. Rhythm units work in any length,
+including `width`, `fontSize` and multi-part values such as
 `border: '0.25r solid'`.
-
-With `--spacing-root` at `0.25rem`, the steps look like this:
-
-<Preview>
-  <RhythmRamp />
-</Preview>
 
 ## Set the root
 
-The engine defines `--spacing-root: 0.25rem` at the start of the stylesheet,
-ranked below every rule you write. Override it with one `globalCss()` line to
-rescale every rhythm value:
+`--spacing-root` is `0.25rem` by default. Set it with `globalCss()` to rescale
+every rhythm value:
 
 ```ts
 // src/theme/global.ts
@@ -64,10 +57,11 @@ globalCss({
 })
 ```
 
-Because the root is a plain custom property, you can also set it on any
-element to change the density of one subtree.
+The default sits in the lowest [cascade layer](/cascade-layers), so your
+value always wins. Set the variable on any element to change the density of
+that part of the page.
 
-## Named spacing tokens
+## Named spacing
 
 Define `spacing` tokens when a value deserves a name:
 
@@ -86,38 +80,35 @@ tokens({
 <Div paddingInline="gutter" marginBlock="-section" />
 ```
 
-A leading `-` negates a named token as well: `-section` prints
-`calc(-1 * var(--spacing-section))`. Spacing tokens apply to `margin*`,
-`padding*`, `gap`, `rowGap`, `columnGap`, `inset`, `top`, `right`, `bottom`
-and `left`; see [Tokens](/tokens#categories) for the full mapping.
+A leading `-` negates a token: `-section` prints
+`calc(-1 * var(--spacing-section))`.
 
 ## Numbers
 
-A bare number on a length property is pixels: `width: 42` prints `42px`.
-Unitless properties such as `opacity` and `zIndex` keep the
-bare number. Use rhythm units for spacing so it follows the root.
+A bare number on a length property is pixels: `width={42}` prints `42px`.
+Properties without a unit, such as `opacity` and `zIndex`, keep the number.
+Use rhythm units for spacing so it follows the root.
 
 ## `getRhythm()`
 
-When you need a rhythm value as a string in JavaScript, for example in an
-inline `style`, call `getRhythm()`:
+`getRhythm()` returns a rhythm value as a string, for places outside style
+props, such as an inline `style`:
 
 ```ts
 import { getRhythm } from '@reference-ui/system'
 
-getRhythm(4)     // 'calc(4 * var(--spacing-root))'
-getRhythm(1)     // 'var(--spacing-root)'
-getRhythm(1, 3)  // 'calc(var(--spacing-root) / 3)'
+getRhythm(4)    // 'calc(4 * var(--spacing-root))'
+getRhythm(1)    // 'var(--spacing-root)'
+getRhythm(1, 3) // 'calc(var(--spacing-root) / 3)'
 ```
 
 ```ts
 function getRhythm(num: number, denom?: number): string
 ```
 
-## The compiler only sees literal steps
+## Write steps literally
 
-A rhythm value gets a CSS rule only when the compiler can read it from your
-source. `padding="4r"` works anywhere. A step built at runtime, such as
-`` `${n}r` ``, has no rule unless the same step appears literally somewhere
-else; in development the browser console names the prop and value that
-missed. See [CSS](/css#what-the-compiler-can-read).
+A rhythm value gets CSS only when the compiler can read it from your source.
+`padding="4r"` works anywhere. A step built at runtime, such as
+`` `${n}r` ``, gets no CSS unless the same step appears literally somewhere
+else. See [CSS](/css#what-the-compiler-can-read).

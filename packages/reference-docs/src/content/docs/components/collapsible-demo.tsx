@@ -8,7 +8,7 @@ export function CollapsibleDemo() {
       <Collapsible>
         <Collapsible.Trigger>Order details</Collapsible.Trigger>
         <Collapsible.Content>
-          <P>Shipped on 12 October. Arrives in 3–5 working days.</P>
+          <P>Shipped on 12 October. Arrives in three to five working days.</P>
         </Collapsible.Content>
       </Collapsible>
     </Div>

@@ -15,8 +15,11 @@ import {
   css,
 } from '@reference-ui/react'
 import { CodeBlock } from './CodeBlock'
-import { MdxH1, MdxH2, MdxH3, type MdxProps } from './headings'
+import { CodeTabs } from './CodeTabs'
+import { MdxH1, MdxH2, MdxH3, MdxH4, Step, type MdxProps } from './headings'
 import { Install } from './Install'
+import { InstallPrompt } from './InstallPrompt'
+import { LinkCard, LinkCards } from './LinkCards'
 
 const linkClass = css({
   color: 'docsHighlight',
@@ -198,6 +201,7 @@ export const mdxComponents = {
   h1: MdxH1,
   h2: MdxH2,
   h3: MdxH3,
+  h4: MdxH4,
   p: MdxP,
   a: MdxLink,
   ul: MdxUl,
@@ -211,5 +215,10 @@ export const mdxComponents = {
   td: MdxTd,
   code: MdxCode,
   pre: CodeBlock,
+  CodeTabs,
   Install,
+  InstallPrompt,
+  LinkCard,
+  LinkCards,
+  Step,
 } satisfies MDXComponents

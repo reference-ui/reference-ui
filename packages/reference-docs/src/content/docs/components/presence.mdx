@@ -3,6 +3,7 @@ title: Presence
 section: Components
 order: 51
 slug: presence
+description: Keeps an element mounted until its exit animation finishes.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -10,16 +11,21 @@ import { PresenceDemo } from './presence-demo'
 
 # Presence
 
-Presence keeps an element in the DOM until its exit animation or transition
-finishes, then unmounts it.
+When `present` turns `false`, Presence waits for the child's exit animation
+or transition to finish, then unmounts it.
 
 <Preview>
   <PresenceDemo />
 </Preview>
 
 ```tsx
-import { Div } from '@reference-ui/react'
+import { Div, css } from '@reference-ui/react'
 import { Presence } from '@reference-ui/lib'
+
+const fade = css({
+  transition: 'opacity 0.3s ease',
+  '&[data-state="closed"]': { opacity: '0' },
+})
 
 <Presence present={open}>
   <Div data-state={open ? 'open' : 'closed'} className={fade}>
@@ -28,9 +34,9 @@ import { Presence } from '@reference-ui/lib'
 </Presence>
 ```
 
-Style the exit against `data-state="closed"`. [Overlay](/overlay),
-[Popover](/popover), and [Collapsible](/collapsible) use Presence already;
-do not wrap them in it.
+Presence does not set `data-state`; the example sets it so the CSS can match
+the closed state. [Overlay](/overlay), [Popover](/popover) and
+[Collapsible](/collapsible) already use Presence, so don't wrap them in it.
 
 ## Import
 
@@ -38,18 +44,27 @@ do not wrap them in it.
 import { Presence } from '@reference-ui/lib'
 ```
 
-## Props
+## API reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `present` | `boolean` | — | Required. Whether the child should be shown. |
-| `children` | one element | — | The element to keep mounted through its exit. |
-| `onExitComplete` | `() => void` | — | Called once after the exit finishes and the child unmounts. |
+| `present` | `boolean` | — | Required. Whether the child is shown. |
+| `children` | `ReactElement \| null \| false` | — | One element. It must pass its `ref` to a DOM node. |
+| `onExitComplete` | `() => void` | — | Called once when the child unmounts after a finished exit. |
 
 ## Behaviour
 
-- Presence waits for CSS animations, CSS transitions, and finite GSAP
-  tweens.
-- If nothing animates (including under `prefers-reduced-motion`), the child
-  unmounts straight away.
-- Presence renders no element of its own.
+- Presence waits for CSS animations, CSS transitions and finite GSAP tweens
+  on the child element itself. Effects on its descendants don't count.
+- A keyframe animation holds the exit only if `animation-name` changes when
+  the element closes. Infinite animations never hold it.
+- If nothing runs, the child unmounts straight away. That includes
+  `prefers-reduced-motion` styles that remove the effect, `display: none`,
+  and a hidden browser tab.
+- Setting `present` back to `true` during an exit cancels it. The child
+  stays, and `onExitComplete` does not fire.
+- A Presence inside another one finishes its exit before the outer one
+  unmounts.
+- Presence only handles the exit. Write enter animations in CSS.
+- Presence renders no element of its own. It throws if the child is not a
+  single element, and on close if no DOM node received its `ref`.

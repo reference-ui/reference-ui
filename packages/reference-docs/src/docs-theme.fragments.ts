@@ -14,7 +14,7 @@ tokens({
   colors: {
     docsPageBg: {
       value: '#ffffff',
-      dark: '{colors.gray.950}',
+      dark: 'color-mix(in oklch, var(--colors-gray-950) 70%, black)',
     },
     docsPanelBg: {
       value: '{colors.gray.50}',
@@ -68,20 +68,20 @@ tokens({
       value: '{colors.gray.300}',
       dark: '{colors.gray.700}',
     },
-    // Code panels: a hairline border on a fill a shade off the page (darker
-    // in dark mode), with the one accent hue for highlighted lines and the
+    // Code panels: a hairline border on a fill a shade off the page (lighter
+    // than the page in dark mode), with the one accent hue for highlighted lines and the
     // selected package-manager tab.
     docsCodeBg: {
       value: '{colors.gray.50}',
-      dark: 'color-mix(in oklch, var(--colors-gray-950) 70%, black)',
+      dark: '{colors.gray.950}',
     },
     docsAccent: {
       value: '{colors.blue.600}',
       dark: '{colors.blue.400}',
     },
     docsLineHighlightBg: {
-      value: 'color-mix(in oklch, var(--colors-blue-600) 10%, transparent)',
-      dark: 'color-mix(in oklch, var(--colors-blue-400) 17%, transparent)',
+      value: 'color-mix(in oklch, var(--colors-blue-600) 6%, transparent)',
+      dark: 'color-mix(in oklch, var(--colors-blue-400) 8%, transparent)',
     },
     docsRing: {
       value: '{colors.gray.400}',

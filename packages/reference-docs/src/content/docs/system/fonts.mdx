@@ -1,22 +1,18 @@
 ---
 title: Fonts
 section: System
-order: 6
+order: 10
 slug: fonts
+description: Define a font family, its files and its weights.
 ---
 
 # Fonts
 
-One `font()` call defines a font family: its CSS stack, the files to load,
-the weights it ships, and a few finishing declarations. From that call the
-system generates the tokens, the `@font-face` rules, and the meaning of the
-`font` and `weight` props, so you never write a `@font-face` block or repeat a
-font stack by hand.
+`font()` defines a font family: its CSS stack, the files to load, and the
+weights it ships. Sync turns it into tokens, `@font-face` rules and the
+`font` and `weight` props.
 
 ## Define a family
-
-Call `font()` with a name and the family's options, in any file your
-`ui.config.ts` `include` globs cover:
 
 ```ts
 // src/theme/fonts.ts
@@ -27,7 +23,6 @@ font('display', {
   fontFace: {
     src: 'url(/fonts/playfair-display.woff2) format("woff2")',
     fontWeight: '400 900',
-    fontStyle: 'normal',
     fontDisplay: 'swap',
   },
   weights: {
@@ -40,13 +35,13 @@ font('display', {
 })
 ```
 
-The next `ref sync` picks it up. From then on, `font="display"` works on every
-primitive and in every `css()` call.
+After the next `ref sync`, `font="display"` works on every primitive and in
+every `css()` call.
 
 ## Use a family
 
-The `font` prop applies the whole family at once: the stack, the family's
-default weight, and its `css` declarations.
+The `font` prop applies the stack, the family's default weight and its `css`
+declarations:
 
 ```tsx
 import { H1 } from '@reference-ui/react'
@@ -54,55 +49,43 @@ import { H1 } from '@reference-ui/react'
 <H1 font="display">Set in Playfair Display</H1>
 ```
 
-The default weight is the first of: `css.fontWeight`, `weights.normal`, then
+The default weight is `css.fontWeight` if set, then `weights.normal`, then
 `400`.
 
-### `font` versus `fontFamily`
+`fontFamily="display"` sets only the stack. Use it when something else sets
+the weight and spacing.
 
-- `font="display"` sets the family stack, the default weight and the `css`
-  extras.
-- `fontFamily="display"` sets only the stack, through the `--fonts-display`
-  token. Use it when something else already owns the weight and spacing.
+## Weights
 
-Both choose the family that bare weight names resolve against (below).
-
-## Weights belong to the family
-
-`weights` maps weight names to the numbers this family really uses. The names
-are `thin`, `light`, `normal`, `semibold`, `bold` and `black`. A weight name
-next to a family resolves against that family's scale:
+`weights` maps weight names to the numbers this family uses. The names are
+`thin`, `light`, `normal`, `semibold`, `bold` and `black`.
 
 ```tsx
 import { P } from '@reference-ui/react'
 
-<P font="display" weight="normal">420, from the display scale</P>
-<P font="display" weight="bold">700, from the display scale</P>
-<P weight="bold">700, the CSS keyword</P>
+<P font="display" weight="normal">420, from the display family</P>
+<P font="display" weight="bold">700, from the display family</P>
+<P weight="bold">700, the CSS value</P>
 ```
 
 | You write | Resolves to |
 | --- | --- |
-| `weight="bold"` with `font` or `fontFamily` on the same element | the family's `bold` |
-| `weight="bold"` with no family on the element | the CSS keyword value |
-| `weight="display.bold"` | the display family's `bold`, with or without a family prop |
-| `weight="display.black"` when display lists no `black` | the CSS keyword for `black` (900) |
-| `weight="550"` | `550` as written |
+| `weight="bold"` with `font` or `fontFamily` on the same element | The family's `bold` |
+| `weight="bold"` with no family on the element | The CSS value, `700` |
+| `weight="display.bold"` | The display family's `bold`, anywhere |
+| `weight="display.black"` when display has no `black` | The CSS value, `900` |
+| `weight="550"` | `550` |
 
-The CSS keyword values are `thin` 100, `light` 300, `normal` 400, `semibold`
-600, `bold` 700 and `black` 900. Use the scoped form, `display.bold`, when the
-weight is set apart from the family, such as on a child element.
+The CSS values are `thin` 100, `light` 300, `normal` 400, `semibold` 600,
+`bold` 700 and `black` 900. Use the `display.bold` form on an element that
+does not set the family itself, such as a child.
 
 ## Load the files
 
-The engine prints one `@font-face` rule per `fontFace` entry, inside the
-`global` layer. You choose where the files live:
+Sync writes one `@font-face` rule for each `fontFace` entry. Point `src` at
+files in your app's public folder, or at a font provider's URL.
 
-- **Self-hosted.** Put the `.woff2` files in your app's public folder and
-  point `src` at them, as in the example above.
-- **Remote.** Point `src` at a font provider's URL. The shape is the same.
-
-Pass an array to `fontFace` when a family needs several files, for example
-one per style:
+Pass an array when a family has several files:
 
 ```ts
 font('body', {
@@ -115,23 +98,19 @@ font('body', {
 })
 ```
 
-`sizeAdjust` and `descentOverride` scale a face's metrics so the fallback
-font takes up nearly the same space while the web font loads. Add them if
-you see text jump on first paint.
+If text jumps when the font loads, use `sizeAdjust` and `descentOverride` to
+make the fallback font take up the same space.
 
 ## What a family generates
 
-For `font('display', …)` the stylesheet gains:
+For `font('display', …)`, the stylesheet gets:
 
-- `--fonts-display`, the stack, as a token in the `fonts` category;
+- `--fonts-display`, the stack, as a `fonts` token;
 - `--font-weights-display-normal`, `--font-weights-display-bold` and so on,
-  one per listed weight;
-- the `@font-face` rules in `@layer global`;
-- the `display` scale that `font` and `weight` resolve against.
+  one for each weight;
+- the `@font-face` rules, in the `global` [cascade layer](/cascade-layers).
 
-Remove the `font()` call and the next sync removes all of it.
-
-## `font()` reference
+## Reference
 
 ```ts
 function font(name: string, options: FontOptions): void
@@ -139,20 +118,20 @@ function font(name: string, options: FontOptions): void
 
 | Option | Type | Required | Description |
 | --- | --- | --- | --- |
-| `value` | `string` | yes | The `font-family` stack, written as it appears in CSS, quotes included. |
-| `fontFace` | `FontFaceRule \| FontFaceRule[]` | yes | The files to load. |
-| `weights` | `Partial<Record<FontWeightName, string>>` | yes | Weight name to numeric weight. Only listed names belong to the family. |
-| `css` | `Record<string, string>` | no | Declarations applied with `font`, such as `letterSpacing`. A `fontWeight` here sets the default weight. |
+| `value` | `string` | Yes | The `font-family` stack, as written in CSS. |
+| `fontFace` | `FontFaceRule \| FontFaceRule[]` | Yes | The files to load. |
+| `weights` | `Partial<Record<FontWeightName, string>>` | Yes | Weight name to number. |
+| `css` | `Record<string, string>` | No | Declarations the `font` prop adds, such as `letterSpacing`. A `fontWeight` here is the default weight. |
 
 `FontFaceRule`:
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `src` | `string` | yes | The `src` descriptor, such as `url(…) format("woff2")`. |
-| `fontWeight` | `string` | no | The weight or range the file covers, such as `'400 900'`. |
-| `fontStyle` | `string` | no | `normal` or `italic`. |
-| `fontDisplay` | `string` | no | Loading behaviour. `swap` keeps text visible while the file loads. |
-| `sizeAdjust` | `string` | no | Scales the face's glyphs, such as `'105%'`. |
-| `descentOverride` | `string` | no | Overrides the face's descent metric, such as `'20%'`. |
+| `src` | `string` | Yes | The `src` descriptor, such as `url(…) format("woff2")`. |
+| `fontWeight` | `string` | No | The weight or range the file covers, such as `'400 900'`. |
+| `fontStyle` | `string` | No | `normal` or `italic`. |
+| `fontDisplay` | `string` | No | How text shows while the file loads, such as `swap`. |
+| `sizeAdjust` | `string` | No | Scales the glyphs, such as `'105%'`. |
+| `descentOverride` | `string` | No | Overrides the descent metric, such as `'20%'`. |
 
 `FontWeightName` is `'thin' | 'light' | 'normal' | 'semibold' | 'bold' | 'black'`.
