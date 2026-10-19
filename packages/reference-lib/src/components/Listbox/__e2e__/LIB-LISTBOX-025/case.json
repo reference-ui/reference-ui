@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-025",
+  "name": "Listbox Composition Gates & Browser Proofs LB-SINGLE-08: Listbox should let consumer handlers cancel option selection before its default runs"
+}

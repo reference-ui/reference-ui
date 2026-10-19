@@ -1,0 +1,4 @@
+{
+  "id": "LIB-MENUBAR-016",
+  "name": "Menubar coordination MB-OPEN-01: keeps at most one menu open across trigger clicks"
+}

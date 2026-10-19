@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-030",
+  "name": "Listbox Composition Gates & Browser Proofs LB-KEY-05: Listbox should treat Space as typeahead text only while a search buffer is active"
+}

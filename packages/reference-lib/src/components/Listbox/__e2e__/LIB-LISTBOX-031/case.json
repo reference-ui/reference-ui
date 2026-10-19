@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-031",
+  "name": "Listbox Composition Gates & Browser Proofs LB-POINTER-01: Listbox should issue one request for a primary mouse press without duplicating it on release"
+}

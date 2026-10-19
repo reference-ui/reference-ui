@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-062",
+  "name": "Listbox behavior CT LB-KEY-06: Listbox should leave unsupported navigation keys and modifiers to the browser or application"
+}

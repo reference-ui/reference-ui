@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-073",
+  "name": "Listbox behavior CT LB-VIRT-08: Virtual Listbox should preserve logical metadata and active visibility through resize"
+}

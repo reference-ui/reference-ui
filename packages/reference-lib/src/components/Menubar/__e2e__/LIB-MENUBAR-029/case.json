@@ -1,0 +1,4 @@
+{
+  "id": "LIB-MENUBAR-029",
+  "name": "Menubar coordination MB-KEY-08: never switches menus from inside a nested submenu"
+}

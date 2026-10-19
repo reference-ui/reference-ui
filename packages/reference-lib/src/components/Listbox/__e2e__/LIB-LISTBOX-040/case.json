@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-040",
+  "name": "Listbox behavior CT LB-DOM-04: Listbox should keep disabled options out of every interactive path"
+}

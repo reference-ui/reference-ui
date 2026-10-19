@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-044",
+  "name": "Listbox behavior CT LB-DOM-11: Listbox should represent a controlled selected-disabled option without making it interactive"
+}

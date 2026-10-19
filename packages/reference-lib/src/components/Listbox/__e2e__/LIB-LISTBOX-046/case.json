@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-046",
+  "name": "Listbox behavior CT LB-GROUP-01: Listbox should preserve native group roles and accessible labels around nested Options"
+}

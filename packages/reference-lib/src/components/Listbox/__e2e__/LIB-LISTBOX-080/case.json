@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-080",
+  "name": "Listbox behavior CT LB-ENV-03: Listbox should preserve roving, typeahead, and virtual scrolling inside a ShadowRoot"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-051",
+  "name": "Listbox behavior CT LB-GROUP-06: Virtual Listbox should keep logical position metadata independent of group depth"
+}

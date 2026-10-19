@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-053",
+  "name": "Listbox behavior CT LB-SINGLE-03: Listbox should request the same single selection when Enter activates an option"
+}

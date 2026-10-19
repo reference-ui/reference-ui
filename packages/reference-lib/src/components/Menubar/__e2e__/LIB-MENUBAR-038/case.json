@@ -1,0 +1,4 @@
+{
+  "id": "LIB-MENUBAR-038",
+  "name": "Menubar consumer and lifecycle contracts MB-CTRL-01: programmatic values update mounted relationships silently and do not inherit stale entry intent"
+}

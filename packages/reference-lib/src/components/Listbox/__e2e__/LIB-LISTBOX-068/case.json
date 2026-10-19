@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-068",
+  "name": "Listbox behavior CT LB-DYNAMIC-04: Listbox should remove a newly disabled option from navigation without clearing controlled selection"
+}

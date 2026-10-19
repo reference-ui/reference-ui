@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ROVINGFOCUS-047",
+  "name": "RovingFocus typeahead browser behavior RF-TYPE-11: buffered search skips newly disabled or unmounted matches"
+}

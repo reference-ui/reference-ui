@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ROVINGFOCUS-038",
+  "name": "RovingFocus tab stops and currentness RF-TAB-08: kernel tabIndex wins over conflicting consumer values"
+}

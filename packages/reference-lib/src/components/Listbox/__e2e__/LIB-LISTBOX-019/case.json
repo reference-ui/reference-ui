@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-019",
+  "name": "Listbox Composition Gates & Browser Proofs LB-DOM-06: Listbox should preserve empty and zero-like string identities"
+}

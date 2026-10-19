@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-055",
+  "name": "Listbox behavior CT LB-SINGLE-07: Listbox should adopt a programmatically selected mounted option without emitting a request"
+}

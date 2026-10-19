@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-081",
+  "name": "Listbox behavior CT LB-A11Y-01: Listbox should pass accessibility checks across every frozen semantic shape"
+}

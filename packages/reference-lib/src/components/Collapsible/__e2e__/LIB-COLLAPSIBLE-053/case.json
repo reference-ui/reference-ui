@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-053",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-MOUNT-CT-01: closed hidden-until-found content stays in the DOM, rendering-skipped, and linked"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-026",
+  "name": "Listbox Composition Gates & Browser Proofs LB-MULTI-03: Listbox should emit a deterministic deduplicated multiple-selection array"
+}

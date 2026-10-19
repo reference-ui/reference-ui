@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-063",
+  "name": "Listbox behavior CT LB-KEY-07: Listbox should ignore composite keyboard commands originating in interactive descendants"
+}

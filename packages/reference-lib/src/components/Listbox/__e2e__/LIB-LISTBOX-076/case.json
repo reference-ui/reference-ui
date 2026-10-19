@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-076",
+  "name": "Listbox behavior CT LB-CB-01: Listbox should switch to Combobox virtual focus without changing option selection semantics"
+}

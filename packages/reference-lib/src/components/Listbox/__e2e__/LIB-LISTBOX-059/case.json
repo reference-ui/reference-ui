@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-059",
+  "name": "Listbox behavior CT LB-MULTI-06: Listbox should keep multiple selection fully controlled across rejection and programmatic updates"
+}

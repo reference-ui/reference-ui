@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-043",
+  "name": "Listbox behavior CT LB-DOM-09: Listbox typeahead should use explicit text before current meaningful rendered text"
+}

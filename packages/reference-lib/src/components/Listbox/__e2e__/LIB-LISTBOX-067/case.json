@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-067",
+  "name": "Listbox behavior CT LB-DYNAMIC-03: Listbox should not correct a controlled value when its selected option is removed"
+}

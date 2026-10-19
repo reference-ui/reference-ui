@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-024",
+  "name": "Listbox Composition Gates & Browser Proofs LB-SINGLE-05: Listbox should treat activation of the already-selected option as a no-op"
+}

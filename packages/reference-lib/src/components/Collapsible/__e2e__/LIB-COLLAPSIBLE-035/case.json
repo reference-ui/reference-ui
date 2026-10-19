@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-035",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-DOM-03: Collapsible should keep its relationship valid throughout a closed exit and remove it after unmount"
+}

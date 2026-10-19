@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-021",
+  "name": "Listbox Composition Gates & Browser Proofs LB-DOM-10: Listbox should apply controlled single-null-vertical defaults when behavior props are omitted"
+}

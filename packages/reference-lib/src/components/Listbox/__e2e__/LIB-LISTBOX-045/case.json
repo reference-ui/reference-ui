@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-045",
+  "name": "Listbox behavior CT LB-DOM-12: Listbox should deliver native scroll events from its fixed root without interpreting them"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-036",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-DOM-04: Collapsible should expose authoritative open, closed, and disabled state on its rendered parts"
+}

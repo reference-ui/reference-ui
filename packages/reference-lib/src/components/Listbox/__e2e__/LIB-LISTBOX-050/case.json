@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-050",
+  "name": "Listbox behavior CT LB-GROUP-05: Listbox should ignore group markup when deriving option state"
+}

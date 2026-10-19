@@ -1,0 +1,4 @@
+{
+  "id": "LIB-LISTBOX-048",
+  "name": "Listbox behavior CT LB-GROUP-03: Listbox typeahead should cross native group boundaries while excluding group labels"
+}

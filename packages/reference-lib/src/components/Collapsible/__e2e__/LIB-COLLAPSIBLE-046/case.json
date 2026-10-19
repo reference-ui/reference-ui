@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COLLAPSIBLE-046",
+  "name": "Collapsible Ports (GSAP-owned motion) CO-PRES-08: Collapsible should isolate visually exiting closed Content and restore only isolation it owns"
+}
