@@ -6,7 +6,7 @@ It generates a thin icon wrapper layer over `@material-symbols-svg/react`, expos
 
 - `variant="outline" | "filled"`
 - `size` as a width/height shorthand
-- standard React DOM props on the outer inline wrapper
+- Reference style props and standard React DOM props on the outer inline wrapper
 
 ## Install
 
@@ -31,29 +31,34 @@ export function Example() {
 }
 ```
 
-## Styling icons from another package: wrap, don't prop
+## Styling
 
-An icon's style props mint icon-system classes (`reference-icons__*`)
-that only the icons compile can back. A design-system style prop passed
-at a foreign call-site (`color`, `width`, `ml`, …) therefore resolves to
-nothing — the runtime warns `no compiled class` and the prop is dead.
-(This compiles: the prop types still extend the `Div` surface for
-ref/DOM props. It just has no styling effect cross-package.)
-
-From a consuming library, style an icon with `size`, `variant`, `style`,
-`className`, or a wrapper element:
+Icons take Reference style props like any other component. Your compile
+resolves them against your own tokens (`brand` here is one of yours):
 
 ```tsx
-import { Span } from '@reference-ui/react'
-
-// ❌ dead — `ml` mints a class no compile backs
-<CheckIcon ml="3r" />
-
-// ✅ wrap the icon and put style props on your own host
-<Span ml="3r">
-	<CheckIcon />
-</Span>
+<CheckIcon color="brand" ml="3r" _hover={{ opacity: 0.7 }} />
 ```
+
+This needs the icons' system in `extends` or `layers`. If you use
+`@reference-ui/lib`, its `baseSystem` already carries it. Otherwise add
+`@reference-ui/icons/baseSystem` to `layers`:
+
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem as iconsSystem } from '@reference-ui/icons/baseSystem'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  layers: [iconsSystem],
+})
+```
+
+With neither, `ref sync` warns `ATM-W-EXTERNAL-UNBACKED` at the icon and the
+style props do not paint. `size`, `variant`, `style` and `className` work
+either way.
 
 ## Build
 
