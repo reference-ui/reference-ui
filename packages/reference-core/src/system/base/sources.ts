@@ -4,9 +4,11 @@
 // declaration texts. The interface lists `jsxOwned` only for a system that
 // carries it, so a system without owned data prints the declarations it
 // always did. The packager leg calls these pure builders and owns every write;
-// the banner rides the shared leaf constant.
+// the banner rides the shared leaf constant. The entry's getRhythm is emitted from rhythm.ts by its source
+// text, so the generated runtime prints what the compiler prints.
 
 import { BASE_SYSTEM_HEADER } from '../../packager/constants.ts'
+import { getRhythm } from './rhythm.ts'
 import type { BaseSystem } from './types.ts'
 
 /** The slice of a published system its declaration text depends on. */
@@ -74,15 +76,7 @@ export function systemEntrySource(): string {
     'export function globalCss(config) {',
     "  collect('__refGlobalCssCollector', config)",
     '}',
-    'export function getRhythm(num, denom) {',
-    '  if (denom !== undefined) {',
-    '    return num === 1',
-    '      ? `calc(var(--spacing-root) / $' + '{denom})`',
-    '      : `calc($' + '{num} * var(--spacing-root) / $' + '{denom})`',
-    '  }',
-    "  if (num === 1) return 'var(--spacing-root)'",
-    '  return `calc($' + '{num} * var(--spacing-root))`',
-    '}',
+    `export const getRhythm = ${getRhythm.toString()}`,
     "export { baseSystem } from './baseSystem.mjs'",
     '',
   ].join('\n')
