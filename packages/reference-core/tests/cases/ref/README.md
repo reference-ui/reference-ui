@@ -9,10 +9,10 @@ corpus per case on purpose — each world stays a self-contained fixture in the 
 
 Seven cases carry the group (CORE-REF-01 through 05, 09, and 11). REF-10
 is the lib re-commission, proven outside cases by lib typecheck plus
-Book fixtures. REF-06, REF-07, and REF-08 are not cases: the
-`unionTypeLabel`, bridge `run`/`init`/`tasty-build`, and `reference-types`
-suites already prove them — the cases reference those suites instead of
-duplicating them.
+Book fixtures. REF-07 and REF-08 are not cases: the bridge
+`run`/`init`/`tasty-build` and `reference-types` suites already prove
+them — the cases reference those suites instead of duplicating them.
+REF-06 has no case: no `unionTypeLabel` surface remains in the tree.
 
 ## Shared helper
 

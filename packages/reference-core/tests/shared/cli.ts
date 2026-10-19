@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // cli.ts — the agentcore CLI, agent-facing entry point over the core harness.
-// Takes argv subcommands (list, search, run, q) and delegates to the case
+// Takes argv subcommands (list, search, run, status, q) and delegates to the case
 // discovery, runner, and quality modules. Emits greppable stdout lines plus
 // exit codes 0-3 (success, failure/usage, serve-only degrade, quality absent).
 //

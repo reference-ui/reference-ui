@@ -1,4 +1,4 @@
-// upstream.ts — the shared sync-and-wire helper for the chain cases that sync a real upstream (CORE-CHAIN-09 to -17).
+// upstream.ts — the shared sync-and-wire helper for the chain cases that sync a real upstream (CORE-CHAIN-08 to -17).
 // It takes a real upstream or consumer directory, syncs it for real, and reads back what it published:
 // the base system and the evaluated spec. It rewrites a canonical ui.config.ts to import published base
 // systems and compose them in order, installs a world package into the world's node_modules the way a

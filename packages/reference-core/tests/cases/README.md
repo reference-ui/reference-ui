@@ -5,7 +5,7 @@ cover the generated-folder contracts, tokens, conditions, responsive
 lowering, the `css()` value grammar, merge semantics, recipes, cascade
 layers, global CSS, pre-generated atoms, extraction shapes, native
 primitives, generated declarations, diagnostics, sync and watch
-lifecycles, publish sites, layers config, and the smaller families
+lifecycles, staged publish, layers config, and the smaller families
 beside them — plus the parity group with its lib-shaped world and the
 harness group whose three cases prove the runner itself rather than
 the system.
@@ -18,8 +18,8 @@ or folder first, then an id prefix, so `agentcore run CORE-LAYER` also runs
 
 Most groups hold `SPEC.md` (behaviour, decisions, approved absences, the
 out-of-scope table) and `TESTS.md` (the case ledger: one row per id with
-a status word); the small groups (`cli/`, `harness/`, `mdx/`, `ref/`)
-describe themselves in a group README instead. Leaf shape everywhere:
+a status word), fronted by a short group README; `cli/`, `harness/`,
+`mdx/`, and `ref/` are README-only. Leaf shape everywhere:
 `case.json` (id, name, `"sync": true` to opt into the sync loop),
 `README.md` (first line is the claim), `world/` (TypeScript sources
 built to `dist/` and served over HTTP), `specs/` (default-export `run`:

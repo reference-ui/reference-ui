@@ -4,11 +4,4 @@ Proves Core against one world authored the way `packages/reference-lib/src` is �
 
 > Search terms: mini-lib world, lib-shaped, lib census, consumer specifiers, panda-isms, light dark paint, package shape
 
-## Cases
-
-- CORE-PARITY-01 — the mini-lib world syncs and paints in light and dark.
-- CORE-PARITY-02 — the 43-family census passes over the mini-lib sheet.
-- CORE-PARITY-03 — every §3 consumer specifier resolves from the world.
-- CORE-PARITY-04 — no panda-isms leak into the generated folder.
-
 Parent: [tests/cases/](../README.md).

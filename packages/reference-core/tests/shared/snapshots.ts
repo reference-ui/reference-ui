@@ -1,6 +1,6 @@
 // snapshots.ts — settled-state screenshot compare with human-gated baselines. Specs call the
 // snap(page, name) closure the runner hands them: it screenshots, compares against the committed
-// baseline in tests/cases/<id>/__snapshots__/<name>.png, and throws on mismatch with the diff path
+// baseline in tests/cases/<group>/<id>/__snapshots__/<name>.png, and throws on mismatch with the diff path
 // plus the mismatch size in plain pixels and percent. Baselines are written only in update mode,
 // which the CLI arms solely with --update-snapshots plus --confirm; there is no silent write path.
 import fs from 'node:fs';

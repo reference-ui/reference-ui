@@ -5,11 +5,12 @@ isolated per-case HTTP server, headless runs, artifact plumbing. This
 folder IS the harness, and it ships its own CLI (`agentcore`):
 
 ```text
-list / search <query> / run [case-id] / q [paths...]
+list / search <query> / status / q [paths...]
+run [case-id] [--failed] [--update-snapshots --confirm]
 ```
 
-Based on the `test-component` skill and its scripts — borrow heavily,
-that work is done. Differences from `agentct`:
+Based on the `test-component` skill and its scripts. Differences from
+`agentct`:
 
 - React 19 latest only. No `--react` switching. We're testing CSS; the
   multi-runtime axis stays a matrix problem for later.
@@ -23,12 +24,9 @@ that work is done. Differences from `agentct`:
   fails only for the folders it selects and warns about the rest.
 - A CLI tool agents call, not an MCP server. List, search, run
   one/some/all, quality-gate, report.
-- Two inspection modes. Fast mode: headless run prints per-case
-  artifacts (screenshot, accessibility snapshot, video/trace on
-  failure). Interactive mode: serve one case world locally and poke
-  it live with your host's browser tools (host table in root
-  `AGENTS.md` section 2); the capability is "inspect a live case
-  world", not any one tool.
+- One inspection mode: a headless run prints per-case artifacts
+  (screenshot and accessibility snapshot on every run, trace on
+  failure).
 - Per-run server: one fresh server per run, no shared daemon.
 
 Proven constraints the code designs around: the browser blocks

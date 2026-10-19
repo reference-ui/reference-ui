@@ -1,6 +1,6 @@
 # CORE-LAYERS-20 — through a chain where b extends a, an app that extends b paints its own token value inside a's and b's components, and an app that layers b paints b's value inside both
 
-The nested side of the token-scope ruling (`.claude/plans/styling-across-packages.md` §11; CORE-LAYERS-19 is the
+The nested side of the token-scope ruling (CORE-LAYERS-19 is the
 direct side). Three systems define `brand`: package a (`core-layers20-a`, `#7e22ce`), package b
 (`core-layers20-b`, `#b45309`), which extends a, and the app (`core-layers20`, `#15803d`). a ships `ABadge` and b
 ships `BCard`, each a `Span` that styles itself with its own `bg="brand"`; `prebuilt/nested.mjs` stands for their

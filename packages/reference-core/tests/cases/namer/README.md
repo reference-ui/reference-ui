@@ -4,11 +4,4 @@ Proves the two namers are one algorithm: the runtime namer constructs exactly th
 
 > Search terms: runtime namer, compiler namer, differential gate, miss class, className lists, slot lists, pre-cutover corpus
 
-## Cases
-
-- CORE-NAMER-01 — the runtime namer equals the compiled plans on every engine input.
-- CORE-NAMER-02 — the browser corpus paints exactly the pre-cutover class lists.
-- CORE-NAMER-03 — a miss constructs its miss class and warns once in browser dev.
-- CORE-NAMER-04 — a late inline sheet warns only the true miss, never the present rule.
-
 Parent: [tests/cases/](../README.md).
