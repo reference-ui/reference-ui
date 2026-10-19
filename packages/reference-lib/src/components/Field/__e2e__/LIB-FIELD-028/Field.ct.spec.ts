@@ -4,7 +4,7 @@
  * fixtures and asserts the host stays roleless with status-only data
  * attributes in a real browser.
  */
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap } from '../../../../../playwright/ct'
 
 test.describe('Field CT', () => {
   test('FI-DOM-01: Field should render a wrapping div with no role and data-reference-field', async ({

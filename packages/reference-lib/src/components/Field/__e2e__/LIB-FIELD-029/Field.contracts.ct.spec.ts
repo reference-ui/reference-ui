@@ -2,7 +2,7 @@
  * Field leaves native validation, successful-control serialization and reset behavior with its children.
  * Status rerenders preserve focused editing state instead of replacing controls.
  */
-import { test, expect } from '../../../../playwright/ct'
+import { test, expect } from '../../../../../playwright/ct'
 
 test('FI-FORM-01: enclosed native controls preserve validation, serialization and reset semantics', async ({ mount, page }) => {
   await mount('components/Field/Field.contracts/NativeControlsFixture', { warning: true })

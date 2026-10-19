@@ -5,8 +5,8 @@
  * IME), commit policies, locale parsing and formatting, form submit and
  * reset, Shadow DOM scoping, and an axe-clean scan.
  */
-import { test, expect, snap } from '../../../../playwright/ct'
-import { expectNoAxeViolations } from '../../../../playwright/axe'
+import { test, expect, snap } from '../../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
 // Real-paste helpers (probed headless-green on Chromium/Firefox/WebKit

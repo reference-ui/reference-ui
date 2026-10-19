@@ -6,8 +6,8 @@
  * undoing an earlier press request.
  */
 import type { ComponentProps } from 'react'
-import { test, expect } from '../../../../playwright/ct'
-import type { ControlledContract } from '../Tabs.story'
+import { test, expect } from '../../../../../playwright/ct'
+import type { ControlledContract } from '../../Tabs.story'
 
 type ContractProps = ComponentProps<typeof ControlledContract>
 

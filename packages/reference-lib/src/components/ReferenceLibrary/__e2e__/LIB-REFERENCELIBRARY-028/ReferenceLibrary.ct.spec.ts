@@ -4,7 +4,7 @@
  * host, serves imperative toasts with live-region updates, fails over to
  * standby on unmount, and follows the mounting root's color mode.
  */
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap } from '../../../../../playwright/ct'
 
 test.describe('ReferenceLibrary Composition Gates & Browser Proofs', () => {
   test.beforeEach(async ({ mount, page }) => {
