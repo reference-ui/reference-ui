@@ -35,9 +35,10 @@ pub struct StylesheetStreams {
     /// `@layer global {…}`, empty when nothing is printable.
     pub global: String,
     /// `@layer tokens {…}` for the served sheet: `:root` selectors, or the isolated own-layer set
-    /// under upstreams.
+    /// under upstreams, which also claims each extended system's stamps.
     pub tokens: String,
-    /// `@layer tokens {…}` with `[data-layer]` selectors (portable sheet).
+    /// `@layer tokens {…}` with `[data-layer]` selectors (portable sheet): the own stamp, then each
+    /// extended system's.
     pub tokens_portable: String,
     /// `@layer recipes {…}`, shared by both sheets.
     pub recipes: String,
@@ -111,6 +112,7 @@ pub fn build_stylesheet_streams(
         own,
         external,
         qualifiers,
+        extended,
         system,
         recipes,
     } = *input;
@@ -131,14 +133,14 @@ pub fn build_stylesheet_streams(
     append_tokens(
         &mut tokens,
         system,
-        own_token_scope(qualifiers),
+        own_token_scope(qualifiers, extended),
         sinks.primary,
     );
     let mut tokens_portable = String::new();
     append_tokens(
         &mut tokens_portable,
         system,
-        TokenScope::Portable,
+        TokenScope::Portable { extended },
         sinks.portable,
     );
     let mut root = String::new();

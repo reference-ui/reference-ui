@@ -4,9 +4,9 @@
 //! plans, stylesheets, and runtime map. Wants partition into own and external
 //! sets by the external marker, both resolved with the consumer `BaseSystem`;
 //! the proof map stays own-only while the utilities layer emits the own group
-//! plus one appended group per foreign qualifier. The portable sheet shares the
-//! printed suffix and sinks its own system-layer diagnostics so warnings
-//! surface once.
+//! plus one appended group per foreign qualifier, and the token layer claims the
+//! stamps of every extended qualifier. The portable sheet shares the printed
+//! suffix and sinks its own system-layer diagnostics so warnings surface once.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -52,6 +52,9 @@ pub(crate) struct AssembleCtx {
     /// authored order; empty for standalone. `finish` turns these into the
     /// qualifier list `[own, …deduped-minus-own]`.
     pub(crate) upstream_systems: Vec<String>,
+    /// The upstreams among those whose tokens this compile's vocabulary
+    /// carries (the extends closure); `finish` keeps the qualified ones.
+    pub(crate) extended_systems: Vec<String>,
 }
 
 /// Build the composed-system qualifier list: the compiling system first, then
@@ -67,6 +70,19 @@ pub(crate) fn qualifiers_for(own: &str, upstream: &[String]) -> Vec<String> {
         }
     }
     qualifiers
+}
+
+/// The extended systems the token layer claims stamps for: the foreign qualifiers
+/// the request names as extended, in qualifier order. A name that is not a foreign
+/// qualifier (the own system, or an upstream with no streams) is dropped, so a
+/// standalone compile never claims a stamp.
+pub(crate) fn extended_for(qualifiers: &[String], extended: &[String]) -> Vec<String> {
+    qualifiers
+        .iter()
+        .skip(1)
+        .filter(|name| extended.contains(name))
+        .cloned()
+        .collect()
 }
 
 /// Keep `ATM-W-EXTERNAL-UNBACKED` only while nothing backs external wants.
@@ -108,12 +124,15 @@ impl AssembleCtx {
             selections,
             upstream_container_root,
             upstream_systems,
+            extended_systems,
         } = self;
         let qualifiers = qualifiers_for(&system.name, &upstream_systems);
+        let extended = extended_for(&qualifiers, &extended_systems);
         settle_unbacked(&mut diagnostics, &qualifiers);
         let scope = FinishScope {
             system,
             qualifiers: &qualifiers,
+            extended: &extended,
             proof,
             upstream_container_root,
         };
@@ -165,10 +184,12 @@ impl AssembleCtx {
 }
 
 /// The borrowed inputs every finish stage reads: the consumer system, the composed
-/// qualifier list, the proof switch, and whether an upstream already roots the page.
+/// qualifier list and its extended subset, the proof switch, and whether an upstream
+/// already roots the page.
 struct FinishScope<'a> {
     system: &'a BaseSystem,
     qualifiers: &'a [String],
+    extended: &'a [String],
     proof: bool,
     upstream_container_root: bool,
 }
@@ -304,6 +325,7 @@ fn build_sheets(
         own: &atoms.own,
         external: &atoms.external,
         qualifiers: scope.qualifiers,
+        extended: scope.extended,
         system: scope.system,
         recipes: compiled_recipes,
     };
@@ -319,3 +341,7 @@ fn build_sheets(
 #[cfg(test)]
 #[path = "assembly_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "assembly_token_scope_tests.rs"]
+mod token_scope_tests;

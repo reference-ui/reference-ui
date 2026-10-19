@@ -33,7 +33,7 @@ const SPACING_ROOT_VAR: &str = "--spacing-root";
 pub fn append_tokens(
     out: &mut String,
     system: &BaseSystem,
-    scope: TokenScope,
+    scope: TokenScope<'_>,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) {
     if system.tokens.is_empty() {
