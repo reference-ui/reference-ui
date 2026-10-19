@@ -2,7 +2,7 @@
  * Parse lib theme TypeScript object literals into JSON without evaluating them.
  * Tokenizes known `as const` files, resolves local identifiers and shorthand
  * properties, and fails closed on computed keys, spreads, calls, or any
- * expression that is not a string or nested object. Callers merge the six
+ * expression that is not a string or nested object. Callers merge the seven
  * `tokens()` arguments, the six `keyframes()` tables, and the `font()` family
  * table separately.
  */

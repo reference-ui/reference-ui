@@ -2,8 +2,9 @@
 //! registry, `FontProps`, `StyleProps`, recursive `SystemStyleObject`. Input
 //! is the definition, not the atom set, and users never write `.mt_2r` here.
 //! This is not a jsx factory and not a patterns farm. Token, recipe, font, and
-//! style emission walks `BaseSystem`; missing categories and recipes are omitted
-//! rather than `never`, and compound `when` rows naming unknown axes are skipped.
+//! style emission walks `BaseSystem`; missing non-core categories and recipes are
+//! omitted, core categories (`colors`, `spacing`, `radii`) and `tones` print
+//! `never`, and compound `when` rows naming unknown axes are skipped.
 //! Style systems without fonts still print `FontRegistry {}` so FontProps cannot
 //! collapse StyleProps. `emit_dts` is always open-mode;
 //! strict category wrappers live on `emit_dts_with` because `strict` is not a

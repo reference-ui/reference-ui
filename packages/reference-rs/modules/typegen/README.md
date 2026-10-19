@@ -43,8 +43,9 @@ recursive `r`, and recursive `SystemStyleObject` (condition and breakpoint keys 
 `*Radius` names, never Panda `rounded*`) print when the dump has a `radii`
 category. Font-less StyleProps still emit `FontRegistry {}` so
 `[FontName] extends [never]` falls back to `StylePropValue<string>` instead of
-`never`. Empty token and recipe categories are **omitted** rather than printed
-as `never`. A populated `animations` category prints `AnimationToken` (token
+`never`. Empty non-core token categories and recipes are **omitted**; the core
+token categories (`colors`, `spacing`, `radii`) and `tones` print `never` when
+empty. A populated `animations` category prints `AnimationToken` (token
 paths such as `spin.slow`), and the `animation` shorthand takes it in both
 modes, since animations are not a strict category; `animationName` stays open
 for keyframe names, and without animations tokens `animation` stays open too.
@@ -108,5 +109,7 @@ pnpm agentrs c typegen
 pnpm agentrs v typegen
 pnpm agentrs q packages/reference-rs/modules/typegen
 ```
+
+> Up: [@reference-ui/rust](../../README.md)
 
 > Search terms: dts printer, type printer, typegen/tokens, typegen/recipes, typegen/fonts, typegen/style-props, rs:base-system, rs:canon, rs:atomic

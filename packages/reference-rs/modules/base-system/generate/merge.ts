@@ -1,5 +1,5 @@
 /**
- * Deep-merge nested token trees from the six `tokens()` call sites.
+ * Deep-merge nested token trees from the seven `tokens()` call sites.
  * Categories merge by key; a duplicate leaf path with a different value is a
  * hard error. Mode leaves match spec.rs: `{ value | light | dark }` strings, so
  * a token *named* `light` whose value is itself `{ light, dark }` stays a group.

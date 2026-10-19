@@ -1,6 +1,6 @@
 /**
  * Contract verification suite for Reference RS frozen wire fixtures.
- * Asserts that committed JSON fixtures satisfy TypeScript interfaces for all §3 boundaries.
+ * Asserts that committed JSON fixtures satisfy TypeScript interfaces for all frozen wire boundaries.
  * Validates positive invariants (schemaVersion === 1, profile === 'reference-ui', owner on plans)
  * and verifies negative fixtures (unsupported versions, unknown fields, layers hosts).
  */
@@ -29,7 +29,7 @@ import type {
 } from '../types'
 
 describe('F0: Frozen wire contract fixtures', () => {
-  it('EvaluatedSystemSpec fixture satisfies interface and contains required §3.1 fields', () => {
+  it('EvaluatedSystemSpec fixture satisfies interface and contains required spec fields', () => {
     const spec = evaluatedSystemSpecJson satisfies EvaluatedSystemSpec
     expect(spec.schemaVersion).toBe(1)
     expect(spec.profile).toBe('reference-ui')

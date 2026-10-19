@@ -18,11 +18,10 @@ At a high level:
 
 ### `@reference-ui/rust`
 
-Lower-level **native** surface (requires the `.node` addon):
-
-- `scanAndEmitModules(rootDir, include)` — returns a JSON string with emitted module sources and diagnostics
-
-Loader utilities (`getReferenceNative`, `loadReferenceNative`, path resolution, etc.) live in the same entry and are useful for tooling that integrates with the binary.
+Host entrypoint: the dynamic loader, native dispatch helpers
+(`requireNative`, `callNativeJson`), and platform diagnostics
+(`getReferenceNative`, `loadReferenceNative`, path resolution, etc.).
+It exposes no tasty functions; generation goes through `./tasty/build` below.
 
 ### `@reference-ui/rust/tasty`
 
@@ -37,7 +36,7 @@ Tasty **runtime** API (consumes emitted JS artifacts; generation still uses the 
 
 ### `@reference-ui/rust/tasty/build`
 
-Node helpers that call `scanAndEmitModules`, write files under an output directory, and return a `TastyApi` — see `js/tasty/build.ts` for `buildTasty`, sessions, and diagnostics.
+Node helpers that call the native `scanAndEmitModules` export, write files under an output directory, and return a `TastyApi` — see `modules/tasty/js/build.ts` for `buildTasty`, sessions, and diagnostics.
 
 ### `@reference-ui/rust/tasty/browser`
 
@@ -73,22 +72,24 @@ Chunk modules contain emitted symbol objects keyed by exported ids. The runtime 
 
 Generated TypeScript for the on-disk artifact shape lives in:
 
-- `packages/reference-rs/js/tasty/generated/`
+- `packages/reference-rs/modules/tasty/js/generated/`
 
 The runtime re-exports those as `RawTasty*` aliases so consumers can distinguish **raw artifact JSON** from **wrapper** interfaces.
 
 ## Basic flow
 
-Emit modules with the native runtime:
+Emit modules with the build helper:
 
 ```ts
-import { scanAndEmitModules } from '@reference-ui/rust'
+import { buildTasty } from '@reference-ui/rust/tasty/build'
 
-const emitted = JSON.parse(
-  scanAndEmitModules('/path/to/workspace', ['src/**/*.{ts,tsx}'])
-)
+const built = await buildTasty({
+  rootDir: '/path/to/workspace',
+  include: ['src/**/*.{ts,tsx}'],
+  outputDir: '/path/to/output',
+})
 
-console.log(Object.keys(emitted.modules))
+console.log(built.manifestPath)
 ```
 
 Load and query with Tasty:
@@ -159,7 +160,7 @@ After `createTastyApi({ manifestPath })` and `await api.ready()`:
 
 ### Utility helpers
 
-Including: `dedupeTastyMembers`, `getTastyMemberDefaultValue`, `getTastyMemberId`, `getTastyJsDocParamDescriptions`, `getTastyCallableParameters`, `parseTastyParamTag`, `normalizeTastyInlineValue`, plus semantic/display helpers exported from `js/tasty/index.ts`.
+Including: `dedupeTastyMembers`, `getTastyMemberDefaultValue`, `getTastyMemberId`, `getTastyJsDocParamDescriptions`, `getTastyCallableParameters`, `parseTastyParamTag`, `normalizeTastyInlineValue`, plus semantic/display helpers exported from `modules/tasty/js/index.ts`.
 
 Example:
 
@@ -217,6 +218,6 @@ Tasty does not model every TypeScript construct as full semantic structure. It m
 ## Testing
 
 - Case tests (bundle shape and goldens): `packages/reference-rs/modules/tasty/tests/cases/<ID>/spec.ts`, run by `packages/reference-rs/modules/tasty/tests/suites/cases.test.ts`
-- Runtime API tests: `packages/reference-rs/modules/tasty/js/index.test.ts`, `js/utilities.test.ts`, `js/build.test.ts`
+- Runtime API tests: `packages/reference-rs/modules/tasty/js/index.test.ts`, `modules/tasty/js/utilities.test.ts`, `modules/tasty/js/build.test.ts`
 
 For the Rust-side pipeline and types, see [tasty-rs.md](./tasty-rs.md).
