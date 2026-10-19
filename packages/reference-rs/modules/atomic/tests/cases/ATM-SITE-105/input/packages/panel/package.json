@@ -1,0 +1,4 @@
+{
+  "name": "@acme/panel",
+  "main": "./dist/index.mjs"
+}

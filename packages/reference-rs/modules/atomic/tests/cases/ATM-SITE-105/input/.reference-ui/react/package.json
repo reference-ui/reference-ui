@@ -1,0 +1,6 @@
+{
+  "name": "@reference-ui/react",
+  "type": "module",
+  "main": "./react.mjs",
+  "types": "./react.d.mts"
+}
