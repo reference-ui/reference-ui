@@ -1,9 +1,3 @@
-import * as React from 'react'
-import { Main } from '@reference-ui/react'
-import { DemoComponent } from '@fixtures/extend-library'
-
-export const matrixChainT8Marker = 'reference-ui-matrix-chain-t8'
-
 /**
  * T8 render entry.
  *
@@ -11,6 +5,13 @@ export const matrixChainT8Marker = 'reference-ui-matrix-chain-t8'
  * library in both extends and layers. The extends-side tokens resolve normally
  * under the allow-and-duplicate policy.
  */
+
+import * as React from 'react'
+import { Main } from '@reference-ui/react'
+import { DemoComponent } from '@fixtures/extend-library'
+
+export const matrixChainT8Marker = 'reference-ui-matrix-chain-t8'
+
 export function Index(): React.ReactElement {
   return (
     <Main data-testid="chain-t8-root">

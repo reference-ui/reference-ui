@@ -1,11 +1,3 @@
-import * as React from 'react'
-import { CheckIcon, Field } from '@reference-ui/lib'
-import { ContentCopyIcon } from '@reference-ui/icons'
-import { CheckBadge } from '@fixtures/aliased-host-library'
-import { matrixChainT17Marker } from './probe'
-
-export { matrixChainT17Marker }
-
 /**
  * T17 render entry — consumer style props on prebuilt components.
  *
@@ -14,6 +6,15 @@ export { matrixChainT17Marker }
  * system the package renders through. Positive controls (`className` /
  * `style` / native props) stay alive on both sides.
  */
+
+import * as React from 'react'
+import { CheckIcon, Field } from '@reference-ui/lib'
+import { ContentCopyIcon } from '@reference-ui/icons'
+import { CheckBadge } from '@fixtures/aliased-host-library'
+import { matrixChainT17Marker } from './probe'
+
+export { matrixChainT17Marker }
+
 export function Index(): React.ReactElement {
   return (
     <main data-testid="chain-t17-root">

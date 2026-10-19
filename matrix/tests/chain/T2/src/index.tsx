@@ -1,8 +1,3 @@
-import * as React from 'react'
-import { LayerPrivateDemo, LightDarkDemo } from '@fixtures/layer-library'
-
-export const matrixChainT2Marker = 'reference-ui-matrix-chain-t2'
-
 /**
  * T2 render entry.
  *
@@ -13,6 +8,12 @@ export const matrixChainT2Marker = 'reference-ui-matrix-chain-t2'
  * library's own component (same layer scope) even though the token is NOT
  * available in chain-t2's global token namespace.
  */
+
+import * as React from 'react'
+import { LayerPrivateDemo, LightDarkDemo } from '@fixtures/layer-library'
+
+export const matrixChainT2Marker = 'reference-ui-matrix-chain-t2'
+
 export function Index(): React.ReactElement {
   return (
     <main data-testid="chain-t2-root">

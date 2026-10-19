@@ -1,9 +1,3 @@
-import * as React from 'react'
-import { Main } from '@reference-ui/react'
-import { MetaExtendDemo } from '@fixtures/meta-extend-library'
-
-export const matrixChainT6Marker = 'reference-ui-matrix-chain-t6'
-
 /**
  * T6 render entry.
  *
@@ -11,6 +5,13 @@ export const matrixChainT6Marker = 'reference-ui-matrix-chain-t6'
  * meta-extend-library. Both the outer local tokens and the transitive
  * extend-library tokens resolve through the republished fragment.
  */
+
+import * as React from 'react'
+import { Main } from '@reference-ui/react'
+import { MetaExtendDemo } from '@fixtures/meta-extend-library'
+
+export const matrixChainT6Marker = 'reference-ui-matrix-chain-t6'
+
 export function Index(): React.ReactElement {
   return (
     <Main data-testid="chain-t6-root">

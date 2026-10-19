@@ -1,10 +1,3 @@
-import * as React from 'react'
-import { Main } from '@reference-ui/react'
-import { MetaExtendDemo } from '@fixtures/meta-extend-library'
-import { LayerPrivateDemo } from '@fixtures/layer-library'
-
-export const matrixChainT10Marker = 'reference-ui-matrix-chain-t10'
-
 /**
  * T10 render entry — chain + layer at the app.
  *
@@ -13,6 +6,14 @@ export const matrixChainT10Marker = 'reference-ui-matrix-chain-t10'
  * tokens resolve inside their own scope and stay out of the app's namespace;
  * the contract spec pins both halves.
  */
+
+import * as React from 'react'
+import { Main } from '@reference-ui/react'
+import { MetaExtendDemo } from '@fixtures/meta-extend-library'
+import { LayerPrivateDemo } from '@fixtures/layer-library'
+
+export const matrixChainT10Marker = 'reference-ui-matrix-chain-t10'
+
 export function Index(): React.ReactElement {
   return (
     <Main data-testid="chain-t10-root">

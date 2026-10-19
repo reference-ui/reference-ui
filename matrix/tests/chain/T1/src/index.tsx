@@ -1,10 +1,3 @@
-import * as React from 'react'
-import { css } from '@reference-ui/react'
-import { Main } from '@reference-ui/react'
-import { DemoComponent } from '@fixtures/extend-library'
-
-export const matrixChainT1Marker = 'reference-ui-matrix-chain-t1'
-
 /**
  * T1 render entry.
  *
@@ -18,6 +11,14 @@ export const matrixChainT1Marker = 'reference-ui-matrix-chain-t1'
  * fragments before they enter this package's Panda config, no CSS rule is
  * generated and the element falls back to its default color.
  */
+
+import * as React from 'react'
+import { css } from '@reference-ui/react'
+import { Main } from '@reference-ui/react'
+import { DemoComponent } from '@fixtures/extend-library'
+
+export const matrixChainT1Marker = 'reference-ui-matrix-chain-t1'
+
 export function Index(): React.ReactElement {
   return (
     <Main data-testid="chain-t1-root">

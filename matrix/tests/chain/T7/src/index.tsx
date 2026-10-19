@@ -1,10 +1,3 @@
-import * as React from 'react'
-import { Main } from '@reference-ui/react'
-import { MetaExtendDemo } from '@fixtures/meta-extend-library'
-import { MetaSiblingDemo } from '@fixtures/meta-extend-library-sibling'
-
-export const matrixChainT7Marker = 'reference-ui-matrix-chain-t7'
-
 /**
  * T7 render entry.
  *
@@ -12,6 +5,14 @@ export const matrixChainT7Marker = 'reference-ui-matrix-chain-t7'
  * meta-extend-library and its sibling. Each branch's local tokens and the
  * shared base tokens resolve in the composed app.
  */
+
+import * as React from 'react'
+import { Main } from '@reference-ui/react'
+import { MetaExtendDemo } from '@fixtures/meta-extend-library'
+import { MetaSiblingDemo } from '@fixtures/meta-extend-library-sibling'
+
+export const matrixChainT7Marker = 'reference-ui-matrix-chain-t7'
+
 export function Index(): React.ReactElement {
   return (
     <Main data-testid="chain-t7-root">

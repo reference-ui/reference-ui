@@ -1,10 +1,3 @@
-import * as React from 'react'
-import { CheckIcon } from '@reference-ui/lib'
-import { ContentCopyIcon } from '@reference-ui/icons'
-import { CheckBadge, CopyBadge } from '@fixtures/aliased-host-library'
-
-export const matrixChainT16Marker = 'reference-ui-matrix-chain-t16'
-
 /**
  * T16 render entry.
  *
@@ -16,6 +9,14 @@ export const matrixChainT16Marker = 'reference-ui-matrix-chain-t16'
  * composition drops any of them, the contract spec fails on unbacked
  * classes, console warnings, or computed styles.
  */
+
+import * as React from 'react'
+import { CheckIcon } from '@reference-ui/lib'
+import { ContentCopyIcon } from '@reference-ui/icons'
+import { CheckBadge, CopyBadge } from '@fixtures/aliased-host-library'
+
+export const matrixChainT16Marker = 'reference-ui-matrix-chain-t16'
+
 export function Index(): React.ReactElement {
   return (
     <main data-testid="chain-t16-root">

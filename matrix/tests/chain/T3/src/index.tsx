@@ -1,10 +1,3 @@
-import * as React from 'react'
-import { Main } from '@reference-ui/react'
-import { DemoComponent } from '@fixtures/extend-library'
-import { LayerPrivateDemo } from '@fixtures/layer-library'
-
-export const matrixChainT3Marker = 'reference-ui-matrix-chain-t3'
-
 /**
  * T3 render entry.
  *
@@ -16,6 +9,14 @@ export const matrixChainT3Marker = 'reference-ui-matrix-chain-t3'
  * LayerPrivateDemo proves the layer-library's CSS arrived without leaking
  * its private tokens into chain-t3's global namespace.
  */
+
+import * as React from 'react'
+import { Main } from '@reference-ui/react'
+import { DemoComponent } from '@fixtures/extend-library'
+import { LayerPrivateDemo } from '@fixtures/layer-library'
+
+export const matrixChainT3Marker = 'reference-ui-matrix-chain-t3'
+
 export function Index(): React.ReactElement {
   return (
     <Main data-testid="chain-t3-root">

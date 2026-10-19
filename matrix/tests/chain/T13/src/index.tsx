@@ -1,3 +1,11 @@
+/**
+ * T13 render entry — parallel chains + shared layer.
+ *
+ * Mounts both extend-chain endpoints beside the app-level layered demo: two
+ * transitive chains plus one layered library in a single build. The contract
+ * spec pins each chain's tokens and the layered scope.
+ */
+
 import * as React from 'react'
 import { Main } from '@reference-ui/react'
 import { MetaExtendDemo } from '@fixtures/meta-extend-library'
@@ -6,13 +14,6 @@ import { LayerPrivateDemo } from '@fixtures/layer-library'
 
 export const matrixChainT13Marker = 'reference-ui-matrix-chain-t13'
 
-/**
- * T13 render entry — parallel chains + shared layer.
- *
- * Mounts both extend-chain endpoints beside the app-level layered demo: two
- * transitive chains plus one layered library in a single build. The contract
- * spec pins each chain's tokens and the layered scope.
- */
 export function Index(): React.ReactElement {
   return (
     <Main data-testid="chain-t13-root">
