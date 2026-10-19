@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-058",
+  "name": "Presence GSAP extension PR-GSAP-01: Retains an exiting child until its finite GSAP tweens complete, and skips the wait under reduced motion"
+}

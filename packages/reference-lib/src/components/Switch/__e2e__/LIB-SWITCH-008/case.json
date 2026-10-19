@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-008",
+  "name": "SW-LIFECYCLE-01: uncontrolled instances retain their own state across default changes and reset on remount"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-017",
+  "name": "Presence PR-RACE-02: Preserves child when present returns true before exit completion"
+}

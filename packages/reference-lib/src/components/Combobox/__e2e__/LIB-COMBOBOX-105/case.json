@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-105",
+  "name": "Combobox reconciliation CT CB-EDIT-01: arrows move the active descendant while DOM focus stays in input"
+}

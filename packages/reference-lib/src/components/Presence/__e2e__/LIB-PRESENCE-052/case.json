@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-052",
+  "name": "Presence mixed and interrupted lifecycles PR-RACE-06: Cleans up immediately when Presence itself unmounts during an exit"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-036",
+  "name": "Presence immediate removal PR-INSTANT-07: Removes immediately when the closed state sets the observed child to display:none"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-024",
+  "name": "Switch parity SW-ACT-06: Switch should ignore activation when disabled"
+}

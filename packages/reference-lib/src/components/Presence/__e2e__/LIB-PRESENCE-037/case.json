@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-037",
+  "name": "Presence CSS transition exits PR-TRANSITION-02: Waits for both transition delay and duration when the closed effect is delayed"
+}

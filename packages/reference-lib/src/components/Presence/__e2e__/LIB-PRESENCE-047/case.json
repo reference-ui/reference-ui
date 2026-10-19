@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-047",
+  "name": "Presence CSS animation exits PR-ANIMATION-07: Ignores infinite animations when a closing child also has finite exit effects"
+}

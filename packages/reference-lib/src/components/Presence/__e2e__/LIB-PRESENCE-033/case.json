@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-033",
+  "name": "Presence immediate removal PR-INSTANT-04: Avoids suspension when every comma-separated CSS effect has zero total duration"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-180",
+  "name": "Combobox virtual listbox and tree bridge CT CB-CLOSE-04: controlled close clears semantics at commit and unmounts after the exit"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FOCUSLOCK-017",
+  "name": "FocusLock Composition Gates & Browser Proofs FL-INIT-05: invalid initialFocus falls back to the first tabbable"
+}

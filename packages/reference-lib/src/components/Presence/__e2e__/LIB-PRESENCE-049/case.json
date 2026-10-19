@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-049",
+  "name": "Presence mixed and interrupted lifecycles PR-RACE-03: Creates a fresh completion set when a child closes again after reopening"
+}

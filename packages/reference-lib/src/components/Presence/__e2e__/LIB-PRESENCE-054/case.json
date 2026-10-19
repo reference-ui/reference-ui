@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-054",
+  "name": "Presence nested exit coordination (interrupt and removal) PR-NEST-03: Releases a descendant registration when the exiting child is removed before completion"
+}

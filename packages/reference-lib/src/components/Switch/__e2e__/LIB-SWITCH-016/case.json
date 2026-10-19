@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-016",
+  "name": "Switch parity SW-DOM-05: Switch should forward native props and refs to the button and an authored Thumb"
+}

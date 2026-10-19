@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-120",
+  "name": "Combobox reconciliation CT CB-COMMIT-07: tab after pointer leave commits nothing, reverts, closes, traverses"
+}

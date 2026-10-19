@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-017",
+  "name": "Switch parity SW-DOM-06: Switch should not participate in form serialization"
+}

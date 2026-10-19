@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-023",
+  "name": "Switch parity SW-ACT-05: Switch should skip its request when the consumer click is canceled"
+}

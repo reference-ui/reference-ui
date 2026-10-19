@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-030",
+  "name": "Switch parity SW-A11Y-01: Switch should remain accessibility-clean in named, disabled, and wrapping-label shapes"
+}

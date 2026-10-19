@@ -1,1 +1,0 @@
-{"id": "LIB-SWITCH-040", "name": "Uncontrolled switch lifecycle contracts against browser activation under StrictMode: initialization, isolation, remounts, and cancellation ordering"}

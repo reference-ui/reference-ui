@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-024",
+  "name": "Presence onExitComplete PR-EXIT-04: Does not fire onExitComplete on initial mount"
+}

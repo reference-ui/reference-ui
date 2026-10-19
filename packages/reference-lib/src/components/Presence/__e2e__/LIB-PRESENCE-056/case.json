@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-056",
+  "name": "Presence composition gates PR-COMP-02: Retains a drawer composition when its closed state uses a transform transition"
+}

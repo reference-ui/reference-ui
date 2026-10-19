@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-041",
+  "name": "Presence CSS transition exits PR-TRANSITION-06: Ignores unrelated perpetual transitions when only a finite close-state change defines the exit"
+}

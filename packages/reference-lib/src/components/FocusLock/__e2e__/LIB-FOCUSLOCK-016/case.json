@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FOCUSLOCK-016",
+  "name": "FocusLock Composition Gates & Browser Proofs FL-INIT-04: initialFocus can target a tabindex=-1 descendant"
+}

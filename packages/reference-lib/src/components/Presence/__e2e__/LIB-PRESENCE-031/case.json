@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-031",
+  "name": "Presence immediate removal PR-INSTANT-02: Removes immediately when the closed state has a zero-duration transition"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-035",
+  "name": "Presence immediate removal PR-INSTANT-06: Does not strand an exiting child when the owner document is hidden"
+}

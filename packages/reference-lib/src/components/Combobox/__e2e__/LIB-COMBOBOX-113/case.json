@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-113",
+  "name": "Combobox reconciliation CT CB-CLOSE-01: true outside press dismisses once; internal chrome stays open"
+}

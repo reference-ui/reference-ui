@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-026",
+  "name": "Switch parity SW-ACT-08: Switch should hold a controlled checked prop when onChange is omitted"
+}

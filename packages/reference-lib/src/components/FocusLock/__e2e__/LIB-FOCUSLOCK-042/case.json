@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FOCUSLOCK-042",
+  "name": "FocusLock Composition Gates & Browser Proofs FL-CAND-14: click focus may enter an in-lock iframe without cross-document traversal"
+}

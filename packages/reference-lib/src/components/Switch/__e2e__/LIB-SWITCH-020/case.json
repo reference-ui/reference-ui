@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-020",
+  "name": "Switch parity SW-ACT-02: Switch should request off once when an enabled checked control is clicked"
+}

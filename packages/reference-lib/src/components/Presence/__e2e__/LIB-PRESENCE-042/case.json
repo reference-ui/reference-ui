@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-042",
+  "name": "Presence CSS animation exits PR-ANIMATION-02: Avoids a final-frame flash when an exit animation has delay, iterations, and fill mode"
+}

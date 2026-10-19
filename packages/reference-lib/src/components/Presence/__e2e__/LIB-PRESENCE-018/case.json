@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-018",
+  "name": "Presence PR-NEST-01: Coordinates nested Presence instances and waits for child completion"
+}

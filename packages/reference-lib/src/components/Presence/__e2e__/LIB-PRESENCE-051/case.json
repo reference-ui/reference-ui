@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-051",
+  "name": "Presence mixed and interrupted lifecycles PR-RACE-05: Releases lifecycle work when its observed child disappears externally during a suspended exit"
+}

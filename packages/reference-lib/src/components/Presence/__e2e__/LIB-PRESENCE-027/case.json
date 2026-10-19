@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-027",
+  "name": "Presence DOM contract (browser re-proof) PR-DOM-02: Omits its child when it first mounts with present false"
+}

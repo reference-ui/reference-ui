@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-100",
+  "name": "Combobox reconciliation CT CB-OPEN-01: ArrowDown requests open without disturbing focus or text"
+}

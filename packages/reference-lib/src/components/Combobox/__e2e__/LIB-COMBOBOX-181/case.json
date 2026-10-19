@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-181",
+  "name": "Combobox virtual listbox and tree bridge CT CB-CLOSE-02 parent-internal: combobox-external press closes only the child once"
+}

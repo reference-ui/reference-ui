@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-014",
+  "name": "Presence PR-DOM-01 & PR-INSTANT-01: Renders child when present, removes immediately on instant close"
+}

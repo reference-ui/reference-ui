@@ -1,0 +1,4 @@
+{
+  "id": "LIB-COMBOBOX-104",
+  "name": "Combobox reconciliation CT CB-OPEN-08: readOnly and disabled sources never request open"
+}

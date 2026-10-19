@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-044",
+  "name": "Presence CSS animation exits PR-ANIMATION-04: Removes immediately when the animation name does not change for the closed state"
+}

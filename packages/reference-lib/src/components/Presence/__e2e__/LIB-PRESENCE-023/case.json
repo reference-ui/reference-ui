@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-023",
+  "name": "Presence onExitComplete PR-EXIT-03: Does not fire onExitComplete on interrupted exits"
+}

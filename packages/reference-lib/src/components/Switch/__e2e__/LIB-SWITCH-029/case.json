@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SWITCH-029",
+  "name": "Switch parity SW-ENV-04: Switch should keep checked state physical when direction is RTL"
+}

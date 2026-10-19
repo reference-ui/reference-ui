@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-046",
+  "name": "Presence CSS animation exits PR-ANIMATION-06: Ignores a descendant animation completion when the observed child is still exiting"
+}

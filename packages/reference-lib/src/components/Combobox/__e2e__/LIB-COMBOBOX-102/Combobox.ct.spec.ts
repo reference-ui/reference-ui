@@ -1,0 +1,30 @@
+/**
+ * Combobox browser proofs: input open/commit flows plus the
+ * reconciliation rows across DOM, open, edit, nav, commit, and close
+ * areas. Mounts the story logs and asserts controlled relationships,
+ * active-descendant discipline, and one-request commits in a real browser.
+ */
+import { test, expect, snap } from '../../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../../playwright/axe'
+import type { Locator, Page } from '@playwright/test'
+
+async function readLog(page: Page, testid: string): Promise<string[]> {
+  const text = await page.getByTestId(testid).textContent()
+  return JSON.parse(text ?? '[]')
+}
+
+test.describe('Combobox reconciliation CT', () => {
+  test('CB-OPEN-04: open editable input stays open on click; trigger toggles', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    await input.click()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    expect(await readLog(page, 'log-counts')).not.toContain('dismiss')
+  })
+});

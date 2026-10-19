@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-016",
+  "name": "Presence PR-ANIMATION-01: Retains closing child during CSS animation and removes after completion"
+}

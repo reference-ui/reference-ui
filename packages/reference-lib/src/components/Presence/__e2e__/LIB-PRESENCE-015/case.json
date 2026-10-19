@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PRESENCE-015",
+  "name": "Presence PR-TRANSITION-01: Retains closing child during CSS transition and removes after completion"
+}
