@@ -4,14 +4,19 @@
     {
       "name": "book",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev:lib"],
+      "runtimeArgs": [
+        "dev:lib"
+      ],
       "port": 5000
     },
     {
       "name": "docs",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev:docs"],
-      "port": 5174
+      "runtimeArgs": [
+        "dev:docs"
+      ],
+      "port": 5174,
+      "autoPort": true
     }
   ]
 }
