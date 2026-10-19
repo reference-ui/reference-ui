@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-179",
+  "name": "NumberField CT NF-COMP-02: A localized currency NumberField composes precision, non-Latin input, dirty submit, and authored labels"
+}

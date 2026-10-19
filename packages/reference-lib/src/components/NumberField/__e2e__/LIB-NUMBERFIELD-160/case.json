@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-160",
+  "name": "NumberField CT NF-EDIT-11: Synthetic composition suspends filtering, stepping, and commit until its final event"
+}

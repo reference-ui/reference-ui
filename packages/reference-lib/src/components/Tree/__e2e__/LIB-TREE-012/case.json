@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-012",
+  "name": "Tree parity TR-DOM-03: Tree should expose expansion state only on items that currently own children"
+}

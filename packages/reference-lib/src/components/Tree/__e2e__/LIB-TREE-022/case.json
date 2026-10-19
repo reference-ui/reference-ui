@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-022",
+  "name": "Tree parity TR-SELECT-01: Tree should request one controlled selection for each supported item activation"
+}

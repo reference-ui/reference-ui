@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-173",
+  "name": "NumberField CT NF-EDIT-17: A controlled value change during active composition invalidates the session and ignores stale fallout"
+}

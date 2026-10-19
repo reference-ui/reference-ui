@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-044",
+  "name": "Tree parity TR-KEY-08: Tree should exclude every collapsed descendant from all keyboard and search paths"
+}

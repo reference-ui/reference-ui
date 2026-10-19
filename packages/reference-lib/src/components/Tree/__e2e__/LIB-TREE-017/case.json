@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-017",
+  "name": "Tree parity TR-DOM-08: Tree should reject duplicate item values while preserving path-like and zero-like strings as opaque identities"
+}

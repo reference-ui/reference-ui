@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-164",
+  "name": "NumberField CT NF-FORM-09: Autofill-equivalent input/change events follow ordinary public edit and commit rules"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-177",
+  "name": "NumberField CT NF-EDIT-09: Invalid paste leaves text, selection, controlled state, and callbacks unchanged"
+}

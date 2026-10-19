@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-054",
+  "name": "Tree parity TR-TYPE-05: Tree typeahead should prefer current explicit textValue over nested or decorative text"
+}

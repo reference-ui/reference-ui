@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FIELD-004",
+  "name": "Field CT FI-DOM-02 (runtime): Field strips prohibited role and ARIA props from JS callers"
+}

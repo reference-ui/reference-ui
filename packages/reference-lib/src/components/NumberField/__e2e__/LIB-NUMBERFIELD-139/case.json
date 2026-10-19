@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-139",
+  "name": "NumberField CT NF-DOM-09: Missing, empty, or unresolved stepper names fail at runtime instead of receiving English fallback text"
+}

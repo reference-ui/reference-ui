@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-028",
+  "name": "Tree parity TR-SELECT-07: Tree should retain a controlled selected descendant while its ancestor is collapsed"
+}

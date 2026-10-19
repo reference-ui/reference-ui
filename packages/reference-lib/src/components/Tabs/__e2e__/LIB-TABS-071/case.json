@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TABS-071",
+  "name": "Tabs Composition Gates & Browser Proofs root keepMounted keeps inactive panels in the DOM and preserves form state"
+}

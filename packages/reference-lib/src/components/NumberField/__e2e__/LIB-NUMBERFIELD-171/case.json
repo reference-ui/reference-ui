@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-171",
+  "name": "NumberField CT NF-EDIT-15: Deletion around grouping and affixes preserves a correct editable buffer"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-049",
+  "name": "Tree parity TR-KEY-13: Tree asterisk key should never enter the typeahead buffer"
+}

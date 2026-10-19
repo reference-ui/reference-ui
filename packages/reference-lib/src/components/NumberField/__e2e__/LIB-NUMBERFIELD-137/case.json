@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-137",
+  "name": "NumberField CT NF-KEY-05: Unsupported keys remain native and never change the value"
+}

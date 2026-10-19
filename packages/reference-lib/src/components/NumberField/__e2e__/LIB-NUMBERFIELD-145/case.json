@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-145",
+  "name": "NumberField CT snap commitBehavior publishes live raw meanings then coerces typed 2.5 to 3 at commit"
+}

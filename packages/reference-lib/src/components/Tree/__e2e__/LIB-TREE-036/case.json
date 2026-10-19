@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TREE-036",
+  "name": "Tree parity TR-EXPAND-07: Tree should move focus to a branch before collapsing its focused descendant"
+}

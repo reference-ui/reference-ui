@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FIELD-027",
+  "name": "FI-LIFECYCLE-01: status rerenders preserve native dirty text, focus and selection without affecting sibling controls"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-172",
+  "name": "NumberField CT NF-EDIT-12: A valid synthetic composition result parses once and an invalid result restores pre-composition text"
+}

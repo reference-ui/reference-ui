@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-150",
+  "name": "NumberField CT NF-DOM-01: NumberField renders exactly one root div, group div, text input, and authored stepper buttons"
+}

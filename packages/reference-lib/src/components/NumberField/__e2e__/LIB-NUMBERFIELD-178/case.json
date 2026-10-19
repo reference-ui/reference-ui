@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-178",
+  "name": "NumberField CT NF-PARSE-07: Disabling grouping removes pasted group tokens without changing the number or caret model"
+}

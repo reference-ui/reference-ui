@@ -1,0 +1,4 @@
+{
+  "id": "LIB-TABS-107",
+  "name": "Tabs click cancellation governs keyboard activation while native press requests remain authoritative"
+}

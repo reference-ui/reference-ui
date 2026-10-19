@@ -1,0 +1,4 @@
+{
+  "id": "LIB-FIELD-011",
+  "name": "Field CT FI-CSS-07: Field should match invalid chrome through :has([aria-invalid=\"true\"])"
+}
