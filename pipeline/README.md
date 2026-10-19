@@ -47,4 +47,4 @@ Each matrix contract declares `react` (react17/18/19, single or array with the f
 
 Registry staging omits `.git` and `node_modules` at any depth, and `target`, `dist/cargo`, `.turbo`, `coverage` at the package root. Excludes match paths relative to the package root, never bare basenames: publishable `dist/` trees must survive the copy.
 
-Subsystem details live in the [pipeline source overview](./src/README.md).
+Subsystem details live in the pipeline source overview.

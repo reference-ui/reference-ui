@@ -4,4 +4,4 @@ Finds matrix-enabled packages and parses their contracts. Scans the matrix suite
 
 A package participates when its contract declares `name`, `refSync.mode` (`full` | `watch-ready`), a non-empty `bundlers` array (`vite7` | `webpack5`), and `react` (one runtime or a non-empty array; the first unique entry is the default). `--react` pins one declared runtime; `--full` expands every declared runtime.
 
-Parent: [matrix/README.md](../README.md).
+Parent: the matrix index.

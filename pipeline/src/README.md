@@ -12,4 +12,4 @@ Execution graph for build, test, and release. The `cli` command tree defines `pn
 
 Commands outside `pnpm pipeline` are thin aliases or helpers: `pnpm release`, `pnpm setup:local`, and small conditional wrappers in the pipeline scripts.
 
-Parent: [pipeline/README.md](../README.md).
+Parent: the pipeline index.

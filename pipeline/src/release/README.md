@@ -15,4 +15,4 @@ Changesets owns intent and version/changelog text; the pipeline owns execution, 
 - `testing/` validates those artifacts in realistic environments.
 - `release/` gates promotion of validated artifacts to the public registry.
 
-Parent: [src/README.md](../README.md).
+Parent: the src index.

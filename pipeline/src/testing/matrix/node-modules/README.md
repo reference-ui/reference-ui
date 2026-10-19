@@ -9,4 +9,4 @@ Two reuse layers:
 
 Fixture-local volumes warm from a graph-shared seed copy on a cold cache. Keeping the policy here lets the Dagger runner orchestrate without hiding cache rules inline.
 
-Parent: [matrix/README.md](../README.md).
+Parent: the matrix index.

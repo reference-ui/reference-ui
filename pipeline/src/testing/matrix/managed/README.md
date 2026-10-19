@@ -4,4 +4,4 @@ Pipeline-owned generated config shapes for matrix execution: manifests, bundler 
 
 Consumed by fixture setup locally and by the Dagger runner inside containers.
 
-Parent: [matrix/README.md](../README.md).
+Parent: the matrix index.

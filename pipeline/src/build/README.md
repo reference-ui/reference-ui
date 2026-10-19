@@ -4,4 +4,4 @@ Builds the registry-target workspace packages and pushes the outputs into the pi
 
 Input-hash fingerprints skip unchanged packages between runs. Rust native packaging for `@reference-ui/rust` lives in [rust/](rust/) and follows the same rule: build here once, then stage the prepared artifacts through the registry.
 
-Parent: [src/README.md](../README.md).
+Parent: the src index.

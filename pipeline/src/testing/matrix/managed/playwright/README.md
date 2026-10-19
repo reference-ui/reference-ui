@@ -4,4 +4,4 @@ Shared Playwright config shape for standard matrix fixtures and generated consum
 
 Setup exempts `@matrix/playwright` from managed generation, so a fixture validating the dedicated Playwright package contract keeps its own config rather than the shared bundler matrix.
 
-Parent: [managed/README.md](../README.md).
+Parent: the managed index.

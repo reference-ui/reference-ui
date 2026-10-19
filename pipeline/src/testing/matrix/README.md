@@ -13,4 +13,4 @@ pnpm pipeline test --trace                                # stream the Dagger ex
 
 Matrix runs fail fast when Docker/Colima lacks the configured CPU, memory, or free disk (see `MATRIX_CONFIG` in the pipeline config). On macOS, Colima starts automatically when the active Docker context is `colima` but the VM is down. Logs and artifacts land under `.pipeline/testing/matrix`.
 
-Parent: [testing/README.md](../README.md).
+Parent: the testing index.

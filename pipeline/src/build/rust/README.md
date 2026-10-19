@@ -14,4 +14,4 @@ A native binary is fresh only when its `reference-native.<triple>.inputs.sha256`
 
 Cross-builds are not attempted. Any `.rs` change makes the next linux build run in Dagger (about 50 s). CI stamps each binary in `rust-compile.yml`, and the stamp folds CRLF to LF so Windows checkouts hash the same as macOS and Linux. the `publish-native` step refuses to publish downloaded binaries without a matching stamp.
 
-Parent: [build/README.md](../README.md).
+Parent: the build index.
