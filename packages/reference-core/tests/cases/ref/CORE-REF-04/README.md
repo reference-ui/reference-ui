@@ -13,6 +13,6 @@ the start, so reruns are deterministic.
 
 The proof is the spec's freshness waits (after each re-sync the manifest must load the spelling in force and
 reject the one it replaced), the browser leg's rendered update, and the unit proof
-`packages/reference-core/src/sync/tasty-refresh.test.ts`, which pins that a warm sync queues a rebuild while the
+the tasty-refresh coverage, which pins that a warm sync queues a rebuild while the
 manifest already exists. The world entry mirrors the matrix `?name=` consumer shell, and the importmap wires
 the generated bundles plus a local `react/jsx-runtime` shim that delegates to the generated react `createElement`.

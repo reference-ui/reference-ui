@@ -1,7 +1,7 @@
 # CORE-SITE-07 — Cross-file `const` from `styles.ts` resolves
 
-The world keeps its color value in `src/styles.ts` and styles the node
-from `src/app.ts` through the imported `brand` binding. The spec asserts
+The world keeps its color value in a styles fixture and styles the node
+from the app fixture through the imported `brand` binding. The spec asserts
 the node paints cherry and the sheet carries exactly the one utility, so
 a site value may live in another scanned file without losing its paint.
 

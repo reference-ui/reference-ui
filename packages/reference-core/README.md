@@ -50,18 +50,18 @@ somewhere to live.
 | :--- | :--- |
 | `reference-rs` | The engine below the cut. |
 | `reference-lib` | Components. Proof a package can own a fast harness. |
-| `matrix/*` | External boundaries: install, bundlers, chain. |
+| matrix suites | External boundaries: install, bundlers, chain. |
 
 ## Working docs
 
-- [`docs/TESTING.md`](docs/TESTING.md) — cases, artifacts, snapshots, the gate.
-- [`docs/DOMAIN.md`](docs/DOMAIN.md) — the domain language: names that build
+- The testing guide — cases, artifacts, snapshots, the gate.
+- The domain guide — the domain language: names that build
   the runtime, plus retired ones to never revive.
 
 ## Building the bin (build-once)
 
 The shippable `ref` bin is compiled: `bin` and the `./runtime` export
-point at `dist/` (see [`tools/README.md`](tools/README.md)), because
+point at `dist/` (see the tools guide), because
 Node refuses to type-strip shipped `.ts` under `node_modules`. `dist/`
 is gitignored, so build it once per checkout (and rebuild after editing
 core sources) before any installed-shim invocation:
@@ -70,6 +70,6 @@ core sources) before any installed-shim invocation:
 cd packages/reference-core && node tools/build-bin.mjs
 ```
 
-Direct-source invocations (`node bin/ref.ts sync`, the `CORE-CLI-*`
-specs, `bin/ref.test.ts`) need no build. `prepack` and `prepublishOnly`
+Direct-source invocations (running `ref` from source, the `CORE-CLI-*`
+specs, the bin tests) need no build. `prepack` and `prepublishOnly`
 build automatically for real publishes.

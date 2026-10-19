@@ -20,6 +20,6 @@ ranges, plus `StylePropValue<T> = T | null | false | undefined | Array<T | null>
 compiler lowers `md` to `@container (min-width: 768px)` and reads `@md` as a
 selector (issue #14).
 
-Evidence: typegen golden `styles.d.ts` (`StylePropValue`, `BreakpointKey`).
+Evidence: the styles declaration golden (`StylePropValue`, `BreakpointKey`).
 
 > Search terms: breakpoints, responsive, base, ranges, media query, at-rule, placeholder, type/conditions, type/responsive-arrays, CORE-TYPE-01, CORE-COND-01

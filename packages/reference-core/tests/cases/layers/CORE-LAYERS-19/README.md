@@ -5,12 +5,12 @@ package with `extends`, the app's token values win, including inside that packag
 it with `layers`, the package keeps its own token values. The share guide promises the same.
 
 The world keeps the prebuilt importmap shape: the page reaches acme through its importmap, and nothing installs it in
-`world/node_modules`. `upstream/` is a real package, acme (`core-layers19-acme`). Its
+the world install. `upstream/` is a real package, acme (`core-layers19-acme`). Its
 tokens define `brand` (`#be185d`, dark `#f9a8d4`), the public `acmeOnly` (`#1d4ed8`, dark `#93c5fd`) and the private
-`_private.seal` (`#7c3aed`, dark `#c4b5fd`). Its `src/Badge.tsx` declares two components: `Badge`, a `Span` that
+`_private.seal` (`#7c3aed`, dark `#c4b5fd`). Its Badge component declares two components: `Badge`, a `Span` that
 styles itself with `bg="brand"`, `color="acmeOnly"` and `borderColor="_private.seal"`, and `Plain`, a `Span` that
-forwards what its caller writes. `prebuilt/acme.mjs` stands for acme's dist: it renders both through acme's bound
-`react.mjs`, so every element stamps `data-layer="core-layers19-acme"`. The app (`core-layers19`) defines `brand`
+forwards what its caller writes. The acme prebuilt stand-in stands for acme's dist: it renders both through acme's bound
+react entry, so every element stamps `data-layer="core-layers19-acme"`. The app (`core-layers19`) defines `brand`
 too (`#15803d`, dark `#86efac`) and renders an own `Div bg="brand"` control, `<Badge>`, and `<Plain bg="brand">`.
 Since acme is not installed, the app's sync cannot follow `@fixture/layers19` to a directory and lowers nothing for
 `<Plain bg="brand">` (an import that lands nowhere is not a Reference package, ATM-SITE-103). The class acme's runtime
@@ -49,9 +49,9 @@ and the extends legs read `rgb(190, 24, 93)` light and `rgb(249, 168, 212)` dark
 background, where the app's `rgb(21, 128, 61)` and `rgb(134, 239, 172)` are expected. The layers legs and the
 package-only probes already passed there.
 
-Evidence: `packages/reference-rs/modules/atomic/src/stylesheet/system_layers/scope.rs` (the stamp lists),
-`packages/reference-core/src/system/base/extended.ts` (the extends closure), `src/sync/index.ts` (the request field),
-`packages/reference-rs/modules/primitives/js/context.ts` (the stamp rule). Siblings: CORE-LAYERS-20 (nested
+Evidence: the stamp lists,
+the extends closure, the sync entry (the request field),
+the primitives scope context (the stamp rule). Siblings: CORE-LAYERS-20 (nested
 composition), CORE-LAYERS-10 (consumer content inside a layered component), CORE-LAYERS-17 (extendSystem on a
 layered package), CORE-CHAIN-15 (an installed package's components, composed), CORE-SYNC-17 (`_private` strip
 under extends).

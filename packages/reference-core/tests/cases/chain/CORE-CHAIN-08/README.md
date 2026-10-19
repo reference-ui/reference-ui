@@ -2,9 +2,9 @@
 
 Every other chain case exercises token adoption through `extends` in one
 compiling scope. This case styles a component the app never compiles: the world
-carries a **prebuilt package component fixture** (`prebuilt/badge.mjs`) built
+carries a **prebuilt package component fixture** (a prebuilt badge fixture) built
 the same way a published dist is — it renders a primitive from its own
-materialized, bound `react.mjs`, so every style prop it forwards qualifies
+materialized, bound react entry, so every style prop it forwards qualifies
 with the **package's** system name (`core-chain8-up`), never the consumer's.
 The consumer renders `<Badge color="chain8Ink" />` with a token defined only
 downstream, so a painted value proves the consumer compile resolved and
@@ -17,17 +17,17 @@ is refused here.
 
 The consumer sync learns which system renders `<Badge>` from the package the
 import lands in, the way Node would resolve it: the spec installs the synced
-upstream as `world/node_modules/@fixture/prebuilt` before the extended re-sync
+upstream as the world prebuilt install before the extended re-sync
 (and removes it after), so the engine reads the system it published,
 `core-chain8-up`, and backs the class under that system only. The browser keeps
 loading the component through the world importmap.
 
 Evidence: the extract's tag gate backs a non-host tag under the systems the
 package its import lands in published (`non_host_gate` in
-`packages/reference-rs/modules/atomic/src/extract/jsx/mod.rs`,
-`extract/package_system.rs`), while the package's runtime mints the class
-under its own system (`css()` in `packages/reference-core/src/runtime/css/css.ts`);
+the JSX extractor,
+the package-system step), while the package's runtime mints the class
+under its own system (`css()` in the runtime CSS resolver);
 no twin without a real prebuilt dist. Siblings: ATM-SITE-96 (the same backing
 inside one compile), CORE-CHAIN-15 (an installed package's import shapes).
 
-> Search terms: prebuilt dist, package backing, published system, external style props, bound react.mjs, foreign qualifier, same-scope vacuous twin, CORE-CHAIN-06, CORE-CHAIN-07
+> Search terms: prebuilt dist, package backing, published system, external style props, bound react entry, foreign qualifier, same-scope vacuous twin, CORE-CHAIN-06, CORE-CHAIN-07

@@ -8,6 +8,6 @@ the probe with visible focus and checks the computed outline colour and
 offset. Unfocused, the probe must not carry the token colour.
 
 Evidence: reference-lib Trace A
-(`primitives/base.ts` 9–13 → `global.css` 21–24); ATM-LAYER-03.
+(the primitives base reference 9–13 → `global.css` 21–24); ATM-LAYER-03.
 
 > Search terms: keyboard focus, a11y, outline-color, outline-offset, tab focus, focus ring, global/focus-visible, global/token-ref

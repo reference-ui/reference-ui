@@ -10,7 +10,7 @@ spec checks the sheet carries exactly the eleven utilities, every folded
 shape paints its declaration (the flattened array at narrow and wide
 container widths, the merge in last-wins pink), the refused node paints only its
 sibling, and a fresh compile of the frozen request reports the `dk`
-warning located at the world's `app.ts` — sync itself succeeds.
+warning located at the world app fixture — sync itself succeeds.
 
 Evidence: element access, folded keys, flatten; Panda v2 scope tests (computed
 string key, ident key, index) and call tests (literal spread, computed key);

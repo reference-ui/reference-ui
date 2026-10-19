@@ -17,6 +17,6 @@ table; the host call position (`RecipeRuntimeFn` methods take
 literal axes instead of the wide record fallback.
 
 Evidence: Panda v1 generate-recipe tests (contrast:
-`ConditionalValue`); typegen golden `recipes.d.ts`; TYP-RECIPE-01.
+`ConditionalValue`); the recipes declaration golden; TYP-RECIPE-01.
 
 > Search terms: cva, autocomplete, intellisense, typo, type/recipe-variants, type/negative-typecheck, CORE-TYPE-01, CORE-TYPE-02

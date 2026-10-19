@@ -1,7 +1,7 @@
 # CORE-LAYERS-14 — invalid layer and extend relations fail a real ref sync with their named message, and an unsynced upstream gives the sync hint
 
 A layers entry is only as good as its streams, and an upstream is only as good as its names.
-The spec drives the spawned `ref sync` over six bad relations in the world's `ui.config.ts` and
+The spec drives the spawned `ref sync` over six bad relations in the world's `ui.config` and
 asserts each one: exit 1, the named header and reason on stdout, and the world's published base
 system left byte-identical. It then runs one more leg over an upstream that was never synced. The
 world config is rewritten per leg and restored in a `finally`, as in CORE-LAYERS-03.
@@ -14,7 +14,7 @@ Three upstreams are real sync output, synced in-process before the legs:
 - `cycle` extends the world's own published system before it is synced, so its streams carry
   `core-layers14` back into the consumer: an A to B cycle.
 
-The legs, with the check that owns each (`src/system/base/validate.ts`):
+The legs, with the check that owns each (the base-system link check):
 
 1. `layers: [{ name, fragment }]`, a fragment-only entry with no streams. `assertRequiredStreams`:
    only streams carry a layer's CSS, so a streamless entry would become a sync qualifier and add
@@ -26,20 +26,20 @@ The legs, with the check that owns each (`src/system/base/validate.ts`):
 5. `extends: [b, b]`, a name repeated within extends. The same check, on the other field.
 6. `extends: [b], layers: [b]`, a system named in both fields. `validateSharedBaseSystems`:
    `extends` already includes everything `layers` gives, so the layers entry is rejected, not merged
-   (the owner's ruling, in `layers/SPEC.md`). The message names the system.
+   (the owner's ruling, in the layers spec). The message names the system.
 7. `layers: [unsynced]`, an installed package whose published system was never generated. Its
    exports name a file that is not there, so the config load fails and `LoadConfigError` appends
-   the sync hint (`src/config/errors.ts`). The package is created for this leg only and removed in
+   the sync hint (config errors). The package is created for this leg only and removed in
    the same leg.
 
 Repeats reached only through another system are not rejected here: the statement and the blocks
 print each system once (CORE-LAYERS-11 proves a diamond). Only a name listed twice in one field, or
 in both fields, is rejected.
 
-Evidence: `src/config/validate.ts` (`validateBaseField`, `validateBaseFields`),
-`src/system/base/validate.ts` (`assertRequiredStreams`, `validateBaseSystemLinks`,
-`validateSharedBaseSystems`), `src/config/errors.ts` (`LoadConfigError` and the upstream hint),
-`bin/ref.ts`, `src/cli/sync.ts`. Siblings: CORE-LAYERS-05 (the shape table and precedence),
+Evidence: config validation (`validateBaseField`, `validateBaseFields`),
+the base-system link check (`assertRequiredStreams`, `validateBaseSystemLinks`,
+`validateSharedBaseSystems`), config errors (`LoadConfigError` and the upstream hint),
+the `ref` entry, the CLI sync command. Siblings: CORE-LAYERS-05 (the shape table and precedence),
 CORE-LAYERS-03 (the order), CORE-LAYERS-06 (re-sync), CORE-LAYERS-11 (the diamond).
 
 > Search terms: layers streams, streamless layers entry, fragment only, self-named entry, own name,

@@ -2,7 +2,7 @@
 
 Evidence: all groups (leans, owns no engine); parity probes (amp, slash, probes, follow-up, micro).
 
-One world authored the way `packages/reference-lib/src` is: light/dark
+One world authored the way reference-lib sources are: light/dark
 tokens, one `font()` with a two-entry `fontFace` array, one `keyframes()`,
 nine `.ref-*` tag recipes via `globalCss()`, two `recipe()`s, primitives, a
 field bezel with `data-slot`, one named `container` region, and a small

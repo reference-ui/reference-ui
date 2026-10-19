@@ -1,9 +1,9 @@
 # CORE-DIAG-07 — ATM-W-MISSING-CONTAINER-ROOT reproduces through the whole compiler as warning
 
-`@container` atoms without a container root. The world carries the minimal fixture (theme/cq.ts, theme/cq-globals.ts) on the diagnostics channel. The spec drives the whole compiler (`compileWorld` over the case world) and asserts the code with warning severity plus a non-blank message, so the case fails loudly if the engine ever stops emitting it.
+`@container` atoms without a container root. The world carries minimal theme fixtures on the diagnostics channel. The spec drives the whole compiler (`compileWorld` over the case world) and asserts the code with warning severity plus a non-blank message, so the case fails loudly if the engine ever stops emitting it.
 
-Raised in: `modules/atomic/src/resolve/conditions/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
+Raised in: the atomic condition resolver. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: ATM-W-MISSING-CONTAINER-ROOT (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-MISSING-CONTAINER-ROOT (the diagnostic registry inventory + the shared repro suite row).
 
 > Search terms: ATM-W-MISSING-CONTAINER-ROOT, atm-w-missing-container-root, diagnostics case index, CORE-DIAG-07

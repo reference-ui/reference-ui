@@ -10,8 +10,8 @@ declaration value. The prefixed spelling is the matrix's
 `primitive-category-tokens` fixture; Core resolves it to the same var
 as the bare spelling.
 
-Matrix source: `matrix/primitives/tests/e2e/primitives-contract.spec.ts`
+Matrix source: the primitives contract spec
 "primitive resolves category-prefixed color tokens in the browser" +
-`matrix/primitives/src/index.tsx` (`primitive-category-tokens`).
+the primitives probe (`primitive-category-tokens`).
 
 > Search terms: category prefix, colors dot, token path spelling, raw leak, primitive-category-tokens, prim/prefixed-colors, CORE-PRIM-13

@@ -1,4 +1,4 @@
-# `src/` — the host
+# The host tree
 
 Core's TypeScript: everything above the cut. Authors write fragments and
 style calls; this tree evaluates them once, compiles through Rust,
@@ -24,9 +24,9 @@ once in dev. `primitives/` holds the generator that writes the per-system
 `react` entry; the executable roster itself (the factory plus its runtime
 trio) ships live from `@reference-ui/rust/primitives`. `entry/` holds the
 unbound React entry and its type files — the unbound surface also types
-worlds under the pre-run check. `index.ts` is the single entry behind the
+worlds under the pre-run check. The package index is the single entry behind the
 `@reference-ui/core` id that fragment files and configs import, and
-`system-surface.d.ts` is the stable type surface for the generated
+The system-surface declarations are the stable type surface for the generated
 `@reference-ui/system` entry. `reference/` is the S6 reference API that Node
 consumers such as MCP use to build documents without the browser runtime.
 
@@ -34,8 +34,7 @@ Around them: `cli/` is the `ref` command layer, `diagnostics/` formats and
 reports errors, `native/` is the bridge to the Rust compiler, `packager/`
 writes the generated packages, and `system/` holds the base system. `lib/`
 carries core-owned seams (`paths/`, `symlink/`, `watch/`) and `microbundle/`,
-which builds the esbuild bundles for configs and fragments. `constants.ts`
-holds the one layout name they share.
+which builds the esbuild bundles for configs and fragments. One shared constant names the layout they share.
 
 Refusals (from the Core README): no style lowering in TS, no second
 Atomic, no second `EvaluatedSystemSpec` (wire format lives in

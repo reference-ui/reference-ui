@@ -2,7 +2,7 @@
 
 Evidence: install-dimension investigation NATIVE GAP (LOG-2 §2 —
 no native test spawns the `core sync --watch` binary) over the bin
-flag path (`packages/reference-core/src/cli/sync.ts:107`).
+flag path in the sync command.
 
 The runner syncs this world fresh, then the spec spawns the real
 `ref sync --watch` binary against it and proves four legs. Boot:
@@ -30,6 +30,6 @@ type, one resync signal plus output-change assert — loop breadth
 (add/change/delete, debounce, config-dep) stays with SYNC-14 and
 the browser-paint loop with WATCH-01, one-shot lifecycle with
 CLI-01, and the bin routing negatives (`clean --watch`, unknown
-command, missing-config failure) with `bin/core.test.ts`.
+command, missing-config failure) with the bin tests.
 
 > Search terms: cli watch flag, core sync --watch, spawned watcher, watch boot, watch resync, watch shutdown, sigterm shutdown, resync signal, bin flag path, NATIVE GAP, CORE-CLI-01, CORE-WATCH-01, CORE-SYNC-14

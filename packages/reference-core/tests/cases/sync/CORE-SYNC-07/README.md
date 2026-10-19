@@ -1,6 +1,6 @@
 # CORE-SYNC-07 — stale files from a previous sync are removed
 
-Evidence: `sync/index.ts` clean (removes the output dir recursive-force before regenerating).
+Evidence: the sync clean step (removes the output dir recursive-force before regenerating).
 
 The runner syncs this world fresh, then the spec plants yesterday's
 leftovers — a top-level junk file, a stale module inside `system/`, and a

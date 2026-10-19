@@ -7,6 +7,6 @@ paints the slate color at 1px solid — the shorthand expands to width plus
 style only, so the sibling color wins.
 
 Evidence: reference-rs case
-`packages/reference-rs/modules/atomic/tests/cases/ATM-SHORT-01`.
+`rs-cases:ATM-SHORT-01`.
 
 > Search terms: border-width, border-style, implicit value, sibling prop, border split, merge/border-expansion, merge/no-clobber, CORE-MERGE-03

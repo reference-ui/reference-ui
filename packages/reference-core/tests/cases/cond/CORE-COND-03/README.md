@@ -8,7 +8,7 @@ only with both arms, and a real disabled button needs a real hover too.
 
 Evidence: ATM-COND-02, ATM-COND-10 (probes emits the chained selector); Panda v1
 test "nested > nested > property"; reference-lib
-`packages/reference-lib/.reference-ui/styled/styles.css:454` (the disabled twin
+the built lib styles (the disabled twin
 list on `.ref-button`).
 
 > Search terms: data-hover, data-disabled, pseudo-class, :disabled, combined, double bind, conditions/hover, conditions/disabled, selector :is(), CORE-COND-01, CORE-COND-02

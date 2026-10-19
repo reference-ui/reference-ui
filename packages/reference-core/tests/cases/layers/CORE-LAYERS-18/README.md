@@ -3,9 +3,9 @@
 `extendSystem(base, { tokens })` themes a published base system by appending one override block to
 the base's own token stream. Its misuse has to fail at config load, through a real `ref sync`, with a
 message that names the mistake. The spec syncs a base upstream for real, then rewrites the world's
-`ui.config.ts` once per leg and drives the spawned `bin/ref.ts sync` over each one.
+`ui.config` once per leg and drives the spawned `ref sync` over each one.
 
-The legs, with the check that owns each (`src/system/base/extend.ts`, `validate.ts`, `config/validate.ts`):
+The legs, with the check that owns each (the extend, base-validation and config-validation checks):
 
 1. An unknown token, `colors.brandMissing`. `extendSystem` throws while the config module evaluates, so
    `LoadConfigError` wraps the message. The override must name the dotted path and the base.
@@ -30,9 +30,9 @@ declares `brandInk` (light and dark), `brandSoft` (light only) and `brandAccent`
 - `extends: [branded]` publishes the `extend:<base>` fragment node after the base's node, and the world's
   evaluated tokens carry the merged override. A light-only leaf drops the base dark value there.
 
-Evidence: `src/system/base/extend.ts` (`extendSystem`, `extendFragmentNode`),
-`src/system/base/fragments.ts` (`fragmentNodesOf`), `src/system/base/validate.ts`
-(`assertBaseSystemName`, `validateBaseSystemLinks`), `src/config/validate.ts` (`validateName`).
+Evidence: the extend step (`extendSystem`, `extendFragmentNode`),
+fragment linearization (`fragmentNodesOf`), the base-system link check
+(`assertBaseSystemName`, `validateBaseSystemLinks`), config validation (`validateName`).
 Siblings: CORE-LAYERS-14 (the relation rejections this case copies) and CORE-LAYERS-05 (the shapes).
 
 > Search terms: extendSystem, theme, override, tokens, branded, extend node, extend:, unknown token,

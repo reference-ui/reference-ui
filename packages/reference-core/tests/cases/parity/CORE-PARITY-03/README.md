@@ -1,7 +1,7 @@
 # CORE-PARITY-03 — every §3 consumer specifier resolves from the world
 
 Evidence: specifier counts 89 / 31 /
-1, the `../.reference-ui/system/baseSystem.mjs` re-export, the
+1, the published-system re-export, the
 `@reference-ui/react/styles.css` stylesheet import, zero styled importers).
 
 The world is the same mini-lib as PARITY-01 (identical sources, synced

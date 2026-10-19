@@ -6,7 +6,7 @@ a directory up front, junctions behave differently from POSIX symlinks,
 and stale scope links survive renames — so every sharp edge lives here,
 behind three functions, instead of scattered as ad-hoc fs calls.
 
-The path-preparation helper is `prepare.ts`, and the `symlink-dir` call
+One helper prepares paths, and the `symlink-dir` call
 follows the v10 named export (`symlinkDirSync`). Core's clean keeps
 hand-placed dirs, so `removeGeneratedLink` guards the scope entry here
 instead of ad-hoc in the bin.

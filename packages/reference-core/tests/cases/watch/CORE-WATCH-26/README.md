@@ -1,10 +1,10 @@
 # CORE-WATCH-26 — five config loads that start together all resolve, so no one-shot loses its config to another's cleanup
 
-Evidence: `src/config/evaluate.ts` (`evaluateConfig`) and `src/config/load.ts`. Every config load makes a per-eval temp dir
+Evidence: config evaluation (`evaluateConfig`) and config loading. Every config load makes a per-eval temp dir
 under the shared `.reference-ui/tmp` root, and its cleanup removes that root, and the out dir above it, once they are
 empty. The mkdir of the root and the mkdtemp of the eval dir are two calls. A load that has made the root but not yet its
 own dir loses the root to another load's cleanup: mkdtemp fails with ENOENT (or EINVAL on macOS), and a one-shot
-`ref sync` exits 1 with `Failed to load ui.config.ts`. Measured before the fix, a few loads in every hundred fail under
+`ref sync` exits 1 with a failed-config-load error. Measured before the fix, a few loads in every hundred fail under
 this spread of starts.
 
 The spec loads one temp world's config five times at once, each load after a random delay of up to 4 ms. That delay

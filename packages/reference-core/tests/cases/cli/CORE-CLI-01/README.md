@@ -1,6 +1,6 @@
 # CORE-CLI-01 — `core` CLI lifecycle: interrupt recovery and clean restore
 
-Evidence: CLI lifecycle (`matrix/distro/tests/unit/distro.test.tsx`
+Evidence: CLI lifecycle (the distro lifecycle coverage
 L280-446: idempotent re-sync, stale runtime rewrite, SIGTERM-interrupt
 recovery, clean-restore round-trip).
 
@@ -18,7 +18,7 @@ for the next run even when an assertion fails.
 
 The distro core's virtual-mirror legs (L288-358: stale virtual cleanup and
 the exact-sync pin) are deliberately not ported: Core has no virtual mirror
-by design (`sync/index.ts`, SYNC-02), so there is no mirror to keep exact.
+by design (the sync entry, SYNC-02), so there is no mirror to keep exact.
 The skipped sentinel test (L440-442) stays skipped — Core emits no sentinel.
 The distro type-surface describes stay with the TYPE group, and the
 Panda-shaped output pins are Core-forbidden. This case is the one coverage

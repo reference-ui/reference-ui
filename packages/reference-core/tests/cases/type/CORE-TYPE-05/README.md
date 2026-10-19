@@ -10,7 +10,7 @@ paints.
 The fragment is materialized at spec time because it cannot live in the repo:
 the harness pre-run typecheck resolves `@reference-ui/system` to the stable
 surface, whose wide shapes (one-argument `font`) differ from the generated
-signatures. No engine rung: the surface is host-authored in `publish.ts`, and
+signatures. No engine rung: the surface is host-authored in the styled-types publisher, and
 it already declared every name, so no host change was needed.
 
 

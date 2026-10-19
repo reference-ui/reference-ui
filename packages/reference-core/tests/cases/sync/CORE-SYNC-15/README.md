@@ -6,9 +6,9 @@ and `Label` (plain props only, no style props at its boundary). The engine
 traces `Card` inside `compile()` and returns it on
 `NativeCompileResult.tracedJsxHosts`; `sync()` publishes the union through
 `resolveJsxElements(config, traced)` while the request stays configured-only.
-The spec checks `system/jsx-elements.json` pins the 101 generated primitives
+The spec checks the JSX-elements snapshot pins the 101 generated primitives
 beside `{ upstream: [], local: ['Card'], merged: ['Card'] }`, `baseSystem.jsxElements`
-is `['Card']`, `compile-request.json` keeps its six frozen keys with
+is `['Card']`, the compile request keeps its six frozen keys with
 `jsxHosts` at primitives only (discovery is not in the request), the sheet
 carries the Card-site utility and `Random`'s `color`, which lowers under own
 as a component nobody traces (styling plan S3) though nothing mints its

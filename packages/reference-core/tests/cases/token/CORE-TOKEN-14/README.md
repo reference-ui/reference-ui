@@ -8,6 +8,6 @@ sheet defines the kebab names in both color-mode blocks with no camelCase
 ghosts, and that both probes compute the same gray.
 
 Evidence: reference-lib
-`shared.ts` `trackBackground`, `Slider.tsx`; ATM-TOKEN-13 (RS-41).
+the shared `trackBackground` helper and `Slider`; ATM-TOKEN-13 (RS-41).
 
 > Search terms: serialization, naming, case conversion, lowercasing, token/naming, token/color-mode, CORE-TOKEN-05

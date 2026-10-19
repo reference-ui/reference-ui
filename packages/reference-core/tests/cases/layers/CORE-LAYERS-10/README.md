@@ -4,7 +4,7 @@ The consumer and a layered upstream both define one colour token, `probeInk`, wi
 The upstream's leaves are `#be185d` (light) and `#f9a8d4` (dark). The consumer's are `#15803d` (light)
 and `#86efac` (dark). The upstream is a real sync (`upstreams/up`): it emits its own `probeInk`
 utility, so its layer carries a rule the page can paint. The spec syncs that upstream, lists it under
-`layers` in the consumer `ui.config.ts`, re-syncs, copies the upstream's published react entry beside
+`layers` in the consumer `ui.config`, re-syncs, copies the upstream's published react entry beside
 the world, and restores the canonical spelling in a `finally`.
 
 The page renders the upstream's `Div` with `color="probeInk"`, and that layered component holds one
@@ -35,9 +35,9 @@ consumer child inside the upstream root lost its stamp in legs 2 and 3. Commit 0
 nearest ancestor's layer name instead: a primitive whose ancestor belongs to another system always
 stamps. Leg 1 has no colour mode in effect, so it passes both before and after that fix.
 
-Evidence: `packages/reference-rs/modules/primitives/js/context.ts` (the stamp rule and the layer-name
-scope), `packages/reference-core/src/primitives/generate/generate.ts` (each system binds its own layer
-name), `src/config/types.ts` (the `layers` field), `src/sync/index.ts` (the upstream sync and the
+Evidence: the primitives scope context (the stamp rule and the layer-name
+scope), the primitives generator (each system binds its own layer
+name), the config types (the `layers` field), the sync entry (the upstream sync and the
 published react entry). Siblings: CORE-LAYERS-09 (the upstream probe under a consumer primitive),
 CORE-LAYERS-01 (a layer paints between extends and own), CORE-LAYERS-02 (the layered visual-only boundary).
 

@@ -8,9 +8,9 @@ The spec checks the sheet wraps both branches and the wide probe at a
 980px viewport paints all four declarations at once, while the narrow
 probe paints only the viewport branch — the container half still gates.
 
-Matrix source: `matrix/recipe/tests/e2e/system-contract.spec.ts`
+Matrix source: the recipe system contract spec
 "responsive recipe applies viewport media and container-query branches
-together on one class" + `matrix/recipe/src/styles.ts`
+together on one class" + the recipe styles
 (`recipeMatrixResponsiveCardRuntime`).
 
 > Search terms: recipe conjunction, media container together, responsive card, alert variant, CORE-RECIPE-12

@@ -21,7 +21,7 @@ globs.
   lands while the baseline runs is buffered and resynced once it lands,
   so no edit can fall between the baseline's reads and the subscription.
   A root that a sync newly subscribes gets one catch-up sync for the
-  same reason (`watchSync` in `index.ts`)
+  same reason (`watchSync`, the module entry)
 - one baseline sync, then resync on every matched add/change/unlink
   until stop (`onResync` fires only for watch-driven resyncs, never the
   baseline)
@@ -32,34 +32,34 @@ globs.
   synced, exactly as the engine compiles it
 - include matching as the engine's walk reads it: dot entries match
   (`dot: true`), a negated pattern subtracts, and nothing under an
-  ignored directory matches (`match.ts`)
+  ignored directory matches
 - symlinked roots and targets: the project root is canonicalized before
   any comparison, since parcel reports real paths; a matched symlink is
   watched through its real target, whose directory becomes a root, and
-  an edit there reports under the link's own relative path (`classify.ts`);
+  an edit there reports under the link's own relative path;
   a symlinked directory under include maps back to its link even when it is
-  empty at boot, so a new file in its target resyncs (`match.ts`)
+  empty at boot, so a new file in its target resyncs
 - watch roots from the static heads of the include globs, plus the
   config dependency dirs and symlink target dirs, collapsed
   shortest-first; a glob with no static head means the project root
-- trailing-edge debounce into one serial sync (`scheduler.ts`), with a
+- trailing-edge debounce into one serial sync, with a
   max-wait ceiling counted from a burst's first event, so a steady
   stream of saves still resyncs; a burst behind a slow sync costs one
   extra pass, never a backlog
 - the trigger scope follows each sync: a successful sync narrows it to
   the latest loaded config, and a failed sync widens it to the union of
-  the live scope and that config (`scope.ts`), so the save that fixes
+  the live scope and that config, so the save that fixes
   the failure is still seen
-- watcher-error policy (`handler.ts`): a dropped-OS-event-buffer error
+- watcher-error policy: a dropped-OS-event-buffer error
   schedules a debounced resync and reports nothing, since the re-scan
   recovers the lost batch; any other error reports through `onError` and
   resyncs after a cooldown so a flapping backend cannot self-perpetuate
-- the watch side of the covered handshake (`handshake.ts`), below
+- the watch side of the covered handshake, below
 
 ## The covered handshake (watch side)
 
 A one-shot `ref sync` that meets a resident watch pokes it with SIGUSR2
-and waits on `<lockDir>/watch-state.json`. The watch keeps that file:
+and waits on the watch-state sentinel in the lock dir. The watch keeps that file:
 
 - at boot, once the SIGUSR2 listener is attached, with nothing requested
   and nothing done
@@ -84,7 +84,7 @@ nothing; the re-assert publishes again.
   never-promise that holds the process open
 - the include globs themselves (they come from the user config)
 - the one-shot side of the handshake (the one-shot reads the file; the
-  lock and the preempt matrix live in `src/sync/session.ts`)
+  lock and the preempt matrix live in the sync session module)
 
 ## Consumers
 

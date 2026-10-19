@@ -7,6 +7,6 @@ declarations must yield nothing or a class absent from the sheet. The
 compiler namer is the oracle; this differential gate is what holds the
 mirror equal to it as both evolve.
 
-Evidence: ATM-SEAM (`packages/reference-rs/modules/atomic/tests/cases/ATM-SEAM-08`); reference-rs case `packages/reference-rs/modules/atomic/tests/cases/ATM-NAME-08`.
+Evidence: ATM-SEAM (`rs-cases:ATM-SEAM-08`); reference-rs case `rs-cases:ATM-NAME-08`.
 
 > Search terms: differential gate, runtime namer, compiler namer, oracle, plan parity, byte-equal declarations, refused declarations, namer mirror, engine corpus

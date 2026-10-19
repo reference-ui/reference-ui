@@ -1,6 +1,6 @@
 # CORE-WATCH-01 — live-edit→paint loop: watch resync repaints the browser
 
-Evidence: watch contract (`matrix/watch/tests/e2e/watch-contract.spec.ts`,
+Evidence: the watch contract spec,
 all 3 tests: css/primitive/recipe/token edits, config-dependency edits, and
 fragment add/delete — each ending in a browser-paint assert).
 
@@ -10,7 +10,7 @@ end in paint. A `css()` rewrite flips the probe from brand to ink. A token
 value edit flips it again without touching the call site. A new token
 fragment file paints its variable onto the probe, and deleting the fragment
 unpaints it. Every leg waits the watcher's own `onResync` (Core emits no
-`session.json` sentinel), asserts the sheet first, then reloads and polls
+session sentinel), asserts the sheet first, then reloads and polls
 the computed style — the sheet assert plus the paint assert together are
 the resync→paint proof. The page entry is rebuilt after the call-site edit
 so the reloaded page applies the new class, matching the real dev-loop
@@ -25,4 +25,4 @@ dual-consumption leg is not ported (H5 default retire; Core has no webpack
 target). This case plus CORE-SYNC-14 are the one coverage home for the watch
 behavior; the matrix file is the interim keep they release.
 
-> Search terms: watch paint loop, live edit repaint, file mutation paint, css edit repaint, token value repaint, fragment add paint, fragment delete unpaint, onResync, session.json, P-watch-1, watch port, CORE-SYNC-14
+> Search terms: watch paint loop, live edit repaint, file mutation paint, css edit repaint, token value repaint, fragment add paint, fragment delete unpaint, onResync, session sentinel, P-watch-1, watch port, CORE-SYNC-14

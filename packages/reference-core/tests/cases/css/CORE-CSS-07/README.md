@@ -6,7 +6,7 @@ each. The spec checks the sheet carries exactly those three utilities with
 the functions intact, each probe carries a single class, and each paints.
 
 Evidence: ATM-NAME-01..07, ATM-LEAF-01..08; reference-lib
-`packages/reference-lib/.reference-ui/styled/styles.css:27446`
+the built lib styles
 (`color-mix(in oklch, currentColor 14%, transparent)`).
 
 > Search terms: hsl(), var(), url(), clamp(), function values, css/arbitrary-values, css/css-functions, CORE-CSS-09

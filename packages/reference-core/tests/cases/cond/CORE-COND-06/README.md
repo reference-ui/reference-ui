@@ -8,7 +8,7 @@ combinator, the child paints brand, and the grandchild and the middle
 
 Evidence: ATM-COND-14 (probes emits the `> p` rule); Panda v1 test "[pseudo]
 should work with nested selector"; reference-lib
-`packages/reference-lib/.reference-ui/styled/styles.css` (15 `>`
+the built lib styles (15 `>`
 child/descendant selectors, e.g. `.ref-button > svg`).
 
 > Search terms: > selector, direct child, child selector, one level, child only, combinators/child, selector >, CORE-COND-10

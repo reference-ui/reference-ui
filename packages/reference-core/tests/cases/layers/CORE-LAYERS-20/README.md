@@ -3,8 +3,8 @@
 The nested side of the token-scope ruling (CORE-LAYERS-19 is the
 direct side). Three systems define `brand`: package a (`core-layers20-a`, `#7e22ce`), package b
 (`core-layers20-b`, `#b45309`), which extends a, and the app (`core-layers20`, `#15803d`). a ships `ABadge` and b
-ships `BCard`, each a `Span` that styles itself with its own `bg="brand"`; `prebuilt/nested.mjs` stands for their
-dists and renders each through its own package's bound `react.mjs`, so each element stamps its own package's
+ships `BCard`, each a `Span` that styles itself with its own `bg="brand"`; a nested prebuilt stand-in stands for their
+dists and renders each through its own package's bound react entry, so each element stamps its own package's
 `data-layer`. The page renders `ABadge` on its own (`#a-direct`) and `BCard` (`#b-card`) holding another `ABadge`
 (`#a-in-b`), the way b's own components wrap a's. No probe carries an app style prop.
 
@@ -37,9 +37,9 @@ the spec fails with seven lines: b's published tokens do not claim a's stamps, t
 stamps under extends, both a probes paint a's `rgb(126, 34, 206)` in both legs, and b's Card paints b's
 `rgb(180, 83, 9)` under extends. b's Card under layers already passed there.
 
-Evidence: `packages/reference-rs/modules/atomic/src/stylesheet/system_layers/scope.rs` (the stamp lists),
-`packages/reference-core/src/system/base/extended.ts` (the extends closure, and `extendedSystemsOf` for a published
-system), `src/system/base/extend.ts` (an override block claims the same stamps). Siblings: CORE-LAYERS-19 (direct
+Evidence: the stamp lists,
+the extends closure, and `extendedSystemsOf` for a published
+system), the extend step (an override block claims the same stamps). Siblings: CORE-LAYERS-19 (direct
 composition, dark mode, package-only tokens), CORE-CHAIN-01 (transitive extends), CORE-LAYERS-11 (a diamond through
 layers), CORE-LAYERS-17 (extendSystem on a layered package).
 

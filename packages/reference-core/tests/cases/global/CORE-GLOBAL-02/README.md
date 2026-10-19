@@ -10,7 +10,7 @@ the lib sheet; Panda's `--made-with-panda` signature is GLOBAL-09's
 claim, not asserted here.
 
 Evidence: reference-lib Trace B
-(`global.ts` 3–20 → `global.css` 2–15); ATM-LAYER-03,
+(the global reference 3–20 → `global.css` 2–15); ATM-LAYER-03,
 ATM-COND-16.
 
 > Search terms: container queries, @container, font-size, spacing scale, body styles, global/body, global/rhythm, global/container-type

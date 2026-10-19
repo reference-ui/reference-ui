@@ -7,7 +7,7 @@ utilities, the twin paints through its attribute, and the live probe rests
 on its base, paints under a real hover, and releases back after.
 
 Evidence: ATM-COND-02; Panda v1 test ("should extract conditions");
-reference-lib `packages/reference-lib/.reference-ui/styled/styles.css`
+the built lib styles
 `:is(:hover, [data-hover])`.
 
 > Search terms: pseudo-class, pointer, conditional, state, state flip, prim/conditional-style, prim/pseudo-class, CORE-COND-02

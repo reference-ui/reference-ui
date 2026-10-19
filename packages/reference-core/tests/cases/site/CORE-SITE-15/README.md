@@ -5,7 +5,7 @@ over a runtime-only flag, plus a `data-hover` twin. The spec checks the sheet
 carries exactly the two hover atoms, the twin paints the flag-chosen arm
 without hovering, and a real hover paints the same arm on the probe.
 
-Evidence: ATM-SITE-21; reference-lib `Tabs.tsx` nested `_hover` ternary
+Evidence: ATM-SITE-21; reference-lib `Tabs` nested `_hover` ternary
 (RS-34).
 
 > Search terms: pseudo-class, state variant, runtime flag, site/conditional-prop, CORE-SITE-01

@@ -6,9 +6,9 @@ spec (mirroring the retired reference-core `buildFontTokens`), so the tokens lay
 `--fonts-sans` and the three `--font-weights-sans-*` vars; the browser
 agrees — the macro probe paints the Inter stack at weight 400.
 
-Placement note: this row belongs to the TOKEN group (TESTS.md
+Placement note: this row belongs to the TOKEN group (the case ledger
 `CORE-TOKEN-10`), but the remainder rung is SYNC-owned
-(`collect/lib/evaluate.ts` merge), so the case lives under `sync/`.
+(the TS-side merge), so the case lives under `sync/`.
 
 Evidence: reference-lib `styles.css` L2173–2191 (font vars); ATM-COND-05.
 

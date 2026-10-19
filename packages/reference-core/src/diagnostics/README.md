@@ -26,12 +26,12 @@ Every error code earns one repro test that drives a minimal world through
 the whole compiler and asserts the code with its severity. The repro suite
 is the living side of the code registry: add the row when you mint the
 code, and the suite fails loudly if the fixture ever stops reproducing it.
-Codes Core mints in TypeScript live in `codes.ts`, the one table the registry self-check reads beside the Rust `codes.rs` tables.
+Codes Core mints in TypeScript live in the codes table the registry self-check reads beside the Rust codes tables.
 
 Agents read the same rows as canonical JSON. `formatJsonDiagnostics`
 renders the reported set as one array on one line — typed rows in template
 field order, legacy carries verbatim, no dedupe, channels concatenated
 userspace, compiler, ref — and `ref sync --json` prints exactly that array
 to stdout. The wire shape, its canonical order, and its examples live in
-the template's `SCHEMA.md`; the `json.test.ts` contract pins the bytes, so
+the template schema; the JSON contract test pins the bytes, so
 any drift between the schema, the encoders, and the CLI fails loudly.

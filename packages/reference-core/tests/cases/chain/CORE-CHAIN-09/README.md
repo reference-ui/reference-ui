@@ -15,8 +15,8 @@ published system a named fragment list and linearizes the lists by first occurre
 evaluates A, B, C, D, and D on `[C, B]` evaluates A, C, B, D, so each override survives.
 
 Cause (fixed): `createPortableFragmentBundle` concatenated upstream fragments without deduping, and
-`getUpstreamFragments` (`src/collect/lib/evaluate.ts`) handed every copy to the one evaluator, so a base that two
-branches republish ran twice. The linearization lives in `src/system/base/fragments.ts`.
+`getUpstreamFragments` (the collector evaluator) handed every copy to the one evaluator, so a base that two
+branches republish ran twice. The linearization lives in fragment linearization.
 
 Siblings: CORE-CHAIN-02 (the extends diamond through stand-ins), CORE-CHAIN-06 (the real-sync template), CORE-CHAIN-10
 (the shared base evaluated once, and the app extending the diamond).

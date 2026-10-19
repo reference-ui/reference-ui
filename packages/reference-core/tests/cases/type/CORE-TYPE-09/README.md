@@ -20,13 +20,13 @@ css() argument, or TS2820 for a near miss.
 The consumers are materialized at spec time because they cannot live in the
 repo: the harness pre-run typecheck resolves `@reference-ui/react` to the
 stable surface, whose open `StyleProps` accept every one of those values. The
-generated `styled/types/index.d.ts` must carry `StrictColorProps<BaseStyleProps>`,
+generated the styled-types declarations must carry `StrictColorProps<BaseStyleProps>`,
 the wrapper that narrows `StyleProps`, and `SystemStyleObject` builds on it, so
 the css() and css-prop positions narrow with the JSX props.
 
 Evidence: typegen TYP-STRICT-05 (wrappers compose) and TYP-STRICT-07 (StyleProps
 and SystemStyleObject accept tokens, toned colors and keywords, and reject
-off-token colors); in `tests/cases/type/SPEC.md`; CORE-TYPE-02 for the open
+off-token colors); in the type spec; CORE-TYPE-02 for the open
 `ColorToken` position this case narrows.
 
 > Search terms: strict colours, strict colors, off-token, raw opacity, hex colour, css prop, css call, StrictColorProps, type/strict-narrowing, type/negative-typecheck, CORE-TYPE-02, CORE-TYPE-08, TYP-STRICT-07

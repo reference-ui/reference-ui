@@ -18,6 +18,6 @@ scopes a variable-held `thin` that the static pass cannot see. The F3
 responsive shapes (weight array, object+object, font-object + string) are
 pinned as KNOWN-DIVERGENT interim behavior.
 
-Evidence: ATM-NAME (`packages/reference-rs/modules/atomic/tests/cases/ATM-NAME-08`) and the ATM-COND-05 weight pins; world macros lean on `CORE-CSS-10`.
+Evidence: ATM-NAME (`rs-cases:ATM-NAME-08`) and the ATM-COND-05 weight pins; world macros lean on `CORE-CSS-10`.
 
 > Search terms: browser corpus, naming shapes, responsive array, per-prop object, hover condition, breakpoint condition, important bang, font macro, size macro, border trio, radius pair, flex rewrite, class list golden, computed styles, bare weight family scoping, weight keywords, dynamic weight boundary, responsive weight divergence

@@ -7,6 +7,6 @@ spec checks the outer stamps the layer, the middle inherits it without
 restamping, and the inner tree stamps it again, while the inner probe still
 paints through the shared runtime.
 
-Evidence: `shouldEmitLayerScope`, portal-boundary restamp; Core `context.test.ts`.
+Evidence: `shouldEmitLayerScope`, portal-boundary restamp; the Core context coverage.
 
 > Search terms: inheritance, scoping, isolation, multi-tree, scope cascade, prim/layer-scope, prim/nested-trees

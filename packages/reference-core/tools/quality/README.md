@@ -18,9 +18,9 @@ for the two things no linter will ever judge, file headers and README shape.
 The runner itself is plumbing: it shells out, maps severities, prints one fix tip
 per violation, and exits 0 clean, 1 on violations, or 2 when tooling is missing.
 
-One override lives in `biome.json`: `noShadowRestrictedNames`
+One override lives in the Biome config: `noShadowRestrictedNames`
 is off for the vendored
-`native/generated/primitives/primitives.d.ts`, whose tag lines mirror generator
+primitives declarations, whose tag lines mirror generator
 emit — the `<map>` tag's component is honestly named `Map`, so the shadowing is
 the contract. The biome config is strict JSON (no comments), which is why this
 note lives here instead of beside the override.

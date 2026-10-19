@@ -8,5 +8,5 @@ report exactly one diagnostic naming the value, the prop, and the call
 site — never a ghost class.
 
 Evidence: ATM-GHOST; case
-`packages/reference-rs/modules/atomic/tests/cases/ATM-GHOST-02`.
+`rs-cases:ATM-GHOST-02`.
 > Search terms: unknown value, unextractable, dynamic value, dev warning, missing utility, phantom class, merge/miss-diagnostic, diagnostics/runtime-miss

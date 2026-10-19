@@ -11,6 +11,6 @@ prints a single `::placeholder` without Panda's `[data-placeholder]`
 twin, so the proof uses the real pseudo.
 
 Evidence: reference-lib Trace E
-(`inputs.ts` 19–31 → `global.css` 497–542); ATM-LAYER-03.
+(the inputs reference 19–31 → `global.css` 497–542); ATM-LAYER-03.
 
 > Search terms: input field, form field, spread props, conditional styles, text input, input strip, global/undefined-strip, global/placeholder

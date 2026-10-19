@@ -1,6 +1,6 @@
 # CORE-SITE-27 — A param shadows the cross-file `const` it names
 
-The world keeps `export const color = 'cherry'` in `src/styles.ts` while
+The world keeps `export const color = 'cherry'` in a styles fixture while
 the entry styles one node through `function Card({ color })` and a twin
 through the unshadowed `accent` binding. The spec asserts the shadowed
 node paints nothing (no utility, one located warning via the frozen

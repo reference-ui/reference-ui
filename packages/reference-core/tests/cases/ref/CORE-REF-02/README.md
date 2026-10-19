@@ -9,19 +9,19 @@ background manifest explicitly, then open a fresh API per section like the matri
 
 ## Oracle mapping
 
-`01-symbols.spec.ts` carries matrix tests 1 (local half), 2, 1 (composed half), 4, and 5 with identical
+The symbols spec carries matrix tests 1 (local half), 2, 1 (composed half), 4, and 5 with identical
 expectations: `[label, disabled, variant]` members, the `indexed_access` raw shape with its `solid | ghost`
 description, composed projection across the intersection, interface-extends-alias flattening to
 `[label, size, tone, hasMenu]`, and the pinned alias keeping `DocsReferencePinnedTarget` identity with
 `[label, disabled]` display members.
 
-`02-style-projection.spec.ts` carries matrix tests 1 and 3 (style halves): exactly one `StyleProps` resolves,
+The style-projection spec carries matrix tests 1 and 3 (style halves): exactly one `StyleProps` resolves,
 it projects the style surface (`accentColor`, `container`, 90+ members), and both extending fixtures inherit
 the surface plus their locals (`localTone`, `localFlag`).
 
 ## Known deltas
 
-- **D-OPEN-1 (RESOLVED):** the closure indexed generated `index.d.ts`, so a second top-level `StyleProps` made the bare lookup throw ambiguous — the RS scoped-external-ref fix plus the single-root closure change (`style-props.d.ts` alone) resolved it; `02-style-projection.spec.ts` green, 26/26.
+- **D-OPEN-1 (RESOLVED):** the closure indexed the generated index declarations, so a second top-level `StyleProps` made the bare lookup throw ambiguous — the RS scoped-external-ref fix plus the single-root closure change (the style-props declarations alone) resolved it; the style-projection spec green, 26/26.
 - **Generator inventory (not reference parity):** the oracle asserts a `WebkitAppearance` member and 100+
   counts, but the core styled generator emits a smaller vendor set (no `Appearance` member anywhere). The
   specs pin `accentColor`/`container` plus 90+ counts instead — the projection mechanism is the reference

@@ -14,10 +14,10 @@ inlined). Commander.js owns argv shape only; the law above is
 unchanged by the framework.
 
 Init is the one writer outside the generated folder: it drops a default
-`ui.config.ts` and refuses when config discovery already finds one.
+`ui.config` and refuses when config discovery already finds one.
 
 Watch splits at the flag: cli owns `--watch` routing unconditionally,
-while the watch driver lives in `src/lib/watch/`.
+while the lib watch module owns the driver.
 Output strings are pinned by the bin tests and the CLI cases, which
 is where the §3.12 one-line contract (glyph + command + stats) is
 checked.

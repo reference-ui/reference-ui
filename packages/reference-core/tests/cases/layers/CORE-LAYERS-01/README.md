@@ -2,7 +2,7 @@
 
 The consumer lists one real upstream under `extends` and another under `layers`.
 Both are synced for real: the spec runs `sync()` on each upstream package, reads
-its published `baseSystem.mjs`, rewrites the consumer config to
+its published `baseSystem`, rewrites the consumer config to
 `extends: [ext]` and `layers: [lay]`, and re-syncs the consumer. A stand-in entry
 has no `streams`, so a layer built from one would contribute no CSS and prove
 nothing; this case refuses stand-ins.
@@ -28,10 +28,10 @@ primitives would. The reason is the sheet: `tokensPortable` is scoped by
 Layer tokens also never reach the consumer's own `:root`, which holds only the
 extends token (`--colors-ext-ink`).
 
-Evidence: `src/config/types.ts:44-49` (the `layers` field),
-`src/sync/index.ts:135,152,206` (upstream names, container root, bucket merge),
-`src/system/base/streams.ts:185-214` (statement, blocks, own block),
-`src/collect/lib/evaluate.ts:63,110` and `src/system/base/jsx.ts:112` (fragments and
+Evidence: the config types (the `layers` field),
+the sync entry (upstream names, container root, bucket merge),
+the stream printer (statement, blocks, own block),
+the collector evaluator and the JSX roster join (fragments and
 roster read `extends` only). Siblings: CORE-CHAIN-06 (real upstream sync under
 `extends`), CORE-LAYER-02 (two-system package nesting).
 

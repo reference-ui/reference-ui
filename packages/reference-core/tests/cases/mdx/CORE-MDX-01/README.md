@@ -1,14 +1,14 @@
 # CORE-MDX-01 — MDX files contribute fragments through the native mdx-rs loader
 
-One world whose only fragment is written in MDX. `world/theme/doc.mdx` carries a
+One world whose only fragment is written in MDX. The world doc fragment carries a
 real top-level `import { font } from '@reference-ui/system'` and calls
 `font('display', …)` in a top-level `export const`; sync compiles the MDX
 through `@rspress/mdx-rs` (the `mdxPlugin`), bundles it with the react stub, and
 the eval script runs the `font()` call, so the sheet mints `@font-face` and
-`.ref-display`. `world/theme/decoy.mdx` carries the same needle **only inside a
+`.ref-display`. The fenced decoy fragment carries the same needle **only inside a
 fence** with no top-level import: it must never be collected and contributes no
 fragment. The decisive decoy proof is scan-level
-(`src/collect/lib/scan/mdx.test.ts`): a compiled fence is an inert string, so the
+(the MDX fence-scan coverage): a compiled fence is an inert string, so the
 sheet alone cannot distinguish a wrongly-collected decoy — the match set can.
 This is the fail-before/pass-after file: before MDX was a fragment candidate the
 sheet had no face and no `.ref-display`.
