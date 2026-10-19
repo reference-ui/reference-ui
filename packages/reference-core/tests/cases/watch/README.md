@@ -64,4 +64,11 @@ in the Known open section of `SPEC.md`.
 The matrix contract's webpack dual-consumption leg is not ported. The H5
 default retire stands, and Core has no webpack target.
 
+## Shared helper
+
+`shared/commit-world.ts` carries the temp-world harness the WATCH-19..23 commit specs share: spawned `ref` CLI,
+commit pause-point driver, folder snapshots, and disposal.
+
+Parent: [tests/cases/](../README.md).
+
 > Search terms: watch lifecycle, watch paint loop, live edit repaint, file mutation paint, watch resync paint, session lock, staged publish, atomic commit, debounce, watch scope, stop signals, types refresh, onResync, P-watch-1, watch port, covered one-shot, watch-state, lock contention, recycled pid, stopping watch, commit rollback, break-lock, file in the way, SIGTERM mid-commit, include glob warning, json failure array, boot edit, dropped events, wedged sync, LC-01, CORE-SYNC-14, CORE-CLI-02

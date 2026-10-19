@@ -29,6 +29,7 @@ expansion, settle reads, and the innermost-exact-text frequency map for element-
 
 ## Open blockers
 
-- D-OPEN-1 (RESOLVED): the closure indexed generated `index.d.ts`, so a second top-level `StyleProps` made bare lookups throw ambiguous — the RS scoped-external-ref fix plus the single-root closure change (`style-props.d.ts` alone) resolved it; REF-02/02 + REF-03/18 green, 26/26.
 - D-OPEN-2 (reference-rs scope, closed ground): the compiler id-sorts extends, so multi-extends line order
   follows root-sensitive hashes instead of clause order. REF-03 spec 08 pins membership order-insensitively.
+
+Parent: [tests/cases/](../README.md).

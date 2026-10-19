@@ -1,3 +1,5 @@
+// Entry for the TOKEN-04 world: paints the #probe, #shadow-ref probes through the generated
+// runtime. Takes the synced css bindings and emits the DOM the specs assert against.
 import { css } from '@reference-ui/react'
 
 function el(id: string): HTMLElement {

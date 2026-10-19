@@ -1,3 +1,6 @@
+// Entry for the TYPE-05 world: paints the #root, #type-root, #type-recipe, #type-css, #type-copy
+// probes through the generated runtime. Takes the synced css bindings and emits the DOM the specs
+// assert against.
 import { createRoot } from 'react-dom/client'
 import { Button, Div, type DivProps, type StyleProps } from '@reference-ui/react'
 import { css, recipe } from '@reference-ui/react'

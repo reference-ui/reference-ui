@@ -1,3 +1,5 @@
+// Entry for the PRIM-01 world: paints the #root, #prim probes through the generated runtime. Takes
+// the synced css bindings and emits the DOM the specs assert against.
 import { createRoot } from 'react-dom/client'
 import { Div } from '@reference-ui/react'
 
