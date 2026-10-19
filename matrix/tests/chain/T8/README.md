@@ -7,4 +7,4 @@ extend-library ──▶ layer  ──┘
 ```
 
 Documents the current allow-and-duplicate policy. See
-[`matrix/CHAIN_RULES.md`](../../CHAIN_RULES.md).
+[`matrix/CHAIN_RULES.md`](../../../CHAIN_RULES.md).

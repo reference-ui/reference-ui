@@ -4,6 +4,13 @@ import { DemoComponent } from '@fixtures/extend-library'
 
 export const matrixChainT8Marker = 'reference-ui-matrix-chain-t8'
 
+/**
+ * T8 render entry.
+ *
+ * Mounts the extend-library DemoComponent where chain-t8 lists the same
+ * library in both extends and layers. The extends-side tokens resolve normally
+ * under the allow-and-duplicate policy.
+ */
 export function Index(): React.ReactElement {
   return (
     <Main data-testid="chain-t8-root">

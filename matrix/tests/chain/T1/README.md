@@ -15,6 +15,9 @@ When a consumer declares `extends: [LibA]` in its `ui.config.ts`:
 - Upstream tokens are visible in the consumer's generated types and CSS variables
 - Upstream portable CSS is included in the assembled stylesheet
 - Upstream JSX elements and component metadata are available in the consumer
+- Upstream `_private` token subtrees are stripped before they reach the
+  consumer's Panda config: a downstream `css({ color: '_private.brand' })`
+  attempt generates no rule and does not resolve
 
 ## Fixture used
 
@@ -26,4 +29,6 @@ components. All are adopted by this package via `extends`.
 
 - `tests/unit/runtime.test.ts` — Verifies the component tree renders and the marker is correct.
 - `tests/e2e/T1-contract.spec.ts` — Browser assertions confirming that upstream
-  tokens resolve to the expected color values in computed styles.
+  tokens resolve to the expected color values in computed styles, plus the
+  `_private` boundary: the upstream private swatch does not resolve outside
+  its data-layer scope and the downstream `_private.brand` attempt fails.

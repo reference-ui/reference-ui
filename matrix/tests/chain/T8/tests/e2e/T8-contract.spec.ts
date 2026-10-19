@@ -1,7 +1,9 @@
 /**
  * Chain T8 browser contract. Renders the chain-t8 root in Playwright and proves
- * the upstream DemoComponent renders correctly even when duplicated. The end-to-end proof of the T8 topology declared
- * in `../ui.config.ts`.
+ * the app boots under allow-and-duplicate: the upstream DemoComponent resolves
+ * its extends-side tokens and the upstream layer block appears in the assembled
+ * stylesheet. The end-to-end proof of the T8 topology declared in
+ * `../../ui.config.ts`.
  */
 
 import { expect, test } from '@playwright/test'

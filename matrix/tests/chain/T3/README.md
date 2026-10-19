@@ -15,7 +15,6 @@ Can one boundary use both composition modes simultaneously?
 
 - `extend-library` is adopted via `extends`: its fragment, tokens, and portable CSS enter this package's config surface and TypeScript types.
 - `layer-library` is adopted via `layers`: only its portable CSS enters the assembled stylesheet; its tokens do NOT enter this package's config or TS surface.
-- The final assembled stylesheet respects the `[...extends, ...layers]` bucket order: extend-library CSS comes before layer-library CSS, followed by the local chain-t3 layer.
 
 ## Fixtures used
 

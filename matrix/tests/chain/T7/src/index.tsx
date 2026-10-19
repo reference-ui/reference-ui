@@ -5,6 +5,13 @@ import { MetaSiblingDemo } from '@fixtures/meta-extend-library-sibling'
 
 export const matrixChainT7Marker = 'reference-ui-matrix-chain-t7'
 
+/**
+ * T7 render entry.
+ *
+ * Mounts both diamond branches' demos where chain-t7 extends
+ * meta-extend-library and its sibling. Each branch's local tokens and the
+ * shared base tokens resolve in the composed app.
+ */
 export function Index(): React.ReactElement {
   return (
     <Main data-testid="chain-t7-root">

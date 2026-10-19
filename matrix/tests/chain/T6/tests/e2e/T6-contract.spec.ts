@@ -1,7 +1,9 @@
 /**
  * Chain T6 browser contract. Renders the chain-t6 root in Playwright and proves
- * the MetaExtendDemo is visible. The end-to-end proof of the T6 topology declared
- * in `../ui.config.ts`.
+ * transitive adoption: the outer library's local tokens and the inner library's
+ * `fixtureDemoAccent` both resolve although the app extends only the outer
+ * package. The end-to-end proof of the T6 topology declared in
+ * `../../ui.config.ts`.
  */
 
 import { expect, test } from '@playwright/test'
