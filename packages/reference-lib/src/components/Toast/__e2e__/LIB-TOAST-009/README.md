@@ -1,0 +1,3 @@
+# LIB-TOAST-009 — Toast Gate 6 TO-SWIPE-01: Toast should dismiss when swipe distance or velocity crosses the threshold
+
+Browser case for Toast. Declaration: `Toast.ct.spec.ts` — `Toast Gate 6 TO-SWIPE-01: Toast should dismiss when swipe distance or velocity crosses the threshold`.
