@@ -1,8 +1,8 @@
 # CORE-CHAIN-15 — an installed package's Button and published Tile paint a consumer token whether imported directly, through a barrel, or under a css wrapper
 
 A package built on Reference UI ships its components bundled with its own generated runtime, so every style prop they
-forward mints a class under the package's system name. This case gives such a package the two names that used to fool
-the app's compile: `Button`, which spells one of the app's own primitives, and `Tile`, a forwarding wrapper the package
+forward mints a class under the package's system name. This case gives such a package the two names that fool
+a name-gated compile: `Button`, which spells one of the app's own primitives, and `Tile`, a forwarding wrapper the package
 publishes in `jsxElements`. The app styles them with `chain15Ink`, a token defined only downstream, in the three ways
 apps import components:
 
@@ -31,9 +31,9 @@ system renders each tag from the directory its import lands in. Before provenanc
 name, so each of the four tags was taken for the app's own host and its value compiled under the app's name, while the
 package runtime minted `core-chain15-up__c_chain15Ink` and nothing backed it. Run against `public-release`
 (`f75f22869`) all four probes compute `rgb(0, 0, 0)` with that class and the runtime logs `no compiled class` for it;
-the local control still paints. The install is load-bearing too: in this case's earlier shape the package was reachable
-only through a browser importmap, so its import resolved nowhere on disk, the sync took it for a package not built on
-Reference UI and lowered nothing, and the four probes failed the same way.
+the local control still paints. The install is load-bearing too: reachable only through a browser importmap, the
+package's import would resolve nowhere on disk, the sync would take it for a package not built on
+Reference UI and lower nothing, and the four probes would fail the same way.
 
 Evidence: `ATM-SITE-96` (direct package import), `ATM-SITE-97` (barrel), `ATM-SITE-98` (`css` wrapper) and
 `ATM-SITE-99` (upstream-published name) pin the same verdicts inside one compile; the request's `upstreamHosts` keeps the

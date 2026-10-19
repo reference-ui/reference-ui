@@ -1,3 +1,7 @@
+// Entry for the CORE-LAYER-05 world. It takes the generated recipe helper
+// and css runtime and paints the host probe with a recipe base plus a brand
+// utility, and a recipe-only control. The utility must win on the host
+// because the utilities layer follows the recipes layer.
 import { css, recipe } from '@reference-ui/react'
 
 function el(id: string): HTMLElement {

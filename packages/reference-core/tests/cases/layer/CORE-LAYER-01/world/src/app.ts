@@ -1,3 +1,8 @@
+// Entry for the CORE-LAYER-01 world. It takes the generated css runtime and
+// paints three cascade probes: a var redefinition racing the dark token
+// island, a dark control consuming the island value, and a chip-plus-utility
+// probe racing tag specificity. Each probe's comment states the rank it
+// proves; the spec reads the winner off computed style.
 import { css } from '@reference-ui/react'
 
 function el(id: string): HTMLElement {
