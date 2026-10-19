@@ -1,6 +1,6 @@
 # Compile
 
-The compile entry (`../index.ts`) calls native `compileSystem`.
+The compile entry calls native `compileSystem`.
 
 ```ts
 import { compile } from '@reference-ui/rust/atomic'
@@ -18,10 +18,10 @@ result.diagnostics
 `{ schemaVersion: 2, spec, … }` shape. Foreign or malformed specs are
 rejected with an error diagnostic (case `ATM-TOKEN-10`).
 
-No OXC in JS. No walking `virtual/`. Core's sync worker calls this as
+No OXC in JS. No walking virtual sources. Core's sync worker calls this as
 the compile entry (`compileNative` in `@reference-ui/core`).
 
-The sheet and `css()` cannot drift: both come from one `compile()`. See crate
-`src/stylesheet` and `src/runtime`.
+The sheet and `css()` cannot drift: both come from one `compile()`. See the crate
+stylesheet and runtime stages.
 
-Up: [atomic JS](../README.md).
+Up: atomic JS.

@@ -14,8 +14,8 @@ diagnostic where v2 drops the call silently. Cycle names are declared
 nowhere on purpose, so the merge-bag fallback genuinely misses and the
 guard stays observable at the case.
 
-Inputs: `tokens.ts` (the aliased scalar, object, and array), `app.ts`
-(the four alias wins), `missing.ts`, and the `cycle-*`, `v2cycle-*`,
+Inputs: `tokens` (the aliased scalar, object, and array), `app`
+(the four alias wins), `missing`, and the `cycle-*`, `v2cycle-*`,
 and `self*` cycle pairs with their consumers.
 
 Bare and default imports stay out for the rider slices;

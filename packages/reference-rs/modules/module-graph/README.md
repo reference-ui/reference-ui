@@ -6,7 +6,7 @@ declared, shared by the Reference UI compilers.
 ## What it provides
 
 - **Ladder** (`SpecifierLadder`): relative specifiers join the importer's
-  directory. Bare ones try the nearest `tsconfig.json` `paths`/`baseUrl` (with
+  directory. Bare ones try the nearest `tsconfig` `paths`/`baseUrl` (with
   `TsconfigPolicy::Follow`), then each ancestor `node_modules`: `exports` or
   entry fields, the direct path, a root's `@types` twin. Bases probe the literal
   file, then extensions and indexes; `.js` tries source siblings first. Hits
@@ -37,6 +37,6 @@ declared, shared by the Reference UI compilers.
 It takes a parsed `oxc` `&Program`, never owns an AST, and produces no
 diagnostics: `Refused` values are data that consumers word.
 
-> Up: [@reference-ui/rust](../../README.md)
+> Up: @reference-ui/rust
 
 > Search terms: specifier ladder, module resolution, export walk, binding origin, ModuleKey, ModuleRecord, BindingWalk, rs:atomic, rs:styletrace

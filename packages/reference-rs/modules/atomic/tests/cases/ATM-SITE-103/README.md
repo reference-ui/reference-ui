@@ -1,8 +1,8 @@
 # ATM-SITE-103 — A component tag from a package not built on Reference UI is not a Reference component: its style-named props mint no want, no class and no diagnostic
 
 Owner ruling (plan section 11.2): tags from packages not built on Reference UI
-are silent. `App.tsx` renders `<Heart color="red" size={16} />` from
-`lucide-react`, installed in the case (`input/node_modules/lucide-react`) with no
+are silent. `App` renders `<Heart color="red" size={16} />` from
+`lucide-react`, installed in the case with no
 published system and no `@reference-ui/react`, and `<Sparkline color="blue"
 p="2r" />` from `chart-kit`, which nothing installs. Both prop sets spell style
 props, but neither package renders through any Reference runtime: Lucide's

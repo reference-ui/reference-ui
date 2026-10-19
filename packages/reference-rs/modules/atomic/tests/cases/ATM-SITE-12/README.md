@@ -6,4 +6,4 @@ text. A tag on a live `css` binding emits one located diagnostic per tag
 (`tagged template is not a css() site; use css({...})`) — the no-silence
 sweep revoked the old "no wants, no diagnostic" note. A tag on
 any other binding (`styled.div`) stays silent.
-Contract: [SPEC.md](../../../SPEC.md).
+Contract: SPEC.

@@ -10,7 +10,7 @@ and value-level `<any>` / `TSInstantiationExpression` unwrap through the
 shared helper — one unwrap rule for args, arms, JSX style blocks, and
 value positions, with authored plans mirroring every want.
 
-Inputs: `calls.ts` (bare control + four mainstream wraps + mixed
-multi-arg), `legacy.ts` (`.ts`-only `<any>` at arg and value level plus
-the `w<string>` instantiation probe), `branches.ts` (wrapped ternary
+Inputs: `calls` (bare control + four mainstream wraps + mixed
+multi-arg), `legacy` (`.ts`-only `<any>` at arg and value level plus
+the `w<string>` instantiation probe), `branches` (wrapped ternary
 arms over an unbound test).

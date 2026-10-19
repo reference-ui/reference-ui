@@ -8,7 +8,7 @@ lowerings** — the closed, O(props + conditions + fonts) data both namers
 read — that authored `css()` in `@reference-ui/react` constructs classes
 with. One algorithm, two implementations, one gate: the compiler namer
 (`stylesheet::name` + `PlanBuilder`, the oracle) and the runtime namer,
-its JS mirror beside this crate (`js/namer/`, shipped as
+its JS mirror beside this crate (shipped as
 `@reference-ui/rust/namer`), held byte-equal by the namer goldens
 (`ATM-SEAM-08`) and the differential gate (`CORE-NAMER-01`).
 `compile()` returns `CssRuntime` as data. The `css()` helper itself is
@@ -74,26 +74,26 @@ gate alone — the class never contains them.
 
 | # | Authored | What the class becomes | Rust site |
 |---|---|---|---|
-| 1 | any string value | structural whitespace runs collapse to one space, **quoted substrings verbatim**, then `_` for whitespace; collapse does not trim | `resolve/normalize.rs::collapse_whitespace`, `stylesheet/name/escape.rs::sanitize_class_value` |
-| 2 | number `4`, or finite numeric string `'1e3'`, `'.5'`, `'01'` on a non-color prop | stem is the canonical number via the `f64` fence + render: magnitudes outside `[1e-6, 1e21)` refuse as `NonCanonicalNumeric`; `0`/`-0` → `0`; hex/radix/`Infinity`/`NaN` refuse; bare numbers re-render through the same fence (never verbatim). CSS gets `px` on dimensional props but **the class does not** | `resolve/unit.rs` (`canonical_numeric_string`, `resolve_numeric_value`, `from_number`, `accepts_bare_number`) |
-| 3 | numeric string on a **color** prop or `font`/`fontFamily` | stays a string (`c_.5`, `c_-0` with no `0` fold) — except leading-zero, radix, and non-finite spellings, which refuse on every prop | `unit.rs::accepts_bare_number`, `legacy_string_value` |
-| 4 | `{ $token: { path, value } }` | class uses `path` | `runtime/values.rs::t_object_to_atom_value`, `AtomValue::class_name_str` |
-| 5 | `{ $r: 2 }` | `2r`; near-integers collapse under a 1e-6 epsilon, the `i64` cast saturates, non-JSON-number `$r` renders JSON-encoded (quotes included) | `runtime/values.rs::r_object_to_atom_value`, `resolve/lexical.rs::collapse_r_number` |
-| 6 | `'…!'` / `'… !important'` | marker stripped from the stem, `!` appended after sanitize; a bang inside quotes never marks importance | `js/namer/value.ts::splitImportant`, `stylesheet/name/mod.rs` |
-| 7 | `padding` / `margin` / `inset` with 2–4 space tokens (paren-depth aware) | four longhands `pt_ pr_ pb_ pl_`; the gate is the three-prop allowlist plus the 2–4 window — 0, 1, and 5+ tokens stay the shorthand class, as do CSS-wide keywords and props like `borderWidth` outside the allowlist | `shorthands/mod.rs` (`is_dimensional_trbl`), `shorthands/dimensional.rs`, `parser.rs::split_tokens` |
-| 8 | `borderBottom: '3px solid red'`, `outline: '…'` | width / style / color longhands by token class: style keywords first (stored **lowercased**), then length-width incl. `thin`/`medium`/`thick`/math fns/`Nr`/`1/3r`, else color (width and color stored **raw**); first of each kind wins, extras dropped never re-fallthrough; `'none'` is case-sensitive (`'None'` classifies as a style); the zero gate is exactly `0`, `0px`, `0rem`, `0em`, `0%` → width `0px`; `outline` is `canon == "outline"` only (style set per prop); the whole-test lowercases but stores the original; `border: 0` → `bd-w_0px`; `border: 'none'`/`inherit`/`var()`/`borders.*` stays whole; **`outline: 'none'` → `outline: '2px solid transparent'` + `outlineOffset: 2px`**; the zero/ring/whole gates read strings and numbers only — token, bool, and null values pass through whole (the `scalar` table control) | `shorthands/border.rs`, `parser.rs`, `shorthands/mod.rs::extract_raw_val` |
-| 9 | six radius pairs `borderTopRadius` … | two corner longhands, same value | `shorthands/pair.rs` |
-| 10 | `flex: '1'` / `'auto'` / `'initial'` / `'none'` | **value rewritten**: `flex_1_1_0%`, `flex_1_1_auto`, `flex_0_1_auto`, `flex_none`; exact, case-sensitive, trim-tolerant; JSON number `1` rewrites too | `shorthands/flex.rs` |
-| 11 | `size` | `width` + `height` | `resolve/size.rs` |
-| 12 | `container` | `containerType: inline-size`, plus `containerName <rendered>` unless the `class_name_str` rendering is empty or `"true"` — so `true`, `"true"`, and `""` stamp the type alone, while `false`, `null`, `0` stamp the name too; the `"true"` test is UNTRIMMED, so padded spellings stamp the name too; guard order bool → empty → untrimmed eq-`"true"` → default | `resolve/container.rs` |
-| 13 | `textGradient` | `backgroundImage` + `webkitBackgroundClip: text` + `color: transparent` | `resolve/gradient.rs` |
-| 14 | `border: true` | `borderWidth: 1px` + `borderStyle: solid` (bool-`true` only; `false` refuses) | `resolve/mod.rs::lower_macro` |
-| 15 | `font: 'sans'` | `fontFamily: sans` + `fontWeight: <scale default or 400>` + every `css` extra on the definition — **system data**; extras ordered, later keys overwrite keeping first-insertion position | `resolve/font/family.rs` |
-| 16 | `weight: 'bold'` / `'sans.bold'` / `'393'` | `fontWeight` via scoped scale (`split_once('.')`), else the 6 keyword pairs (`thin`…`black`), else as-is | `resolve/font/weight.rs` |
-| 17 | `variant`, `colorMode` | zero declarations, any value (arrays/objects drop member-wise) | `resolve/mod.rs::is_runtime_owned` |
-| 18 | responsive array `['1r', null, '3r']` | index → breakpoint name pushed on `when`; `null` skips; beyond-scale skips silently; slot gets `@bp` (`base` member included) | `runtime/builder/resolve.rs::resolve_array`, `BreakpointScale::breakpoint_for_index` (base-system crate) |
-| 19 | per-prop object `width: { base, md, _hover }` | breakpoint keys → `@bp` slot + condition; other keys → nested `when` in the slot; whole object carries one `important` | `runtime/builder/resolve.rs::resolve_object`, core `css.ts::cleanResponsiveObject` |
-| 20 | `r: { 300: {…} }` | anonymous numeric keys are lowered in JS to `@container (min-width: …)` keys before lookup; named forms (`card/md`, `md@card`) drop through the generic path with no class | core `lowerResponsiveStyles.ts` (anonymous numeric only), `resolve/r/query.rs` |
+| 1 | any string value | structural whitespace runs collapse to one space, **quoted substrings verbatim**, then `_` for whitespace; collapse does not trim | `resolve::normalize::collapse_whitespace`, `stylesheet::name::escape::sanitize_class_value` |
+| 2 | number `4`, or finite numeric string `'1e3'`, `'.5'`, `'01'` on a non-color prop | stem is the canonical number via the `f64` fence + render: magnitudes outside `[1e-6, 1e21)` refuse as `NonCanonicalNumeric`; `0`/`-0` → `0`; hex/radix/`Infinity`/`NaN` refuse; bare numbers re-render through the same fence (never verbatim). CSS gets `px` on dimensional props but **the class does not** | `resolve::unit` (`canonical_numeric_string`, `resolve_numeric_value`, `from_number`, `accepts_bare_number`) |
+| 3 | numeric string on a **color** prop or `font`/`fontFamily` | stays a string (`c_.5`, `c_-0` with no `0` fold) — except leading-zero, radix, and non-finite spellings, which refuse on every prop | `unit::accepts_bare_number`, `legacy_string_value` |
+| 4 | `{ $token: { path, value } }` | class uses `path` | `runtime::values::t_object_to_atom_value`, `AtomValue::class_name_str` |
+| 5 | `{ $r: 2 }` | `2r`; near-integers collapse under a 1e-6 epsilon, the `i64` cast saturates, non-JSON-number `$r` renders JSON-encoded (quotes included) | `runtime::values::r_object_to_atom_value`, `resolve::lexical::collapse_r_number` |
+| 6 | `'…!'` / `'… !important'` | marker stripped from the stem, `!` appended after sanitize; a bang inside quotes never marks importance | `splitImportant` (namer mirror), `stylesheet::name` |
+| 7 | `padding` / `margin` / `inset` with 2–4 space tokens (paren-depth aware) | four longhands `pt_ pr_ pb_ pl_`; the gate is the three-prop allowlist plus the 2–4 window — 0, 1, and 5+ tokens stay the shorthand class, as do CSS-wide keywords and props like `borderWidth` outside the allowlist | `shorthands` (`is_dimensional_trbl`), `shorthands::dimensional`, `parser::split_tokens` |
+| 8 | `borderBottom: '3px solid red'`, `outline: '…'` | width / style / color longhands by token class: style keywords first (stored **lowercased**), then length-width incl. `thin`/`medium`/`thick`/math fns/`Nr`/`1/3r`, else color (width and color stored **raw**); first of each kind wins, extras dropped never re-fallthrough; `'none'` is case-sensitive (`'None'` classifies as a style); the zero gate is exactly `0`, `0px`, `0rem`, `0em`, `0%` → width `0px`; `outline` is `canon == "outline"` only (style set per prop); the whole-test lowercases but stores the original; `border: 0` → `bd-w_0px`; `border: 'none'`/`inherit`/`var()`/`borders.*` stays whole; **`outline: 'none'` → `outline: '2px solid transparent'` + `outlineOffset: 2px`**; the zero/ring/whole gates read strings and numbers only — token, bool, and null values pass through whole (the `scalar` table control) | `shorthands::border`, `parser`, `shorthands::extract_raw_val` |
+| 9 | six radius pairs `borderTopRadius` … | two corner longhands, same value | `shorthands::pair` |
+| 10 | `flex: '1'` / `'auto'` / `'initial'` / `'none'` | **value rewritten**: `flex_1_1_0%`, `flex_1_1_auto`, `flex_0_1_auto`, `flex_none`; exact, case-sensitive, trim-tolerant; JSON number `1` rewrites too | `shorthands::flex` |
+| 11 | `size` | `width` + `height` | `resolve::size` |
+| 12 | `container` | `containerType: inline-size`, plus `containerName <rendered>` unless the `class_name_str` rendering is empty or `"true"` — so `true`, `"true"`, and `""` stamp the type alone, while `false`, `null`, `0` stamp the name too; the `"true"` test is UNTRIMMED, so padded spellings stamp the name too; guard order bool → empty → untrimmed eq-`"true"` → default | `resolve::container` |
+| 13 | `textGradient` | `backgroundImage` + `webkitBackgroundClip: text` + `color: transparent` | `resolve::gradient` |
+| 14 | `border: true` | `borderWidth: 1px` + `borderStyle: solid` (bool-`true` only; `false` refuses) | `resolve::lower_macro` |
+| 15 | `font: 'sans'` | `fontFamily: sans` + `fontWeight: <scale default or 400>` + every `css` extra on the definition — **system data**; extras ordered, later keys overwrite keeping first-insertion position | `resolve::font::family` |
+| 16 | `weight: 'bold'` / `'sans.bold'` / `'393'` | `fontWeight` via scoped scale (`split_once('.')`), else the 6 keyword pairs (`thin`…`black`), else as-is | `resolve::font::weight` |
+| 17 | `variant`, `colorMode` | zero declarations, any value (arrays/objects drop member-wise) | `resolve::is_runtime_owned` |
+| 18 | responsive array `['1r', null, '3r']` | index → breakpoint name pushed on `when`; `null` skips; beyond-scale skips silently; slot gets `@bp` (`base` member included) | `runtime::builder::resolve::resolve_array`, `BreakpointScale::breakpoint_for_index` (base-system crate) |
+| 19 | per-prop object `width: { base, md, _hover }` | breakpoint keys → `@bp` slot + condition; other keys → nested `when` in the slot; whole object carries one `important` | `runtime::builder::resolve::resolve_object`, core `cleanResponsiveObject` |
+| 20 | `r: { 300: {…} }` | anonymous numeric keys are lowered in JS to `@container (min-width: …)` keys before lookup; named forms (`card/md`, `md@card`) drop through the generic path with no class | core `lowerResponsiveStyles` (anonymous numeric only), `resolve::r::query` |
 | 21 | table-miss prefixes (font `css` extras, custom props) | prefix = the canonical **verbatim** — the oracle never kebabs on a miss (`MyProp` stays `MyProp`, `mozFoo` stays `mozFoo`, `--brandX` stays `--brandX`); extras are the only unknown-prop path into the namer (every other path is style-prop-gated); unitless; bare numbers canonicalize; token unique-name lookup is sheet-side only | `canon::class_prefix_for_prop` fallback, `canon::is_unitless_prop` |
 
 Prefix fallback order: table hit → canonical verbatim.
@@ -116,7 +116,7 @@ keeps `containerType` while the name refuses.
 
 ### Conditions → class segment
 
-`resolve/conditions/mod.rs::lower_when` in order; the runtime namer
+`resolve::conditions::lower_when` in order; the runtime namer
 mirrors the order, the prefix-match at-rules (`@mediafoo` is known), the
 case-sensitive everything except range-name matching, the
 spaces-only bracket join, the per-arm width gate on ranges, the exact
@@ -141,9 +141,9 @@ for responsive members. `splitSlot` / `evictFamilyLosers` /
 ## Lexical functions and builtin divergences
 
 The class stem passes only through six explicit functions —
-`src/resolve/lexical.rs` on the compiler side,
-`js/namer/lexical.ts` on the runtime side — never a `std` or builtin
-default. One golden per function (`tests/goldens/namer/01–06`), plus a
+`resolve::lexical` on the compiler side,
+the namer `lexical` mirror on the runtime side — never a `std` or builtin
+default. One golden per function (namers 01–06), plus a
 compiled case per divergence (`ATM-NAME-08`).
 
 - **L1 `is_structural_whitespace`** — the 25-point Rust `White_Space`
@@ -171,20 +171,20 @@ compiled case per divergence (`ATM-NAME-08`).
 
 | Rust call in the class path | JS a port reaches for | Where they disagree | The mirror does |
 |---|---|---|---|
-| `str::parse::<f64>` + finite gate (`unit.rs`) | `Number(s)` | JS takes `0x10`/`0b1`/`0o7`/`""`/`"  "`; Rust takes any-case `inf`/`nan`, rejects hex/empty/underscores/untrimmed | L3 `parse_decimal` + `.finite()`; never bare `Number()` |
-| `is_valid_numeric_str` (`parser.rs`, no finite gate) | same `Number()` or reusing L3 | `inf`/`nan` classify as border *widths* here but refuse at the unit site — two behaviors, two golden entries | L3 ungated entry |
-| `f64::to_string` (`unit.rs`, `$r`) | `String(n)` | exponent form at `|n| ≥ 1e21` and `0 < |n| < 1e-6`; `-0` renders `"-0"` vs `"0"`; exact shortest-ties break away (Rust) vs even (V8) | L4 fence + `render_decimal` on both sides, ties re-broken the oracle way |
+| `str::parse::<f64>` + finite gate (`unit`) | `Number(s)` | JS takes `0x10`/`0b1`/`0o7`/`""`/`"  "`; Rust takes any-case `inf`/`nan`, rejects hex/empty/underscores/untrimmed | L3 `parse_decimal` + `.finite()`; never bare `Number()` |
+| `is_valid_numeric_str` (`parser`, no finite gate) | same `Number()` or reusing L3 | `inf`/`nan` classify as border *widths* here but refuse at the unit site — two behaviors, two golden entries | L3 ungated entry |
+| `f64::to_string` (`unit`, `$r`) | `String(n)` | exponent form at `|n| ≥ 1e21` and `0 < |n| < 1e-6`; `-0` renders `"-0"` vs `"0"`; exact shortest-ties break away (Rust) vs even (V8) | L4 fence + `render_decimal` on both sides, ties re-broken the oracle way |
 | `serde_json::Number::to_string` (plan-JSON path) | `String(n)` on the JS number | same exponent gap via the scalar path; bare stems re-render, never verbatim | L4 covers this row too |
 | `f as i64` (`$r` collapse) | `Math.round`/`Math.trunc` | saturating cast (`1e21` → `i64::MAX`); JS has no saturating op | L4 wrapper clamps explicitly |
-| `char::is_whitespace` (`normalize.rs`) | `/\s/` | sets differ on exactly U+0085 (Rust yes) and U+FEFF (JS yes) | L1 explicit set |
+| `char::is_whitespace` (`normalize`) | `/\s/` | sets differ on exactly U+0085 (Rust yes) and U+FEFF (JS yes) | L1 explicit set |
 | `str::trim` (every pre-trim site) | `String#trim()` | same two code points | L2 (= trim with L1) |
-| `sanitize_class_value` 3-char map (`escape.rs`) | `.replace(/\s/g, '_')` | `\r` and NBSP survive in Rust, notably inside quotes | L6 three-character map |
+| `sanitize_class_value` 3-char map (`escape`) | `.replace(/\s/g, '_')` | `\r` and NBSP survive in Rust, notably inside quotes | L6 three-character map |
 | `to_ascii_lowercase` / `eq_ignore_ascii_case` | `.toLowerCase()` | non-ASCII (`İ`, `ẞ`, final sigma) | L5 ASCII-only fold |
-| `serde_json::Map` iteration (`builder.rs`) | `Object.entries` order assumed | agrees only via explicit `preserve_order` in `atomic/Cargo.toml` — and never for 2+ integer-like keys in non-ascending author order: V8 `[[OwnPropertyKeys]]` ascends them at object creation, before any namer code runs (substrate limit) | insertion order both sides; the differential carves integer-keyed members as sets, order-pinned within (witness `ATM-NAME-08` intOrder) |
-| `IndexMap` (`font/family.rs` extras) | object spread / key order | agrees only via ordered pairs + insert-ordered map with overwrite-keeps-position | `fonts[].css` pairs; interpreter uses `Map` |
+| `serde_json::Map` iteration (`builder`) | `Object.entries` order assumed | agrees only via explicit `preserve_order` in the atomic manifest — and never for 2+ integer-like keys in non-ascending author order: V8 `[[OwnPropertyKeys]]` ascends them at object creation, before any namer code runs (substrate limit) | insertion order both sides; the differential carves integer-keyed members as sets, order-pinned within (witness `ATM-NAME-08` intOrder) |
+| `IndexMap` (`font::family` extras) | object spread / key order | agrees only via ordered pairs + insert-ordered map with overwrite-keeps-position | `fonts[].css` pairs; interpreter uses `Map` |
 | quote machines ×2 | one shared "quote-aware" helper | collapse is alternation-only with **no escapes**; `has_parent_reference` has backslash escapes + independent quote flags — different inputs, different outputs | **do not unify**: two goldens |
 
-Boundary: extract/fold numerics, `r` query lowering, token/rhythm
+Boundary: fold numerics, `r` query lowering, token/rhythm
 resolution, wraps, and selector escaping are not inherited by the
 namer. Resolution is sheet-side — but **refusal is
 membership-affecting**: an unknown token path drops its declaration
@@ -198,4 +198,4 @@ integer-like per-prop keys is likewise not inherited: V8 destroys it at
 object creation, so the namer correctly emits the received (V8) order
 and the differential compares those members as sets.
 
-Up: [atomic](../../README.md).
+Up: atomic.

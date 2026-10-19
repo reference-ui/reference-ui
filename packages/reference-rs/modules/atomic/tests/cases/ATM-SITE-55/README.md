@@ -2,24 +2,24 @@
 
 Pins the identity rule: a consumer wrapper module
 (`export { css } from '@reference-ui/react'`) carries site identity to
-its importers with zero config — the binding walk (`extract/identity.rs`)
+its importers with zero config — the binding walk (`extract::identity`)
 that replaces Panda's `importMap`.
 
 Live arms (each extracts): direct wrapper re-export plus consumer-side
-alias (`App.tsx`), wrapper-side alias (`Aliased.tsx`), two-hop chain
-(`Chain.tsx`), local re-export of an import (`Local.tsx`), star
-re-export (`Star.tsx`), namespace member `ui.css` (`Ns.tsx`), default
-re-export (`Def.tsx`), named and namespace `recipe` (`Recipe.tsx`,
-`Ns.tsx`), and a JSX host (`Hosts.tsx`). `ValueControl.tsx` proves the
+alias (`App`), wrapper-side alias (`Aliased`), two-hop chain
+(`Chain`), local re-export of an import (`Local`), star
+re-export (`Star`), namespace member `ui.css` (`Ns`), default
+re-export (`Def`), named and namespace `recipe` (`Recipe`,
+`Ns`), and a JSX host (`Hosts`). `ValueControl` proves the
 walk disturbs nothing: direct Reference identity and const-value
 resolution are undisturbed.
 
 Miss cases (each a silent non-site — zero wants, zero diagnostics, the
 unmatched-callee precedent): a consumer declaration named
-`css` (`MissShadow.tsx`), a foreign-package origin (`MissForeign.tsx`),
-a re-export cycle (`MissCycle.tsx`, guard terminates), a missing export
-(`MissMissing.tsx`), an unresolvable specifier (`MissAbsent.tsx`), and a
-default import through a star (`MissDefaultStar.tsx` — stars never
+`css` (`MissShadow`), a foreign-package origin (`MissForeign`),
+a re-export cycle (`MissCycle`, guard terminates), a missing export
+(`MissMissing`), an unresolvable specifier (`MissAbsent`), and a
+default import through a star (`MissDefaultStar` — stars never
 carry `default`).
 
 Fences: the walk is relative-only — bare and aliased specifiers

@@ -2,14 +2,14 @@
 
 `@reference-ui/lib` re-exports icons, so a `BoltIcon` imported from it renders
 through icons' runtime while lib's own components render through lib's. The
-installed package (`input/node_modules/@reference-ui/lib`) publishes its system
+installed package (installed for the case) publishes its system
 through `exports["./baseSystem"]`: name `reference-ui`, streams
 `[reference-icons, reference-ui]`, the shape lib's real sheet carries. The
-engine reads the streams, not the d.ts re-export hop, so a tag from lib backs
+engine reads the streams, not the declaration re-export hop, so a tag from lib backs
 under every stream system it can render through: two rules instead of one is the
 price of not parsing lib's declarations.
 
-`App.tsx` writes `<BoltIcon color="red" />` beside an own `<Div p="1r">`.
+`App` writes `<BoltIcon color="red" />` beside an own `<Div p="1r">`.
 Composed with icons, lib and an unrelated `acme` (`upstreamSystems:
 ['reference-icons', 'reference-ui', 'acme']`), `color` backs under
 `reference-icons+reference-ui`: one plan and one painted rule each,

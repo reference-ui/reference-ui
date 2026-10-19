@@ -11,7 +11,7 @@ name `{ ...base, ...override }`.
 
 This crate is the stylesheet compiler. It is not `@reference-ui/system` (the
 authoring package for fragments) and it is not the host pipeline in
-`packages/reference-core`. The interactive pipeline map is [`map.html`](./map.html) (ecosystem map at [`../map.html`](../map.html)).
+`@reference-ui/core`. The interactive pipeline map is `map.html` (ecosystem map: the parent `map.html`).
 
 ## What it takes
 
@@ -59,10 +59,10 @@ The engine operates on five core representations that bridge authored code to em
 
 Compilation follows a deterministic, one-pass pipeline: `compile(request) -> { stylesheet, css, diagnostics, wants, recipes }`.
 
-1. **Ingestion & Discovery (`src`)**:
+1. **Ingestion & Discovery**:
    Accepts virtual sources (`VirtualSource`) or scans disk roots for `.tsx`, `.ts`, `.jsx`, `.js` files, filtering out build caches and node modules. Discovers file-level and project-level constant declarations.
 
-2. **Extraction (`src/extract`)**:
+2. **Extraction**:
    Performs fast AST traversal using OXC. Identifies author style calls:
    - JSX StyleProps on Reference primitives
    - `css(...)` open style composition
@@ -70,21 +70,21 @@ Compilation follows a deterministic, one-pass pipeline: `compile(request) -> { s
    - `staticCss` on the ingested `BaseSystem` (third want source; `['*']` enumerates the property's token category)
    Extracts raw property-value pairs into `Want`s. Never evaluates author JS: branches of ternaries and arrays are extracted symmetrically to capture every possible runtime state. Does not expand `staticCss` at emit time.
 
-3. **Resolution (`src/resolve`)**:
+3. **Resolution**:
    Transforms raw `Want`s into normalized `Atom`s through four sequential passes:
    - **Rhythm**: Converts rhythm units (`2r`, `0.5r`, fractional multiples) into CSS calculations anchored to `--spacing-root`.
    - **Shorthands**: Expands authored shorthands (`mt`, `px`, `borderBottom`) into longhands with property-priority ranking so longhands reliably override shorthands in the cascade.
    - **Tokens & Colors**: Resolves token identifiers (`n300`, `primary`) to CSS custom properties (`var(--colors-n-300)`) against the base system.
    - **Conditions**: Normalizes responsive breakpoints and pseudo-selectors (`_hover`, `_dark`) into media queries and CSS selectors.
 
-4. **Stylesheet Assembly (`src/stylesheet`)**:
+4. **Stylesheet Assembly**:
    Constructs the final CSS output conforming strictly to the six-layer specification:
    `@layer reset, global, base, tokens, recipes, utilities;`.
    - Populates `@layer recipes` with static, closed variant classes (e.g. `.recipe-button--size_sm`).
    - Populates `@layer utilities` with sorted, deduplicated atomic utility rules (shorthands before longhands).
    Because `@layer utilities` follows `@layer recipes`, ad-hoc StyleProps on recipe components naturally override recipe defaults via native CSS cascade precedence.
 
-5. **Runtime Lookup Generation (`src/runtime`)**:
+5. **Runtime Lookup Generation**:
    Builds the client-facing data dictionaries:
    - `CssRuntime`: maps `[conditions:]prop:value` to compiled utility class names for `css()`.
    - Recipe Variant Tables: maps variant permutations to compiled recipe class names for `recipe()`.
@@ -108,7 +108,7 @@ Grain is one class per leaf. Spelling is ours.
 
 ## Verify
 
-v1 must be provable without the host pipeline in `packages/reference-core`. The engine is a pure function —
+v1 must be provable without the host pipeline in `@reference-ui/core`. The engine is a pure function —
 sources + base system in, CSS + class map out.
 
 ```bash
@@ -120,7 +120,7 @@ pnpm agentrs v atomic --update-goldens
 | # | Gate | Home | Touches core? |
 | :--- | :--- | :--- | :--- |
 | A | Crate internals | `#[cfg(test)]` next to each module | no |
-| B | Golden cases | `tests/cases/<ATM-*>/` — sources in, `{styles.css,css.json,diagnostics.json}` out | no |
+| B | Golden cases | `rs-cases:ATM-*` — sources in, style sheet plus CSS and diagnostics JSON out | no |
 | C | Production parity | Same cases through both engines; coverage of `(prop, value, when)`, not spelling | no |
 | D | Matrix | integration, after A–C | yes |
 
@@ -128,4 +128,4 @@ The live compiler stays in production until D.
 
 > Search terms: atom compiler, extract/css(), extract/recipe(), namer/class-map, tokens/lookup, conditions/lowering, rs:canon, rs:styletrace, rs:base-system
 
-Up: [@reference-ui/rust](../../README.md).
+Up: @reference-ui/rust.

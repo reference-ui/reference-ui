@@ -9,12 +9,12 @@ the same calc the current helper already documents:
 - `2r` → `calc(2 * var(--spacing-root))`
 - `1/3r` → `calc(var(--spacing-root) / 3)`
 
-Rhythm belongs here so stylesheet and `css()` share it. Matrix
-`matrix/spacing` is the spec. Do not change the public `r` grammar.
+Rhythm belongs here so stylesheet and `css()` share it. The spacing
+scale is the spec. Do not change the public `r` grammar.
 
 ## Must not
 
 - Change the public `r` grammar.
 - Apply rhythm to non-length props by accident (color, `display`, …).
 
-Up: [resolve](../README.md).
+Up: resolve.

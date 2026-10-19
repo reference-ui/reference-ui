@@ -10,12 +10,12 @@ array/object operands refuse with `ATM-W-DYNAMIC-BINARY` and zero wants
 from that position — never a dropped value (the `'foo' - 1` net keeps
 every static sibling) or a walked-through operand.
 
-`fold.ts` pins arithmetic and concat over literal, ident, and member
-operands; `compare.ts` pins comparisons directly and as ternary tests;
-`logical.ts` pins the six short-circuit shapes; `deadarm.ts` pins
+`fold` pins arithmetic and concat over literal, ident, and member
+operands; `compare` pins comparisons directly and as ternary tests;
+`logical` pins the six short-circuit shapes; `deadarm` pins
 dead-arm elimination in value, spread, condition, and `css()`-arg
-positions; `refuse.ts` pins the five refusal shapes beside an open-test
-control; `flat.tsx` pins JSX parity.
+positions; `refuse` pins the five refusal shapes beside an open-test
+control; `flat` pins JSX parity.
 
 Both walkers call the shared `extract/fold/{binary,logical,conditional}`
 nodes, so want/plan parity is structural. Guards stay authoritative:

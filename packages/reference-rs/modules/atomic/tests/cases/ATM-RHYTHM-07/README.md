@@ -11,8 +11,8 @@ because the identifier rule needs a leading letter. Finite controls (`2r`, `1/3r
 finiteness, not magnitude. Close (a) refuse-to-passthrough: legacy parity on every named
 spelling; genuine-overflow singles pass through where legacy mints valid
 `calc(Infinity * …)` (documented GIGO). The refused declarations ride the
-grammar quarantine (`tests/harness/css-quarantine.ts`), like
+grammar quarantine (the CSS-quarantine harness), like
 `ATM-TOKEN-16` — the author wrote them, the browser drops them. Contract:
-[SPEC.md](../../../SPEC.md) ATM-VALID-02 + rule 10. Siblings:
+SPEC ATM-VALID-02 + rule 10. Siblings:
 `ATM-RHYTHM-01..06` (mint shapes); mirror cargo pins live in
-`resolve/rhythm/mod.rs`.
+`resolve::rhythm`.

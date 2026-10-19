@@ -20,4 +20,4 @@ prints it. This folder does not own `_hover` or `@media`.
 - Copy a rem viewport dictionary next to canon.
 - Treat unknown names as passthrough. Fail closed (diagnostic / None).
 
-Up: [resolve](../README.md).
+Up: resolve.

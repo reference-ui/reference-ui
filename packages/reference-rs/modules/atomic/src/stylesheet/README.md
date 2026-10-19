@@ -5,7 +5,7 @@ The product. AtomSet + recipes + tokens + reset → **CSS text**.
 If this module does not exist, there is no system. Extract without a
 sheet is a linter. `css()` without a sheet is a ghost-class machine.
 `compile()` returns the sheet from here and the `css()` map from
-`src/runtime` in the same call so the two cannot drift.
+the runtime stage in the same call so the two cannot drift.
 
 ```css
 @layer color-mode {
@@ -28,13 +28,13 @@ outrank another package's nested utilities on a composed page.
 
 ## Cascade sort
 
-Two mechanisms guard the shorthand cascade, not one. `resolve/shorthands`
+Two mechanisms guard the shorthand cascade, not one. `resolve::shorthands`
 expands `borderBottom` so it never resets `border-bottom-color`. This module
 **orders** utilities so a longhand always beats the shorthand it belongs to —
 expansion alone cannot order two colour utilities against each other, because
 `border-color` is itself a shorthand of four longhands.
 
-`cascade/` sorts every utility by `CascadeKey`:
+`cascade` sorts every utility by `CascadeKey`:
 
 1. rule bucket — unconditioned, selector-only, then at-rule / mixed
 2. at-rule kind — supports, media, container, print, other; then size queries
@@ -58,7 +58,7 @@ sorted for cascade. The sorter never rewrites a name.
 Does not invent declarations. Does not walk source. If a want is
 missing here, extract or resolve lost it.
 
-`name/` stamps `.mt_2r`. `layers/` buckets the text. Dedup already
+`name` stamps `.mt_2r`. `layers` buckets the text. Dedup already
 happened in `atom`.
 
 ## Must not
@@ -67,4 +67,4 @@ happened in `atom`.
 - Rescan source to “fix” a missing atom.
 - Live in JS.
 
-Up: [atomic](../../README.md).
+Up: atomic.

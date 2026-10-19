@@ -3,14 +3,14 @@
 TypeScript metadata, type projection, and ESM chunk artifact engine. It discovers
 TypeScript sources, parses them with OXC, models signatures as a first-class
 `TypeRef` graph, and emits manifest-first ESM chunk artifacts for the JS runtime
-to load lazily. Part of [reference-rs](../../README.md).
+to load lazily. Part of reference-rs.
 
 ## Pipeline
 
 Scan → parse → resolve → emit. The scanner expands include globs into a reachable
 file set; the AST layer lowers OXC syntax into `TypeRef` IR and connects symbols
 into a graph; the generator serializes that graph into a manifest plus per-symbol
-chunks. The JS runtime (`js/`) loads chunks on demand and serves graph navigation
+chunks. The JS runtime loads chunks on demand and serves graph navigation
 plus bounded object-like member projection (`projectObjectLikeMembers`,
 `getDisplayMembers`).
 
@@ -36,7 +36,7 @@ evaluator settles them as TypeScript does; budgets (50 nested alias expansions,
 
 The manifest is a small eager module (`version`, `symbolsByName`, `symbolsById`);
 chunk modules hold symbol payloads keyed by exported id. The serialized contract
-lives in `src/emitted/` with ts-rs derives for the runtime; bulk codegen stays
+lives in the `emitted` contract module with ts-rs derives for the runtime; bulk codegen stays
 string-based by design. Comments surface as `description`, `descriptionRaw`, and
 parsed `jsdoc` — a best-effort pass-through, not a TSDoc model.
 
@@ -44,22 +44,22 @@ parsed `jsdoc` — a best-effort pass-through, not a TSDoc model.
 
 Typed `TST-*` facts, not message strings: warnings ride the manifest `warnings`
 array, the one error (scan refusal) throws coded. Meanings and raise sites live
-in the shared [registry](../diagnostics/REGISTRY.md); codes a golden pins are
+in the shared registry; codes a golden pins are
 wire contract.
 
 ## Tests
 
-Rust tests are smoke-only. Correctness lives in Vitest: `tests/cases/TST-*/`
-cases (input project, `spec.ts`, committed `manifest.js` + `chunks.json`
-goldens), run on demand through the N-API addon with per-file scratch roots
-under `.scratch/`. Refresh goldens with `pnpm agentrs v tasty --update-goldens`.
+Rust tests are smoke-only. Correctness lives in Vitest: `rs-cases:TST-*`
+cases (input project, `spec`, committed manifest + chunks
+goldens), run on demand through the N-API addon with per-file scratch roots.
+Refresh goldens with `pnpm agentrs v tasty --update-goldens`.
 
 ## Verify
 
 ```bash
 pnpm agentrs c tasty
 pnpm agentrs v tasty
-pnpm agentrs q packages/reference-rs/modules/tasty
+pnpm agentrs q
 ```
 
 > Search terms: generics, mapped types, type metadata engine, ts extractor, tasty/symbols, tasty/projection, tasty/chunks, tasty/jsdoc, tasty/generics, export star, export map, barrel re-exports, symbol resolution, export resolution, tasty/resolve, rs:atlas, rs:typegen, rs:shared

@@ -5,4 +5,4 @@ un-normalized: it compiles against the frozen lib spec and pins the full
 `@layer global` (keyframes, spacing root) and `@layer tokens` (palette, fonts,
 radii) emission in one place. Every other atomic case collapses those layer
 bodies via `normalizeSystemLayers`, so a lib token-value change rewrites this
-golden and nothing else. Contract: [SPEC.md](../../../SPEC.md).
+golden and nothing else. Contract: SPEC.

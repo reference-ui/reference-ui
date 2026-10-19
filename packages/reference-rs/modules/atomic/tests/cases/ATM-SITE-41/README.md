@@ -9,6 +9,6 @@ guarded, with zero diagnostics.
 The aliased re-export resolves by binding too: `css({ margin: space })`
 mints the `4px` margin atom.
 
-Inputs: `tokens.ts` (origin consts), `barrel.ts` (one hop), `index.ts`
-(two hops plus the aliased re-export), `third.ts` (three hops), and
-`App.tsx`, `Page.tsx`, `Deep.tsx`, `Alias.tsx` importing from each.
+Inputs: `tokens` (origin consts), `barrel` (one hop), `index`
+(two hops plus the aliased re-export), `third` (three hops), and
+`App`, `Page`, `Deep`, `Alias` importing from each.

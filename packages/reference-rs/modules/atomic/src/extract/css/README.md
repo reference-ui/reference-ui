@@ -1,7 +1,7 @@
 # Extract / css
 
 Finds `css()` / `css.object()` calls and hands their arguments to
-`extract/expressions`. The callee must be a Reference import (or the
+`extract::expressions`. The callee must be a Reference import (or the
 compiler alias `__reference_ui_css`), not a shadowed local or unknown
 helper named `css`.
 
@@ -19,4 +19,4 @@ css.object({ p: '1r' })
 - Extract `sva` / `cva` / unknown helpers.
 - Match the identifier `css` without an import binding.
 
-Up: [extract](../README.md).
+Up: extract.

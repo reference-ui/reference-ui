@@ -5,7 +5,7 @@ registry, FontProps, StyleProps, recursive SystemStyleObject. Not a jsx farm.
 
 Primitives already exist as authored React. They need **types** that stay in
 sync with the base system. Typegen is that printer. Part of
-[reference-rs](../../README.md).
+reference-rs.
 
 ## What it takes
 
@@ -58,7 +58,7 @@ order. The open object prints as `BaseStyleProps` and `StyleProps` wraps it, so
 JSX style props (`<Div bg="#fff">`) and `SystemStyleObject` both reject
 off-token values. `r` names `StyleProps`, so nested responsive values narrow
 too. Unknown and duplicate strict names are skipped. `strict` is not a spec
-field and typegen does not parse `ui.config.ts`.
+field and typegen does not parse the UI config.
 
 Users never write `.mt_2r` in these files. Atomic class names are not a public
 API.
@@ -66,18 +66,18 @@ API.
 ## What it does not do
 
 - Generate `css()` / `recipe()` — those are authored TypeScript
-- Generate a jsx factory, patterns (`BoxProps`), or recipes-as-modules (`recipes/*.d.ts`)
-- Emit runtime token JS (`tokens.mjs`, `token(`)
+- Generate a jsx factory, patterns (`BoxProps`), or recipes-as-modules (one file per recipe)
+- Emit runtime token JS (`token(`)
 - Depend on `atomic`
 - Dump all of `csstype.Properties` or import `@reference-ui/styled`
-- Host-wire the printer into the packager (`packages/reference-core/src/packager`)
+- Host-wire the printer into the packager (the `@reference-ui/core` packager)
 
 We author `css()`; we still generate the unions. The **input** is the base
 system either way.
 
 ## Goldens
 
-Committed snapshots: `tests/goldens/tokens.d.ts`, `recipes.d.ts`, `compound.d.ts`, `recipes-two.d.ts`, `fonts.d.ts`, `styles.d.ts`, `styles-fonts.d.ts`, `styles-strict.d.ts`, `tones.d.ts`, `tones-strict.d.ts`.
+Committed snapshots: `tokens`, `recipes`, `compound`, `recipes-two`, `fonts`, `styles`, `styles-fonts`, `styles-strict`, `tones`, `tones-strict`.
 Tests assert equality against `emit_dts` (open) or `emit_dts_with` (strict). Refresh is opt-in:
 
 ```bash
@@ -85,10 +85,10 @@ TYPEGEN_UPDATE_GOLDENS=1 pnpm agentrs c typegen
 ```
 
 A normal `pnpm agentrs c typegen` run never rewrites the files. The token
-golden stays token-only; StyleProps and SystemStyleObject live on `styles.d.ts`
-(empty fonts) and `styles-fonts.d.ts` (populated dump keys). `styles-strict.d.ts`
-is `strict: ['colors', 'radii', 'spacing']`. `tones.d.ts` and
-`tones-strict.d.ts` are a colour-plus-tones dump in open and `strict: ['colors']`
+golden stays token-only; StyleProps and SystemStyleObject live on `styles`
+(empty fonts) and `styles-fonts` (populated dump keys). `styles-strict`
+is `strict: ['colors', 'radii', 'spacing']`. `tones` and
+`tones-strict` are a colour-plus-tones dump in open and `strict: ['colors']`
 mode. Open goldens keep `(string & {})`.
 `pnpm agentrs v typegen` runs tsc consumer fixtures against those goldens.
 
@@ -99,7 +99,7 @@ prints byte-identical `.d.ts`, then reports unknown token categories, invalid or
 empty recipes, bad compound rows, unknown or absent strict categories, and empty
 font families as sorted, deduped rows. The one error, an invalid base system,
 throws coded instead of riding the payload. Meanings and raise sites live in the
-shared [registry](../diagnostics/REGISTRY.md); codes a golden pins are wire
+shared registry; codes a golden pins are wire
 contract.
 
 ## Verify
@@ -107,9 +107,9 @@ contract.
 ```bash
 pnpm agentrs c typegen
 pnpm agentrs v typegen
-pnpm agentrs q packages/reference-rs/modules/typegen
+pnpm agentrs q
 ```
 
-> Up: [@reference-ui/rust](../../README.md)
+> Up: @reference-ui/rust
 
 > Search terms: dts printer, type printer, typegen/tokens, typegen/recipes, typegen/fonts, typegen/style-props, rs:base-system, rs:canon, rs:atomic

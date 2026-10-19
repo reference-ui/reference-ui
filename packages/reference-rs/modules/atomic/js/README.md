@@ -3,13 +3,13 @@
 Atlas-thin Node face of the `atomic` crate.
 
 Rust owns the compiler. This directory is path normalization, one native
-call, and the request/result types. Same thickness as `../../atlas/js`.
+call, and the request/result types. Same thickness as the atlas JS face.
 
 ```
 Core sync
         │
         ▼
-js/index.ts  →  N-API compileSystem  →  atomic crate
+js entry     →  N-API compileSystem  →  atomic crate
         │                                    │
         │                     ┌──────────────┤
         │                     ▼              ▼
@@ -38,4 +38,4 @@ JS does not expand `borderBottom`, fold ternaries, or name classes. Browser
 N-API stays `compileSystem` so the native binary does not move with the
 folder rename.
 
-Up: [atomic](../README.md).
+Up: atomic.

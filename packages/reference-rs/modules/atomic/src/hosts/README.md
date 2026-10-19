@@ -39,4 +39,4 @@ only configured `jsxHosts` admit it.
 - Gate on a stale surface (the surface rebuilds from the request system per compile).
 - Skip the declared owned props on any path, including the ones that never trace.
 
-Up: [atomic](../../README.md).
+Up: atomic.

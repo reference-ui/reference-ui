@@ -26,16 +26,16 @@ file's export; an imported impure helper refuses with a diagnostic.
 Binding-walk arms pin the five oracle divergences: same-named helpers in
 two files resolve by binding with no cross (`clash-a`/`clash-b`), three-hop
 and aliased barrel chains fold (`hop-*`), a bare call with no import
-refuses with a located diagnostic (`xbare.ts`), aliased imports fold
-(`xalias.ts`), and import-then-export plus aliased export-from chains fold
-including a re-exported declaration (`rmid.ts`).
+refuses with a located diagnostic (`xbare`), aliased imports fold
+(`xalias`), and import-then-export plus aliased export-from chains fold
+including a re-exported declaration (`rmid`).
 
 Body-eval failure propagates, verbatim v2's `?`: a missing
 member left of `&&`, a division by zero left of `||`, and either as a
 ternary test refuse the whole call with a diagnostic — never yield past
 the failure into the surviving arm. A pure call in a const init
 (`const x = getColor()`) folds through the post-attach init pass
- (`scope/call_init.rs`): v2 folds it via
+ (`scope::call_init`): v2 folds it via
 `resolve_declarator`→`call_to_literal`, and the fence now folds inits
 exactly like call sites, so the use paints with no diagnostic. The
 sibling case ATM-SITE-80 pins scalar, object, and array call inits

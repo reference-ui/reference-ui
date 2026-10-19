@@ -1,4 +1,4 @@
 # ATM-SHORT-07 — Paren-depth
 
 The shorthand token splitter tracks parenthesis depth so a function value
-does not swallow its siblings. Contract: [SPEC.md](../../../SPEC.md).
+does not swallow its siblings. Contract: SPEC.

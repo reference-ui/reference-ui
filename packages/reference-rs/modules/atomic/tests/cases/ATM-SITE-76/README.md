@@ -2,4 +2,4 @@
 
 Aliased, named multi-declaration, and string-literal `css` imports are
 live sites. Pins the alias arm and the
-string-literal arm (`packages/reference-rs/modules/atomic/src/extract/bindings.rs:254`).
+string-literal arm (`extract::bindings`).

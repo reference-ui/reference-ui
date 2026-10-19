@@ -4,10 +4,10 @@ Owner ruling (plan section 11.2) for the monorepo. Two workspace packages are
 linked into `node_modules` the way pnpm links them, each with a built `dist`
 outside the compile sources and no published system:
 
-- `@acme/icons` (`packages/icons`) is a plain icon package: `<StarIcon color
+- `@acme/icons` (the mock `icons` package) is a plain icon package: `<StarIcon color
   size>` draws an SVG whose stroke is `color`. Nothing in it imports a Reference
   runtime.
-- `@acme/panel` (`packages/panel`) forwards its props into `Div` from
+- `@acme/panel` (the mock `panel` package) forwards its props into `Div` from
   `@reference-ui/react`, which it keeps external.
 
 The project has synced: `node_modules/@reference-ui/react` links its generated
@@ -17,7 +17,7 @@ the verdict also asks whether the package is Reference code for this app: its
 code (the manifest's root entries) imports `@reference-ui/react`, its manifest
 depends on it, or this compile's include set reaches inside it.
 
-`App.tsx` writes `<StarIcon color="red" size={16} />` and `<Panel bg="blue" />`
+`App` writes `<StarIcon color="red" size={16} />` and `<Panel bg="blue" />`
 beside an own `<Div p="1r">`. `@acme/panel` borrows the runtime, so `bg` backs
 under own as `@reference-ui/lib__bg_blue`. `@acme/icons` is a foreign package:
 no want, no style plan, no class and no diagnostic, standalone and with lib

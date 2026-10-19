@@ -9,21 +9,21 @@ warning naming the write — never the stale init. Unmutated `let`/`var`
 (controls) and unmutated `export let` (cross-file arm) resolve exactly like
 `const` with zero diagnostics.
 
-Inputs: `mutated.ts` (plain, compound, update, member-root, for-of, and
-spread writes), `controls.ts` (unmutated `let`/`var`/`const`), `tokens.ts`
-(unmutated + mutated `export let`), `app.ts` (cross-file uses).
+Inputs: `mutated` (plain, compound, update, member-root, for-of, and
+spread writes), `controls` (unmutated `let`/`var`/`const`), `tokens`
+(unmutated + mutated `export let`), `app` (cross-file uses).
 
-Object half (`objects.ts`): const objects record
+Object half (`objects`): const objects record
 identifier values and static spreads — pure reads only, every source an
 unmutated const. Baked entries strip when their source is written (dep
-provenance in `extract/scope/`); case-level mutation interplay is still open.
+provenance in `extract::scope`); case-level mutation interplay is still open.
 
-Cross-file (`tokens.ts` + `app.ts`): a spread inside an
+Cross-file (`tokens` + `app`): a spread inside an
 exported object resolves through the binding walk — whole-object and
 spread uses both fold color and padding with zero diagnostics, exactly
 like the same-file `cardButton`.
 
-Delete arm (`delete.ts`): `delete
+Delete arm (`delete`): `delete
 obj.prop` poisons the root exactly like an assignment — member reads,
 computed deletes, and spreads each drop with a `Dynamic mutated binding`
 warning naming the delete (`deleted at file:line:col`), never the stale

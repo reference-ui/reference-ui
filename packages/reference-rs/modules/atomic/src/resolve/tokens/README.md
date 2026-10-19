@@ -14,11 +14,11 @@ Examples:
 - bare misses pass through silently, except two shapes that warn: on color
   props `ATM-W-UNKNOWN-COLOR` (`ATM-TOKEN-16`), and on spacing, radius, size
   and font-size props `ATM-W-UNKNOWN-TOKEN` for a bare identifier that is no
-  token in that category and no CSS keyword the prop accepts (`bare_name.rs`;
+  token in that category and no CSS keyword the prop accepts (`bare_name`;
   `ATM-TOKEN-24`, `ATM-TOKEN-25`). Numbers, lengths and functions never warn.
 - a whole token value that names another token without braces (`gray.900`
   for `colors.gray.900`) prints verbatim under `ATM-W-UNBRACED-TOKEN-REF`, which
-  suggests the braced form. That check lives in `stylesheet/system_layers`,
+  suggests the braced form. That check lives in `stylesheet::system_layers`,
   where `@layer tokens` is printed, not in this resolver (`ATM-TOKEN-26`).
 
 A **tone** names a colour at a theme-owned opacity: `blue.500/medium` emits
@@ -33,10 +33,10 @@ such as the colour longhand a `border` shorthand decomposes into, is refused the
 same way.
 
 OKLCH and semantic color-mode resolution already have an owner: `tokens()`
-in `packages/reference-core/src/collect/surface/tokens.ts`. This module **looks up** the compiled dictionary
+in `@reference-ui/core` token collection. This module **looks up** the compiled dictionary
 from `BaseSystem`. It does not become a second color science crate.
 
-`_dark` / `_light` are pseudo-props (`resolve/conditions/pseudoprops`), not token
+`_dark` / `_light` are pseudo-props (`resolve::conditions::pseudoprops`), not token
 renames. A leaf `color: 'gray.800'` under `_dark` is still this lookup,
 then a condition chain.
 
@@ -46,4 +46,4 @@ then a condition chain.
 - Drop unknown paths silently. Fail closed: diagnostic + `Raw` / passthrough
   only when the author wrote a raw CSS value.
 
-Up: [resolve](../README.md).
+Up: resolve.

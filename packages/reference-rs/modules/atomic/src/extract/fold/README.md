@@ -16,4 +16,4 @@ There is no `eval`, no environment mutation, no loop construct, no unknown
 call — adding a language form means adding a node file, and the refusal pins
 beside it keep the table honest about what still does not fold.
 
-Up: [extract](../README.md).
+Up: extract.

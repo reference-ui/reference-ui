@@ -14,4 +14,4 @@ claims every `*Only` key as a breakpoint range before the
 known-prop check, so it never reaches resolve (pre-existing,
 separate gap). Future per-prop expansions land as `EXT-02+`, each
 un-refusing its prop with its own red test.
-Contract: [SPEC.md](../../../SPEC.md).
+Contract: SPEC.

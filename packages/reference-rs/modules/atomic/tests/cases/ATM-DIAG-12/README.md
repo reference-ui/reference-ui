@@ -5,8 +5,8 @@ expected runtime lookup key for equivalent declarations, while native
 `style` and `globalCss` predict none — they do not use the runtime
 style-plan lookup.
 
-`input/src/viaCss.ts` and `input/src/viaJsx.tsx` declare the equivalent
-`mt: 2r`; both collapse to one runtime plan key. `input/src/native.tsx`
+The `viaCss` and `viaJsx` fixtures declare the equivalent
+`mt: 2r`; both collapse to one runtime plan key. The `native` fixture
 renders `<div style={{ padding: '99px' }} />` whose unique value must
 reach neither wants nor plans. The expectation half of the claim
 (identical predicted keys per surface, no facts for native/config
@@ -19,6 +19,6 @@ config), so its exclusion is asserted on the channel plus unit
 tests, not on case input. Related: `ATM-DIAG-08` (present proves
 silent), `ATM-DIAG-11` (unknown values), `ATM-DIAG-14` (modes),
 `ATM-SITE-01` (JSX StyleProps), `ATM-DIAG-04` (positions). Contract:
-[SPEC.md](../../../SPEC.md). Symbols: `ExpectedKey`, `StyleSurfaceKind`,
+SPEC. Symbols: `ExpectedKey`, `StyleSurfaceKind`,
 `compilerDiagnostics`. Search: diagnostics surface parity expected-key
 native-style globalCss compiler channel.

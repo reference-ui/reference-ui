@@ -24,7 +24,7 @@ Want
   prop:   borderColor | borderBottom | bg | mt | …
   value:  n300 | 3px solid | 2r | …
   when:   [] | [_hover] | [_dark] | [breakpoint]
-  origin: Tabs.Tab | Box | css() in Card.tsx   // diagnostics, not identity
+  origin: Tabs.Tab | Box | css() in Card   // diagnostics, not identity
 ```
 
 Extract inserts wants. Both branches of a ternary are two wants. Do not
@@ -96,7 +96,7 @@ soup. HTML class lists are long. Gzip eats repeated declarations
 either way.
 
 We pay that because StyleProps + `css()` are an **open** map, not a
-closed host. Fix cascade **inside** `resolve/shorthands` (longhands that
+closed host. Fix cascade **inside** `resolve::shorthands` (longhands that
 don’t reset color; one namer for sheet and `css()`). Do not “fix” it by
 hashing the pair — runtime would then need that pair as a key.
 
@@ -114,4 +114,4 @@ conditions }` records in `process_atomic` and dedups them with `FxHashSet`. That
 grain. Their input is `Literal` from the evaluator; ours is a `Want`
 from leaves.
 
-Up: [atomic](../../README.md).
+Up: atomic.

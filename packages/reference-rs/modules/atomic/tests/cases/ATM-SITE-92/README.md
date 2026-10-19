@@ -9,7 +9,7 @@ held for the root and for every subpath, because both expand the same map.
 `exports` nests `types` beside `import` at the root (`./dist/index.d.ts`,
 `./src/index.ts`) and at `./tokens` (`./dist/tokens.d.ts`, `./src/tokens.ts`).
 Both declarations are body-less; both sources fold (`'purple'`, `'blue'`).
-`App.tsx` paints an imported value from each entry plus a literal control, so
+`App` paints an imported value from each entry plus a literal control, so
 the sheet must carry `purple`, `blue` and `red`, one class each, with zero
 diagnostics. Under the old order the two imported calls vanish silently.
 
