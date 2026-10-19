@@ -6,7 +6,8 @@
 //! condition blocks walk, and dynamic shapes become dynamic-slot facts. A
 //! capitalized non-host tag lowers under the systems extraction's own
 //! [`Composed`] decision names for it, and its exact keys target exactly those
-//! systems (none for an unbacked package tag; a foreign package's tag predicts
+//! systems (own for a project or unbound component nobody traces or publishes,
+//! none for an unbacked package tag; a foreign package's tag predicts
 //! nothing), unless it is a same-file wrapper threading `css` into a host,
 //! whose `css` predicts own as extraction lowers it. Native `style` is
 //! excluded; lowercase DOM tags and attributes emit nothing.

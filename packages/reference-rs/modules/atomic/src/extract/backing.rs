@@ -5,8 +5,9 @@
 //! renders through that this compile composes (`extends` and `layers`), and nowhere else. When none
 //! is composed nothing can back them, and the tag warns, naming the package. A package not built on
 //! Reference UI (`Foreign`) is not a Reference component at all: nothing lowers and nothing warns. A
-//! tag with no binding that a composed upstream publishes backs under that upstream; any other
-//! project or unbound tag keeps backing under every composed system until it lowers under own.
+//! tag with no binding that a composed upstream publishes backs under that upstream. Any other
+//! project or unbound tag nobody traces or publishes lowers under own, and under no composed
+//! system: own is what it renders through if it forwards a style prop at all, and dead weight if not.
 //! [`Composed`] carries the composed facts; extraction and the analysis mirror both ask it, so
 //! the wants and the expected lookups name the same systems.
 
@@ -26,7 +27,6 @@ static NO_HOSTS: BTreeMap<String, Vec<String>> = BTreeMap::new();
 pub struct Composed<'a> {
     systems: &'a [String],
     hosts: &'a BTreeMap<String, Vec<String>>,
-    every: Backing,
 }
 
 /// How one styled non-host tag lowers.
@@ -82,11 +82,7 @@ impl<'a> Composed<'a> {
     /// request's published host names.
     pub fn new(qualifiers: &'a [String], hosts: &'a BTreeMap<String, Vec<String>>) -> Self {
         let systems = qualifiers.get(1..).unwrap_or_default();
-        Self {
-            systems,
-            hosts,
-            every: Backing::systems(systems.iter().map(String::as_str)),
-        }
+        Self { systems, hosts }
     }
 
     /// Nothing composed: the standalone compile.
@@ -95,7 +91,8 @@ impl<'a> Composed<'a> {
     }
 
     /// The backing of a styled tag no own host admits: its package's when
-    /// its root (or the wrapper it is) ends at one, else by its provenance.
+    /// its root (or the wrapper it is) ends at one, the publishing upstream's
+    /// for an unbound name one publishes, else own.
     pub(crate) fn non_host<'t>(
         &self,
         package: Option<&'t PackageTag>,
@@ -107,7 +104,7 @@ impl<'a> Composed<'a> {
             None if matches!(provenance, TagProvenance::Unbound) => {
                 TagBacking::Backed(self.unbound(tag))
             }
-            None => TagBacking::Backed(self.local()),
+            None => TagBacking::Backed(Backing::Own),
         }
     }
 
@@ -131,7 +128,7 @@ impl<'a> Composed<'a> {
     }
 
     /// The backing of a tag no import binds: the composed upstreams that
-    /// publish its name, else every composed system.
+    /// publish its name, else own.
     pub(crate) fn unbound(&self, tag: &str) -> Backing {
         let joined = tag.contains('.').then(|| tag.replace('.', ""));
         let publishes = |names: &Vec<String>| {
@@ -146,14 +143,9 @@ impl<'a> Composed<'a> {
             .map(String::as_str)
             .collect();
         if publishers.is_empty() {
-            return self.local();
+            return Backing::Own;
         }
         Backing::systems(publishers)
-    }
-
-    /// The backing of a project tag nobody traces: every composed system.
-    pub(crate) fn local(&self) -> Backing {
-        self.every.clone()
     }
 
     /// The composed systems among `systems`, in composed order.

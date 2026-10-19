@@ -1,8 +1,9 @@
 //! Host gating tests: configured hosts admit unimported tags, empty hosts match legacy.
-//! Proves explicit `jsxHosts` promote an unimported tag from an external
-//! component (capital, no file-local import — G0 §D/C8) to a host, while
-//! absent and empty host lists compile identically to each other. Also proves
-//! the system's declared `jsxOwned` gates with no trace and ships sorted.
+//! Proves explicit `jsxHosts` promote an unimported tag from a component nobody
+//! publishes (capital, no file-local import — G0 §D/C8) to a host, both lowering
+//! under own since styling plan S3, while absent and empty host lists compile
+//! identically to each other. Also proves the system's declared `jsxOwned`
+//! gates with no trace and ships sorted.
 
 use super::*;
 use crate::{compile, BaseSystem, VirtualSource};
@@ -32,11 +33,12 @@ fn has_mt(wants: &[crate::Want], value: &str) -> bool {
 #[test]
 fn test_explicit_hosts_admit_unimported_tags() {
     let gated = compile(&host_request(None)).expect("compile succeeds");
-    // Unconfigured, the capital tag is an external component (G0 §D/C8):
-    // its want is external, never a host want.
+    // Unconfigured, the capital tag is a component no upstream publishes
+    // (G0 §D/C8): not a host, but nothing else renders it, so its want
+    // lowers under own (S3).
     assert!(
-        !gated.wants.is_empty() && gated.wants.iter().all(|w| !w.backing.is_own()),
-        "unconfigured tag is external, not a host: {:?}",
+        !gated.wants.is_empty() && gated.wants.iter().all(|w| w.backing.is_own()),
+        "unconfigured unbound tag lowers under own: {:?}",
         gated.wants
     );
 
@@ -51,6 +53,7 @@ fn test_explicit_hosts_admit_unimported_tags() {
         "a configured host collects a host want"
     );
     assert!(admitted.stylesheet.contains("mt_4r"));
+    assert_eq!(gated.stylesheet, admitted.stylesheet);
 }
 
 #[test]

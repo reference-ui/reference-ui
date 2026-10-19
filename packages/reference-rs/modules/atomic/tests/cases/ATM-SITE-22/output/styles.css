@@ -11,6 +11,7 @@
 }
 @layer utilities {
   .\@reference-ui\/lib__bg_red { background: red; }
+  .\@reference-ui\/lib__p_4r { padding: calc(4 * var(--spacing-root)); }
   .\@reference-ui\/lib__min-w_40r { min-width: calc(40 * var(--spacing-root)); }
 }
 }

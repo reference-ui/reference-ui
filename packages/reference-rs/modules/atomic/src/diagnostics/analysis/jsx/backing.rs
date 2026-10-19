@@ -26,7 +26,7 @@ impl<'b> JsxVisitor<'_, 'b> {
             return Some(Backing::Own);
         }
         let graph_resolved = !self.host_gate().hosts.is_empty();
-        if !graph_resolved || !crate::extract::jsx::is_external_tag(tag) {
+        if !graph_resolved || !crate::extract::jsx::is_component_tag(tag) {
             return None;
         }
         let package = self

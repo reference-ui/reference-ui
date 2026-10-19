@@ -5,9 +5,10 @@
 //! directly, through a project barrel or a same-file alias) backs under that
 //! package's systems this compile composes, never under any other composed
 //! system and never as own; a tag from a package not built on Reference UI
-//! lowers nothing. Lowercase DOM tags keep today's drop path, a plain tag stays
-//! silent, member tags take their root's verdict, and a threaded wrapper
-//! lowers its `css` before the non-host gate.
+//! lowers nothing (project and unbound components: `untraced_tag_tests.rs`).
+//! Lowercase DOM tags keep today's drop path, a plain tag stays silent, member
+//! tags take their root's verdict, and a threaded wrapper lowers its `css`
+//! before the non-host gate.
 
 use crate::atom::Backing;
 use crate::tests::packages::PackageApp;
@@ -24,46 +25,6 @@ fn compile_code(code: &str) -> crate::CompileResult {
         ..Default::default()
     };
     compile(&req).expect("compile succeeds")
-}
-
-/// A capitalized non-host tag extracts a want and an authored plan, both
-/// stamped with a non-own backing by the shared attribute loop.
-#[test]
-fn external_tag_extracts_want_and_authored() {
-    let res = compile_code(
-        "import { Div } from '@reference-ui/react';\
-         export const el = <BoltIcon color=\"red\" />;",
-    );
-    let want = res
-        .wants
-        .iter()
-        .find(|w| &*w.prop == "color")
-        .expect("external want on <BoltIcon>");
-    // Standalone, nothing is composed, so the backing names no system: the
-    // want resolves but builds no plan.
-    assert_eq!(want.backing, Backing::none(), "{want:?}");
-    assert!(
-        res.style_plans.iter().all(|plan| plan.prop != "color"),
-        "nothing composed means no external plan: {:?}",
-        res.style_plans
-    );
-    assert!(res.diagnostics.is_empty(), "{:?}", res.diagnostics);
-}
-
-/// A member tag takes its root's verdict: `Foo.Bar` is not own.
-#[test]
-fn member_external_tag_extracts() {
-    let res = compile_code(
-        "import { Div } from '@reference-ui/react';\
-         export const el = <Foo.Bar color=\"red\" />;",
-    );
-    assert!(
-        res.wants
-            .iter()
-            .any(|w| &*w.prop == "color" && !w.backing.is_own()),
-        "member external tag extracts: {:?}",
-        res.wants
-    );
 }
 
 /// A lowercase non-host tag keeps today's drop path — silent under a resolved
@@ -333,30 +294,4 @@ fn alias_of_package_import_is_external() {
         &["acme"],
     );
     assert_eq!(plan_classes(&res, "color"), vec!["acme__c_blue"]);
-}
-
-/// A tag no import binds that a composed upstream publishes (`upstreamHosts`)
-/// backs under that upstream only; an unbound tag nobody publishes still backs
-/// under every composed system until it lowers under own.
-#[test]
-fn unbound_tags_back_under_their_publisher_else_every_composed_system() {
-    let app = PackageApp::new("ext-unbound");
-    let mut request = app.request(
-        &[(
-            "src/test.tsx",
-            "import { Div } from '@reference-ui/react';\
-             export const published = <AcmeCard p=\"1r\" />;\
-             export const unknown = <Mystery m=\"2r\" />;",
-        )],
-        &["reference-ui", "acme"],
-    );
-    request
-        .upstream_hosts
-        .insert("acme".into(), vec!["AcmeCard".into()]);
-    let res = compile(&request).expect("compile succeeds");
-    assert_eq!(plan_classes(&res, "p"), vec!["acme__p_1r"]);
-    assert_eq!(
-        plan_classes(&res, "m"),
-        vec!["reference-ui__m_2r", "acme__m_2r"]
-    );
 }

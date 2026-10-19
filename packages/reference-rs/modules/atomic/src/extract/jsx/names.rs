@@ -58,17 +58,15 @@ fn format_jsx_member_object(object: &oxc_ast::ast::JSXMemberExpressionObject<'_>
     }
 }
 
-/// True when a JSX tag names a component rather than a host element, by the
+/// True when a JSX tag names a component rather than a DOM element, by the
 /// JSX capitalization rule alone: the root segment (before the first `.`)
 /// must start with a character that exists and is not ASCII-lowercase, so
 /// `_Foo`, `$Bar`, and `Élan` are components while `div` and an empty tag are
-/// not. Syntactic only — no shadow or scope consult. This is the single
-/// shared predicate for the extract gate and the analysis gate.
-///
-/// Exotic external props (custom breakpoints, conditions, fonts) extract and
-/// emit normally in the first cut; refusal would land as a guard on this
-/// predicate, its future home (D2/C21).
-pub(crate) fn is_external_tag(tag: &str) -> bool {
+/// not. Syntactic only — no shadow or scope consult. It decides only whether
+/// a non-host tag may lower at all (a DOM tag never does); which systems back
+/// it is decided by its binding, never its spelling. The extract gate and the
+/// analysis gate share it.
+pub(crate) fn is_component_tag(tag: &str) -> bool {
     let root = tag.split('.').next().unwrap_or(tag);
     root.chars().next().is_some_and(|c| !c.is_ascii_lowercase())
 }
@@ -89,18 +87,18 @@ pub(crate) fn format_jsx_attribute_name(name: &JSXAttributeName<'_>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::is_external_tag;
+    use super::is_component_tag;
 
     /// The capitalization rule reads only the root segment (G0 §D): components
     /// are any leading character that is not ASCII-lowercase, member tags take
-    /// their root's verdict, and lowercase/empty tags are not external.
+    /// their root's verdict, and lowercase/empty tags are DOM elements.
     #[test]
-    fn external_tag_is_the_leading_character_rule() {
+    fn component_tag_is_the_leading_character_rule() {
         for tag in ["BoltIcon", "_Foo", "$Bar", "Élan", "Foo.Bar", "Foo.bar.Baz"] {
-            assert!(is_external_tag(tag), "{tag} is a component");
+            assert!(is_component_tag(tag), "{tag} is a component");
         }
         for tag in ["div", "span", "my-element", "foo.Bar", ""] {
-            assert!(!is_external_tag(tag), "{tag} is not external");
+            assert!(!is_component_tag(tag), "{tag} is a DOM element");
         }
     }
 }
