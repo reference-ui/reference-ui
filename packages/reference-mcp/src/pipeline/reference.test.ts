@@ -1,3 +1,5 @@
+// Vitest tests for tasty reference-document loading.
+// They take fixture manifests and assert per-component data plus warning formatting.
 import { describe, expect, it, vi } from 'vitest'
 
 const createReferenceDocument = vi.fn(() => ({ id: 'doc' }))

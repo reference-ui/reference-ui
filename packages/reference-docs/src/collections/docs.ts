@@ -1,3 +1,6 @@
+// Docs collection schema and transform.
+// It takes raw MDX frontmatter and emits validated doc metadata: title, section, order,
+// slug, and the optional description lead.
 import { defineCollection } from '@content-collections/core'
 import { z } from 'zod'
 

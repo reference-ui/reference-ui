@@ -1,3 +1,6 @@
+// node:test suite for the agentct catalog machinery: discovery, selection, grep and legacy
+// targets, and output formatting. It takes temp component trees plus malformed catalogs and
+// asserts conformity, targeting, and report completeness without starting a browser.
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import os from 'node:os'

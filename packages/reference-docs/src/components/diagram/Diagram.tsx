@@ -1,3 +1,7 @@
+// Docs diagram kit: canvas, rows, columns, panels, and arrows.
+// It takes ordinary Reference UI content and emits composed diagrams; every style is a
+// static css() call site so ref sync can extract it. Props only select among precompiled
+// classes, and the kit owns no content of its own.
 import type { ReactNode } from 'react'
 import { Div, css } from '@reference-ui/react'
 import './diagram-theme.fragments'

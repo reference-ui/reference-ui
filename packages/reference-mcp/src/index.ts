@@ -1,3 +1,6 @@
+// Package entry for @reference-ui/mcp.
+// It takes nothing and emits the server factories and runners, the CLI command, the
+// project manager, the model state, and the shared pipeline types.
 export {
   createReferenceMcpServer,
   createReferenceMcpHttpServer,

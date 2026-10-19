@@ -1,3 +1,8 @@
+// Full build orchestrator for @reference-ui/icons.
+// It runs generate, core ensure-dist, ref sync, the esbuild bundle, tsc declarations,
+// runtime materialization, and the declaration-specifier rewrite in order, then verifies
+// every required dist artifact exists. Any missing output fails the build here instead
+// of shipping a half-built package.
 import { execFileSync } from 'node:child_process'
 import { constants } from 'node:fs'
 import { access, rm } from 'node:fs/promises'

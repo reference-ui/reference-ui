@@ -1,3 +1,7 @@
+// Vite app config for the reference-docs site.
+// It wires MDX (GFM + frontmatter + section ids + build-time Shiki highlighting),
+// content-collections metadata, and React Fast Refresh, pre-bundles the linked lib and icons
+// barrels, and serves on 5174 while ignoring the compiled baseSystem re-export.
 import { defineConfig, type PluginOption } from 'vite'
 import { fileURLToPath } from 'node:url'
 import contentCollections from '@content-collections/vite'

@@ -1,3 +1,6 @@
+// Live Tooltip demos for the Tooltip component page.
+// They take nothing and emit the tooltip plus the grouped variant. Colocated with the page
+// that embeds them.
 import { Button, Div } from '@reference-ui/react'
 import { Tooltip } from '@reference-ui/lib'
 

@@ -1,3 +1,6 @@
+// Shared surface recipes for component-page demos.
+// They take nothing and emit the floating and list surfaces, demo stacks, and note styles
+// the demos compose.
 import { css } from '@reference-ui/react'
 
 /**

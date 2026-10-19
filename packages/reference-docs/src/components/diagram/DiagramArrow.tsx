@@ -1,3 +1,6 @@
+// Connector arrow of the docs Diagram kit.
+// It takes a direction plus label and emits the quiet-shaft arrow with the verb in the
+// label. Down and right carry nearly every real diagram.
 import { Div, Span, css } from '@reference-ui/react'
 import type { DiagramDirection } from './Diagram'
 

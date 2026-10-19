@@ -1,3 +1,6 @@
+// Card grid for page-level navigation links.
+// They take hrefs plus titles and emit the LinkCards group and LinkCard entries MDX pages
+// use for next-step links.
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Div, css } from '@reference-ui/react'

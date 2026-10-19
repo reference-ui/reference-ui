@@ -1,3 +1,6 @@
+// Child-process entrypoint for MCP build and Atlas prefetch jobs.
+// It takes a JSON payload on argv[2] naming the job plus cwd, loads the project config,
+// and emits the build or warms the cache. Fatal misuse exits 1 on stderr.
 import { resolve } from 'node:path'
 import { setConfig, setCwd } from '@reference-ui/core/config/store'
 import { loadUserConfig } from '../core/config-load'

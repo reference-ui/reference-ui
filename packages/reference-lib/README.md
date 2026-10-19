@@ -143,3 +143,5 @@ To launch Book: run `pnpm dev:lib` from the repository root (or `pnpm run dev` w
 import { baseSystem } from '@reference-ui/lib/baseSystem'
 import { colors, fonts } from '@reference-ui/lib/theme'
 ```
+
+Part of [Reference UI](../../../README.md). Component test catalog: [testing/README.md](./testing/README.md).

@@ -1,3 +1,8 @@
+// Factory shared by every generated icon component.
+// It takes a Material Symbols SVG component plus its display name and emits a
+// ref-forwarding component on the Div shell with variant and size handling. Size
+// tokens resolve to spacing variables with pixel fallbacks; remaining style props
+// pass through to the shell.
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type {

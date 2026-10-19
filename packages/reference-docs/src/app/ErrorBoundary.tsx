@@ -1,3 +1,5 @@
+// Render-error fallback around the docs router.
+// It takes the app tree and emits children, or the fallback UI when rendering throws.
 import React from 'react'
 import { Div, H2, P, Pre } from '@reference-ui/react'
 import { useDocsTheme } from '../shared/providers/DocsThemeContext'

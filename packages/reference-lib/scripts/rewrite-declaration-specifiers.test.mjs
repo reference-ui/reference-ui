@@ -1,3 +1,6 @@
+// Vitest tests for the declaration-specifier rewrite.
+// They take temp declaration trees and assert specifiers repoint at shipped runtime copies
+// while unshipped targets are reported instead of silently kept.
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'

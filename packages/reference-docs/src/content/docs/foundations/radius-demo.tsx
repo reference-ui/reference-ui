@@ -1,3 +1,5 @@
+// Radius scale specimen for the Foundations radius page.
+// It takes nothing and emits the radius ramp. Colocated with the page that embeds it.
 import type { ReactNode } from 'react'
 import { Div, Span, css } from '@reference-ui/react'
 import { Preview } from '../../../mdx/Preview'

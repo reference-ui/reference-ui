@@ -1,3 +1,5 @@
+// Vitest tests for component doc extraction.
+// They take fixture sources and assert parsed anatomy, props, examples, and cache behavior.
 import { describe, expect, it } from 'vitest'
 import { resolve } from 'node:path'
 import {

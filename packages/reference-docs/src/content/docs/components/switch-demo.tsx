@@ -1,3 +1,6 @@
+// Live Switch demos for the Switch component page.
+// They take nothing and emit the toggle plus visual variants. Colocated with the page that
+// embeds them.
 import { useState } from 'react'
 import { Div, Label } from '@reference-ui/react'
 import { Switch } from '@reference-ui/lib'

@@ -1,3 +1,6 @@
+// Active-project tracking across discovered Reference UI projects.
+// It takes selection requests and emits success/failure results, ordering projects by
+// last-active. The selected project feeds every project-scoped tool.
 import { existsSync, realpathSync } from 'node:fs'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { resolveRefConfigFile } from '../core/paths'

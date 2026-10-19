@@ -1,3 +1,6 @@
+// API example specimen for the /diagram gallery.
+// It takes nothing and emits the whole kit in one figure: canvas, row, two panels, one
+// arrow. Titles, icons, code, and badge are ordinary components Diagram owns none of.
 import { CodeIcon, PackageIcon } from '@reference-ui/lib'
 import { Code, Span, css } from '@reference-ui/react'
 import { Diagram } from '../../components/diagram/Diagram'

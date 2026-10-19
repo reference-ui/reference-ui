@@ -1,3 +1,6 @@
+// Runtime slug lookup for the Vite MDX pipeline.
+// It takes the generated collection metadata plus an eager glob of MDX modules and emits
+// the sorted docs list, section index, and slug-to-module map DocPage renders from.
 /// <reference types="vite/client" />
 
 import type { ComponentType } from 'react'

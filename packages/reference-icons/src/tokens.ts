@@ -1,3 +1,7 @@
+// Author-side design tokens for @reference-ui/icons.
+// It declares the slate and gray color ramps that ref sync compiles into the packaged
+// base system, so icon style props resolve against real tokens. Registered through the
+// author `tokens()` call; the compiled output ships, not this module.
 import { tokens } from '@reference-ui/system'
 
 export const colors = {

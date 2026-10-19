@@ -1,3 +1,6 @@
+// Docs color-mode context and provider.
+// It takes the app tree and emits light/dark state with a setter; useDocsTheme reads it.
+// The toggle and themed styles follow this mode.
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 const STORAGE_KEY = 'reference-docs-color-mode'

@@ -1,3 +1,7 @@
+// Joins Atlas-observed components with reference-doc data.
+// It takes raw Atlas components plus the loaded tasty document and emits McpComponents with
+// resolved props, style-prop filtering, and formatted warnings. toMcpReferenceData converts
+// a reference document to the shared reference-data shape first.
 import type { Component } from '@reference-ui/rust/atlas'
 import {
   formatReferenceType,

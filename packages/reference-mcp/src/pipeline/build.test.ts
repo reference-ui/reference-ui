@@ -1,3 +1,5 @@
+// Vitest tests for the MCP artifact build.
+// They take fixture projects and assert the built model plus cache and prefetch behavior.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { REFERENCE_UI_PRIMITIVE_NAMES } from './primitives'
 

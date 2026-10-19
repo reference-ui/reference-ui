@@ -1,3 +1,6 @@
+// Live motion demos for the Foundations motion page.
+// They take nothing and emit the looping and entrance preset specimens. Colocated with
+// the page that embeds them.
 import { type ReactNode, useState } from 'react'
 import { Button, Div, Span, css } from '@reference-ui/react'
 import { Preview } from '../../../mdx/Preview'

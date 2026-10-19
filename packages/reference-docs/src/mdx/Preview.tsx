@@ -1,3 +1,5 @@
+// Flat specimen frame for live MDX examples.
+// It takes example children and emits the borderless preview surface pages render demos in.
 import type { ReactNode } from 'react'
 import { Div, css } from '@reference-ui/react'
 

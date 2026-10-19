@@ -1,3 +1,6 @@
+// MiniSearch engine over the serialized icon index.
+// It takes demand queries plus options and emits ranked matches with readouts, import paths,
+// and category facets. The singleton searchEngine loads the prebuilt JSON at import time.
 import MiniSearch, { type AsPlainObject } from 'minisearch'
 import rawIndex from '../data/icons-index.json' with { type: 'json' }
 

@@ -1,3 +1,5 @@
+// Live FocusLock demo for the FocusLock component page.
+// It takes nothing and emits the trapped-focus region. Colocated with the page that embeds it.
 import { useState } from 'react'
 import { Button, Div, Input } from '@reference-ui/react'
 import { FocusLock } from '@reference-ui/lib'

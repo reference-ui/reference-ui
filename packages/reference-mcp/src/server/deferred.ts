@@ -1,3 +1,5 @@
+// Tiny deferred-promise helper for async handoffs.
+// It takes nothing and emits a promise bundled with its resolve and reject functions.
 export interface Deferred<T> {
   readonly promise: Promise<T>
   readonly settled: boolean

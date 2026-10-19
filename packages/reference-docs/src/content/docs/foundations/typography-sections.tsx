@@ -1,3 +1,6 @@
+// Section specimens for the Foundations typography page.
+// They take nothing and emit font families, the type scale, and inline samples. Colocated
+// with the page that embeds them.
 import type { ReactNode } from 'react'
 import {
   Abbr,

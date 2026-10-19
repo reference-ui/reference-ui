@@ -1,3 +1,5 @@
+// Docs-only icon glyphs the library lacks.
+// It takes nothing and emits the GitHub brand mark for the repo link.
 import { Svg } from '@reference-ui/react'
 
 /**

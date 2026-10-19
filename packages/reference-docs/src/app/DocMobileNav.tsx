@@ -1,3 +1,6 @@
+// Off-canvas docs navigation for small viewports.
+// It takes open state plus the close callback and emits the shared DocNav in a dismissible
+// panel. The sidebar rail hides where this appears.
 import { useEffect, useState } from 'react'
 import { Div } from '@reference-ui/react'
 import { CloseIcon } from '@reference-ui/lib'

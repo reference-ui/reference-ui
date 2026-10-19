@@ -1,5 +1,7 @@
-// Run with `node --test scripts/rewrite-declaration-specifiers.test.mjs`: icons has no vitest, and this
-// build script needs only node:test.
+// Tests for the icons declaration-specifier post-pass, run with
+// `node --test scripts/rewrite-declaration-specifiers.test.mjs`: icons has no vitest,
+// and this build script needs only node:test. They take temp declaration trees and assert
+// rewrites land on shipped files while dangling specifiers are reported.
 import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'

@@ -1,3 +1,7 @@
+// Style vocabulary for the reference-pipeline specimen.
+// It takes nothing and emits the canvas header, stage, card, chip, progress-bar, and
+// runtime-mock classes. Content stays in the specimen; every value here is a literal so
+// the extractor reads each call site directly.
 import { css } from '@reference-ui/react'
 
 /**

@@ -1,3 +1,5 @@
+// Live Icons demo for the Icons component page.
+// It takes nothing and emits the icon specimens. Colocated with the page that embeds it.
 import { Div } from '@reference-ui/react'
 import { HomeIcon, SearchIcon, SettingsIcon } from '@reference-ui/lib'
 

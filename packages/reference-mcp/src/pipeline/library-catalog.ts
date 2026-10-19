@@ -1,3 +1,6 @@
+// Static catalog of the Reference Library components as McpComponent records.
+// It takes nothing and emits the hand-written discovery data (props, examples, co-usage)
+// queries serve before Atlas enrichment. findReferenceUiLibraryComponent looks one up by name.
 import type { McpComponent, McpComponentProp } from './types'
 
 function libProp(

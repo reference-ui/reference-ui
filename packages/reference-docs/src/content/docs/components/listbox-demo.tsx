@@ -1,3 +1,6 @@
+// Live Listbox demos for the Listbox component page.
+// They take nothing and emit single and multiple selection. Colocated with the page that
+// embeds them.
 import { useState } from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Listbox } from '@reference-ui/lib'

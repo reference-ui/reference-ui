@@ -1,3 +1,6 @@
+// Live animation demo for the System animation page.
+// It takes nothing and emits motion driven by the page's own animation tokens, so the demo
+// shows the API rather than any library's animations. Colocated with the page that embeds it.
 import { type ReactNode, useState } from 'react'
 import { Button, Div, Span } from '@reference-ui/react'
 import './animation-demo.fragments'

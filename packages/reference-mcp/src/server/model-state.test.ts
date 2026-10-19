@@ -1,3 +1,5 @@
+// Vitest tests for model build state and error classification.
+// They take lifecycle events plus raw errors and assert state transitions and classified codes.
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import {
   classifyProjectError,

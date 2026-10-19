@@ -1,3 +1,6 @@
+// Tabbed container grouping related code blocks.
+// It takes labels plus children and emits the tab chrome; useInCodeTabs lets nested blocks
+// adapt to their group.
 import {
   Children,
   createContext,

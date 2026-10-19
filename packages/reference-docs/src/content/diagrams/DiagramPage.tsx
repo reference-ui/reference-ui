@@ -1,3 +1,6 @@
+// Private diagram gallery at /diagram, outside the doc shell.
+// It takes nothing and emits full-bleed specimen canvases plus the aesthetic guidelines;
+// there is no sidebar or nav entry. The teaching set for diagram authors, human and agent.
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Div, H1, H2, Li, Ol, P, Span, Strong, css } from '@reference-ui/react'

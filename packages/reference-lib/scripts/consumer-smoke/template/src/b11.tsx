@@ -1,3 +1,6 @@
+// Behavior specimens for the consumer smoke probe (the B11 pass).
+// It mounts tree autodetect, accordion arrows, splitter, menu, tree expander, and presence
+// cases behind data-testids the probe drives. Each export is one named behavior, not a demo page.
 import * as React from 'react'
 import {
   Accordion,

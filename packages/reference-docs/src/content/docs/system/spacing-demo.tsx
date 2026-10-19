@@ -1,3 +1,6 @@
+// Spacing rhythm ramp for the System spacing page.
+// It takes nothing and emits the rhythm ramp specimen over the spacing scale. Colocated
+// with the page that embeds it.
 import type { ReactNode } from 'react'
 import { Div, Span } from '@reference-ui/react'
 

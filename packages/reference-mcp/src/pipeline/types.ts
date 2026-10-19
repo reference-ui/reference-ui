@@ -1,3 +1,6 @@
+// Shared model types for the MCP pipeline and tools.
+// It takes nothing and emits the component, prop, anatomy, token, artifact, and tool-input
+// shapes every pipeline stage and server file builds on.
 import type { AtlasDiagnostic, Usage } from '@reference-ui/rust/atlas'
 
 export type McpComponentPropOrigin = 'observed' | 'documented'

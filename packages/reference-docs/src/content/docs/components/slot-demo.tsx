@@ -1,3 +1,5 @@
+// Live Slot demo for the Slot component page.
+// It takes nothing and emits the slotted composition. Colocated with the page that embeds it.
 import type { ReactNode } from 'react'
 import { Button, Div, H3 } from '@reference-ui/react'
 import { createSlotRootContext } from '@reference-ui/lib'

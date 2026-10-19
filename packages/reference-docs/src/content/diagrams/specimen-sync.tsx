@@ -1,3 +1,7 @@
+// Sync overview specimen for the /diagram gallery.
+// It takes nothing and emits one workflow with four payoffs: a tinted command block
+// dropping into a two-by-two of centered outcome cards. Rows inside a column give the
+// grid without a grid primitive.
 import { HandymanIcon, PaletteIcon, TuneIcon, WidgetsIcon } from '@reference-ui/lib'
 import { Span, css } from '@reference-ui/react'
 import { Diagram } from '../../components/diagram/Diagram'

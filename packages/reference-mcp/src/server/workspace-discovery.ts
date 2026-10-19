@@ -1,3 +1,6 @@
+// Discovers Reference UI projects across cwd, ancestors, workspace, registry, and scan.
+// It takes discovery options and emits ranked project entries with sync state. isProjectSynced
+// reports whether a project has the generated output tools need.
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import fg from 'fast-glob'

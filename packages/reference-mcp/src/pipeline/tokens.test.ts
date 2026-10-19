@@ -1,3 +1,6 @@
+// Vitest tests for the MCP token projection.
+// They take fragment token graphs and assert flattened tokens plus upstream fragment
+// linearization.
 import { describe, expect, it } from 'vitest'
 import { flattenTokenFragments, getUpstreamFragments } from './tokens'
 

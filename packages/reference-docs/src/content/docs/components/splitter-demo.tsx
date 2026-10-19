@@ -1,3 +1,6 @@
+// Live Splitter demos for the Splitter component page.
+// They take nothing and emit the split panes plus the nested variant. Colocated with the
+// page that embeds them.
 import { useState } from 'react'
 import { Div, Span, css } from '@reference-ui/react'
 import { Splitter } from '@reference-ui/lib'

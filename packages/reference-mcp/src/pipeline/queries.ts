@@ -1,3 +1,7 @@
+// Read-model queries behind the component and token tools.
+// They take the built artifact plus the static catalogs and emit compact summaries,
+// enriched components, prop projections, and token listings. Nothing here touches the
+// server; tools.ts calls in with an active project.
 import type {
   McpBuildArtifact,
   McpComponent,

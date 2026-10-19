@@ -1,3 +1,6 @@
+// Builds the MiniSearch icon index MCP queries at runtime.
+// It takes src/data/icons-metadata.json plus the synonym table and emits the serialized
+// src/data/icons-index.json the icons search index loads.
 import { readFile, writeFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'

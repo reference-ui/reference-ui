@@ -1,3 +1,6 @@
+// Live Popover demos for the Popover component page.
+// They take nothing and emit click and hover triggers. Colocated with the page that embeds
+// them.
 import { Div, Span } from '@reference-ui/react'
 import { Popover } from '@reference-ui/lib'
 import { floatingSurface } from './demo-surface'

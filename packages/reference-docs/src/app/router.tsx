@@ -1,3 +1,7 @@
+// TanStack route tree for the docs site.
+// It takes the collection-backed DocPage plus the private /diagram gallery and emits the
+// router: doc shell at / and /$slug, full-bleed gallery outside the shell, and the legacy
+// /colors redirect. Static paths outrank $slug.
 import { createRouter, createRootRoute, createRoute, redirect } from '@tanstack/react-router'
 import { DocLayout } from './DocLayout'
 import { DocPage } from './DocPage'

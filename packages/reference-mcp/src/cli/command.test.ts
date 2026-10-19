@@ -1,3 +1,5 @@
+// Vitest tests for ref-mcp transport selection.
+// They take option shapes plus argv vectors and assert stdio/HTTP resolution and conflicts.
 import { describe, expect, it } from 'vitest'
 
 import { type McpCommandOptions, resolveTransport } from './command'

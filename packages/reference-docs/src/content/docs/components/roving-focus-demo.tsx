@@ -1,3 +1,5 @@
+// Live RovingFocus demo for the RovingFocus component page.
+// It takes nothing and emits the roving-tabindex group. Colocated with the page that embeds it.
 import { Button, Div } from '@reference-ui/react'
 import { RovingFocus } from '@reference-ui/lib'
 

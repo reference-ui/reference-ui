@@ -1,3 +1,6 @@
+// Server barrel plus the stdio runner.
+// It takes nothing and emits the server factories, HTTP runner, project manager, model
+// state, and shared URIs and defaults. runReferenceMcpServer starts stdio serving.
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { log } from './logger'
 import {

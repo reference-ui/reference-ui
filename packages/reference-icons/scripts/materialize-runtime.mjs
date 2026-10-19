@@ -1,5 +1,7 @@
 // Package the generated runtime into dist so published reference-icons resolves
-// stable relative files instead of relying on nested node_modules paths.
+// stable relative files instead of relying on nested node_modules paths. It takes the
+// built bundle plus the runtime and tasty declarations and emits the staged dist layout
+// the tarball ships.
 import { constants } from 'node:fs'
 import { access, cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'

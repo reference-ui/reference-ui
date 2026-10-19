@@ -1,3 +1,7 @@
+// Reference-pipeline specimen for the /diagram gallery.
+// It takes nothing and emits the large worked example composing every Diagram piece:
+// stages, badges, analysis chips, and the browser-runtime mock. Styles live in the
+// specimen-pipeline.styles companion.
 import {
   BoltIcon,
   BrushIcon,

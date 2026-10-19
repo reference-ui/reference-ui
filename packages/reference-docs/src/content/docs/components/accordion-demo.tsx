@@ -1,3 +1,6 @@
+// Live Accordion demos for the Accordion component page.
+// They take nothing and emit single and multiple expansion. Colocated with the page that
+// embeds them.
 import { Div, P, css } from '@reference-ui/react'
 import { Accordion } from '@reference-ui/lib'
 

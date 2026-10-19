@@ -1,3 +1,6 @@
+// model.json artifact persistence.
+// It takes a project root plus the built artifact and emits the written file path; the read
+// entry parses it back. The directory is created on write.
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import type { McpBuildArtifact } from './types'
 import { getMcpDirPath, getMcpModelPath } from './paths'

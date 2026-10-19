@@ -1,3 +1,5 @@
+// Vitest tests for the reference-warning one-liner.
+// They take typed manifest diagnostics and assert the file:line:col CODE subject rendering.
 import { describe, expect, it } from 'vitest'
 import { formatReferenceWarning } from './warnings'
 

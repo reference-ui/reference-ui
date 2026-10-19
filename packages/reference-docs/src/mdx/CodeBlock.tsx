@@ -1,3 +1,6 @@
+// Fenced code block with line highlights and tall-source reveal.
+// It takes pre children plus highlight metadata and emits the panel with full-width accent
+// rows, top-right copy, and a centered View Code reveal for tall unhighlighted sources.
 import { useLayoutEffect, useRef, useState, type ComponentPropsWithoutRef } from 'react'
 import { Div, css } from '@reference-ui/react'
 import { useInCodeTabs } from './CodeTabs'

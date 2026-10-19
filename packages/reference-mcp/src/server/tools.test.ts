@@ -1,3 +1,5 @@
+// Vitest tests for the registered reference tools over MCP.
+// They take temp projects and assert tool results against the built model.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'

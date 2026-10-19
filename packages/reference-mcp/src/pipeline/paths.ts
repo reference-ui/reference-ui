@@ -1,3 +1,5 @@
+// Generated-folder paths for the MCP model artifact.
+// They take a project root and emit the mcp dir, model.json, and tasty manifest paths.
 import { join } from 'node:path'
 import { getOutDirPath } from '../core/paths'
 

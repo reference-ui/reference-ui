@@ -1,3 +1,6 @@
+// Floating docs header over the article.
+// It takes the nav-open callback and emits menu, brand, repo link, and theme controls on
+// the frosted control surface. There is no opaque header bar.
 import { Div, Header, Span, css } from '@reference-ui/react'
 import { MenuIcon } from '@reference-ui/lib'
 import { Brand } from './Brand'

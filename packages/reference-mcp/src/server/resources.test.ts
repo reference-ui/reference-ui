@@ -1,3 +1,5 @@
+// Vitest tests for the MCP guidance resources.
+// They take temp projects and assert registration plus the component-model sync re-check.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'

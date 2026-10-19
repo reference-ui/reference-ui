@@ -1,3 +1,6 @@
+// License gallery specimen for the /diagram gallery.
+// It takes nothing and emits the two-seat license figure: green activated seats and
+// pills with a neutral limit note. Panels nest layout freely inside.
 import { ComputerIcon, KeyIcon, LaptopMacIcon, MonitorIcon } from '@reference-ui/lib'
 import { Div, Span, css } from '@reference-ui/react'
 import { Diagram } from '../../components/diagram/Diagram'

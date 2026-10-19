@@ -1,3 +1,6 @@
+// Live Field demos for the Field component page.
+// They take nothing and emit the labeled field plus status states. Colocated with the page
+// that embeds them.
 import { Button, Div, Input, Label, P, Span, css } from '@reference-ui/react'
 import { Field } from '@reference-ui/lib'
 import { demoNote, demoStack } from './demo-surface'

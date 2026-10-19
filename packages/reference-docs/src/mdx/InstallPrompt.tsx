@@ -1,3 +1,6 @@
+// AI-agent install card with copyable prompt.
+// It takes nothing and emits the label, primary Copy prompt button, and the collapsed
+// read-only disclosure. The prompt is the repo-root INSTALL.md imported ?raw at build time.
 import { useEffect, useId, useState, type MouseEvent } from 'react'
 import { Div, css } from '@reference-ui/react'
 import { CheckIcon, ContentCopyIcon, VisibilityIcon, VisibilityOffIcon } from '@reference-ui/lib'

@@ -1,3 +1,5 @@
+// Palette swatch grid for the Foundations color page.
+// It takes a palette group and emits its swatches. Colocated with the page that embeds it.
 import { Div, H3, Span } from '@reference-ui/react'
 import { colors } from '@reference-ui/lib/theme'
 

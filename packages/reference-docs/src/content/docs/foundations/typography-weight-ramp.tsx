@@ -1,3 +1,5 @@
+// Font-weight ramp specimen for the Foundations typography page.
+// It takes nothing and emits the weight ramp. Colocated with the page that embeds it.
 import type { ReactNode } from 'react'
 import { Div, Span } from '@reference-ui/react'
 

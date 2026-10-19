@@ -1,3 +1,7 @@
+// Shared prop and component types for every Material Symbols icon.
+// It takes the Div style-props surface and emits the icon contract: outline/filled
+// variant, token or CSS size values, and the ref-forwarding component type the
+// generated icons implement.
 import type * as React from 'react'
 import type { DivProps } from '@reference-ui/react'
 

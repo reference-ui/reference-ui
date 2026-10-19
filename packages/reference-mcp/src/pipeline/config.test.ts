@@ -1,3 +1,6 @@
+// Vitest tests for the MCP Atlas config builder.
+// They take project configs and assert the selector: includes, excludes, and the primitives
+// observe entry, with empty lists dropped.
 import { describe, expect, it } from 'vitest'
 import { getAtlasMcpConfig } from './config'
 import { REFERENCE_UI_PRIMITIVE_NAMES } from './primitives'

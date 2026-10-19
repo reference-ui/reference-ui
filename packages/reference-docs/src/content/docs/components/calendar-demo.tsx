@@ -1,3 +1,6 @@
+// Live Calendar demos for the Calendar component page.
+// They take nothing and emit single-date and range selection. Colocated with the page that
+// embeds them.
 import { useState } from 'react'
 import { Calendar, type DateRangeValue, type ISODate } from '@reference-ui/lib'
 

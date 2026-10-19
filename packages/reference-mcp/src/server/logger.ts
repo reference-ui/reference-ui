@@ -1,3 +1,6 @@
+// Shared stderr log sink for the MCP server and pipeline.
+// It takes log arguments and emits [ref mcp]-prefixed lines; debug stays silent unless
+// REF_DEBUG or DEBUG is set. stdout stays clean for stdio transport.
 export const log = {
   info: (...args: unknown[]) => {
     console.error('[ref mcp]', ...args)

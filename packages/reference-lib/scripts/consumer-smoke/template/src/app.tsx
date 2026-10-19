@@ -1,3 +1,7 @@
+// Mount-all app for the consumer smoke probe.
+// It renders every barrel component, each isolated in an error boundary that prints
+// MOUNT-FAILED, and sets __SMOKE_MOUNTED__ once mounted. The Playwright probe asserts the
+// mounts, the stale-dist behaviors, and zero unexpected console errors against it.
 import * as React from 'react'
 import {
   AbcIcon,

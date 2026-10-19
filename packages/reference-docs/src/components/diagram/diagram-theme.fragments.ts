@@ -1,3 +1,6 @@
+// Diagram palette tokens collected by ref sync.
+// It declares the midnight-slate canvas chrome, the six semantic tones on the core scale,
+// and the legible inks. Imported for its side effects by the Diagram kit.
 import { tokens } from '@reference-ui/system'
 
 /**

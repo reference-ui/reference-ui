@@ -1,3 +1,6 @@
+// Previous/next article pager under the article.
+// It takes nothing and emits the neighbors from the flattened doc order, keeping reading
+// flowing across sections without a table of contents.
 import { Link, useRouterState } from '@tanstack/react-router'
 import { Div, Span, css } from '@reference-ui/react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@reference-ui/lib'

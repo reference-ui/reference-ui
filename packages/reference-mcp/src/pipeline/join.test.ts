@@ -1,3 +1,6 @@
+// Vitest tests for the Atlas/reference join.
+// They take observed components plus reference documents and assert joined props,
+// style-prop filtering, and the reference-data conversion.
 import { describe, expect, it } from 'vitest'
 import type { Component } from '@reference-ui/rust/atlas'
 import type { ReferenceDocument } from '@reference-ui/core/reference'

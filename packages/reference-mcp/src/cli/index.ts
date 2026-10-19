@@ -1,3 +1,6 @@
+// The ref-mcp commander program.
+// It takes argv and emits the parsed command dispatch; tests drive the real argv parsing
+// without starting a server. runCli is the bin entry's call.
 import { Command } from 'commander'
 import { mcpCommand, type McpCommandOptions } from './command'
 

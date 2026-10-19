@@ -1,3 +1,6 @@
+// Full-height docs navigation rail.
+// It takes nothing and emits the wordmark plus the shared DocNav section list, which the
+// mobile nav reuses. Hidden on small viewports by container query.
 import { Link, useRouterState } from '@tanstack/react-router'
 import { Aside, Div, Nav, css } from '@reference-ui/react'
 import { docsBySection } from '../collections/runtime'

@@ -1,3 +1,6 @@
+// Tone gallery specimen for the /diagram gallery.
+// It takes nothing and emits the six semantic tones at resting intensity plus one tone
+// across all four intensities, with the dashed notice-before-crossing boundary.
 import {
   BoltIcon,
   CheckCircleIcon,

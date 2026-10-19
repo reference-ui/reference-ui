@@ -1,3 +1,6 @@
+// Live DateField demos for the DateField component page.
+// They take nothing and emit single-date and range inputs. Colocated with the page that
+// embeds them.
 import { useState } from 'react'
 import { Div, Label } from '@reference-ui/react'
 import { DateField, type DateRangeValue, type ISODate } from '@reference-ui/lib'

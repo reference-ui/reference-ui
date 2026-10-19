@@ -1,3 +1,6 @@
+// File-lock CPU gate coordinating concurrent agent runs off /tmp/reference-ui-cpu-gate.
+// It takes a holder class plus task name and emits serialized execution through a locks.json
+// ledger and mutex dir, reaping entries whose PIDs are dead.
 import fs from 'node:fs'
 import path from 'node:path'
 

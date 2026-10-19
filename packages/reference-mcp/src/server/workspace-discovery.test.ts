@@ -1,3 +1,5 @@
+// Vitest tests for workspace project discovery.
+// They take temp workspaces and assert ranked entries across sources plus sync detection.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'

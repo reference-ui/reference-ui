@@ -1,3 +1,5 @@
+// Vitest tests for observed-primitive construction from Atlas output.
+// They take fixture Atlas elements plus temp trees and assert the emitted primitive records.
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'

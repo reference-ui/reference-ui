@@ -1,3 +1,7 @@
+// Style-prop vocabulary reference behind get_style_props.
+// It takes the core style vocabulary plus the color-key table and emits the prop categories,
+// the isStylePropName predicate, and the shared guide text. The guide is identical for every
+// project; only the query input varies.
 import { isStylePropName as isVocabularyStylePropName } from '@reference-ui/core/style-vocabulary'
 import { COLOR_PROP_KEYS } from './constants'
 import type { McpGetStylePropsInput } from './types'

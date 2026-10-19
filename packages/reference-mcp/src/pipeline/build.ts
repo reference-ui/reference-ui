@@ -1,3 +1,7 @@
+// Builds, loads, and prefetches the per-project MCP artifact.
+// It takes a project root and emits the joined component model, running Atlas analysis out
+// of process and caching by root. loadOrBuild prefers the on-disk artifact; prefetch warms
+// the Atlas cache during project selection.
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { analyzeDetailed } from '@reference-ui/rust/atlas'
