@@ -4,10 +4,12 @@
  * and its tag reader does not skip template strings, so a props table whose
  * data has an object with a brace, or a template string with an apostrophe,
  * would come out as raw JSX. This pass moves every `={...}` attribute expression
- * on a block start tag into a stash and leaves `={TAMAGUI_EXPR_n}`; hooks read the
- * source back with exprOf(). It also turns the JSX spacer {' '} and inline
- * <Code>/<Link> in prose into text, since the converter can only mark those.
- * Fenced code and backtick code spans are copied through untouched.
+ * on a block start tag into a stash and leaves `={TAMAGUI_EXPR_n}`; it returns
+ * the converted body with that stash, which the adapter keeps per page file
+ * for its hooks. It also turns the JSX spacer {' '} and inline <Code>/<Link>
+ * in prose into text, since the converter can only mark those. Fenced code
+ * and backtick code spans are copied through untouched. Empty `hero template=`
+ * blocks are dropped and counted: the site fills them from the inlined demo.
  */
 
 const FENCE_OPEN = /^(\s*)(`{3,}|~{3,})(.*)$/

@@ -1,9 +1,9 @@
 /**
  * Memex engine: manifests in, ranked docs out. No CLI side effects.
  *
- * Manifest collections (cases, rs-cases, surfaces) load from
- * `.agents/memex/collections/*.json`; the graph system collection is
- * built in. Everything is read live on every call, so there is no
+ * Manifest collections (cases, components, docs-corpus, rs-cases, surfaces)
+ * load from `.agents/memex/collections/*.json`; the graph system collection
+ * is built in. Everything is read live on every call, so there is no
  * stale state and no rebuild step. MiniSearch ranks globally over
  * manifest collections. The graph is targeted-only: thousands
  * of harvested headers would drown curated hits in a global rank, so

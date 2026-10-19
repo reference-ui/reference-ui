@@ -6,8 +6,9 @@
  * semver version file; the older versions are not live pages. The live URLs
  * `/tailwind/`, `/unstyled/`, `/tailwind-ui/` and `/styled-ui/` render the same MDX
  * with other chrome and code syntax, so they are not pages of their own.
- * Live pages the nav does not list come from UNLISTED, after the nav pages, in
- * section "Unlisted". Other MDX outside the nav is left out (see the report lines).
+ * Live pages the nav does not list come from UNLISTED, after the nav pages,
+ * in section "Unlisted"; other MDX outside the nav is left out (see the
+ * report lines).
  */
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'

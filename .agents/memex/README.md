@@ -90,7 +90,7 @@ errors — a passed flag never silently does nothing.
 ## JSON shapes
 
 - `search … --json`: `{total, returned, hits[]}`; hits carry
-  `collection/id/score/title/extra/path/snippet/fuzzy[]/facets` (`fuzzy` lists matched variants; `facets` holds `source` and `type` when the doc has them).
+  `collection/id/score/title/extra/path/snippet/fuzzy[]/matched[]/facets` (`fuzzy` lists matched variants; `matched` names the fields a hit matched when the snippet shows none; `facets` holds `source` and `type` when the doc has them).
 - `search --in <coll> --json`: `{collection, total, returned, docs[]}`.
 - bare `search --json`: the complete collections array.
 - `show … --json`: `{ref, text}` plus the doc's structured fields

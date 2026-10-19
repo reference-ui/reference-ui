@@ -2,7 +2,8 @@
  * Reads JSX-like source as text for the Tailwind adapter: string, template,
  * number and literal values, objects, arrays, tagged templates (`dedent`) and
  * JSX trees. Nothing from the source is executed. Anything outside this subset
- * throws a SourceError with the file offset, so a caller can name it.
+ * throws a SourceError naming the line and the failing source, which fails
+ * the run.
  */
 
 export class SourceError extends Error {}
