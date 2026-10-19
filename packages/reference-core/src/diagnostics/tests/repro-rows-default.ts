@@ -251,12 +251,23 @@ export const DEFAULT_ROWS: ReproRow[] = [
     files: { 'theme/ext.ts': styleFile("export const cls = css({ translateX: '10px' })") },
   },
   {
-    // A package's tag styled with nothing in extends/layers to back it.
+    // An installed Reference package's tag, styled, with its published system in neither
+    // extends nor layers. The package is on disk as a registry install leaves it: the engine
+    // follows the import to its directory and reads the system it published there, so a
+    // name that resolves nowhere would be a foreign package, silent by ruling.
     code: 'ATM-W-EXTERNAL-UNBACKED',
     severity: 'warning',
     channel: 'diagnostics',
     configExtra: '',
     files: {
+      'node_modules/acme-icons/package.json': JSON.stringify({
+        name: 'acme-icons',
+        type: 'module',
+        exports: { '.': './dist/index.js', './baseSystem': './.reference-ui/system/baseSystem.mjs' },
+      }),
+      'node_modules/acme-icons/dist/index.js': 'export function CopyIcon() {\n  return null\n}\n',
+      'node_modules/acme-icons/.reference-ui/system/baseSystem.mjs':
+        'export const baseSystem = {\n  "name": "acme-icons"\n}\n',
       'theme/icon.tsx': [
         "import { CopyIcon } from 'acme-icons'",
         '',
