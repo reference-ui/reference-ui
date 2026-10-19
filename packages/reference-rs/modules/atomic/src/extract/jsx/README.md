@@ -9,38 +9,61 @@ import { Div } from '@reference-ui/react'
 ```
 
 String attrs, expression containers, boolean props, spreads, `r={{…}}`,
-and a `css={…}` attr are all JSX. A tag lowers one of three ways. An own
-host (a styletrace name, or a component imported from
-`@reference-ui/react` / `@reference-ui/styled`) lowers its wants under
-the app's system. Any other capitalized tag, a local `<Foo mt="2r" />`
-or a package's `<Button>`, is an external component: its wants lower
-with `external: true` and the consumer backs them under every composed
-system. Lowercase tags that are not hosts are skipped silently. An empty
-host set admits nothing: style-bearing JSX with no hosts resolvable is a
-missing-graph error (ATM-SITE-13), once per file.
+and a `css={…}` attr are all JSX. Lowercase tags that are not hosts are
+skipped silently. An empty host set admits nothing: style-bearing JSX with
+no hosts resolvable is a missing-graph error (ATM-SITE-13), once per file.
 
-Ownership comes from the tag root's provenance, not its name. A root
-whose import ends at an installed package (directly, or through project
-barrels and `tsconfig` aliases) is never an own host, even when it spells
-a primitive or an upstream's published wrapper: `<Button>` from
-`@reference-ui/lib`, `acme-ui` or any other package renders through that
-package's bundled runtime and mints its class, so it takes the external
-path like any capitalized non-host. Reference imports are own by proof;
-project imports, same-file declarations and unbound names keep the host
-roster match. The same gate decides whether a same-file wrapper threads
-its `css` prop into a host.
+## Which system a tag lowers under
 
-A package's classes paint only when the consumer composes that package's
-system (`extends` / `layers`): each composed upstream becomes a qualifier
-the external wants fan out under. With none composed, nothing can back
-them, so a package-bound tag that lowers a style want reports
-`ATM-W-EXTERNAL-UNBACKED` once, at the tag, naming the package (subpath
-dropped, `const` aliases followed) and the fix: compose its baseSystem.
-A same-file wrapper whose `css` prop forwards into a package-bound tag
-reports it at each call site that sets `css`. Extraction cannot see the
-composed systems, so assembly keeps the line only when there is no
-foreign qualifier. Own, project and unbound tags never report it, and
-neither does a tag whose props its owner keeps.
+The class belongs to the runtime that renders the tag, so the tag root's
+provenance decides, never its name. `../README.md` describes how an import
+is followed to where it lands on disk.
+
+- **Own host**: a component imported from `@reference-ui/react` /
+  `@reference-ui/styled`, or a name the host roster admits (styletrace's
+  traced wrappers). Its wants lower under this compile's system.
+- **Package tag**: a root whose import ends at a package that published a
+  system, directly or through project barrels, `tsconfig` aliases and
+  same-file `const` aliases. `<Button>` from `@reference-ui/lib` or
+  `acme-ui` renders through that package's bundled runtime, which mints
+  the class under the package's own system, so it is never an own host,
+  even when it spells a primitive. Its wants back under the systems the
+  package renders through (its published `streams`) that this compile
+  composes, and under no other.
+- **Not a Reference component**: a root whose import ends at a package
+  with no published system and no path to this compile's runtime, such as
+  `<LucideIcon color="red" />`. Nothing lowers and nothing warns.
+- **Anything else**: a project import, a same-file declaration or an
+  unbound name the roster does not admit. An unbound name that a composed
+  upstream publishes (`upstreamHosts`) backs under that upstream; the rest
+  back under own, which is what they render if they forward at all.
+
+The same gate decides whether a same-file wrapper threads its `css` prop
+into a host. The analysis mirror (`diagnostics/analysis/jsx`) asks the same
+`Composed`, so its expected keys name the systems extraction lowers under.
+
+## ATM-W-EXTERNAL-UNBACKED
+
+A package tag whose systems this compile does not compose cannot paint: the
+package's runtime mints `acme__c_blue`, and nothing in this compile's sheet
+backs it. Composing some other system does not help. The tag lowers under no
+system and warns once, at the tag, with the package, its system and the fix:
+
+```text
+message: style props on <AcmeCard> will not paint: 'acme-ui' renders through its own system 'acme', and no system in `extends` or `layers` backs it
+help:    add 'acme-ui/baseSystem' to `extends` or `layers` in ui.config
+```
+
+The package name drops any subpath (`@reference-ui/lib/primitives` names
+`@reference-ui/lib`) and follows same-file `const` aliases. A published
+system that cannot be read warns too, naming the package and why. A
+same-file wrapper whose `css` prop forwards into a package tag warns at
+each call site that sets `css`. Own, project and unbound tags never warn,
+and neither does a tag whose props its owner keeps or a package not built
+on Reference UI.
+
+The warning is decided here, where the tag's span and the composed systems
+both are; assembly passes it through.
 
 ## Must not
 

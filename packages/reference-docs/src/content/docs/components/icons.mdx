@@ -54,8 +54,8 @@ your tokens:
 
 Style props on an icon compile when lib's `baseSystem` is in `extends` or
 `layers` in `ui.config.ts`, as `ref init` sets up; it carries the icons' own
-system. With nothing in either, `ref sync` warns `ATM-W-EXTERNAL-UNBACKED` at
-the icon and the props do not paint.
+system. When neither holds lib's or the icons' `baseSystem`, `ref sync` warns
+`ATM-W-EXTERNAL-UNBACKED` at the icon and the props do not paint.
 
 `size`, `variant`, `style` and `className` work either way, and so does
 wrapping the icon in your own element:

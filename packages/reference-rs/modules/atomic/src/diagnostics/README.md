@@ -144,7 +144,7 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 | `ATM-W-UNKNOWN-TONE` | default | `css({ color: 'blue.500/mediun' })` |
 | `ATM-W-UNKNOWN-TOKEN` | default | `css({ p: 'upGap' })` |
 | `ATM-W-UNBRACED-TOKEN-REF` | default | `tokens({ colors: { accent: { value: 'gray.900' } } })` |
-| `ATM-W-EXTERNAL-UNBACKED` | default | `import { Button } from 'acme-ui'; <Button color="red" />` with no upstream system |
+| `ATM-W-EXTERNAL-UNBACKED` | default | `import { Button } from 'acme-ui'; <Button color="red" />` while acme's published system is in neither `extends` nor `layers` |
 
 ## Must not
 

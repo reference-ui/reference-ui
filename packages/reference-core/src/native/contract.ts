@@ -41,10 +41,12 @@ export interface ScopedCompileRequest extends NativeCompileRequest {
    */
   retentionToken?: number
   /**
-   * Upstream system names (extends then layers, self excluded) the engine
-   * qualifies external wants against. Carried structurally like `include`:
-   * undefined drops from the serialized request, so a no-upstream compile
-   * gains no key and the Rust default `[]` keeps the old path.
+   * Upstream system names (extends then layers, self excluded): the composed
+   * systems. The engine backs a package tag's style props under those the
+   * package renders through, and warns when there are none. Carried
+   * structurally like `include`: undefined drops from the serialized request,
+   * so a no-upstream compile gains no key and the Rust default `[]` keeps the
+   * old path.
    */
   upstreamSystems?: string[]
   /**

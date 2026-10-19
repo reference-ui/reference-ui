@@ -83,10 +83,21 @@ this file in the same pass.
   `approved-absence`, `retired`: the `TESTS.md` ledger states.
 - **host** — a JSX name whose style props extract under the app's own
   system: primitives carry every tag, wrappers earn it by forwarding.
-  Ownership is by import provenance, never by name: a tag whose import
-  ends at an installed package (lib, icons, any third-party package) is
-  external even when it spells a host, and its style props are backed
-  under every composed system. (styletrace, atomic)
+  Ownership follows the import to where it lands on disk, never the
+  name: a tag whose import ends at a package that published a system
+  (lib, icons, any package built on Reference UI) is **external** even
+  when it spells a host. A workspace package the same sync compiles, or
+  one that renders this project's generated `@reference-ui/react`, is
+  the app's own. (styletrace, atomic)
+- **external** — a tag that renders through another package's runtime,
+  which mints its class under that package's system. Its style props
+  resolve in the app's vocabulary and are backed under the systems the
+  package renders through (its published `streams`) that the app
+  composes, never under any other. When none is composed, sync warns
+  `ATM-W-EXTERNAL-UNBACKED` at the tag, naming the package, its system
+  and `<package>/baseSystem`. A tag from a package not built on
+  Reference UI is not a Reference component: nothing backs it and
+  nothing warns. (atomic)
 - **traced** — discovered by StyleTrace inside `compile()`, per
   project, from the code — never declared. (styletrace)
 - **configured** — names in the `jsxElements` config field. Only Core

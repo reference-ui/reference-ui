@@ -107,8 +107,9 @@ treated as a style prop.
 Components you import from a package, such as those in `@reference-ui/lib`,
 take style props too. They render with the package's own system, so their
 style props compile when that package's `baseSystem` is in `extends` or
-`layers`. With nothing in either, `ref sync` warns `ATM-W-EXTERNAL-UNBACKED`
-at the component.
+`layers`. Another system there does not stand in for it: without the
+package's own, `ref sync` warns `ATM-W-EXTERNAL-UNBACKED` at the component
+and names the package.
 
 ## Types
 
