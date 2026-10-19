@@ -23,6 +23,6 @@ goldens, where the package want backs under no system and the tag reports
 `ATM-W-EXTERNAL-UNBACKED` naming `acme`, ATM-SITE-100) and Core's request with
 the roster and both upstreams. Nothing is configured by the user. Siblings: ATM-SITE-97 (barrel re-export), ATM-SITE-98
 (`css` wrapper), ATM-SITE-99 (published wrapper name), ATM-SITE-95 (compiled
-package owned props), CORE-CHAIN-08 (fan-out across composed systems).
+package owned props), CORE-CHAIN-08 (a prebuilt package's tag backed under its published system).
 
-> Search terms: ownership, provenance, package import, primitive name, Button, external component, foreign runtime, fan-out, upstreamSystems, jsxHosts roster, TagProvenance, own host, backing, published system, no spray
+> Search terms: ownership, provenance, package import, primitive name, Button, external component, foreign runtime, upstreamSystems, jsxHosts roster, TagProvenance, own host, backing, published system, no spray

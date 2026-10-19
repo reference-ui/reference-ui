@@ -23,7 +23,7 @@ compile composes nothing, so the tag backs nowhere and warns once
 Nothing is configured by the user.
 
 Siblings: ATM-SITE-100 (unbacked warning), ATM-SITE-96 (a single-system
-package), CORE-CHAIN-08 (fan-out across composed systems), matrix T17 contract 7
+package), CORE-CHAIN-08 (a prebuilt package's tag backed under its published system), matrix T17 contract 7
 (icons accounting).
 
-> Search terms: streams, two systems, lib re-exports icons, BoltIcon, reference-icons, published system, baseSystem, exports, foreign group, no spray, composed systems, intersection, backing, fan-out
+> Search terms: streams, two systems, lib re-exports icons, BoltIcon, reference-icons, published system, baseSystem, exports, foreign group, no spray, composed systems, intersection, backing

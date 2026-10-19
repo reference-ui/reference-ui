@@ -23,6 +23,6 @@ Composing lib only (`upstreamSystems: ['reference-ui']`, gap 2) backs lib's tag
 `bg` backs under no system, never under lib's. Composing acme too backs it as
 `acme__bg_red`, and no `ATM-W-EXTERNAL-UNBACKED` remains. Nothing is configured by the user.
 Siblings: ATM-SITE-96 (package primitive name), ATM-SITE-99 (published wrapper
-name), CORE-CHAIN-08 (fan-out across composed systems).
+name), CORE-CHAIN-08 (a prebuilt package's tag backed under its published system).
 
-> Search terms: EXTERNAL-UNBACKED, unbacked external, package tag, composed system, extends, layers, baseSystem, fan-out, silent failure, nothing paints, upstreamSystems, located warning, gap 2, partly composed, backing
+> Search terms: EXTERNAL-UNBACKED, unbacked external, package tag, composed system, extends, layers, baseSystem, no spray, silent failure, nothing paints, upstreamSystems, located warning, gap 2, partly composed, backing

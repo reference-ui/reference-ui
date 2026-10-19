@@ -31,4 +31,4 @@ Siblings: ATM-SITE-102 (a traced runtime-borrowing package), ATM-SITE-99
 (published wrapper name), ATM-SITE-56 (zero-config discovery), ATM-SITE-103
 (a foreign package is silent).
 
-> Search terms: untraced, local component, unbound tag, MDX components map, global, upstreamHosts, published name, capitalised spelling, is_external_tag, own, spray, built workspace package, borrows runtime, higher-order component, backing
+> Search terms: untraced, local component, unbound tag, MDX components map, global, upstreamHosts, published name, capitalised spelling, is_component_tag, own, spray, built workspace package, borrows runtime, higher-order component, backing
