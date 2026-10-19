@@ -1,0 +1,1 @@
+{"id": "ATM-SITE-102", "name": "A workspace package with no system of its own, whose @reference-ui/react resolves to this project's generated runtime, renders through that runtime, so its tags are own"}

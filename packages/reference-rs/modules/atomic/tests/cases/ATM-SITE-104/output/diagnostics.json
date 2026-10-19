@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-EXTERNAL-UNBACKED",
+    "message": "style props on <BoltIcon> will not paint: '@reference-ui/lib' renders through its own system 'reference-ui', and no system in `extends` or `layers` backs it",
+    "file": "input/src/App.tsx",
+    "line": 12,
+    "column": 7,
+    "span": {
+      "start": 316,
+      "end": 340
+    },
+    "help": [
+      "add '@reference-ui/lib/baseSystem' to `extends` or `layers` in ui.config"
+    ]
+  }
+]
