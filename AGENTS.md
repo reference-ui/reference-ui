@@ -20,7 +20,7 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | `packages/reference-docs` (docs app: MDX content, shell, examples) | **agent-docs** skill (`pnpm agentdocs`) |
 | `matrix/*` (kept chain and MCP suites), `packages/reference-mcp`, `pipeline/*`, hermetic bundler contracts | **test-core** (`pnpm agent`) |
 | Core sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:core`) |
-| Past hunts, verdicts, cases, evidence (agent memory) | Memex (`node .agents/memex/cli.mjs`, `.agents/memex/README.md`) |
+| Past hunts, verdicts, cases, evidence (agent memory) | Memex (`memex search|show|log`, intent graph + `.memex/` log store; see memex block below) |
 
 If a lib-component task also modified `matrix/*`, `pipeline/*` or `packages/reference-mcp`, finish `test-component` for the component, then **switch to test-core** for that proof. `pnpm agentct` does not cover them. Core and reference-rs changes go to `agent-core` / `agent-rs` (table above).
 
@@ -212,3 +212,17 @@ A case is a folder named by its raw ID (`ATM-TOKEN-06`, `CORE-TYPE-09`) that hol
 The reference-rs runner (`packages/reference-rs/testing`) fails any folder under `cases/` that is not named by a raw ID, and any case whose `case.json` is missing or whose id differs from its folder name, or whose README first line is not that heading. Core's runner enforces the same rules in `packages/reference-core/tests/shared/caseIndex.ts`, and also requires case.json `name` to equal the README claim: `listCases()` runs that check, so `pnpm agentcore list`, `search` and `run` all fail on a broken case folder. Memex indexes `case.json`: Core cases in `cases`, reference-rs cases in `rs-cases`.
 
 
+
+<!-- memex:begin -->
+## memex: read intent before code
+This repo keeps an intent layer. The graph: README.md per folder and a header comment atop each file
+(first line = purpose). Dimensions: any Markdown file with `memex: <collection>` in its frontmatter
+joins that collection, such as CASES.md (`memex: cases`): test ids with their claims; each id is in its test's name or in a comment on it.
+- Overview: `memex info`: where everything is (graph, collections, streams, messages for you).
+- Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children.
+- Find: `memex search <words>` over READMEs, headers, collections and logs. Use `rg` for symbols.
+- Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
+- Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
+- Messages to you: `memex search to:<your-id>`.
+- When you change code, update its header/README in the same change, then run `memex audit <paths>` and fix what it lists. Cite ids and paths; don't copy.
+<!-- memex:end -->

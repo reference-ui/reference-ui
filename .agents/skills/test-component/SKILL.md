@@ -323,36 +323,36 @@ Native Playwright UI with live story rendering, locators, and time-travel.
 
 ---
 
-## Memex (`components`, `cases`, and `surfaces` collections)
+## Memex (intent graph + log memory)
 
-Memex is the one agent CLI over every collection
-(`.agents/memex/README.md`): component declarations live in `components`,
-core cases in `cases`, and RS module surfaces in `surfaces`. Component entries
-index registered manifest declarations, not executed verdicts. Use component
-entries to select evidence and core entries to find related behavior coverage.
+Memex is the one agent CLI over the repo's intent layer (`memex info`;
+log store in `.memex/`): READMEs and file headers as a citation graph,
+plus timestamped logs agents leave each other. Memex finds declarations
+(component READMEs, headers), not executed verdicts: a `show` hit selects
+evidence, it never proves a behavior is tested. Use component hits to
+select evidence and case hits to find related behavior coverage.
 
 ```bash
-node .agents/memex/cli.mjs search "<query>" [--limit=N] [--json]       # all collections, hits labeled
-node .agents/memex/cli.mjs search "<query>" --in surfaces [--limit=N]  # RS surfaces only
-node .agents/memex/cli.mjs show cases:CORE-CHAIN-01                      # full doc + related
-node .agents/memex/cli.mjs search 'focus' --in components                # registered declarations
-node .agents/memex/cli.mjs show components:LIB-FIELD-026                # manifest metadata, not a verdict
+memex search "<query>" [--limit=N] [--json]            # readmes + headers + logs, grouped
+memex search 'focus'                                   # component + case hits for a concern
+memex show <path>                                      # README/header, cites, chain up
+memex log <stream> --agent <id> <<'EOF' ... EOF        # record hunts/verdicts; prints a ref
 ```
 
-Terms are stemmed (`queries` matches `query`) and typo-tolerant
-(fuzzy+prefix); `search` caps at 15 hits unless `--limit N` raises it.
-Resolve ids with `show`, not `search`. Component metadata comes from colocated
-`case.json` manifests. For the documentation collections, enrich the index by
-writing a detailed README: describe the behavior,
-name the symbols, cite sibling case ids (cited ids surface as
-`related`). Everything reads live: new docs are searchable immediately,
-no rebuild step.
+`search` groups hits (readmes/headers/logs); `--limit N` is hits per
+group (default 5). `show` resolves paths and printed refs; find a case
+id's folder with `rg <ID>` until the `cases` frontmatter collection
+lands. Resolve ids with `show`, not `search`. There is no metadata sidecar —
+enrich the graph by writing a detailed README: describe the behavior,
+name the symbols, cite sibling case ids. Everything reads live: new docs
+are searchable immediately, no rebuild step.
 
-Example (RS surface hit):
+Example:
 
 ```text
-$ node .agents/memex/cli.mjs search "barrels" --in surfaces --limit 1
-6.465 surfaces:rs:atlas — Atlas Module  6 suites, 15 cases
-        packages/reference-rs/modules/atlas
-        > Search terms: call-site snippets, namespace package, […]
+$ memex search "barrels" --limit 1
+readmes  (showing 1 of 45)
+  packages/reference-rs/modules/atlas/tests/cases/ATL-REXP-01/README.md  Verifies that local components imported through barrel files are properly tracked.
+headers  (showing 1 of 99)
+  packages/reference-rs/modules/styletrace/tests/cases/STT-BAR-04/input/index.ts  Named barrel for the named_barrel station.
 ```

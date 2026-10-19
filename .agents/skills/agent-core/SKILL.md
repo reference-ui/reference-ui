@@ -67,7 +67,7 @@ Subcommands: `list`, `search <query>`, `run [case-id]`, `q [paths]`.
   broken; other broken folders get one warning line each.
 - Case folders share one convention with reference-rs (`AGENTS.md` section 7):
   `case.json` (`id`, `name`), `README.md`, then Core's `specs/` and `world/`.
-  Memex indexes each case as `cases`.
+  Memex finds each case through its README.
 
 ## 4. Playwright Policy
 
@@ -207,33 +207,34 @@ renders a lie. Theme flips via `?theme=light`; routes come from
   works — nothing here gates anything. Checks confirm the page exists,
   matches the claim, and the console is clean.
 
-## 9. Memex (`cases` + `surfaces` collections)
+## 9. Memex (intent graph + log memory)
 
-Memex is the one agent CLI over every collection
-(`.agents/memex/README.md`): core cases live in `cases`, RS module
-surfaces in `surfaces`. Use it to find **cases by feature** instead
-of grepping — it reaches terms `agentcore search` (id/name/README text) misses,
+Memex is the one agent CLI over the repo's intent layer (`memex info`;
+log store in `.memex/`): READMEs and file headers as a citation graph,
+plus timestamped logs agents leave each other. Use it to find **cases by feature**
+instead of grepping — it reaches terms `agentcore search` (id/name/README text) misses,
 and surfaces the RS surfaces a case proves.
 
 ```bash
-node .agents/memex/cli.mjs search "<query>" [--limit=N] [--json]     # all collections, hits labeled
-node .agents/memex/cli.mjs search "<query>" --in cases [--limit=N]   # core cases only
-node .agents/memex/cli.mjs show cases:CORE-CHAIN-01                    # full doc + related
+memex search "<query>" [--limit=N] [--json]            # readmes + headers + logs, grouped
+memex show <path>                                      # README/header, cites, chain up
+memex log <stream> --agent <id> <<'EOF' ... EOF        # record hunts/verdicts; prints a ref
 ```
 
-Terms are stemmed (`queries` matches `query`) and typo-tolerant
-(fuzzy+prefix); `search` caps at 15 hits unless `--limit N` raises it.
-Resolve ids with `show`, not `search`. There is no metadata sidecar —
-enrich the index by writing a detailed README: describe the behavior,
-name the symbols, cite sibling case ids (cited ids surface as
-`related`). Everything reads live: new docs are searchable immediately,
-no rebuild step.
+`search` groups hits (readmes/headers/logs); `--limit N` is hits per
+group (default 5). `show` resolves paths and printed refs; find a case
+id's folder with `rg <ID>` until the `cases` frontmatter collection
+lands. Resolve ids with `show`, not `search`. There is no metadata sidecar —
+enrich the graph by writing a detailed README: describe the behavior,
+name the symbols, cite sibling case ids. Everything reads live: new docs
+are searchable immediately, no rebuild step.
 
-Example (RS surface hit):
+Example:
 
 ```text
-$ node .agents/memex/cli.mjs search "barrels" --in surfaces --limit 1
-6.465 surfaces:rs:atlas — Atlas Module  6 suites, 15 cases
-        packages/reference-rs/modules/atlas
-        > Search terms: call-site snippets, namespace package, […]
+$ memex search "barrels" --limit 1
+readmes  (showing 1 of 45)
+  packages/reference-rs/modules/atlas/tests/cases/ATL-REXP-01/README.md  Verifies that local components imported through barrel files are properly tracked.
+headers  (showing 1 of 99)
+  packages/reference-rs/modules/styletrace/tests/cases/STT-BAR-04/input/index.ts  Named barrel for the named_barrel station.
 ```

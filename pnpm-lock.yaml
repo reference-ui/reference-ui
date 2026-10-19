@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@aswemaythink/memex':
+        specifier: ^0.1.1
+        version: 0.1.1
       '@changesets/cli':
         specifier: ^2.30.0
         version: 2.30.0(@types/node@25.1.0)
@@ -1404,6 +1407,11 @@ importers:
         version: 6.5.2(typanion@3.14.0)
 
 packages:
+
+  '@aswemaythink/memex@0.1.1':
+    resolution: {integrity: sha512-V4ll2vi6dHNRSWA/Slci06qOdZimh1YbRORGI+gWdq0PrKMk0KZwFu9i5UsaO11kwCEeeyM/H8FMBOdaQLnqYA==}
+    engines: {node: '>=14.14', npm: '>=6'}
+    hasBin: true
 
   '@axe-core/playwright@4.13.0':
     resolution: {integrity: sha512-6YLx+kxXu5GJceG4ozFg+33a2EMTdjYwWGloJ3sb9Kta5pp+ZNS53uxGVog5JetIY8s++P5UrtX+cri+u0VAVg==}
@@ -7089,6 +7097,10 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
+
+  '@aswemaythink/memex@0.1.1':
+    dependencies:
+      detect-libc: 2.1.2
 
   '@axe-core/playwright@4.13.0(playwright-core@1.63.0)':
     dependencies:

@@ -54,7 +54,7 @@ Do **not** hunt for one harness. Each module has different testing needs:
 | **Rust Domain Units** | Cargo unit tests | Pure Rust tests for algorithms and data structures. | `pnpm agentrs c [module]` |
 | **Full Dev Loop** | Native Build -> Cargo -> Vitest -> Quality | Complete verification in under 5 seconds. | `pnpm agentrs t` |
 
-**Case folders.** Every case is a case folder named by its raw ID, holding `case.json` (`{"id", "name"}`), `README.md`, `spec.ts`, `input/` and `output/`. The runner fails a folder that breaks this, and Memex indexes each case as `rs-cases`. The shared convention is in `AGENTS.md` section 7.
+**Case folders.** Every case is a case folder named by its raw ID, holding `case.json` (`{"id", "name"}`), `README.md`, `spec.ts`, `input/` and `output/`. The runner fails a folder that breaks this, and Memex finds each case through its README. The shared convention is in `AGENTS.md` section 7.
 
 ---
 
@@ -225,36 +225,36 @@ flowchart TD
 
 ---
 
-## 6. Memex (`cases`, `rs-cases` + `surfaces` collections)
+## 6. Memex (intent graph + log memory)
 
-Memex is the one agent CLI over every collection
-(`.agents/memex/README.md`): core cases live in `cases`, RS cases in
-`rs-cases`, RS module surfaces in `surfaces`. Use it to find **module surfaces by feature**
+Memex is the one agent CLI over the repo's intent layer (`memex info`;
+log store in `.memex/`): READMEs and file headers as a citation graph,
+plus timestamped logs agents leave each other. Use it to find **module surfaces by feature**
 instead of grepping — it also surfaces the core cases that prove a surface.
 Surface docs overlap by design (several modules can claim one concern);
-adjudicate ownership via each doc's `related:` links plus the core case's
+adjudicate ownership via each doc's cited-by links plus the core case's
 `Raised in:` source line, not rank alone.
 
 ```bash
-node .agents/memex/cli.mjs search "<query>" [--limit=N] [--json]       # all collections, hits labeled
-node .agents/memex/cli.mjs search "<query>" --in surfaces [--limit=N]  # RS surfaces only
-node .agents/memex/cli.mjs search --in cases                           # roster of cases
-node .agents/memex/cli.mjs show surfaces:rs:atlas                      # full doc + related
+memex search "<query>" [--limit=N] [--json]            # readmes + headers + logs, grouped
+memex show <path>                                      # README/header, cites, chain up
+memex log <stream> --agent <id> <<'EOF' ... EOF        # record hunts/verdicts; prints a ref
 ```
 
-Terms are stemmed (`queries` matches `query`) and typo-tolerant
-(fuzzy+prefix); `search` caps at 15 hits unless `--limit N` raises it.
-Resolve ids with `show`, not `search`. There is no metadata sidecar —
-enrich the index by writing a detailed README: describe the behavior,
-name the symbols, cite sibling case ids (cited ids surface as
-`related`). Everything reads live: new docs are searchable immediately,
-no rebuild step.
+`search` groups hits (readmes/headers/logs); `--limit N` is hits per
+group (default 5). `show` resolves paths and printed refs; find a case
+id's folder with `rg <ID>` until the `cases` frontmatter collection
+lands. Resolve ids with `show`, not `search`. There is no metadata sidecar —
+enrich the graph by writing a detailed README: describe the behavior,
+name the symbols, cite sibling case ids. Everything reads live: new docs
+are searchable immediately, no rebuild step.
 
-Example (RS surface hit):
+Example:
 
 ```text
-$ node .agents/memex/cli.mjs search "barrels" --in surfaces --limit 1
-6.465 surfaces:rs:atlas — Atlas Module  6 suites, 15 cases
-        packages/reference-rs/modules/atlas
-        > Search terms: call-site snippets, namespace package, […]
+$ memex search "barrels" --limit 1
+readmes  (showing 1 of 45)
+  packages/reference-rs/modules/atlas/tests/cases/ATL-REXP-01/README.md  Verifies that local components imported through barrel files are properly tracked.
+headers  (showing 1 of 99)
+  packages/reference-rs/modules/styletrace/tests/cases/STT-BAR-04/input/index.ts  Named barrel for the named_barrel station.
 ```
