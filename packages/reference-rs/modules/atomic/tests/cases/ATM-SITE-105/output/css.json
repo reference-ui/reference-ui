@@ -1,0 +1,7 @@
+{
+  "bg:blue": "@reference-ui/lib__bg_blue",
+  "bg:red": "@reference-ui/lib__bg_red",
+  "color:green": "@reference-ui/lib__c_green",
+  "p:1r": "@reference-ui/lib__p_1r",
+  "p:2r": "@reference-ui/lib__p_2r"
+}
