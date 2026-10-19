@@ -19,10 +19,22 @@ import {
   collectCore,
   collectRs,
   collectRsCases,
+  loadMarkdownDoc,
 } from './adapters.mjs'
+import { facetValues, facetsOf, matchesFacets } from './facets.mjs'
+import { loadPersistedIndex } from './persist.mjs'
 import { GRAPH_NAME, chainShow, collectGraph } from './graph.mjs'
 import { collectComponents } from './components.mjs'
-import { processTerm, snippet, snippetNeedles, tokenize } from './text.mjs'
+import {
+  contentTerms,
+  expandQuery,
+  parseFrontmatter,
+  processTerm,
+  snippet,
+  snippetNeedles,
+  titleSimilarity,
+  tokenize,
+} from './text.mjs'
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 export const COLLECTIONS_DIR = join(
@@ -32,6 +44,12 @@ export const COLLECTIONS_DIR = join(
 export const DEFAULT_LIMIT = 15
 export const LIST_CAP = 300
 export const GRAPH_BOOSTS = { title: 2 }
+
+/** MiniSearch's BM25 parameters (k, b, d); a manifest's `"bm25"` overrides any of them. */
+const BM25 = { k: 1.2, b: 0.7, d: 0.5 }
+export function bm25Params(manifest) {
+  return { ...BM25, ...(manifest?.bm25 ?? {}) }
+}
 
 const requireFromHere = createRequire(import.meta.url)
 
@@ -125,10 +143,14 @@ function unionFields(docs) {
   return [...fields]
 }
 
-/** One MiniSearch over docs; missing fields normalize to empty. */
-export function buildIndex(docs, boosts) {
+/**
+ * One MiniSearch over docs; missing fields normalize to empty. `allowed`
+ * (a manifest's `fields`) limits indexing to those fields; without it every
+ * field a doc carries is indexed.
+ */
+export function buildIndex(docs, boosts, allowed = null) {
   const MiniSearch = loadMiniSearch()
-  const fields = unionFields(docs)
+  const fields = allowed ?? unionFields(docs)
   const mini = new MiniSearch({
     fields,
     storeFields: ['collection', 'title'],
@@ -167,7 +189,7 @@ function matchedFields(doc, needles) {
   )
 }
 
-function toHit(doc, score, terms, exclude) {
+function toHit(doc, score, terms, exclude, facets = {}) {
   const snip = snippet(doc.snippetText, terms, exclude)
   exclude.add(snip.text)
   const needles = snippetNeedles(terms)
@@ -183,52 +205,292 @@ function toHit(doc, score, terms, exclude) {
     snippet: snip.text,
     fuzzy: snip.fuzzy,
     matched,
+    facets,
   }
 }
 
-function rankMini(docs, boosts, query, terms, limit, weigh) {
-  const mini = buildIndex(docs, boosts)
+/** Facet filters given and non-empty, or null: the one shape a search takes. */
+function activeFilters(facets) {
+  return facets && Object.keys(facets).length ? facets : null
+}
+
+/**
+ * The best `n` hits of each source, in score order within a source. Sources come
+ * in the order of their best hit, which is the order hits arrive in, so the
+ * first hit of each source sets its place.
+ */
+function bySource(hits, n, sourceOf) {
+  const groups = new Map()
+  for (const hit of hits) {
+    const source = sourceOf(hit)
+    const group = groups.get(source) ?? []
+    if (group.length < n) group.push(hit)
+    groups.set(source, group)
+  }
+  return [...groups.values()].flat()
+}
+
+/**
+ * The hits a search shows, from hits already in score order: the ones whose
+ * facets pass the filters, shaped by `perSource` (the best N of each source),
+ * or else by the manifest's diversity caps; `total` counts the matches before
+ * shaping. The caller cuts to the limit and builds the output.
+ */
+function shapeHits(scored, { filters = null, perSource = null, diversity = null, facetOf }) {
+  const matching = filters ? scored.filter(hit => matchesFacets(facetOf(hit), filters)) : scored
+  const shaped = perSource == null
+    ? diversify(matching, diversity)
+    : bySource(matching, perSource, hit => facetOf(hit).source ?? '')
+  return { total: matching.length, shaped }
+}
+
+/**
+ * Scales each hit by how much its title says the query's words: a title that
+ * is exactly the query scores (1 + titleBoost) times. A page named for the
+ * query then outranks its own sections, which repeat its words in a heading.
+ * `pageBoost` scales a page (an id with no `#` part) over its sections.
+ * Without either the ranking is untouched.
+ */
+function boostHits(hits, { titleBoost = 0, pageBoost = 1 } = {}, query = '') {
+  if (!titleBoost && pageBoost === 1) return hits
+  const queryTerms = contentTerms(query)
+  return hits
+    .map(hit => {
+      const title = titleBoost ? 1 + titleBoost * titleSimilarity(hit.title ?? '', queryTerms) : 1
+      const page = pageBoost !== 1 && !String(hit.id).includes('#') ? pageBoost : 1
+      return { ...hit, score: hit.score * title * page }
+    })
+    .sort((a, b) => b.score - a.score)
+}
+
+/**
+ * Keeps one page, one source or one repeated heading from filling a ranked
+ * list: at most `perPage` hits from one page (an id is `page#section`), at
+ * most `perSource` from one source (the id's part before its first colon), and
+ * at most `perHeading` sections under one heading text (the title's last part,
+ * by content words). Hits over a cap are deferred behind the rest, so the list
+ * still fills up and nothing is dropped.
+ */
+function diversify(hits, diversity) {
+  if (!diversity) return hits
+  const { perPage = Infinity, perSource = Infinity, perHeading = Infinity } = diversity
+  const pageCounts = new Map()
+  const sourceCounts = new Map()
+  const headingCounts = new Map()
+  const kept = []
+  const deferred = []
+  for (const hit of hits) {
+    const key = String(hit.id)
+    const doc = key.startsWith(`${hit.collection}:`) ? key.slice(hit.collection.length + 1) : key
+    const page = doc.split('#')[0]
+    const source = doc.split(':')[0]
+    const heading = doc.includes('#')
+      ? [...contentTerms(String(hit.title ?? '').split(' › ').pop())].sort().join(' ')
+      : ''
+    const pages = pageCounts.get(page) ?? 0
+    const sources = sourceCounts.get(source) ?? 0
+    const sameHeading = heading ? (headingCounts.get(heading) ?? 0) : 0
+    if (pages < perPage && sources < perSource && sameHeading < perHeading) {
+      kept.push(hit)
+      pageCounts.set(page, pages + 1)
+      sourceCounts.set(source, sources + 1)
+      if (heading) headingCounts.set(heading, sameHeading + 1)
+    } else {
+      deferred.push(hit)
+    }
+  }
+  return [...kept, ...deferred]
+}
+
+/**
+ * A manifest's concept vocabulary (concept -> keywords), read once per file.
+ * Absent or unnamed means no vocabulary: a query is then searched as typed.
+ */
+const vocabularies = new Map()
+export function loadVocabulary(manifest, root = ROOT) {
+  if (!manifest?.vocabulary) return null
+  const file = resolve(root, manifest.vocabulary)
+  if (!vocabularies.has(file)) {
+    try {
+      vocabularies.set(file, JSON.parse(readFileSync(file, 'utf8')))
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err
+      vocabularies.set(file, null)
+    }
+  }
+  return vocabularies.get(file)
+}
+
+function rankMini(
+  docs,
+  boosts,
+  query,
+  terms,
+  limit,
+  weigh,
+  allowed = null,
+  { rules = {}, searchText = query, bm25 = BM25, diversity = null, filters = null, perSource = null } = {}
+) {
+  const mini = buildIndex(docs, boosts, allowed)
   const byId = new Map(docs.map(d => [`${d.collection}:${d.id}`, d]))
-  const ranked = mini.search(query).map(hit => ({
-    hit,
-    score: weigh ? hit.score * prior(hit.collection) : hit.score,
-  }))
-  if (weigh) ranked.sort((a, b) => b.score - a.score)
+  const facetOf = hit => facetsOf(byId.get(hit.id)?.fields)
+  let scored = boostHits(mini.search(searchText, { bm25 }), rules, query)
+  if (weigh) {
+    scored = scored
+      .map(hit => ({ ...hit, score: hit.score * prior(hit.collection) }))
+      .sort((a, b) => b.score - a.score)
+  }
+  const { total, shaped } = shapeHits(scored, { filters, perSource, diversity, facetOf })
   const exclude = new Set()
   return {
-    hits: ranked
+    hits: shaped
       .slice(0, limit)
-      .map(({ hit, score }) => toHit(byId.get(hit.id), score, terms, exclude)),
-    total: ranked.length,
+      .map(hit => toHit(byId.get(hit.id), hit.score, terms, exclude, facetOf(hit))),
+    total,
   }
+}
+
+/** A hit's doc: read from its file now, so only shown hits cost a read. A file gone since the index was written keeps its record. */
+function loadRecordDoc(record, manifest) {
+  try {
+    const doc = loadMarkdownDoc(resolve(ROOT, record.path), record.path, manifest)
+    if (doc) return { ...doc, collection: record.collection, id: record.id, path: record.path }
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err
+  }
+  return { collection: record.collection, id: record.id, title: record.title, extra: record.extra, path: record.path, snippetText: '', fields: {} }
+}
+
+/** Ranks a persisted index with the manifest's weights and reads only the shown hits. */
+function rankPersisted(persisted, manifest, query, terms, limit, shape = {}) {
+  const boost = Object.fromEntries(Object.entries(manifest.weights || {}))
+  const searchText = expandQuery(query, loadVocabulary(manifest))
+  const facetOf = hit => persisted.records.get(hit.id)?.facets ?? {}
+  const scored = boostHits(
+    persisted.mini.search(searchText, { prefix: true, fuzzy: 0.2, boost, bm25: bm25Params(manifest) }),
+    manifest,
+    query
+  )
+  const { total, shaped } = shapeHits(scored, { ...shape, diversity: manifest.diversity, facetOf })
+  const exclude = new Set()
+  return {
+    hits: shaped
+      .slice(0, limit)
+      .map(hit =>
+        toHit(loadRecordDoc(persisted.records.get(hit.id), manifest), hit.score, terms, exclude, facetOf(hit))
+      ),
+    total,
+  }
+}
+
+/** Facet values in a collection's docs, from its persisted records or its live docs. */
+function facetCatalog(all, collection) {
+  const persisted = all.persisted?.get(collection)
+  if (persisted) return [...persisted.records.values()].map(record => record.facets ?? {})
+  return all.docs.filter(doc => doc.collection === collection).map(doc => facetsOf(doc.fields))
+}
+
+/**
+ * Refuses facet filters a collection cannot answer: a facet none of its docs
+ * carry, or a value none of them has. The error lists the values it does have.
+ */
+export function checkFilters(all, collection, facets) {
+  const catalog = facetCatalog(all, collection)
+  for (const [name, wanted] of Object.entries(facets)) {
+    const known = facetValues(catalog, name)
+    if (!known.length) throw new UsageError(`${collection} docs carry no ${name} field, so --${name} cannot filter them`)
+    for (const value of wanted) {
+      if (!known.some(item => item.toLowerCase() === value.toLowerCase())) {
+        throw new UsageError(`unknown ${name} '${value}' in ${collection} (known: ${known.join(', ')})`)
+      }
+    }
+  }
+}
+
+/**
+ * The persisted indexes a verb can use: a ranked search of a collection whose
+ * manifest names one (`"index"`). A missing or unreadable index is absent from
+ * the map, and the search then indexes live.
+ */
+export function persistedFor(manifests, opts, root = ROOT) {
+  const found = new Map()
+  if (opts.cmd !== 'search' || opts.in == null || !opts.query.join(' ').trim()) return found
+  const manifest = manifests.find(m => m.name.toLowerCase() === String(opts.in).toLowerCase())
+  if (!manifest?.index) return found
+  try {
+    const loaded = loadPersistedIndex(resolve(root, manifest.index), manifest)
+    if (loaded) found.set(manifest.name, loaded)
+  } catch {
+    // An unreadable index is a missing one: search indexes live instead.
+  }
+  return found
 }
 
 /**
  * Ranked search. No query + no collection lists collections; no query +
  * a collection lists its roster. Everything ranks through MiniSearch.
- * Global rank weights authoritative collections over evidence logs.
+ * Global rank weights authoritative collections over evidence logs; a
+ * targeted collection (`"targeted": true`) and the graph answer only --in.
+ * `facets` keep the docs whose source or type is one of the listed values;
+ * `perSource` keeps the best N hits of each source. Both need a collection.
  */
-export function search(all, query, { collection = null, limit = DEFAULT_LIMIT } = {}) {
+export function search(
+  all,
+  query,
+  { collection = null, limit = DEFAULT_LIMIT, facets = null, perSource = null } = {}
+) {
   const terms = query.trim().split(/\s+/).filter(Boolean)
+  const filters = activeFilters(facets)
+  if (collection == null && (filters || perSource != null)) {
+    throw new UsageError('--source, --type and --per-source need --in <collection>')
+  }
   if (collection != null) {
+    const manifest = all.manifest(collection)
+    if (filters) checkFilters(all, collection, filters)
+    const persisted = all.persisted?.get(collection)
+    if (persisted) return rankPersisted(persisted, manifest, query, terms, limit, { filters, perSource })
     const docs = all.docs.filter(d => d.collection === collection)
     const boosts = {}
-    for (const [field, weight] of Object.entries(
-      all.manifest(collection).weights || {}
-    )) {
+    for (const [field, weight] of Object.entries(manifest.weights || {})) {
       boosts[field] = weight
     }
-    return rankMini(docs, boosts, query, terms, limit, false)
+    return rankMini(docs, boosts, query, terms, limit, false, manifest.fields ?? null, {
+      rules: manifest,
+      searchText: expandQuery(query, loadVocabulary(manifest)),
+      bm25: bm25Params(manifest),
+      diversity: manifest.diversity ?? null,
+      filters,
+      perSource,
+    })
   }
-  const curated = all.docs.filter(d => d.collection !== GRAPH_NAME)
-  return rankMini(curated, mergeBoosts(all.manifests), query, terms, limit, true)
+  const targeted = new Set(all.manifests.filter(m => m.targeted).map(m => m.name))
+  const curated = all.docs.filter(d => d.collection !== GRAPH_NAME && !targeted.has(d.collection))
+  const global = all.manifests.filter(m => !m.targeted)
+  const titleBoost = Math.max(0, ...global.map(m => m.titleBoost ?? 0))
+  return rankMini(curated, mergeBoosts(global), query, terms, limit, true, null, { rules: { titleBoost } })
 }
 
-export function loadAll(manifests, root = ROOT) {
+/**
+ * Which collections a verb needs. A targeted search loads only its own;
+ * a global search skips the graph and targeted collections it never ranks.
+ * Listings and show need everything.
+ */
+export function scopeFor(opts) {
+  if (opts.cmd !== 'search') return () => true
+  if (opts.in != null) {
+    const name = String(opts.in).toLowerCase()
+    return m => m.name.toLowerCase() === name
+  }
+  if (!opts.query.join(' ').trim()) return () => true
+  return m => !m.system && !m.targeted
+}
+
+export function loadAll(manifests, root = ROOT, include = () => true) {
   const docs = []
   const warnings = []
   const counts = {}
   for (const manifest of manifests) {
+    if (!include(manifest)) continue
     const found = collectCollection(manifest, root)
     for (const doc of found.docs) docs.push(doc)
     for (const w of found.warnings) warnings.push(`[${manifest.name}] ${w}`)
@@ -244,8 +506,13 @@ export function loadAll(manifests, root = ROOT) {
   }
 }
 
-export function roster(all, collection, limit = LIST_CAP) {
-  const docs = all.docs.filter(d => d.collection === collection)
+/** A collection's docs in listing order, narrowed by facet filters when given (checked first). */
+export function roster(all, collection, limit = LIST_CAP, facets = null) {
+  const filters = activeFilters(facets)
+  if (filters) checkFilters(all, collection, filters)
+  const docs = all.docs.filter(
+    d => d.collection === collection && (!filters || matchesFacets(facetsOf(d.fields), filters))
+  )
   return { docs: docs.slice(0, limit), total: docs.length }
 }
 
@@ -262,12 +529,21 @@ function pick(matches) {
   return null
 }
 
+/**
+ * A ref's leading `name:` is a collection only when a collection of that
+ * name exists; otherwise the whole ref is a bare id (`panda:tokens` is an id
+ * that contains a colon, not a collection named panda).
+ */
 function findById(all, ref) {
-  const [collection, ...rest] = ref.includes(':') ? ref.split(':') : [null, ref]
-  const id = rest.join(':')
-  if (collection && collection.toLowerCase() === 'rs') {
+  const cut = ref.indexOf(':')
+  const head = cut === -1 ? null : ref.slice(0, cut)
+  if (head && head.toLowerCase() === 'rs') {
     return findById(all, `surfaces:${ref}`)
   }
+  const known =
+    head !== null && all.docs.some(d => d.collection.toLowerCase() === head.toLowerCase())
+  const collection = known ? head : null
+  const id = known ? ref.slice(cut + 1) : ref
   const pool = collection
     ? all.docs.filter(d => d.collection.toLowerCase() === collection.toLowerCase())
     : all.docs
@@ -328,6 +604,13 @@ function formatDocShow(doc) {
       if (p.specs.length) lines.push(`specs:\n  ${p.specs.join('\n  ')}`)
       lines.push(`\n${p.readme || '(no README)'}`)
       return lines.join('\n')
+    }
+    case 'markdown': {
+      // The body alone, under its url when the doc has one; --json has the frontmatter.
+      const body = parseFrontmatter(doc.payload.raw ?? '').body.trim()
+      const url = doc.payload.frontmatter?.url
+      const meta = [head, `path: ${doc.path}`, ...(url ? [`url: ${url}`] : [])]
+      return `${meta.join('\n')}\n\n${body}`
     }
     default:
       return `${head}\npath: ${doc.path}\n\n${doc.payload.raw}`

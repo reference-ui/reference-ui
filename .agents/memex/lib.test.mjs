@@ -5,7 +5,7 @@
  */
 
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, it } from 'node:test'
@@ -18,8 +18,12 @@ import {
   matchGlob,
 } from './adapters.mjs'
 import { chainShow, extractHeader, readmeChain } from './graph.mjs'
-import { buildIndex, loadAll, loadManifests, search, show } from './lib.mjs'
+import { buildIndex, loadAll, loadManifests, persistedFor, roster, scopeFor, search, show, UsageError } from './lib.mjs'
+import { facetValues, facetsOf, matchesFacets } from './facets.mjs'
+import { loadPersistedIndex, writePersistedIndex } from './persist.mjs'
 import {
+  contentTerms,
+  expandQuery,
   extractTitle,
   firstParagraph,
   levenshtein,
@@ -28,6 +32,7 @@ import {
   processTerm,
   snippet,
   stem,
+  titleSimilarity,
   tokenize,
 } from './text.mjs'
 
@@ -647,6 +652,531 @@ describe('engine', () => {
     const all = { docs, manifests: [], manifest: () => ({ weights: {} }) }
     assert.equal(show(all, 'N1', { up: 0, upExplicit: true }).misuse, true)
     assert.ok(show(all, 'N1', {}).text.includes('N1'))
+  })
+})
+
+describe('docs-corpus contract', () => {
+  it('reads frontmatter ids, not basenames, when the manifest asks', () => {
+    const { dir, done } = fixture()
+    try {
+      mkdirSync(join(dir, 'panda'))
+      mkdirSync(join(dir, 'chakra'))
+      writeFileSync(
+        join(dir, 'panda', 'installation.md'),
+        '---\nid: panda:get-started/installation\ntitle: Install\n---\nbody one\n'
+      )
+      writeFileSync(
+        join(dir, 'chakra', 'installation.md'),
+        '---\nid: chakra:get-started/installation\ntitle: Install\n---\nbody two\n'
+      )
+      writeFileSync(join(dir, 'loose.md'), '# Loose\nno id here\n')
+      const manifest = {
+        name: 'c',
+        kind: 'markdown',
+        roots: [dir],
+        include: ['**/*.md'],
+        id: 'frontmatter',
+        weights: {},
+      }
+      const { docs, warnings } = collectMarkdown(dir, manifest)
+      assert.equal(warnings.length, 0)
+      assert.deepEqual(docs.map(d => d.id).sort(), [
+        'chakra:get-started/installation',
+        'loose.md',
+        'panda:get-started/installation',
+      ])
+    } finally {
+      done()
+    }
+  })
+
+  it('treats a missing optional root as an empty collection, not a warning', () => {
+    const { dir, done } = fixture()
+    try {
+      const manifest = {
+        name: 'c',
+        kind: 'markdown',
+        roots: [],
+        include: ['**/*.md'],
+        id: 'frontmatter',
+        optional: true,
+        weights: {},
+      }
+      assert.deepEqual(collectMarkdown(join(dir, 'nope'), manifest), { docs: [], warnings: [] })
+    } finally {
+      done()
+    }
+  })
+
+  it('takes a frontmatter title over a body heading and keeps code-comment hashes', () => {
+    const { dir, done } = fixture()
+    try {
+      writeFileSync(
+        join(dir, 's.md'),
+        '---\ntitle: Tokens › Semantic\n---\n## Semantic\n\n```bash\n# run it\n```\n'
+      )
+      const manifest = {
+        name: 'c',
+        kind: 'markdown',
+        roots: [dir],
+        include: ['*.md'],
+        id: 'basename',
+        weights: {},
+      }
+      const { docs } = collectMarkdown(dir, manifest)
+      assert.equal(docs[0].title, 'Tokens › Semantic')
+      assert.ok(docs[0].snippetText.includes('# run it'))
+    } finally {
+      done()
+    }
+  })
+
+  it('ships docs-corpus as a targeted, optional, frontmatter-id collection', () => {
+    const manifest = loadManifests().find(m => m.name === 'docs-corpus')
+    assert.equal(manifest.targeted, true)
+    assert.equal(manifest.optional, true)
+    assert.equal(manifest.id, 'frontmatter')
+    assert.ok(manifest.fields.includes('concepts'))
+  })
+
+  it('loads only the collections a verb needs', () => {
+    const manifests = [
+      { name: 'cases', kind: 'core' },
+      { name: 'docs-corpus', kind: 'markdown', targeted: true },
+      { name: 'graph', kind: 'graph', system: true },
+    ]
+    const names = opts => manifests.filter(scopeFor(opts)).map(m => m.name)
+    assert.deepEqual(names({ cmd: 'search', in: 'docs-corpus', query: ['x'] }), ['docs-corpus'])
+    assert.deepEqual(names({ cmd: 'search', in: null, query: ['x'] }), ['cases'])
+    assert.deepEqual(names({ cmd: 'search', in: null, query: [] }), ['cases', 'docs-corpus', 'graph'])
+    assert.deepEqual(names({ cmd: 'show', in: null, query: [] }), ['cases', 'docs-corpus', 'graph'])
+  })
+})
+
+describe('docs-corpus engine', () => {
+  /** A markdown doc shaped like a collected one, with a frontmatter block in its raw file. */
+  const doc = (collection, id, title, { body = title, fields = {} } = {}) => {
+    const url = `https://x.test/${id}`
+    return {
+      collection,
+      kind: 'markdown',
+      id,
+      title,
+      extra: '',
+      path: id,
+      snippetText: body,
+      fields: { title, body, ...fields },
+      payload: {
+        raw: `---\nurl: ${url}\n---\n${body}\n`,
+        tags: [],
+        frontmatter: { url },
+      },
+    }
+  }
+
+  it('keeps a targeted collection out of global search but answers --in', () => {
+    const docs = [doc('page', 'a', 'harvest notes'), doc('plain', 'b', 'harvest notes')]
+    const manifests = [
+      { name: 'page', kind: 'markdown', weights: { title: 9 }, targeted: true },
+      { name: 'plain', kind: 'markdown', weights: {} },
+    ]
+    const all = { docs, manifests, manifest: name => manifests.find(m => m.name === name) }
+    assert.deepEqual(
+      search(all, 'harvest', {}).hits.map(h => h.collection),
+      ['plain']
+    )
+    assert.equal(search(all, 'harvest', { collection: 'page' }).hits.length, 1)
+  })
+
+  it('finds pages by concept in a targeted collection, indexing only allowed fields', () => {
+    const docs = [
+      doc('corpus', 'panda:theming/conditions', 'Conditions', {
+        fields: { concepts: 'dark-mode', url: 'zebra' },
+      }),
+      doc('corpus', 'panda:theming/tokens', 'Tokens', { fields: { concepts: 'tokens' } }),
+    ]
+    const manifest = {
+      name: 'corpus',
+      kind: 'markdown',
+      targeted: true,
+      fields: ['title', 'concepts'],
+      weights: { concepts: 3 },
+    }
+    const all = { docs, manifests: [manifest], manifest: () => manifest }
+    assert.equal(search(all, 'dark mode', { collection: 'corpus' }).hits[0].id, 'panda:theming/conditions')
+    assert.equal(search(all, 'zebra', { collection: 'corpus' }).hits.length, 0)
+  })
+
+  it('shows a section by its id with the page url above the body alone', () => {
+    const docs = [
+      doc('corpus', 'panda:theming/tokens', 'Tokens', { body: '# Tokens\n\nPage intro.' }),
+      doc('corpus', 'panda:theming/tokens#semantic-tokens', 'Tokens › Semantic tokens', {
+        body: '## Semantic tokens\n\nSection body.',
+      }),
+    ]
+    const all = { docs, manifests: [], manifest: () => ({ weights: {} }) }
+    const section = show(all, 'panda:theming/tokens#semantic-tokens', {}).text
+    assert.ok(section.startsWith('corpus:panda:theming/tokens#semantic-tokens — Tokens › Semantic tokens'))
+    assert.ok(section.includes('url: https://x.test/panda:theming/tokens#semantic-tokens'))
+    assert.ok(section.endsWith('## Semantic tokens\n\nSection body.'))
+    assert.ok(!section.includes('Page intro'))
+    assert.ok(show(all, 'corpus:panda:theming/tokens', {}).text.includes('Page intro.'))
+  })
+
+  it('loads only the requested collection when asked to', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'memex-scope-'))
+    try {
+      mkdirSync(join(dir, 'one'))
+      writeFileSync(join(dir, 'one', 'a.md'), '# A\nalpha\n')
+      const manifests = [
+        { name: 'one', kind: 'markdown', roots: ['one'], include: ['**/*.md'], id: 'path', weights: {} },
+        { name: 'two', kind: 'markdown', roots: ['one'], include: ['**/*.md'], id: 'path', weights: {} },
+      ]
+      const all = loadAll(manifests, dir, m => m.name === 'one')
+      assert.deepEqual(Object.keys(all.counts), ['one'])
+      assert.equal(all.docs.length, 1)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('title and concept matching', () => {
+  const entry = (id, title, fields = {}) => ({
+    collection: 'corpus',
+    kind: 'markdown',
+    id,
+    title,
+    extra: '',
+    path: id,
+    snippetText: fields.body ?? title,
+    fields: { title, ...fields },
+    payload: { raw: '', tags: [], frontmatter: {} },
+  })
+  const corpus = (docs, manifest) => ({ docs, manifests: [manifest], manifest: () => manifest })
+
+  it('compares a title with the query by its stemmed content words', () => {
+    const query = contentTerms('dark mode')
+    assert.equal(titleSimilarity('Dark mode', query), 1)
+    assert.equal(titleSimilarity('The dark mode of the app', query), 2 / 3)
+    assert.equal(titleSimilarity('Tabs', query), 0)
+    assert.equal(titleSimilarity('', query), 0)
+    assert.deepEqual([...contentTerms('The Tabs of a page')].sort(), ['page', 'tab'])
+  })
+
+  it('expands a query with a concept whose keyword it contains, adding only missing words', () => {
+    const vocabulary = {
+      ssr: ['ssr', 'server-side rendering'],
+      rtl: ['rtl', 'right to left'],
+      'dark-mode': ['color mode', 'dark mode'],
+    }
+    assert.equal(expandQuery('server side rendering', vocabulary), 'server side rendering ssr')
+    assert.equal(expandQuery('Right to left', vocabulary), 'Right to left rtl')
+    assert.equal(expandQuery('color mode', vocabulary), 'color mode dark')
+    assert.equal(expandQuery('dark mode', vocabulary), 'dark mode')
+    assert.equal(expandQuery('tabs', vocabulary), 'tabs')
+    assert.equal(expandQuery('ssr', null), 'ssr')
+  })
+
+  it('finds a doc by a synonym only when the manifest names the vocabulary', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'memex-vocab-'))
+    try {
+      const vocabFile = join(dir, 'concepts.json')
+      writeFileSync(vocabFile, JSON.stringify({ ssr: ['server side rendering'] }))
+      const docs = [entry('site:hydrate', 'Hydrating pages', { concepts: 'ssr', body: 'Hydrating pages.' })]
+      const plain = { name: 'corpus', kind: 'markdown', targeted: true, fields: ['title', 'concepts'], weights: { concepts: 3 } }
+      const withVocab = { ...plain, vocabulary: vocabFile }
+      assert.deepEqual(search(corpus(docs, plain), 'server side rendering', { collection: 'corpus' }).hits, [])
+      assert.deepEqual(
+        search(corpus(docs, withVocab), 'server side rendering', { collection: 'corpus' }).hits.map(h => h.id),
+        ['site:hydrate']
+      )
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('lifts a page whose title is the query above a section that outscores it without the boost', () => {
+    const filler = 'lorem ipsum dolor sit amet '.repeat(60)
+    const docs = [
+      entry('site:tabs', 'Tabs', { body: `Tabs are panels. ${filler}` }),
+      entry('site:tabs#usage', 'Guide › Tabs', { body: 'Tabs tabs tabs tabs' }),
+    ]
+    const manifest = (titleBoost) => ({
+      name: 'corpus',
+      kind: 'markdown',
+      targeted: true,
+      fields: ['title', 'body'],
+      weights: { title: 4, body: 1 },
+      titleBoost,
+    })
+    assert.equal(search(corpus(docs, manifest(0)), 'tabs', { collection: 'corpus' }).hits[0].id, 'site:tabs#usage')
+    assert.equal(search(corpus(docs, manifest(1)), 'tabs', { collection: 'corpus' }).hits[0].id, 'site:tabs')
+  })
+
+  it('ranks a page above its own section when pageBoost is set', () => {
+    const docs = [
+      entry('site:tabs#usage', 'Tabs', { body: 'tabs' }),
+      entry('site:tabs', 'Tabs', { body: 'tabs' }),
+    ]
+    const manifest = {
+      name: 'corpus',
+      kind: 'markdown',
+      targeted: true,
+      fields: ['title', 'body'],
+      weights: { title: 4, body: 1 },
+      pageBoost: 3,
+    }
+    assert.equal(search(corpus(docs, manifest), 'tabs', { collection: 'corpus' }).hits[0].id, 'site:tabs')
+  })
+
+  it('caps the hits from one source in the top of the list, deferring the rest', () => {
+    const filler = 'lorem ipsum dolor sit amet '.repeat(40)
+    const docs = [
+      entry('a:one', 'Tabs', { body: 'tabs' }),
+      entry('a:two', 'Tabs', { body: 'tabs' }),
+      entry('a:three', 'Tabs', { body: 'tabs' }),
+      entry('b:one', 'Tabs', { body: `tabs ${filler}` }),
+    ]
+    const manifest = {
+      name: 'corpus',
+      kind: 'markdown',
+      targeted: true,
+      fields: ['title', 'body'],
+      weights: { title: 4, body: 1 },
+      diversity: { perSource: 2 },
+    }
+    const top = search(corpus(docs, manifest), 'tabs', { collection: 'corpus', limit: 3 }).hits.map(h => h.id)
+    assert.ok(top.includes('b:one'), `expected the second source in the top three, got ${top.join(', ')}`)
+    assert.equal(top.filter(id => id.startsWith('a:')).length, 2)
+  })
+})
+
+describe('facets and per-source', () => {
+  const entry = (id, title, fields = {}) => ({
+    collection: 'corpus',
+    kind: 'markdown',
+    id,
+    title,
+    extra: '',
+    path: id,
+    snippetText: fields.body ?? title,
+    fields: { title, ...fields },
+    payload: { raw: '', tags: [], frontmatter: {} },
+  })
+  const manifest = (extra = {}) => ({
+    name: 'corpus',
+    kind: 'markdown',
+    targeted: true,
+    fields: ['title', 'body', 'source', 'type'],
+    weights: { title: 4, body: 1 },
+    ...extra,
+  })
+  const corpus = (docs, m) => ({ docs, manifests: [m], manifest: () => m })
+  const filler = 'lorem ipsum dolor sit amet '.repeat(40)
+
+  it('reads facets from frontmatter and matches them', () => {
+    assert.deepEqual(facetsOf({ source: ' chakra ', type: 'theming', title: 'x' }), { source: 'chakra', type: 'theming' })
+    assert.deepEqual(facetsOf({ source: '', title: 'x' }), {})
+    assert.equal(matchesFacets({ source: 'Chakra', type: 'guide' }, { source: ['chakra', 'mantine'] }), true)
+    assert.equal(matchesFacets({ source: 'chakra', type: 'guide' }, { source: ['chakra'], type: ['theming'] }), false)
+    assert.equal(matchesFacets({ type: 'guide' }, { source: ['chakra'] }), false)
+    assert.deepEqual(facetValues([{ source: 'b' }, { source: 'a' }, { source: 'B' }, {}], 'source'), ['a', 'b'])
+  })
+
+  it('filters a targeted search by source and type, every facet named must match', () => {
+    const docs = [
+      entry('a:one', 'Tabs', { source: 'a', type: 'component', body: 'tabs' }),
+      entry('b:one', 'Tabs', { source: 'b', type: 'guide', body: 'tabs' }),
+      entry('c:one', 'Tabs', { source: 'c', type: 'component', body: 'tabs' }),
+    ]
+    const all = corpus(docs, manifest())
+    const ids = facets => search(all, 'tabs', { collection: 'corpus', facets }).hits.map(h => h.id).sort()
+    assert.deepEqual(ids({ source: ['b', 'c'] }), ['b:one', 'c:one'])
+    assert.deepEqual(ids({ source: ['a'], type: ['guide'] }), [])
+    assert.deepEqual(ids({ type: ['component'] }), ['a:one', 'c:one'])
+    assert.deepEqual(search(all, 'tabs', { collection: 'corpus', facets: { source: ['a'] } }).hits[0].facets, {
+      source: 'a',
+      type: 'component',
+    })
+  })
+
+  it('refuses a value or a field the collection lacks, and facets or per-source without a collection', () => {
+    const docs = [entry('a:one', 'Tabs', { source: 'a', body: 'tabs' }), entry('x:one', 'Other', { body: 'tabs' })]
+    const all = corpus(docs, manifest())
+    assert.throws(() => search(all, 'tabs', { collection: 'corpus', facets: { source: ['nope'] } }), /unknown source 'nope' in corpus \(known: a\)/)
+    assert.throws(() => search(all, 'tabs', { collection: 'corpus', facets: { type: ['guide'] } }), /no type field/)
+    assert.throws(() => search(all, 'tabs', { facets: { source: ['a'] } }), UsageError)
+    assert.throws(() => search(all, 'tabs', { perSource: 1 }), UsageError)
+  })
+
+  it('shows the best N of each source, sources ordered by their best hit', () => {
+    const docs = [
+      entry('a:one', 'Tabs', { source: 'a', body: 'tabs' }),
+      entry('b:one', 'Tabs', { source: 'b', body: `tabs ${filler}` }),
+      entry('c:one', 'Tabs', { source: 'c', body: `tabs ${filler}${filler}` }),
+    ]
+    const top = search(corpus(docs, manifest()), 'tabs', { collection: 'corpus', perSource: 1, limit: Infinity })
+    assert.deepEqual(top.hits.map(h => h.id), ['a:one', 'b:one', 'c:one'])
+    assert.equal(top.total, 3)
+  })
+
+  it('keeps a page above its own section within a source when taking N per source', () => {
+    const docs = [
+      entry('a:page', 'Tabs', { source: 'a', body: 'tabs' }),
+      entry('a:page#usage', 'Guide › Tabs', { source: 'a', body: 'tabs' }),
+      entry('b:one', 'Tabs', { source: 'b', body: `tabs ${filler}` }),
+    ]
+    const all = corpus(docs, manifest({ pageBoost: 3 }))
+    const two = search(all, 'tabs', { collection: 'corpus', perSource: 2, limit: Infinity })
+    assert.deepEqual(two.hits.map(h => h.id), ['a:page', 'a:page#usage', 'b:one'])
+    const one = search(all, 'tabs', { collection: 'corpus', perSource: 1, limit: Infinity })
+    assert.deepEqual(one.hits.map(h => h.id), ['a:page', 'b:one'])
+  })
+
+  it('lists a roster narrowed by facets', () => {
+    const docs = [entry('a:one', 'One', { source: 'a' }), entry('b:one', 'Two', { source: 'b' })]
+    const all = corpus(docs, manifest())
+    assert.deepEqual(roster(all, 'corpus', 10, { source: ['b'] }).docs.map(d => d.id), ['b:one'])
+    assert.equal(roster(all, 'corpus', 10).total, 2)
+  })
+
+  it('filters and groups a persisted index the same way as the live docs', () => {
+    const { dir, done } = fixture()
+    try {
+      mkdirSync(join(dir, 'pages'))
+      writeFileSync(join(dir, 'pages', 'a.md'), '---\nid: corpus:a\ntitle: Tabs\nsource: a\ntype: component\n---\n# Tabs\ntabs here.\n')
+      writeFileSync(join(dir, 'pages', 'b.md'), '---\nid: corpus:b\ntitle: Tabs\nsource: b\ntype: guide\n---\n# Tabs\ntabs and more tabs.\n')
+      const m = manifest({ roots: ['pages'], include: ['**/*.md'], id: 'frontmatter' })
+      const all = loadAll([m], dir)
+      const docs = all.docs.map(d => ({ ...d, path: join(dir, d.path) }))
+      const mini = buildIndex(docs, m.weights, m.fields)
+      const base = join(dir, 'idx', 'corpus')
+      writePersistedIndex({ base, mini, docs, manifest: m })
+      const persisted = loadPersistedIndex(base, m)
+      assert.ok(persisted, 'the pair loads')
+      assert.deepEqual([...persisted.records.values()].map(r => r.facets.source).sort(), ['a', 'b'])
+      const stored = { ...all, persisted: new Map([['corpus', persisted]]) }
+      const facets = { type: ['guide'] }
+      assert.deepEqual(
+        search(stored, 'tabs', { collection: 'corpus', facets }).hits.map(h => h.id),
+        search(all, 'tabs', { collection: 'corpus', facets }).hits.map(h => h.id)
+      )
+      assert.deepEqual(search(stored, 'tabs', { collection: 'corpus', facets }).hits.map(h => h.id), ['corpus:b'])
+      assert.deepEqual(
+        search(stored, 'tabs', { collection: 'corpus', perSource: 1, limit: Infinity }).hits.map(h => h.id),
+        search(all, 'tabs', { collection: 'corpus', perSource: 1, limit: Infinity }).hits.map(h => h.id)
+      )
+    } finally {
+      done()
+    }
+  })
+
+  it('parses facet flags and refuses their misuse', async () => {
+    const { parseArgs } = await import('./cli.mjs')
+    const opts = parseArgs(['search', 'tabs', '--in', 'docs-corpus', '--source', 'chakra, mantine', '--type', 'guide', '--per-source', '2'])
+    assert.deepEqual(opts.source, ['chakra', 'mantine'])
+    assert.deepEqual(opts.type, ['guide'])
+    assert.equal(opts.perSource, 2)
+    assert.throws(() => parseArgs(['search', 'x', '--per-source', '0']), UsageError)
+    assert.throws(() => parseArgs(['search', 'x', '--source', ' , ']), UsageError)
+    assert.throws(() => parseArgs(['search', 'x', '--source', 'a', '--source', 'b']), UsageError)
+  })
+
+  it('refuses facet flags on show and without --in from the command line', () => {
+    const cli = new URL('./cli.mjs', import.meta.url).pathname
+    const failure = args => {
+      try {
+        execFileSync(process.execPath, [cli, ...args], { stdio: 'pipe', encoding: 'utf8' })
+        return null
+      } catch (err) {
+        return { status: err.status, text: `${err.stdout}${err.stderr}` }
+      }
+    }
+    const onShow = failure(['show', 'x', '--source', 'chakra'])
+    assert.equal(onShow.status, 2)
+    assert.match(onShow.text, /apply to search only/)
+    const noIn = failure(['search', 'tabs', '--source', 'chakra'])
+    assert.equal(noIn.status, 2)
+    assert.match(noIn.text, /need --in/)
+  })
+})
+
+describe('vanishing entries and persisted indexes', () => {
+  it('skips an entry that vanishes during the walk', () => {
+    const { dir, done } = fixture()
+    try {
+      writeFileSync(join(dir, 'a.md'), '# A\nbody\n')
+      symlinkSync(join(dir, 'gone-target'), join(dir, 'gone.md'))
+      const manifest = { name: 't', kind: 'markdown', roots: ['.'], include: ['**/*.md'], id: 'path', weights: {} }
+      assert.deepEqual(collectMarkdown(dir, manifest).docs.map(d => d.id), ['a.md'])
+    } finally {
+      done()
+    }
+  })
+
+  it('answers a targeted search from the persisted index with the live hits and snippets', () => {
+    const { dir, done } = fixture()
+    try {
+      mkdirSync(join(dir, 'pages'))
+      writeFileSync(join(dir, 'pages', 'a.md'), '---\nid: x:a\ntitle: Dark mode guide\nconcepts: [dark-mode]\n---\n# Dark mode guide\nUse data-theme for dark mode.\n')
+      writeFileSync(join(dir, 'pages', 'b.md'), '---\nid: x:b\ntitle: Tokens\n---\n# Tokens\nSemantic tokens here.\n')
+      const manifest = {
+        name: 'corpus',
+        kind: 'markdown',
+        roots: ['pages'],
+        include: ['**/*.md'],
+        id: 'frontmatter',
+        targeted: true,
+        fields: ['title', 'concepts', 'body'],
+        weights: { title: 4, concepts: 3, body: 1 },
+      }
+      const all = loadAll([manifest], dir)
+      const docs = all.docs.map(d => ({ ...d, path: join(dir, d.path) }))
+      const mini = buildIndex(docs, manifest.weights, manifest.fields)
+      const base = join(dir, 'idx', 'corpus')
+      writePersistedIndex({ base, mini, docs, manifest })
+      const persisted = loadPersistedIndex(base, manifest)
+      assert.ok(persisted, 'the pair loads')
+      const live = search(all, 'dark mode', { collection: 'corpus' })
+      const stored = search({ ...all, persisted: new Map([['corpus', persisted]]) }, 'dark mode', { collection: 'corpus' })
+      assert.deepEqual(stored.hits.map(h => h.id), live.hits.map(h => h.id))
+      assert.deepEqual(stored.hits.map(h => h.snippet), live.hits.map(h => h.snippet))
+      assert.equal(stored.total, live.total)
+    } finally {
+      done()
+    }
+  })
+
+  it('treats a records file that disagrees with its index as absent', () => {
+    const { dir, done } = fixture()
+    try {
+      const manifest = { name: 'corpus', kind: 'markdown', fields: ['title'], weights: {} }
+      const mini = buildIndex([{ collection: 'corpus', kind: 'markdown', id: 'a', title: 'A', extra: '', path: join(dir, 'a.md'), snippetText: '', fields: { title: 'A' }, payload: {} }], {}, ['title'])
+      const base = join(dir, 'corpus')
+      writePersistedIndex({ base, mini, docs: [{ collection: 'corpus', id: 'a', title: 'A', extra: '', path: join(dir, 'a.md') }], manifest })
+      assert.ok(loadPersistedIndex(base, manifest))
+      writeFileSync(`${base}.records.json`, JSON.stringify({ format: 1, collection: 'corpus', count: 2, records: [] }))
+      assert.equal(loadPersistedIndex(base, manifest), null)
+    } finally {
+      done()
+    }
+  })
+
+  it('names a persisted index only for a targeted search with a query on a manifest that has one', () => {
+    const { dir, done } = fixture()
+    try {
+      const manifest = { name: 'corpus', kind: 'markdown', index: 'idx/corpus', fields: ['title'], weights: {} }
+      const opts = { cmd: 'search', in: 'corpus', query: ['x'] }
+      assert.equal(persistedFor([manifest], opts, dir).size, 0, 'no files yet')
+      const mini = buildIndex([], {}, ['title'])
+      writePersistedIndex({ base: join(dir, 'idx', 'corpus'), mini, docs: [], manifest })
+      assert.equal(persistedFor([manifest], opts, dir).has('corpus'), true)
+      assert.equal(persistedFor([manifest], { ...opts, query: [] }, dir).size, 0, 'a listing never uses it')
+      assert.equal(persistedFor([manifest], { cmd: 'search', in: null, query: ['x'] }, dir).size, 0, 'global never uses it')
+    } finally {
+      done()
+    }
   })
 })
 

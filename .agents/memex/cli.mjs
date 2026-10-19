@@ -23,7 +23,9 @@ import {
   collectionTable,
   loadAll,
   loadManifests,
+  persistedFor,
   roster,
+  scopeFor,
   search,
   show,
 } from './lib.mjs'
@@ -37,12 +39,15 @@ const USAGE = `memex — one CLI over every agent collection.
 
 usage:
   cli.mjs search [<query...>] [--in <coll>] [--limit N] [--json]
+                 [--source <s>[,<s>]] [--type <t>[,<t>]] [--per-source N]
   cli.mjs show <id-or-path> [--up N] [--limit N] [--json]
 
   search with no query lists collections (--in lists one roster).
   show resolves paths through the graph, ids to docs (--limit pages
   ambiguous-id candidates).
-  ranked search is stemmed + fuzzy (default --limit 15). --up applies to paths only.`
+  ranked search is stemmed + fuzzy (default --limit 15). --up applies to paths only.
+  --source and --type filter on frontmatter (a list matches any value);
+  --per-source N shows the best N hits of each source. Both need --in.`
 
 function emitError(message, json) {
   if (json) {
@@ -64,6 +69,19 @@ function parseCount(value, flag) {
   return Number(value)
 }
 
+function positiveCount(value, flag) {
+  const count = parseCount(value, flag)
+  if (count < 1) throw new UsageError(`${flag} needs a positive integer, got '${value}'`)
+  return count
+}
+
+/** A comma list for a filter flag: `a, b` -> ['a', 'b']. */
+function listValue(value, flag) {
+  const items = value.split(',').map(item => item.trim()).filter(Boolean)
+  if (!items.length) throw new UsageError(`${flag} needs at least one value`)
+  return items
+}
+
 /** Parse CLI args; throws UsageError on misuse. Never exits. */
 export function parseArgs(argv) {
   const failWith = (message, json) => {
@@ -83,6 +101,9 @@ export function parseArgs(argv) {
     limit: null,
     up: null,
     json: false,
+    source: null,
+    type: null,
+    perSource: null,
   }
   const seen = new Set()
   let positionalOnly = false
@@ -95,7 +116,7 @@ export function parseArgs(argv) {
     if (!positionalOnly && (arg === '--help' || arg === '-h')) return { cmd: 'help' }
     if (!positionalOnly && arg.startsWith('--')) {
       const name = arg.slice(2)
-      if (!['in', 'limit', 'up', 'json'].includes(name)) {
+      if (!['in', 'limit', 'up', 'json', 'source', 'type', 'per-source'].includes(name)) {
         failWith(`unknown flag '${arg}' for '${cmd}'\n${USAGE}`, opts.json)
       }
       if (seen.has(name)) failWith(`flag '${arg}' repeated`, opts.json)
@@ -112,6 +133,9 @@ export function parseArgs(argv) {
         if (name === 'in') opts.in = value
         if (name === 'limit') opts.limit = parseCount(value, '--limit')
         if (name === 'up') opts.up = parseCount(value, '--up')
+        if (name === 'source') opts.source = listValue(value, '--source')
+        if (name === 'type') opts.type = listValue(value, '--type')
+        if (name === 'per-source') opts.perSource = positiveCount(value, '--per-source')
       } catch (err) {
         if (err instanceof UsageError) failWith(err.message, opts.json)
         throw err
@@ -140,13 +164,21 @@ function printHit(hit) {
   }
 }
 
-function footer(shown, total) {
+function footer(shown, total, perSource = null) {
+  if (perSource !== null) return `showing ${shown} of ${total} matching, up to ${perSource} per source`
   if (shown >= total) return `showing ${total}`
   return `showing ${shown} of ${total} (--limit ${total} for all)`
 }
 
 function runSearch(all, opts) {
   const query = opts.query.join(' ').trim()
+  const facets = {}
+  if (opts.source) facets.source = opts.source
+  if (opts.type) facets.type = opts.type
+  const hasFacets = Object.keys(facets).length > 0
+  if ((hasFacets || opts.perSource !== null) && opts.in == null) {
+    throw new UsageError('--source, --type and --per-source need --in <collection>', opts.json)
+  }
   if (!query && opts.in == null) {
     const rows = collectionTable(all)
     if (opts.json) {
@@ -168,7 +200,8 @@ function runSearch(all, opts) {
   }
   const collection = manifest?.name ?? null
   if (!query) {
-    const found = roster(all, collection, opts.limit ?? LIST_CAP)
+    if (opts.perSource !== null) throw new UsageError('--per-source needs a query', opts.json)
+    const found = roster(all, collection, opts.limit ?? LIST_CAP, hasFacets ? facets : null)
     if (opts.json) {
       console.log(
         JSON.stringify(
@@ -203,7 +236,9 @@ function runSearch(all, opts) {
   }
   const found = search(all, query, {
     collection,
-    limit: opts.limit ?? DEFAULT_LIMIT,
+    limit: opts.limit ?? (opts.perSource !== null ? Infinity : DEFAULT_LIMIT),
+    facets: hasFacets ? facets : null,
+    perSource: opts.perSource,
   })
   if (opts.json) {
     console.log(
@@ -220,7 +255,7 @@ function runSearch(all, opts) {
     return
   }
   for (const hit of found.hits) printHit(hit)
-  console.log(footer(found.hits.length, found.total))
+  console.log(footer(found.hits.length, found.total, opts.perSource))
 }
 
 function showJsonDoc(doc) {
@@ -249,6 +284,9 @@ function showJsonDoc(doc) {
 function runShow(all, opts) {
   if (opts.ref.length !== 1) {
     throw new UsageError('usage: cli.mjs show <id-or-path> [--up N] [--json]', opts.json)
+  }
+  if (opts.source || opts.type || opts.perSource !== null) {
+    throw new UsageError('--source, --type and --per-source apply to search only', opts.json)
   }
   if (opts.in != null) {
     throw new UsageError(
@@ -306,7 +344,10 @@ function main(argv) {
   } catch (err) {
     fail(`cannot load ${COLLECTIONS_DIR}: ${err.message}`, opts.json)
   }
-  const all = loadAll(manifests)
+  const scope = scopeFor(opts)
+  const persisted = persistedFor(manifests, opts)
+  const all = loadAll(manifests, ROOT, m => scope(m) && !persisted.has(m.name))
+  all.persisted = persisted
   for (const warning of all.warnings) console.error(`warn: ${warning}`)
   if (opts.cmd === 'search') runSearch(all, opts)
   else runShow(all, opts)

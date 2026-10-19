@@ -65,16 +65,48 @@ export function matchGlob(pattern, relpath) {
   return match(0, 0)
 }
 
+/**
+ * Every file under `dir`. An entry that vanishes mid-walk is skipped: a
+ * normalize run swaps a source folder into place while Memex may be reading.
+ */
 function walkFiles(dir, out = []) {
-  for (const entry of readdirSync(dir).sort()) {
+  let names
+  try {
+    names = readdirSync(dir).sort()
+  } catch (err) {
+    if (err.code === 'ENOENT') return out
+    throw err
+  }
+  for (const entry of names) {
     const full = join(dir, entry)
-    if (statSync(full).isDirectory()) {
+    let stat
+    try {
+      stat = statSync(full)
+    } catch (err) {
+      if (err.code === 'ENOENT') continue
+      throw err
+    }
+    if (stat.isDirectory()) {
       if (!SKIP_DIRS.has(entry)) walkFiles(full, out)
     } else {
       out.push(full)
     }
   }
   return out
+}
+
+/** Marks a file that disappeared between the walk and the read. */
+const VANISHED = Symbol('vanished')
+
+function parseVisible(abs, rel, manifest) {
+  try {
+    if (abs.endsWith('.json')) return parseJsonDoc(abs, rel, manifest.id === 'basename' ? basename(abs) : rel)
+    if (abs.endsWith('.md') || abs.endsWith('.markdown')) return parseMarkdownDoc(abs, rel, manifest)
+    return null
+  } catch (err) {
+    if (err.code === 'ENOENT') return VANISHED
+    throw err
+  }
 }
 
 function flattenJson(value, prefix, lines) {
@@ -92,17 +124,28 @@ function flattenJson(value, prefix, lines) {
   lines.push(prefix ? `${prefix}: ${value}` : String(value))
 }
 
-function parseMarkdownDoc(abs, rel, id) {
+/**
+ * A markdown doc's id: the frontmatter `id` when the manifest asks for it
+ * (`"id": "frontmatter"`), else the basename or the relative path.
+ */
+function docId(manifest, abs, rel, fields) {
+  if (manifest.id === 'frontmatter' && fields.id) return String(fields.id)
+  return manifest.id === 'basename' ? basename(abs) : rel
+}
+
+function parseMarkdownDoc(abs, rel, manifest) {
   const raw = readFileSync(abs, 'utf8')
   if (raw.includes('\0')) return null
   const { fields, body } = parseFrontmatter(raw)
+  const id = docId(manifest, abs, rel, fields)
   const tags = parseTags(fields.tags)
-  const title = extractTitle(body) ?? fields.title ?? id
+  // A frontmatter title wins: a body `# ` line can be a code comment.
+  const title = fields.title ?? extractTitle(body) ?? id
   return {
     id,
     title,
     tags,
-    body: body.replace(/^#\s+.+$/m, '').trim(),
+    body: body.replace(/^\s*#\s+.+\n?/, '').trim(),
     extraFields: fields,
     path: rel,
     raw,
@@ -139,46 +182,56 @@ function parseJsonDoc(abs, rel, id) {
   }
 }
 
-/** Collect one `markdown` root: .md plus generic .json sidecars. */
+/**
+ * Collect one `markdown` root: .md plus generic .json sidecars. A manifest
+ * with `"optional": true` treats a missing root as an empty collection.
+ */
 export function collectMarkdown(root, manifest) {
   const docs = []
   const warnings = []
   if (!existsSync(root) || !statSync(root).isDirectory()) {
-    return { docs, warnings: [`root missing: ${root}`] }
+    return { docs, warnings: manifest.optional ? [] : [`root missing: ${root}`] }
   }
   for (const abs of walkFiles(root)) {
     const rel = relative(root, abs)
     if (!manifest.include.some(p => matchGlob(p, rel))) continue
-    const id = manifest.id === 'basename' ? basename(abs) : rel
-    const parsed = abs.endsWith('.json')
-      ? parseJsonDoc(abs, rel, id)
-      : abs.endsWith('.md') || abs.endsWith('.markdown')
-        ? parseMarkdownDoc(abs, rel, id)
-        : null
+    const parsed = parseVisible(abs, rel, manifest)
+    if (parsed === VANISHED) continue
     if (!parsed) {
       warnings.push(`skipped (unparseable): ${rel}`)
       continue
     }
-    const mv = [parsed.extraFields.module, parsed.extraFields.verdict].filter(Boolean)
-    docs.push({
-      collection: manifest.name,
-      kind: manifest.kind,
-      id: parsed.id,
-      title: parsed.title,
-      extra: mv.length ? `[${mv.join(' · ')}]` : '',
-      path: parsed.path,
-      snippetText: parsed.body,
-      fields: {
-        ...parsed.extraFields,
-        id: parsed.id,
-        title: parsed.title,
-        tags: parsed.tags.join(' '),
-        body: parsed.body,
-      },
-      payload: { raw: parsed.raw, tags: parsed.tags, frontmatter: parsed.extraFields },
-    })
+    docs.push(markdownDoc(parsed, manifest))
   }
   return { docs, warnings }
+}
+
+/** The doc a parsed markdown file becomes: the same shape for a root walk and a single file. */
+function markdownDoc(parsed, manifest) {
+  const mv = [parsed.extraFields.module, parsed.extraFields.verdict].filter(Boolean)
+  return {
+    collection: manifest.name,
+    kind: manifest.kind,
+    id: parsed.id,
+    title: parsed.title,
+    extra: mv.length ? `[${mv.join(' · ')}]` : '',
+    path: parsed.path,
+    snippetText: parsed.body,
+    fields: {
+      ...parsed.extraFields,
+      id: parsed.id,
+      title: parsed.title,
+      tags: parsed.tags.join(' '),
+      body: parsed.body,
+    },
+    payload: { raw: parsed.raw, tags: parsed.tags, frontmatter: parsed.extraFields },
+  }
+}
+
+/** One markdown file as a doc, read now: a persisted search reads only the hits it shows. */
+export function loadMarkdownDoc(abs, rel, manifest) {
+  const parsed = parseMarkdownDoc(abs, rel, manifest)
+  return parsed ? markdownDoc(parsed, manifest) : null
 }
 
 const CORE_SKIP_DIRS = new Set(['node_modules', 'world', 'dist', 'target', '.git'])

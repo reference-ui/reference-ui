@@ -1,0 +1,18 @@
+{
+  "description": "Normalized design-system docs: one doc per live page plus one per H2 section (H3 when long). Built by vendor/docs/normalize; gitignored input. Targeted only: search with --in docs-corpus.",
+  "fields": ["title", "heading", "description", "concepts", "section", "type", "body"],
+  "id": "frontmatter",
+  "index": "vendor/docs/_normalized/docs-corpus",
+  "include": ["**/*.md"],
+  "kind": "markdown",
+  "name": "docs-corpus",
+  "optional": true,
+  "owner": "vendor/docs/normalize (no owning skill)",
+  "roots": ["vendor/docs/_normalized"],
+  "targeted": true,
+  "titleBoost": 3,
+  "pageBoost": 3,
+  "diversity": { "perSource": 2 },
+  "vocabulary": "vendor/docs/normalize/concepts.json",
+  "weights": { "title": 4, "heading": 1, "concepts": 3, "section": 2, "description": 3, "type": 1, "body": 0.5 }
+}

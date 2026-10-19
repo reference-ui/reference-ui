@@ -172,9 +172,68 @@ export function processTerm(term) {
   return stem(lower)
 }
 
+/** Words that name no topic: a title is compared without them. */
+const STOP_WORDS = new Set([
+  'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'in', 'is',
+  'it', 'its', 'of', 'on', 'or', 'the', 'to', 'vs', 'with',
+])
+
+/** The stemmed content words of a text, as a set. */
+export function contentTerms(text) {
+  const terms = new Set()
+  for (const token of tokenize(text)) {
+    if (STOP_WORDS.has(token.toLowerCase())) continue
+    const term = processTerm(token)
+    if (term) terms.add(term)
+  }
+  return terms
+}
+
+/** Jaccard similarity of a title's content terms with the query's terms: 1 when they are the same words. */
+export function titleSimilarity(title, queryTerms) {
+  const titleTerms = contentTerms(title)
+  if (!titleTerms.size || !queryTerms.size) return 0
+  let shared = 0
+  for (const term of queryTerms) if (titleTerms.has(term)) shared++
+  return shared / (titleTerms.size + queryTerms.size - shared)
+}
+
+/**
+ * The query with the words of every concept whose keyword it contains, so a
+ * synonym reaches the concept field: "server side rendering" also searches
+ * `ssr`. Keywords match on whole-word runs, as they do when documents are
+ * tagged. Only words the query lacks are added, so a concept the query already
+ * names does not weigh its words twice.
+ */
+export function expandQuery(query, vocabulary) {
+  if (!vocabulary) return query
+  const words = tokenize(query.toLowerCase())
+  const haystack = ` ${words.join(' ')} `
+  const have = new Set(words)
+  const added = []
+  for (const [concept, keywords] of Object.entries(vocabulary)) {
+    const matched = keywords.some(keyword => {
+      const phrase = tokenize(keyword.toLowerCase()).join(' ')
+      return phrase !== '' && haystack.includes(` ${phrase} `)
+    })
+    if (!matched) continue
+    for (const word of tokenize(concept.toLowerCase())) {
+      if (have.has(word)) continue
+      have.add(word)
+      added.push(word)
+    }
+  }
+  return added.length ? `${query} ${added.join(' ')}` : query
+}
+
+/** A double-quoted value is a JSON string (escapes decode); anything else is kept. */
 function unquote(value) {
   if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
-    return value.slice(1, -1)
+    try {
+      return JSON.parse(value)
+    } catch {
+      return value.slice(1, -1)
+    }
   }
   return value
 }
