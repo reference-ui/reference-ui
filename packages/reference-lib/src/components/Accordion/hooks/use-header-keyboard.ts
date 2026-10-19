@@ -1,6 +1,7 @@
 /**
- * APG header traversal: the root keydown handler behind `keyboard="headers"`.
- * Consumer handlers run first, `none` opts out, and anything outside
+ * APG header traversal: the root keydown handler behind `keyboard="headers"`
+ * (`"arrows"` is the same behavior under its base-API alias). Consumer
+ * handlers run first, `none` opts out, and anything outside
  * Arrow/Home/End or sourced inside an item Content is ignored (AC-KEY-07).
  * Otherwise focus moves across the root's own enabled headers with
  * wrap-around arrows and edge-landing Home/End.

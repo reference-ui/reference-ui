@@ -1,8 +1,8 @@
 /**
- * Listbox public API: the compound root plus the selection and
- * virtualization helpers tests and virtualized consumers import.
- * Re-exports only — every behavior lives in the root, parts, hooks,
- * and domain folders.
+ * Listbox public API: the compound root, its individually exported parts,
+ * plus the selection and virtualization helpers tests and virtualized
+ * consumers import. Re-exports only — every behavior lives in the root,
+ * parts, hooks, and domain folders.
  */
 export { Listbox, ListboxComponentBase } from './Listbox'
 export type { ListboxComponent } from './Listbox'

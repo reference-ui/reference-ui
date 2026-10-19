@@ -1,9 +1,9 @@
 /**
  * Calendar root: composition only. The fail-closed gate runs first, the
- * pane, availability, selection, today-marker, and locale hooks resolve
- * the subtree state in their original order, and the render slots
- * authored parts into their defaults. The compound assignment below is
- * the public part surface.
+ * pane, availability, out-of-range, selection, today-marker, and locale
+ * hooks resolve the subtree state in their original order, and the render
+ * slots authored parts into their defaults. The compound assignment below
+ * is the public part surface.
  */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'

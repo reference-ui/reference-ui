@@ -4,7 +4,7 @@
  * the 0001–9999 domain. Everything downstream — the month grid, the text
  * engine in DateField, selection matching — speaks these canonical strings,
  * so lexical comparison is chronological comparison and an invalid string
- * never leaves the gate. Ported verbatim from b19c73bee.
+ * never leaves the gate.
  */
 export type CanonicalISODate = `${number}-${number}-${number}`
 export type ISOMonth = `${number}-${number}`
