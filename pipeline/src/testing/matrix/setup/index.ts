@@ -1,10 +1,11 @@
 /**
  * Matrix workspace setup.
  *
- * This module owns the pipeline-managed preparation step for matrix fixtures.
- * It writes the managed package.json files and optionally installs workspace
- * dependencies so both local and containerized matrix flows start from the
- * same contract.
+ * Writes each fixture's managed package.json plus generated runtime files —
+ * bundler config, HTML shell, React entrypoint, and runner configs — pruning
+ * managed files a fixture no longer needs. Optionally installs workspace
+ * dependencies and, with sync enabled, builds workspace artifacts and runs
+ * each package's sync script for IDE-ready local usage.
  */
 
 import { existsSync, readdirSync } from 'node:fs'

@@ -6,7 +6,7 @@ Runs each matrix package in isolated Dagger containers across its declared React
 
 ```sh
 pnpm pipeline test                                        # every package, default environment
-pnpm pipeline test --packages=@matrix/lib --react=react19 # subset / pinned runtime
+pnpm pipeline test --packages=@matrix/chain-t8 --react=react19 # subset / pinned runtime
 pnpm pipeline test --full                                 # every declared React × bundler
 pnpm pipeline test --trace                                # stream the Dagger execution trace
 ```

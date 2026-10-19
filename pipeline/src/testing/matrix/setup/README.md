@@ -4,10 +4,10 @@ Materializes the pipeline-managed files of each matrix fixture: manifests plus g
 
 ```sh
 pnpm pipeline setup --sync                              # all matrix packages
-pnpm pipeline setup --sync --packages=@matrix/playwright # targeted
+pnpm pipeline setup --sync --packages=@matrix/mcp # targeted
 pnpm pipeline setup --no-install                        # generate files only
 ```
 
-The same step runs inside pipeline-managed environment creation before isolated test runs.
+The Dagger runner reuses the same managed generators when materializing synthetic consumers inside containers.
 
 Parent: [matrix/README.md](../README.md).
