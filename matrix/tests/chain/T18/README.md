@@ -113,7 +113,8 @@ pnpm agent vt matrix/tests/chain/T18            # native unit + sync legs
 pnpm agent pw chain/T18                         # native contract
 ```
 
-Native runs need a fresh `ref sync` first: rebuild the fixture
-(`pnpm --filter @fixtures/primitive-named-library run build`) and run
+Native runs need a fresh `ref sync` first: `ref sync` icons, `ref sync`
+lib, rebuild the fixture
+(`pnpm --filter @fixtures/primitive-named-library run build`), then
 `pnpm agent setup --packages=@matrix/chain-t18 --sync`. A stale
 `.reference-ui` is the classic false pass.

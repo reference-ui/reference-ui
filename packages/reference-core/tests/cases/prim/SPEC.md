@@ -5,7 +5,7 @@ tag components, the `css`/`recipe` bindings over compiled plans, and the
 DOM contract (`data-layer`, `data-variant`, `data-color-mode`). Style
 values lower in the engine; this group proves they paint through a
 primitive and that metadata and DOM props land where they should. Owns
-`src/primitives/**` and `src/sync/react.ts`.
+`src/primitives/**` and `src/packager/react.ts`.
 
 ## Dialect
 

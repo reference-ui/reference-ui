@@ -1,8 +1,8 @@
 # SYNC — generated folder and contracts
 
-Purpose: after `sync()`, the `.reference-ui/` tree matches PLAN §4.1 exactly
-(expected present, forbidden absent), byte-deterministic, with loud config and
-compile errors — and every consumer specifier resolves. This group owns the
+Purpose: after `sync()`, the `.reference-ui/` tree matches the §4.1 folder
+inventory exactly (expected present, forbidden absent), byte-deterministic,
+with loud config and compile errors — and every consumer specifier resolves. This group owns the
 folder; every other group's worlds sync through it.
 
 ## Dialect

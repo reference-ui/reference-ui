@@ -42,8 +42,9 @@ import {
  * every package tag fanned out under every composed system, so
  * `t18AcmeInk` was also emitted under `reference-ui__` and `reference-icons__`.
  *
- * Re-sync order (as T17): `ref sync` lib, rebuild the fixture, matrix
- * `setup --packages=@matrix/chain-t18 --sync`, then this spec. A stale
+ * Re-sync order (as T17): `ref sync` icons, `ref sync` lib, rebuild the
+ * fixture, matrix `setup --packages=@matrix/chain-t18 --sync`, then this
+ * spec. A stale
  * `.reference-ui` is the classic false pass.
  */
 const PROVENANCE_LANDED = true

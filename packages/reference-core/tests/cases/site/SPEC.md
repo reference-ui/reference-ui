@@ -5,8 +5,8 @@ shapes become utilities in a synced world, and which fail closed with a
 diagnostic and no ghost class. The engine (Atomic extract + styletrace)
 decides what is a site; Core proves the decision paints — or provably
 paints nothing — in a browser. Host surface is small:
-`src/sync/compile-files.ts` (what gets scanned) and
-`src/sync/jsx-elements.ts` (which tag names are hosts).
+`src/config/types.ts` carries `include` (what gets scanned) and
+`jsxElements` (which tag names are hosts).
 
 ## Dialect
 
