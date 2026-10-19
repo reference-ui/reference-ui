@@ -1,6 +1,6 @@
-// Config for the CORE-CHAIN-15 upstream package. It takes the Tile source and emits a real materialized base system plus
-// a bound `react.mjs`: the app extends the base system, and the prebuilt fixture renders through the bound runtime, so
-// every class it mints is qualified with this package's name.
+// Config for the CORE-CHAIN-15 upstream package, `@fixture/chain15`. It takes the package's sources and emits a real
+// published base system plus a bound `react.mjs`: the app extends the base system, and the package's built `dist/`
+// renders through the bound runtime, so every class it mints is qualified with this package's name.
 
 import { defineConfig } from '@reference-ui/core'
 

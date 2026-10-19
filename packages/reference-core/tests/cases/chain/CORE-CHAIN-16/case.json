@@ -1,1 +1,1 @@
-{"id": "CORE-CHAIN-16", "name": "a package's styled tags with nothing in extends or layers sync with one located ATM-W-EXTERNAL-UNBACKED warning each, naming the package", "sync": true}
+{"id": "CORE-CHAIN-16", "name": "an installed package whose system the app does not compose, with nothing or another system composed, warns ATM-W-EXTERNAL-UNBACKED once per styled tag site naming the package, its system and its baseSystem fix, and backs nothing; a non-Reference package stays silent", "sync": true}

@@ -1,0 +1,8 @@
+{
+  "name": "plain-glyphs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/src/index.js"
+  }
+}

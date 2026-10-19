@@ -11,6 +11,7 @@ import path from 'node:path';
 import type { CoreCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 import { sync } from '../../../../../src/sync/index.ts';
+import { installPackage, uninstallPackage } from '../../shared/upstream.ts';
 
 // The consumer token added on top of the frozen upstream package.
 const PROBE_RGB = 'rgb(183, 2, 51)';
@@ -29,20 +30,6 @@ interface SpecInput {
   page: SpecPage;
   url: string;
   case: CoreCase;
-}
-
-/**
- * Install the upstream package where Node resolves `@fixture/prebuilt` from
- * the app: the consumer sync reads the system that package published to know
- * which system renders `<Badge>`. The browser still loads it through the
- * world importmap. Returns the link so the finally can remove it.
- */
-function installPrebuilt(worldDir: string, upstreamDir: string): string {
-  const link = path.join(worldDir, 'node_modules', '@fixture', 'prebuilt');
-  fs.mkdirSync(path.dirname(link), { recursive: true });
-  fs.rmSync(link, { force: true, recursive: true });
-  fs.symlinkSync(path.relative(path.dirname(link), upstreamDir), link, 'dir');
-  return link;
 }
 
 function toExtendedConfig(canonical: string): string {
@@ -84,7 +71,9 @@ export default async function run({ page, url, case: c }: SpecInput): Promise<vo
     // cannot be reading a package-shipped rule by coincidence.
     assert.ok(!upstream.includes('b70233'), 'probe value is absent from the published package');
 
-    installed = installPrebuilt(c.worldDir, upstreamDir);
+    // Installed where Node resolves `@fixture/prebuilt` from the app: the consumer sync reads the system the
+    // package published to know which system renders `<Badge>`. The browser still loads it through the importmap.
+    installed = installPackage(c.worldDir, '@fixture/prebuilt', upstreamDir);
     fs.writeFileSync(configPath, toExtendedConfig(canonical), 'utf8');
     await sync(c.worldDir);
 
@@ -118,7 +107,7 @@ export default async function run({ page, url, case: c }: SpecInput): Promise<vo
 
     assert.deepEqual(misses, [], `zero runtime misses, got ${misses.length}`);
   } finally {
-    if (installed) fs.rmSync(installed, { force: true, recursive: true });
+    if (installed) uninstallPackage(c.worldDir, installed);
     fs.writeFileSync(configPath, canonical, 'utf8');
     await sync(c.worldDir);
   }

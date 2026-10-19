@@ -1,0 +1,9 @@
+{
+  "name": "@fixture/chain16",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/src/index.js",
+    "./baseSystem": "./.reference-ui/system/baseSystem.mjs"
+  }
+}
