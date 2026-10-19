@@ -1,6 +1,6 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Small parsing helpers shared by the Atlas parser: export-name rendering, default-export naming, and span slicing.
+//! Each takes an Oxc node or source span and emits the plain string the component, export, or type parser records.
+//! Kept separate so the per-concern parsers stay focused on grammar rather than string plumbing.
 
 use oxc_ast::ast::{ModuleExportName, PropertyKey};
 use oxc_span::{GetSpan, Span};

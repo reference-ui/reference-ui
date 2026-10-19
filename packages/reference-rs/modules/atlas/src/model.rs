@@ -1,6 +1,6 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Public Atlas data model: components, observed elements, prop inventories, and usage tiers.
+//! It takes the analyzer's aggregated records and emits the serializable structs the JS wrapper returns.
+//! Every wire type mirrors to `js/generated/` via ts-rs, and `Usage::from_count` maps raw call-site counts to tiers.
 
 use std::collections::BTreeMap;
 

@@ -1,6 +1,7 @@
 /**
- * Test harness definitions and fixtures.
- * Verifies the module correctness and output contracts.
+ * Atlas indexing scope: local-first defaults plus include/exclude package selection.
+ * Takes the shared demo app through the harness and asserts which components index under each config.
+ * Emits no artifacts; failures here mean the discovery boundary moved.
  */
 import { describe, it, expect } from 'vitest'
 import { getComponents, getComponent } from '../harness/helpers.js'

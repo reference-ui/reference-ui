@@ -1,6 +1,6 @@
 # Styletrace SPEC
 
-Current freeze, cases, and proof. Design narrative: [README.md](./README.md). Diagnostic codes and refusal rules: [src/diagnostics/README.md](./src/diagnostics/README.md).
+Current freeze, cases, and proof. Design narrative: [README.md](./README.md). Diagnostic codes and refusal rules: [README.md](./README.md#diagnostics).
 
 Harness: `pnpm agentrs v styletrace` (Vitest: case suite plus `tests/suites/`) | `pnpm agentrs c styletrace` (Cargo, not proof; see Legend)
 

@@ -1,6 +1,7 @@
 /**
- * Test harness definitions and fixtures.
- * Verifies the module correctness and output contracts.
+ * Atlas component wire shape: required fields, optional-field types, and usage vocabulary.
+ * Takes the harness component list and asserts every entry matches the published contract.
+ * Emits no artifacts; failures here mean the model or its generated types drifted.
  */
 import { describe, it, expect } from 'vitest'
 import { getComponents, USAGE_VALUES } from '../harness/helpers.js'

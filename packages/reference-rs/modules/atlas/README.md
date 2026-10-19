@@ -1,26 +1,31 @@
-# Atlas Module
+# Atlas
 
-Atlas is the component discovery, props interface mapping, and JSX call-site analysis engine of Reference UI.
+Atlas is the component discovery, props-interface mapping, and JSX call-site analysis engine of Reference UI. It answers which React components exist in a project and its included design libraries, which props interface type each maps to, and how components, props, and values are used at JSX call sites. Callers can also observe non-component elements, such as library primitives, by import source. Part of [reference-rs](../../README.md): a Rust engine plus a thin JS wrapper, proven by `tests/cases/` and `tests/suites/`.
 
-It answers three core architecture questions for a codebase:
-- Which React components exist in this project or its included design libraries?
-- Which props interface type does each component map to?
-- How are those components, props, and values actually used in JSX call sites across the application?
+## Public API
 
-It can also observe elements it does not index as components, such as a library's primitives. A caller names an import source and element names in `observe`, and Atlas returns the same call-site statistics for them, bound by import (named, aliased or namespace) rather than by component resolution.
+`analyze(rootDir, config?)` returns the component list; `analyzeDetailed(rootDir, config?)` returns components plus diagnostics. Each component carries `name`, `source`, `interface`, `props`, `count`, `examples`, and `usedWith`. Call sites count in project sources only: package sources and `node_modules` resolve components and types but never count as usage. `config.observe` lists import sources with element names to count, adding one `observed` entry per element actually seen.
 
-## Architecture
+## Scope
 
-Atlas is structured as a self-contained module containing its Rust engine, JavaScript wrapper, and test suite:
+Exported function and arrow-function components, default-exported components consumed through default imports, and props types resolving through local files or included packages (interfaces, aliases, intersections, extension, literal unions). Local and package barrels, renamed imports, and namespace imports resolve; dynamic expressions and type metaprogramming are out of scope and surface as diagnostics rather than guesses.
 
-- **Rust Domain Core (`atlas/src/`)**: High-performance AST scanner built on OXC. Walks files, resolves imports/exports, tracks barrel re-exports, matches JSX call sites, and aggregates usage statistics and representative code snippets.
-- **JavaScript Interface (`atlas/js/`)**: Ergonomic, thin wrapper around the N-API addon (`@reference-ui/rust/atlas`). Exposes `analyze()` for simple component lists and `analyzeDetailed()` for full results with diagnostic warnings.
-- **Test Suite (`atlas/tests/`)**: Fixture projects with realistic application structures. Each case is `tests/cases/<ID>/` named by its raw case id (e.g. `ATL-BAR-01`), where `spec.ts` is the case specification; `analysis.json` and `diagnostics.json` provide deterministic fixture outputs for inspection. Vitest entries live in `tests/suites/` and shared helpers in `tests/harness/`.
+## Diagnostics
 
-## Key Invariants
+Unresolved or unsupported inputs emit typed `ATL-*` diagnostics, never guessed data. Codes are wire contract: never rename, never remove. Meanings and raise sites live in the [shared registry](../../diagnostics/REGISTRY.md).
 
-1. **Diagnostics Over Guesses**: Unsupported or unresolved inputs surface explicitly through template diagnostics (e.g. `ATL-W-UNRESOLVED-PROPS-TYPE`, `ATL-W-UNSUPPORTED-PROPS-ANNOTATION`) rather than hallucinated or guessed data.
-2. **Fail-Closed Boundary**: Only exported components and explicitly included design packages are tracked. Arbitrary node_modules dependencies are never eagerly scanned.
-3. **No Kitchen-Sink Leakage**: Atlas never depends on style system runtime or compiler passes. It is strictly a semantic analysis product.
+| Code | Severity | Trigger |
+| ---- | -------- | ------- |
+| `ATL-W-UNRESOLVED-PROPS-TYPE` | warning | named props type resolves nowhere; partial component kept |
+| `ATL-W-UNSUPPORTED-PROPS-ANNOTATION` | warning | inline object props annotation; component omitted |
+| `ATL-W-UNRESOLVED-INCLUDE-PACKAGE` | warning | included package does not resolve; skipped |
+| `ATL-W-PACKAGE-SCAN-FAILED` | warning | resolved package unreadable; siblings kept |
+| `ATL-E-SCAN-FAILED` | error | discovery itself fails; analysis refused |
 
-> Search terms: call-site snippets, namespace package, component index, usage analyzer, discovery/components, discovery/props-interface, callsites/jsx, barrels/re-exports, diagnostics/unresolved-props, rs:tasty, rs:styletrace, rs:shared
+## Invariants
+
+- Diagnostics over guesses: every unsupported input surfaces explicitly.
+- Fail-closed boundary: only exported components and explicitly included design packages are tracked; arbitrary `node_modules` are never eagerly scanned.
+- No style-system leakage: Atlas never depends on style runtime or compiler passes.
+
+> Search terms: call-site snippets, component index, usage analyzer, discovery/components, discovery/props-interface, callsites/jsx, barrels/re-exports, diagnostics/unresolved-props, rs:tasty, rs:styletrace, rs:shared

@@ -1,6 +1,6 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Internal per-module records shared by the Atlas parse, resolve, and usage phases: imports, components, types, and re-exports.
+//! Parsing fills one `ModuleInfo` per file; resolution and call-site aggregation read those records back to build the inventory.
+//! Nothing here crosses the wire — the public `Component` payload is assembled from these records in the output stage.
 
 use crate::model::{Component, ComponentInterface, ComponentProp, Usage};
 use oxc_ast::ast::Expression;

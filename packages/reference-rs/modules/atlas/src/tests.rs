@@ -1,6 +1,6 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Atlas Rust unit tests: usage tiers, co-usage scoring, analyzer smoke runs, and re-export resolution.
+//! Each test takes synthetic counts or a scratch project and asserts the tier, score, or inventory Atlas emits.
+//! Case-driven end-to-end coverage lives in `tests/cases/` instead; this file pins units and small integrations.
 
 #[cfg(test)]
 mod tests {
