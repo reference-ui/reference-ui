@@ -7,7 +7,12 @@
       {
         "imports": {
           "@reference-ui/react": "./.reference-ui/react/react.mjs",
-          "@fixture/chain15": "./prebuilt/chain15.mjs"
+          "@fixture/chain15": "./node_modules/@fixture/chain15/dist/src/index.js"
+        },
+        "scopes": {
+          "./node_modules/@fixture/chain15/": {
+            "@reference-ui/react": "./node_modules/@fixture/chain15/.reference-ui/react/react.mjs"
+          }
         }
       }
     </script>

@@ -1,18 +1,22 @@
 // ownership.spec.ts — spec for CORE-CHAIN-15, the component-ownership chain case. It takes { page, url, case } with the
-// world synced standalone, syncs the upstream package for real, rewrites the app config to extend the base system it
-// published, re-syncs, then asserts a consumer-only token paints on every package import shape (direct `Button`,
-// published `Tile`, barrel `Button`, `css` wrapper) with zero runtime misses. The canonical config is restored with a
-// heal sync in a finally. Emits nothing on success; throws one line naming every unbacked probe and its class on failure.
+// world synced standalone, syncs the upstream package for real, builds its dist, installs it in world/node_modules as
+// `@fixture/chain15`, rewrites the app config to extend the base system it published and re-syncs. It then asserts a
+// consumer-only token paints on every package import shape (direct `Button`, published `Tile`, barrel `Button`, `css`
+// wrapper) with zero runtime misses. The install goes and the canonical config is restored with a heal sync in a
+// finally. Emits nothing on success; throws one line naming every unbacked probe and its class on failure.
 import fs from 'node:fs'
 import path from 'node:path'
+import { buildWorld } from '../../../../shared/build.ts'
 import type { CoreCase } from '../../../../shared/cases.ts'
 import type { SpecPage } from '../../../../shared/page.ts'
 import { sync } from '../../../../../src/sync/index.ts'
 import {
   canonicalConfig,
+  installPackage,
   paintOf,
   restoreDir,
   syncUpstream,
+  uninstallPackage,
   wireConfig,
   writeConfig,
   type PublishedBaseSystem,
@@ -23,6 +27,7 @@ import {
 const PROBE_RGB = 'rgb(11, 110, 79)'
 const PROBE_HEX = '0b6e4f'
 const UPSTREAM_NAME = 'core-chain15-up'
+const PACKAGE = '@fixture/chain15'
 
 const UPSTREAM_LINK: UpstreamLink = {
   binding: 'upstreamBase',
@@ -92,10 +97,16 @@ export default async function run({ page, url, case: c }: SpecInput): Promise<vo
     if (message.text().includes('no compiled class')) misses.push(message.text())
   })
 
+  let installed: string | undefined
   try {
     const upstream = (await syncUpstream(upstreamDir)) as HostingBaseSystem
     const published = fs.readFileSync(path.join(upstreamDir, '.reference-ui', 'system', 'baseSystem.mjs'), 'utf8')
     const broken = upstreamProblems(upstream, published)
+
+    // The package ships what its source builds to; the app's sync and the page both find it through the install.
+    const built = await buildWorld(upstreamDir)
+    if ('error' in built) throw new Error(`the upstream package does not build: ${built.error}`)
+    installed = installPackage(c.worldDir, PACKAGE, upstreamDir)
 
     writeConfig(c.worldDir, wireConfig(canonical, [UPSTREAM_LINK], ['upstreamBase']))
     await sync(c.worldDir)
@@ -109,6 +120,7 @@ export default async function run({ page, url, case: c }: SpecInput): Promise<vo
     if (misses.length > 0) broken.push(`${misses.length} runtime miss(es), first: ${misses[0]}`)
     if (broken.length > 0) throw new Error(`CORE-CHAIN-15 broke: ${broken.join('; ')}`)
   } finally {
+    if (installed) uninstallPackage(c.worldDir, installed)
     await restoreDir(c.worldDir, canonical)
   }
 }
