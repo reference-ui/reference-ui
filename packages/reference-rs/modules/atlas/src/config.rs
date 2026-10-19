@@ -1,6 +1,7 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Request configuration for an Atlas analysis run: the app root plus include, exclude, and observe selectors.
+//! It takes the caller's JS-side options and emits the serializable `AtlasConfig` the analyzer resolves
+//! packages and filters sources from. The struct mirrors to `js/generated/` via ts-rs, so the JS wrapper
+//! and the Rust engine share one config shape.
 
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;

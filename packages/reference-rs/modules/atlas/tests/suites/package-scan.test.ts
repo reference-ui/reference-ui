@@ -1,7 +1,8 @@
 /**
  * ATL package-scan pin: a resolved included package whose
  * discovery fails surfaces ATL-W-PACKAGE-SCAN-FAILED naming the package,
- * while healthy siblings still index.
+ * while healthy siblings still index. The suite builds a scratch app with
+ * one locked package and asserts the warning plus the surviving inventory.
  */
 import fs from 'node:fs'
 import os from 'node:os'
