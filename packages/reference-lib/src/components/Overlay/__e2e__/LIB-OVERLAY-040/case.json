@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-040",
+  "name": "Overlay Deep SPEC & Production Verification Suite 6. Inert Background Isolation OV-INERT-01: Sibling DOM nodes are marked inert while isolating overlay is open"
+}

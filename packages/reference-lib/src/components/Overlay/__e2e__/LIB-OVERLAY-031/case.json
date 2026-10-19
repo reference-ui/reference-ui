@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-031",
+  "name": "Overlay Deep SPEC & Production Verification Suite 4. Outside Press & Pointer Mechanics OV-OUT-04: Overlay should not immediately dismiss when the pointerdown that opens it is also outside its newly mounted Content"
+}

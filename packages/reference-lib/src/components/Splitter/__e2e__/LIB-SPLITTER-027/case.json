@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-027",
+  "name": "Splitter pointer-session robustness SP-DRAG-08: Release outside the handle cleans up once and keeps focus"
+}

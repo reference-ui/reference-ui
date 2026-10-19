@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-056",
+  "name": "Splitter FEATURES #3/#8: measured constraints over the Panel-axis sum SP-DYNAMIC-02: Idle resize re-resolves measured bounds and ARIA without touching value or callbacks"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-POPOVER-042",
+  "name": "An explicit Popover restoreFocus target receives focus on close"
+}

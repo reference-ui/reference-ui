@@ -1,0 +1,4 @@
+{
+  "id": "LIB-ACCORDION-046",
+  "name": "Accordion Composition Gates & Browser Proofs AC-KEY-11: Accordion should keep every enabled header in the browsers native Tab sequence even after arrow focus moves"
+}

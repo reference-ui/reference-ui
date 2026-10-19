@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-013",
+  "name": "Splitter Composition Gates & Browser Proofs min/max/index never leak to css() or the DOM"
+}

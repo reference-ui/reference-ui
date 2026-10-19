@@ -1,0 +1,4 @@
+{
+  "id": "LIB-MEASURE-006",
+  "name": "Measure sharp edges MS-SCALE-01: transform-only change does not churn the layout box"
+}

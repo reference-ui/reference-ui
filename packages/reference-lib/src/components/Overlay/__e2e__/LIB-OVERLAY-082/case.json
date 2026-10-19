@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-082",
+  "name": "Overlay Deep SPEC & Production Verification Suite 11. Modal Pointer Isolation OV-RESTORE-05: Cancels pending focus restoration when reopened during exit animation"
+}

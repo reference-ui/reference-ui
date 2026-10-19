@@ -1,0 +1,4 @@
+{
+  "id": "LIB-POPOVER-013",
+  "name": "Popover Composition Gates & Browser Proofs PO-HOVER-07: Popover should remain open when Trigger is clicked within the 300-millisecond impatient window after hover-open"
+}

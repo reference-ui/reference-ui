@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-097",
+  "name": "OV-ENV-04: StrictMode resilience One modal side effect even when React replays lifecycles"
+}

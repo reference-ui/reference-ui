@@ -1,0 +1,4 @@
+{
+  "id": "LIB-MEASURE-010",
+  "name": "Measure sharp edges MS-ENV-01: StrictMode remount leaves one settled observer session"
+}

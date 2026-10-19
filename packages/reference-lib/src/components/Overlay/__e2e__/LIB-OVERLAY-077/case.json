@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-077",
+  "name": "Overlay Deep SPEC & Production Verification Suite 11. Modal Pointer Isolation OV-POINTER-01: Blocks background pointer activation (mouse, text, focus) while modal is open"
+}

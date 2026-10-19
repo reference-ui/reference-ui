@@ -1,0 +1,4 @@
+{
+  "id": "LIB-POPOVER-035",
+  "name": "Rejected Popover opening keeps controlled DOM and uses current callbacks"
+}

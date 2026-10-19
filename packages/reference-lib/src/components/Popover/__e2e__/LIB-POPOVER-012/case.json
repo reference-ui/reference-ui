@@ -1,0 +1,4 @@
+{
+  "id": "LIB-POPOVER-012",
+  "name": "Popover Composition Gates & Browser Proofs PO-HOVER-05: Popover should leave hover grace when pointer travel is slow, reversed, or crosses the side opposite Content"
+}

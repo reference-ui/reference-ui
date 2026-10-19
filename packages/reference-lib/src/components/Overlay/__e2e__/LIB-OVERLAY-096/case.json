@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-096",
+  "name": "OV-SCROLL-10: Interrupted teardown Clean scroll-lock effects exactly once if teardown is interrupted or reopened during exit"
+}

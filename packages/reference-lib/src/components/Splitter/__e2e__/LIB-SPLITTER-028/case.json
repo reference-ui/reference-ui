@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-028",
+  "name": "Splitter pointer-session robustness SP-DRAG-09: Cancel paths abort the drag with one cleanup and no end"
+}

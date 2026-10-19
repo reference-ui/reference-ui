@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-012",
+  "name": "Splitter Composition Gates & Browser Proofs Panel constraint props never leak onto the DOM"
+}

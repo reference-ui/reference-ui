@@ -1,0 +1,4 @@
+{
+  "id": "LIB-OVERLAY-039",
+  "name": "Overlay Deep SPEC & Production Verification Suite 5. Scroll Lock Mechanics OV-SCROLL-02: Overlay avoids layout shift when locking page with scrollbar and authored root styles"
+}

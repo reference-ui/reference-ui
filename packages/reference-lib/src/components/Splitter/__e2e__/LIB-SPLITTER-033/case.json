@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SPLITTER-033",
+  "name": "Splitter pointer-session robustness SP-END-03: Canceled keyboard sessions emit no end"
+}

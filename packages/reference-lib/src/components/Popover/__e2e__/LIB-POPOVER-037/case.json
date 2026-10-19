@@ -1,0 +1,4 @@
+{
+  "id": "LIB-POPOVER-037",
+  "name": "Popover consumer cancellation stops trigger and Close requests before transitions"
+}
