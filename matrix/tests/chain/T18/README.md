@@ -27,27 +27,34 @@ not hosts.
 ## Probes
 
 One source file per import shape, each with its own novel consumer token
-(`src/tokens.ts`), so one probe's fan-out never backs another's class.
+(`src/tokens.ts`), so one probe's rules never back another's class. The
+renderer is the package whose runtime draws the probe (`renderer` in
+`src/probe.ts`); its published streams are the only systems allowed to back
+the probe's stem.
 
-| File | Shape | Runtime prefix | Before provenance |
-| --- | --- | --- | --- |
-| `lib-button.tsx` | `import { Button } from '@reference-ui/lib/primitives'` | `reference-ui__` | pass |
-| `namespace-button.tsx` | `import * as Acme from '@fixtures/…'; <Acme.Button>` | `primitive-named-library__` | pass |
-| `icon.tsx` | `ContentCopyIcon` from `@reference-ui/icons`, icons composed | `reference-icons__` | pass |
-| `chip.tsx` | `<Chip size="lg">`: owned prop, no class, no rule, no miss | none | pass |
-| `acme-button.tsx` | `import { Button } from '@fixtures/primitive-named-library'` | `primitive-named-library__` | red (probe 1) |
-| `ui/index.ts` + `barrel-button.tsx` | relative barrel re-exporting lib's `Button` | `reference-ui__` | red (probe 2) |
-| `wrapper-button.tsx` | same-file `css` wrapper around lib's `Button` | `reference-ui__` | red (probe 3) |
-| `tile.tsx` | `<Tile padding>`, a published `jsxElements` name | `primitive-named-library__` | red (probe 1b) |
+| File | Shape | Runtime prefix | Renderer's systems | Before provenance |
+| --- | --- | --- | --- | --- |
+| `lib-button.tsx` | `import { Button } from '@reference-ui/lib/primitives'` | `reference-ui__` | lib: `reference-icons`, `reference-ui` | pass |
+| `namespace-button.tsx` | `import * as Acme from '@fixtures/…'; <Acme.Button>` | `primitive-named-library__` | `primitive-named-library` | pass |
+| `icon.tsx` | `ContentCopyIcon` from `@reference-ui/icons`, icons composed | `reference-icons__` | `reference-icons` | pass |
+| `chip.tsx` | `<Chip size="lg">`: owned prop, no class, no rule, no miss | none | none | pass |
+| `acme-button.tsx` | `import { Button } from '@fixtures/primitive-named-library'` | `primitive-named-library__` | `primitive-named-library` | red (probe 1) |
+| `ui/index.ts` + `barrel-button.tsx` | relative barrel re-exporting lib's `Button` | `reference-ui__` | lib: `reference-icons`, `reference-ui` | red (probe 2) |
+| `wrapper-button.tsx` | same-file `css` wrapper around lib's `Button` | `reference-ui__` | lib: `reference-icons`, `reference-ui` | red (probe 3) |
+| `tile.tsx` | `<Tile padding>`, a published `jsxElements` name | `primitive-named-library__` | `primitive-named-library` | red (probe 1b) |
+
+Lib publishes two streams because it layers icons, so a lib tag is backed
+under both (styling-across-packages plan §3: the price of not following lib's
+d.ts re-exports); every other renderer names one system.
 
 Before provenance the red probes were backed only as `chain-t18__<stem>`, so
 the runtime class (`primitive-named-library__c_t18AcmeInk`, …) was unbacked,
 painted nothing and logged `no compiled class`; the wrapper also drew three
 misleading `ATM-W-MISSING-STYLE-PLAN` warnings at sync. All of them pass now.
 
-## Icons composition (sync level)
+## Composition legs (sync level)
 
-`tests/unit/icons-composition.test.ts` syncs two tiny projects with the
+`tests/unit/icons-composition.test.ts` syncs three tiny projects with the
 installed `ref sync <dir> --json`:
 
 - `tests/sync/backed` layers `@reference-ui/icons/baseSystem`: the sheet backs
@@ -56,6 +63,17 @@ installed `ref sync <dir> --json`:
   unstyled icon draws no warning (pass), and the styled icon must warn
   `ATM-W-EXTERNAL-UNBACKED` once, at its line, naming `@reference-ui/icons`
   (before plan S3 the batch was `[]`, the silent failure of plan probe 4).
+- `tests/sync/partial` is the app's partly-composed twin
+  (styling-across-packages plan gap 2, slice S6): it extends lib but not the
+  fixture, and styles the fixture's `<Tile padding>` and `<Button color>`
+  beside lib's `<Button color>`. Each fixture tag warns
+  `ATM-W-EXTERNAL-UNBACKED` once, at its line, naming
+  `'@fixtures/primitive-named-library'`, its system `'primitive-named-library'`
+  and the fix `@fixtures/primitive-named-library/baseSystem`; nothing else
+  warns. Their stems are backed under no prefix at all (no spray under lib's
+  systems or the app's), though their tokens compile. The lib tag is the
+  control: backed under lib's systems only. Before plan S2 the fixture props
+  were sprayed under every composed system and nothing warned.
 
 ## Contract
 
@@ -68,6 +86,11 @@ installed `ref sync <dir> --json`:
 4. Probe tokens are absent from every published sheet (novelty).
 5. Every class on the probes that passed before provenance is backed, and
    every runtime miss names a provenance probe's stem (the red-tier guard).
+6. No spray (styling-across-packages plan S2, checked since S6): each probe
+   stem is backed only under its renderer's published streams, never under
+   another composed system and never under `chain-t18__`. Before S2,
+   `t18AcmeInk` was also emitted under `reference-ui__` and
+   `reference-icons__`.
 
 ## Red tier and the flip
 

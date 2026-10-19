@@ -5,6 +5,7 @@ import { baseSystem as packageBaseSystem } from '@fixtures/primitive-named-libra
 import { chipPaddingLg } from '@fixtures/primitive-named-library'
 import {
   type ColorProbe,
+  type ProbeRenderer,
   T18_CHIP_TEST_ID,
   T18_OWN_PREFIX,
   T18_PROBES,
@@ -28,6 +29,12 @@ import {
  * provenance tests expected-fail again; Playwright fails a marked test that
  * passes, so a stale mark cannot hide.
  *
+ * No spray (styling-across-packages plan S2, checked since S6): a probe's
+ * stem is backed only under the systems its renderer published as streams,
+ * never under another composed system and never under the app's. Before S2
+ * every package tag fanned out under every composed system, so
+ * `t18AcmeInk` was also emitted under `reference-ui__` and `reference-icons__`.
+ *
  * Re-sync order (as T17): `ref sync` lib, rebuild the fixture, matrix
  * `setup --packages=@matrix/chain-t18 --sync`, then this spec. A stale
  * `.reference-ui` is the classic false pass.
@@ -40,7 +47,21 @@ const PROBES: readonly ColorProbe[] = Object.values(T18_PROBES)
 const EXTERNAL_TODAY = PROBES.filter((probe) => probe.status === 'external-today')
 const PROVENANCE = PROBES.filter((probe) => probe.status === 'provenance')
 
-type SystemLike = { streams?: Array<{ utilities?: unknown }> }
+type SystemLike = { streams?: Array<{ name?: unknown; utilities?: unknown }> }
+
+/** The published system of each package that renders a probe. */
+const RENDERER_SYSTEMS: Record<ProbeRenderer, SystemLike> = {
+  lib: libBaseSystem as SystemLike,
+  package: packageBaseSystem as SystemLike,
+  icons: iconsBaseSystem as SystemLike,
+}
+
+/** The systems a package renders through: its published stream names. */
+function streamNames(system: SystemLike): string[] {
+  const names = (system.streams ?? []).flatMap((stream) => (typeof stream.name === 'string' ? [stream.name] : []))
+  if (names.length === 0) throw new Error('a published baseSystem names no streams')
+  return names
+}
 
 function streamUtilities(system: SystemLike): string {
   return (system.streams ?? [])
@@ -223,6 +244,21 @@ test.describe('T18 — ownership by provenance', () => {
       expect(backed, `classes the sheet backs for ${stem} (${probe.shape})`).toContain(probeClass(probe))
       expect(backed, `own-qualified rule for ${stem} (${probe.shape})`).not.toContain(`${T18_OWN_PREFIX}${stem}`)
       expect(await computedValue(page, probe), `${probe.testId} computed ${probe.property}`).toBe(probe.computed)
+    })
+  }
+
+  for (const probe of PROBES) {
+    test(`${probe.testId}: no spray, backed only under the systems ${probe.renderer} renders through`, async ({
+      page,
+    }) => {
+      const stem = probeStem(probe)
+      const allowed = streamNames(RENDERER_SYSTEMS[probe.renderer]).map((name) => `${name}__${stem}`)
+      expect(allowed, `${probe.renderer}'s streams name the runtime prefix`).toContain(probeClass(probe))
+      const backed = backedClassesForStem(await loadedSelectors(page), stem)
+      expect(
+        backed.filter((name) => !allowed.includes(name)),
+        `classes backed for ${stem} outside ${probe.renderer}'s systems (${probe.shape}); all: ${backed.join(', ')}`
+      ).toEqual([])
     })
   }
 
