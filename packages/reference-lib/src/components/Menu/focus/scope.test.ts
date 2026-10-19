@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/**
+ * Owning-root proof: light-DOM and shadow-hosted scope reads. Runs in
+ * happy-dom against real nodes; focus discovery consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { activeElementIn, owningScope } from './scope'
 

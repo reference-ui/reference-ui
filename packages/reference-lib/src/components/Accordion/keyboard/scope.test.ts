@@ -1,5 +1,9 @@
 // @vitest-environment happy-dom
-/** Header-scope proof: content-bound nodes, nested roots, header collection. */
+/**
+ * Header-scope proof: content-bound nodes, nested roots, and header
+ * collection. Runs in happy-dom against real buttons; traversal indices
+ * prove out in the sibling traversal suite.
+ */
 import { describe, expect, it } from 'vitest'
 import { collectHeaderTriggers, isInsideContentOf } from './scope'
 

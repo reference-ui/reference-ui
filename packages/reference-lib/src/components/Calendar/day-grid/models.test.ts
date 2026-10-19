@@ -1,3 +1,8 @@
+/**
+ * Day-model proof: per-date state resolution for every rendered cell.
+ * Pure models computed once per date; sections consume them without
+ * recomputing.
+ */
 import { describe, expect, it } from 'vitest'
 import type { GridDay } from '../dates/grid'
 import { resolveDayModels, type DayModelInputs } from './models'

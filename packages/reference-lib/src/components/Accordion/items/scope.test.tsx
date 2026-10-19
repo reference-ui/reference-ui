@@ -1,4 +1,8 @@
-/** Nesting-isolation proof: item children re-scope to null, the rest passes through. */
+/**
+ * Nesting-isolation proof: item children re-scope to null while the rest
+ * passes through. Mounts real providers in happy-dom; nested-root
+ * independence proves out in CT.
+ */
 import * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import { AccordionContext } from '../context'

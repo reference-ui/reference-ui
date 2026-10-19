@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/**
+ * Listbox mounted proof: controlled types, virtual adapter diagnostics,
+ * multi-settle, hydration, and the unmatched-value warning matrix. Runs
+ * in happy-dom with real trees; selection and navigation prove out in CT.
+ */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { createRoot } from 'react-dom/client'

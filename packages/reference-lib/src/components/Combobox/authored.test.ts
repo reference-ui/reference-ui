@@ -1,3 +1,8 @@
+/**
+ * Authored-scan proof: collection scans plus the grid and windowed-list
+ * adapter shape guards. Runs over stub elements with no mount; the
+ * content gate consumes the scan.
+ */
 import * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import {

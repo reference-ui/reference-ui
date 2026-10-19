@@ -1,4 +1,7 @@
-/** DateField hooks: single edit session, range draft, form observers. */
+/**
+ * DateField hooks: single edit session, range draft, and form observers.
+ * Re-exports the bindings both hosts compose; no logic lives here.
+ */
 export { useEditSession } from './use-edit-session'
 export type { DateEditSessionOptions } from './use-edit-session'
 export { useRangeDraft } from './use-range-draft'

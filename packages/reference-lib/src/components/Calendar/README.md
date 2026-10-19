@@ -19,15 +19,6 @@ month and year fields. Shared holds the diagnostics, names, slot
 detection, and prop gate all of them ask. Pure decisions carry
 colocated unit tests; browser behavior proves out in CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`dates/`](./dates) | ISO kit, weeks, grid, spans, pane seating |
-| [`selection/`](./selection) | Matchers, range completion, collection paint |
-| [`navigation/`](./navigation) | Keyboard move resolution |
-| [`day-grid/`](./day-grid) | Preview, roving targets, per-date models |
-| [`collections/`](./collections) | Shared month/year rover and year window |
-| [`hooks/`](./hooks) | Pane, availability, selection, today, locale, grid focus |
-| [`parts/`](./parts) | One file per public part |
-| [`shared/`](./shared) | Diagnostics, names, slots, keys, prop gate |
-
 DateField imports the date kernel directly (`dates/iso`); that deep edge is internal to the Calendar and DateField pair, not a public contract.
+
+Up: [components](../components.md).

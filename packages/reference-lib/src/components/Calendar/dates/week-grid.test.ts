@@ -1,3 +1,7 @@
+/**
+ * Week-start and month-grid proof: locale week starts and padded month
+ * grids. Pure layout math with no DOM; the grid hook renders from it.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   type ISOMonth,

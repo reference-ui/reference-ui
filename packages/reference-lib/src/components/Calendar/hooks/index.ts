@@ -1,4 +1,8 @@
-/** Calendar hooks: pane, availability, out-of-range warning, selection, today, locale, grid focus. */
+/**
+ * Calendar hooks: pane, availability, out-of-range warning, selection,
+ * today, locale, and grid focus. Re-exports the bindings the root
+ * resolves in order; no logic lives here.
+ */
 export { usePane } from './use-pane'
 export type { PaneOptions } from './use-pane'
 export { useAvailability } from './use-availability'

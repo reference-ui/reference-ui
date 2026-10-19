@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/**
+ * Menu restore proof: trigger restore and past-trigger tab handoff. Runs
+ * in happy-dom against real nodes; dismissal consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { findNextTabbable, restoreFocusToTrigger } from './restore'
 

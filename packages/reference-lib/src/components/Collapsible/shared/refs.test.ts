@@ -1,4 +1,8 @@
-/** Ref-assignment proof for setRef: function passthrough, object writes, gaps. */
+/**
+ * Ref-assignment proof for setRef: function passthrough, object writes,
+ * and gaps. Runs against plain ref objects; the parts prove the composed
+ * host wiring.
+ */
 import { describe, expect, it, vi } from 'vitest'
 import { setRef } from './refs'
 

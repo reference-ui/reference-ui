@@ -1,3 +1,8 @@
+/**
+ * Range-draft proof: resolving the next editable draft from endpoints
+ * and input. Pure draft decisions with no DOM; the range machines
+ * consume them.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveRangeDraft } from './draft'
 

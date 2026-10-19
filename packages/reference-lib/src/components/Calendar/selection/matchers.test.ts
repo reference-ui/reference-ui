@@ -1,3 +1,8 @@
+/**
+ * Selection-matcher proof: committed matching across single, multiple,
+ * and range modes. Pure predicates with no DOM; the selection hook
+ * consumes them.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   matchInRange,

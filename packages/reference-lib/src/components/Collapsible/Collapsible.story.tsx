@@ -1,3 +1,9 @@
+/**
+ * Collapsible CT fixtures: basic and controlled disclosures, exit and
+ * isolation probes, focus fallback, hidden-until-found and force-mount
+ * policies, size publishers, and the Accordion nest. Mounted by the e2e
+ * spec; not a public API.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'

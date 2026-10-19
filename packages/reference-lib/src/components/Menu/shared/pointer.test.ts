@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/**
+ * Pointer-capability proof: hover detection and submenu-side geometry.
+ * Pure predicates; the travel effect and parts consume them.
+ */
 import { describe, expect, it } from 'vitest'
 import { hoverCapablePointer, submenuSide } from './pointer'
 

@@ -1,3 +1,8 @@
+/**
+ * Field Book gallery: default, button-aligned, prefixed, custom-border,
+ * invalid, and disabled hosts. Manual visual stories only; the contract
+ * fixtures CT mounts live in the story file.
+ */
 import * as React from 'react'
 import { Div, Input, Span, Button, Label, P } from '@reference-ui/react'
 import { Field } from './index'

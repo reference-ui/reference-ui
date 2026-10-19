@@ -1,3 +1,7 @@
+/**
+ * Roving-tab-target proof: which day holds the grid's tab stop. Pure
+ * target resolution with no DOM; focus movement consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import type { GridDay } from '../dates/grid'
 import { computePreferredTarget, nearestFocusableTarget } from './targets'

@@ -1,3 +1,8 @@
+/**
+ * Calendar CT fixtures: date and range panes, locale and boundary
+ * grids, emission and month machines, view modes, and custom-day
+ * compositions. Mounted by the e2e specs; not a public API.
+ */
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { Div, Span, Button } from '@reference-ui/react'

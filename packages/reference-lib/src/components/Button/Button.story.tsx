@@ -1,3 +1,8 @@
+/**
+ * Button CT fixtures: the variants-and-states matrix with a click
+ * counter, the block-default layout probe, and the icon-color fixture.
+ * Mounted by the browser specs; form-contract fixtures live alongside.
+ */
 import * as React from 'react'
 import { Button, Div, Span } from '@reference-ui/react'
 import { AddIcon, KeyboardArrowDownIcon, SettingsIcon } from '@reference-ui/icons'

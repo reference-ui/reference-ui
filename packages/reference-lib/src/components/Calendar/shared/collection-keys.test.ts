@@ -1,3 +1,7 @@
+/**
+ * Collection-key proof: key deltas across the month/year collections.
+ * Pure arithmetic with no DOM; collection navigation consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { collectionKeyDelta } from './collection-keys'
 

@@ -1,3 +1,8 @@
+/**
+ * Host-election proof: first-claimant wins, idempotent re-claim,
+ * failover on release, and per-document independence. Pure registry
+ * decisions over stub documents; lifecycle wiring proves out in CT.
+ */
 import { describe, expect, it } from 'vitest'
 import { claimPrimaryHost, getPrimaryHost, releasePrimaryHost } from './election'
 

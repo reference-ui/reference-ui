@@ -1,3 +1,8 @@
+/**
+ * ISO-kit proof: parsing, formatting, validation, arithmetic, and
+ * comparison over canonical dates, months, and years. Pure functions
+ * with no DOM; the whole date kernel builds on them.
+ */
 import { describe, expect, it } from 'vitest'
 import type { CanonicalISODate as ISODateCanonical } from './iso'
 import {

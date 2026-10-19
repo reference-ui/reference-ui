@@ -1,3 +1,7 @@
+/**
+ * Interactivity proof: telling the option's own events apart from
+ * in-row controls. Pins the reads option press guards itself with.
+ */
 import { describe, expect, it } from 'vitest'
 import { isInteractiveDescendant } from './interactive'
 

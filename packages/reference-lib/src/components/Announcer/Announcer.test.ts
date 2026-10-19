@@ -1,3 +1,9 @@
+/**
+ * Announce API proof: blank and documentless no-ops, token supersede,
+ * SSR and hydration, flushSync fallback, and the Toast announce rows.
+ * Exercises the store and announce entry directly; browser speech proves
+ * out in CT.
+ */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'

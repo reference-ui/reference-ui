@@ -1,3 +1,9 @@
+/**
+ * Accordion controlled-policy hardening in the browser. Rejected,
+ * programmatic, consumer-cancelled, and reordered single/multiple
+ * requests must leave disclosure visibility and linkage authoritative
+ * without remounting surviving triggers.
+ */
 import { test, expect } from '../../../../playwright/ct'
 import type { ComponentProps } from 'react'
 import type { ControlledContract } from '../Accordion.story'

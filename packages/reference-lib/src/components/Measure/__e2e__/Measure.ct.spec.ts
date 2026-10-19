@@ -1,3 +1,9 @@
+/**
+ * Measure browser proofs: border-box publishing, settle, pause, and idle
+ * reads plus the scale, loop, document, hidden, and StrictMode edges.
+ * Mounts the story fixture and asserts ResizeObserver discipline with
+ * no wrapper node in a real browser.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('Measure browser proofs', () => {

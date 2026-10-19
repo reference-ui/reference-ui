@@ -1,3 +1,7 @@
+/**
+ * Menubar diagnostic proof: devWarn shape and channel. Pins the warning
+ * every Menubar part reports through.
+ */
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { devWarn } from './warn'
 

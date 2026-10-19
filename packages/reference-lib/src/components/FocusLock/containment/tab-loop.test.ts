@@ -1,4 +1,7 @@
-/** Isolation proof for the Tab decision: stepping, wrap, and re-entry. */
+/**
+ * Tab-decision proof: stepping, wrap, and re-entry. Pure decisions with
+ * no DOM; the containment effect applies them.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveTabTarget } from './tab-loop'
 

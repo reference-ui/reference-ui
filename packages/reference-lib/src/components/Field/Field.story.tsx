@@ -1,3 +1,9 @@
+/**
+ * Field CT fixtures: status and focus, prefix/suffix, prohibited props,
+ * embedded and state chrome, amount, compound embeds, surface recipe,
+ * and hosted DateField, token-picker, and range compositions. Mounted by
+ * the e2e specs; not a public API.
+ */
 import * as React from 'react'
 import { Div, Button, Input, Span, Label, P, Textarea, Select, Option } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'

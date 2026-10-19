@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
-/** Isolation proof for target resolution: FocusTarget forms and shard filtering. */
+/**
+ * Target-resolution proof: FocusTarget forms and shard filtering. Runs
+ * in happy-dom with real elements and refs; activation consumes it.
+ */
 import * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import { resolveFocusTarget, resolveShardElements } from './targets'

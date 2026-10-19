@@ -1,4 +1,8 @@
-/** Collapsible hooks: session, registration, presence, evacuation, reveal, motion, isolation. */
+/**
+ * Collapsible hooks: session, registration, presence, evacuation, reveal,
+ * motion, and isolation. Re-exports the bindings parts consume; no logic
+ * lives here.
+ */
 export { useSession } from './use-session'
 export type { SessionOptions } from './use-session'
 export { useContentRegistration } from './use-content-registration'

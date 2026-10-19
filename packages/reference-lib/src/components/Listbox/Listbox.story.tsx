@@ -1,3 +1,9 @@
+/**
+ * Listbox CT fixtures: basic and multiple lists, sections, controlled
+ * mirrors, roving and typeahead probes, dynamic order, virtual rows, and
+ * grouped and native compositions. Mounted by the e2e spec; not a
+ * public API.
+ */
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { Div, Span, Button } from '@reference-ui/react'

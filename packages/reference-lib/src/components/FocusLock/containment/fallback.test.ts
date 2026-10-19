@@ -1,4 +1,7 @@
-/** Isolation proof for the reclaim landing: memory order and lazy querying. */
+/**
+ * Reclaim-landing proof: memory order and lazy querying. Pure landing
+ * decisions with no DOM; the containment effect applies them.
+ */
 import { describe, expect, it, vi } from 'vitest'
 import { pickFallbackTarget } from './fallback'
 

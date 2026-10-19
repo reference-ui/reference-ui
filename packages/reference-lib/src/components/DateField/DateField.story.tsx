@@ -1,3 +1,9 @@
+/**
+ * DateField CT fixtures: compound and childless hosts, folded and
+ * unfolded pickers, part resolution, constraints, forms, engine probes,
+ * blur veto, shadow hosts, and range compositions. Mounted by the e2e
+ * spec; not a public API.
+ */
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'

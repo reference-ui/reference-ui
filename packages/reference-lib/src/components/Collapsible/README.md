@@ -19,17 +19,9 @@ the parts' vocabulary. Shared holds the ref assignment. Pure decisions
 carry colocated unit tests; mounted behavior proves out in the existing
 suites and CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`parts/`](./parts) | Trigger, Content gate, Content panel |
-| [`hooks/`](./hooks) | Session, registration, presence, evacuation, reveal, motion, isolation |
-| [`linkage/`](./linkage) | Trigger/content addressing and border collapse |
-| [`mount/`](./mount) | Stay-mounted policies and find reveals |
-| [`collapse/`](./collapse) | Height-tween skip decisions |
-| [`isolation/`](./isolation) | Closed-content inert/hidden lockdown |
-| [`shared/`](./shared) | Ref assignment |
-
 Accordion owns this component's collection mode: an `id` inside an
 Accordion hands openness to the Accordion value through the deep context
-import, with both sides in this refactor. There is no `store.ts`: the
+import. There is no `store.ts`: the
 disclosure store is the session hook, not a substrate.
+
+Up: [components](../components.md).

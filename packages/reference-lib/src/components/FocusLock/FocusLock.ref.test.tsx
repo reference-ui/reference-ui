@@ -1,3 +1,8 @@
+/**
+ * FocusLock ref proof: the child ref reads without a React ref warning.
+ * Mounts one lock in happy-dom; composed-ref assignment proves out
+ * beside it.
+ */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'

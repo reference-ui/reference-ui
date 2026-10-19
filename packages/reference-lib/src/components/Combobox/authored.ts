@@ -1,21 +1,18 @@
+/**
+ * Authored-children inspection for Combobox (#10 content gate,
+ * CB-ADAPTER-02/03/08 diagnostics). Coordinators answer from authored
+ * children plus collection metadata above the mount, because
+ * unmount-when-closed keeps the popover unmounted while closed.
+ * Element-type refs are caller-supplied so this module stays
+ * dependency-free (no import cycle with Combobox.tsx). Fragments and
+ * arrays are transparent; wrapped popovers/collections (HOCs obscuring
+ * the element type) are out of contract and read as absent — direct
+ * authorship is the documented shape. The adapter shape guards are
+ * type-only imports, so the runtime stays dependency-free too.
+ */
 import * as React from 'react'
 import type { VirtualFocusAdapter } from '../Listbox'
 import type { ComboboxGridAdapter } from './combobox-context'
-
-/**
- * Authored-children inspection for Combobox (#10 content gate, CB-ADAPTER-02/03/08
- * diagnostics). Overlay #4 resolved closed-content observation as a non-goal:
- * coordinators answer from authored children plus collection metadata above
- * the mount, because unmount-when-closed keeps the popover unmounted while
- * closed. This module is the Combobox half of that contract.
- *
- * Element-type refs are caller-supplied so this module stays dependency-free
- * (no import cycle with Combobox.tsx). Fragments and arrays are transparent;
- * wrapped popovers/collections (HOCs obscuring the element type) are out of
- * contract and read as absent — direct authorship is the documented shape.
- * The adapter shape guards below are type-only imports, so the runtime
- * stays dependency-free too.
- */
 
 export interface AuthoredCollectionRefs {
   Popover: React.ElementType

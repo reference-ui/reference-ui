@@ -1,3 +1,9 @@
+/**
+ * Measure CT fixture: a measured host driven through box, settle, pause,
+ * scale, loop, document, hidden, and StrictMode cases. Renders with
+ * createRoot, falling back to legacy render on the React 17 runtime;
+ * mounted by the browser spec.
+ */
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { createRoot } from 'react-dom/client'

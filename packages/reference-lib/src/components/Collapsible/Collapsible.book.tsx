@@ -1,3 +1,8 @@
+/**
+ * Collapsible Book gallery: default-closed, default-open, and controlled
+ * disclosures with shared divider chrome. Manual visual stories only;
+ * the contract fixtures CT mounts live in the story file.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Collapsible } from './index'

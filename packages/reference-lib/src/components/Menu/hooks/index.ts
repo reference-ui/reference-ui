@@ -1,4 +1,7 @@
-/** Menu hooks: entry keys, levels, focus effects, press, and travel. */
+/**
+ * Menu hooks: entry keys, levels, focus effects, press, and travel.
+ * Re-exports the bindings parts compose; no logic lives here.
+ */
 export { useMenuTriggerKeys } from './use-menu-trigger-keys'
 export { useMenuContextKeys } from './use-menu-context-keys'
 export { useChoiceDismiss } from './use-choice-dismiss'

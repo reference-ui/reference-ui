@@ -1,3 +1,7 @@
+/**
+ * Year-window proof: window resolution around the seated year. Pure
+ * arithmetic with no DOM; the year collection renders from its result.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveYearWindow } from './year-window'
 

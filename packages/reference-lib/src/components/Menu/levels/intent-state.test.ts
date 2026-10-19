@@ -1,3 +1,7 @@
+/**
+ * Submenu-intent proof: intent timers and state transitions. Pure state
+ * machine with no DOM; nested levels consume it.
+ */
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { clearIntentTimer, freshIntentState } from './intent-state'
 

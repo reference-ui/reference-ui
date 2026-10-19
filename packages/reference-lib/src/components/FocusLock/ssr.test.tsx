@@ -1,3 +1,8 @@
+/**
+ * FocusLock SSR proof: the authored child server-renders with no extra
+ * markup or document access. Render-to-string only; mounted behavior
+ * proves out in CT.
+ */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'

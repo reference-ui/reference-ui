@@ -1,4 +1,7 @@
-/** Collapse-skip proof: armed skips, instant hidden shut, force-mount bypass. */
+/**
+ * Collapse-skip proof: armed skips, instant hidden shut, and force-mount
+ * bypass. Pure skip decisions with no DOM; the motion hook consumes them.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveCollapseSkip } from './skip'
 

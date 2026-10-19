@@ -1,3 +1,7 @@
+/**
+ * Preview-band proof: hover range bands over committed selection. Pure
+ * band resolution with no DOM; the grid paints from its result.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolvePreviewBand } from './preview'
 

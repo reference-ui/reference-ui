@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/**
+ * Collapsible mount contract: hidden-until-found and force-mount
+ * policies with beforematch reveals across ten CO-MOUNT rows. Runs in
+ * happy-dom with real disclosures; browser exits prove out in CT.
+ */
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 import * as React from 'react'
 import { createRoot } from 'react-dom/client'

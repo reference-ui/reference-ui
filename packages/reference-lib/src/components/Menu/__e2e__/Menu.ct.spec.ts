@@ -1,3 +1,9 @@
+/**
+ * Menu browser proofs: composition gates plus the root-level parity
+ * re-targets across DOM, focus, typeahead, and action rows. Mounts the
+ * story fixtures and asserts levels, roving, and one-selection
+ * discipline in a real browser.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 

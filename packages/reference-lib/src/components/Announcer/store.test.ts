@@ -1,3 +1,8 @@
+/**
+ * Announcer store proof: pending cap, token supersede, recycle delay,
+ * per-document identity, and blank-message ignores. Drives the real
+ * store without mounting a host; replay and speech prove out in CT.
+ */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   ANNOUNCE_CLEAR_DELAY,

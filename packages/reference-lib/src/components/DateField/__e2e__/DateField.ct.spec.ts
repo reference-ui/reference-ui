@@ -1,3 +1,9 @@
+/**
+ * DateField browser proofs: compound rendering and picker flows plus the
+ * DF re-target rows across DOM, keys, calendar, form, and bounds areas.
+ * Mounts the story fixtures and asserts canonical-ISO discipline with
+ * deliberate picker activation in a real browser.
+ */
 import type { Page } from '@playwright/test'
 import { test, expect, snap } from '../../../../playwright/ct'
 

@@ -1,3 +1,7 @@
+/**
+ * Inline-completion proof: completion matching and prefix decisions.
+ * Pure string decisions with no DOM; the text session consumes them.
+ */
 import { describe, expect, it } from 'vitest'
 import { completesInline, completionForPrefix } from './autocomplete'
 

@@ -1,4 +1,10 @@
 // @vitest-environment happy-dom
+/**
+ * Combobox reconciliation proof: theming, CB case rows, shadow portal,
+ * cluster-B decisions, inline and custom values, and adapter
+ * diagnostics. Runs in happy-dom with real trees; browser open, commit,
+ * and close discipline proves out in CT.
+ */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRoot, hydrateRoot, type Root } from 'react-dom/client'

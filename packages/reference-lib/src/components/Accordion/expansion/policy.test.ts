@@ -1,4 +1,8 @@
-/** Expansion-policy proof: openness reads, single/multiple toggles, shape guards. */
+/**
+ * Expansion-policy proof: openness reads, single/multiple toggles, and
+ * shape guards. Pure value math with no DOM; the store wiring proves out
+ * in the hook and root suites.
+ */
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import {
   assertValueShape,

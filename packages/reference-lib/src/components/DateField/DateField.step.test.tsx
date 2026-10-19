@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/**
+ * DateField caret-stepping proof: day, month, and year carry with
+ * Gregorian constrain. Runs in happy-dom with real inputs; the keyed
+ * stepping rows prove out in CT.
+ */
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 import * as React from 'react'
 import { act } from 'react'

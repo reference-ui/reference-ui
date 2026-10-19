@@ -1,3 +1,9 @@
+/**
+ * Collapsible browser proofs: composition gates plus the GSAP-motion
+ * ports across DOM, activation, presence, and size rows. Mounts the
+ * story fixtures and asserts linkage, exits, evacuation, isolation, and
+ * published measurements in a real browser.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('Collapsible Composition Gates & Browser Proofs', () => {

@@ -1,3 +1,9 @@
+/**
+ * Accordion browser proofs: composition gates plus the AC-DOM, AC-KEY,
+ * AC-NEST, AC-PRES, AC-A11Y, AC-COMP, and AC-FIND-CT case rows. Mounts the
+ * story fixtures and asserts expansion, traversal, nesting, and presence
+ * in a real browser with axe checks on the accessibility rows.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 

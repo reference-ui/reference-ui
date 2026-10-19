@@ -1,4 +1,7 @@
-/** Isolation proof for restore decisions: origin capture and target ranking. */
+/**
+ * Restore-decision proof: origin capture and target ranking. Pure
+ * decisions with no DOM; the restore callback applies them.
+ */
 import { describe, expect, it } from 'vitest'
 import { captureRestoreOrigin, resolveRestoreTarget, type RestoreSnapshot } from './decision'
 

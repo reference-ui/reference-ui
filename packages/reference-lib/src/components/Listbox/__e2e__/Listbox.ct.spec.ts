@@ -1,3 +1,9 @@
+/**
+ * Listbox browser proofs: composition gates across DOM, single and
+ * multiple selection, keyboard, pointer, and dynamic rows. Mounts the
+ * story fixtures and asserts roving focus, typeahead, and one-request
+ * selection in a real browser.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 

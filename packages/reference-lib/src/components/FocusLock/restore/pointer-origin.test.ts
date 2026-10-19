@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
-/** Isolation proof for pointer-origin tracking: record on pointerdown. */
+/**
+ * Pointer-origin proof: record on pointerdown per document. Runs in
+ * happy-dom with synthetic events; restore ranking consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { lastPointerOrigin, trackPointerOrigin } from './pointer-origin'
 

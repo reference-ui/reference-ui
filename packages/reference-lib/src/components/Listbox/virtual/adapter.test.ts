@@ -1,3 +1,8 @@
+/**
+ * Virtual-adapter proof: adapter validation and mounted-index entries.
+ * Pins the contract windowed rows must satisfy; violations surface as
+ * dev diagnostics.
+ */
 import { describe, expect, it } from 'vitest'
 import { toMountedIndexEntries, validateVirtualAdapter } from './adapter'
 

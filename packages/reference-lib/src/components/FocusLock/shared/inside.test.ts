@@ -1,5 +1,9 @@
 // @vitest-environment happy-dom
-/** Isolation proof for isInsideLock: container, shards, and outside nodes. */
+/**
+ * Lock-membership proof: container, shards, and outside nodes. Runs in
+ * happy-dom against real nodes; containment checks every focus event
+ * against it.
+ */
 import { describe, expect, it } from 'vitest'
 import { isInsideLock } from './inside'
 

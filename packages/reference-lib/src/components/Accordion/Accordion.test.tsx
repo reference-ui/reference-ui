@@ -1,4 +1,10 @@
 // @vitest-environment happy-dom
+/**
+ * Accordion unit contract: identity diagnostics, single/multiple request
+ * policy, nesting isolation, and hydration across React versions. Runs in
+ * happy-dom with real roots; traversal math and browser behavior prove
+ * out in the colocated suites and CT.
+ */
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 import * as React from 'react'
 import { act } from 'react'

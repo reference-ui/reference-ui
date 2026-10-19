@@ -1,3 +1,7 @@
+/**
+ * Prohibited-strip proof: runtime removal of the six barred keys. Pure
+ * function with no DOM; the root applies it before spreading props.
+ */
 import { describe, expect, it } from 'vitest'
 import { stripProhibitedFieldProps } from './strip-prohibited'
 

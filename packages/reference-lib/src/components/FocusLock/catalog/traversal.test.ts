@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
-/** Isolation proof for composed traversal: shadow, slots, opacity, and order. */
+/**
+ * Composed-traversal proof: shadow, slots, opacity, and order. Runs in
+ * happy-dom against real trees; the catalog consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { collectComposedCandidates, documentOrder } from './traversal'
 

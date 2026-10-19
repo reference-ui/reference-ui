@@ -1,3 +1,7 @@
+/**
+ * Pane-seating proof: which month a value, month prop, or navigation
+ * request seats. Pure resolution with no DOM; the pane hook consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { getHomeView, monthFromValue, shiftMonth, systemMonth } from './pane'
 

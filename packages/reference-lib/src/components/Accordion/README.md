@@ -19,16 +19,9 @@ re-export Collapsible's parts unchanged. Shared holds the ref fanout. Pure
 decisions carry colocated unit tests; mounted behavior proves out in the
 existing suites and CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`parts/`](./parts) | Item alias over Collapsible |
-| [`hooks/`](./hooks) | Expansion store, header traversal handler |
-| [`expansion/`](./expansion) | Single/multiple value policy and shape guards |
-| [`items/`](./items) | Detection, identity collection, nesting isolation |
-| [`keyboard/`](./keyboard) | Traversal math and header scope |
-| [`shared/`](./shared) | Ref fanout |
-
 Collapsible consumes the context through a deep import
 (`../Accordion/context`) — the one cross-component edge this collection
-owns, with both sides in this refactor. There is no `store.ts`: the value
+owns. There is no `store.ts`: the value
 store is a hook, not a substrate.
+
+Up: [components](../components.md).

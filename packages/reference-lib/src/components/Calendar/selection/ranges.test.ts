@@ -1,3 +1,7 @@
+/**
+ * Range-completion proof: resolving the next range from anchor and
+ * candidate dates. Pure decision with no DOM; commits consume it.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveRangeSelect } from './ranges'
 

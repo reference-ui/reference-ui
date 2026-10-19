@@ -1,3 +1,8 @@
+/**
+ * Combobox CT fixtures: request-logging harnesses plus select-only,
+ * dynamic, overlay, token-picker, grid, and conflict compositions.
+ * Mounted by the e2e specs; not a public API.
+ */
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { Div, Span, Button, Input } from '@reference-ui/react'

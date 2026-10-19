@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/**
+ * Accordion find-in-page contract: beforematch swaps, adds, cancels, and
+ * nests across single, multiple, and standalone disclosures. Runs in
+ * happy-dom with real roots; the browser re-proof lives in CT.
+ */
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 import * as React from 'react'
 import { act } from 'react'

@@ -1,3 +1,9 @@
+/**
+ * Button browser proofs: resting variants and icon configurations plus
+ * hover, active, focus, click, and disabled states with visual snaps.
+ * Mounts the states fixtures; form-ownership contracts live in the
+ * sibling contracts spec.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('Button Component', () => {

@@ -1,3 +1,9 @@
+/**
+ * Calendar browser proofs: grid rendering, selection, navigation,
+ * locale presentation, keyboard moves, and constrained states. Mounts
+ * the story machines and asserts one-request-per-gesture discipline
+ * with stable tab stops in a real browser.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 

@@ -1,3 +1,8 @@
+/**
+ * Combobox touch proofs: outside-touch dismissal without compat-mouse
+ * replay, inside-tap tolerance, and single tap commits. Mounts the story
+ * fixtures with touch enabled in a real browser.
+ */
 import { test, expect } from '../../../../playwright/ct'
 import type { Locator, Page } from '@playwright/test'
 

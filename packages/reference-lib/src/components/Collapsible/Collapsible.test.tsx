@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/**
+ * Collapsible unit contract: linkage, activation, presence, size,
+ * nesting, and environment rows with real disclosures. Runs in
+ * happy-dom; motion-owned exits and browser behavior prove out in CT.
+ */
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'

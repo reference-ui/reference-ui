@@ -1,3 +1,7 @@
+/**
+ * Arrow-target proof: standalone and virtual index resolution. Pure
+ * resolution with no DOM; the navigation hook consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveStandaloneTarget, resolveVirtualTarget } from './targets'
 

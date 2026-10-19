@@ -1,3 +1,8 @@
+/**
+ * Accordion Book gallery: single- and multiple-expansion FAQ sections
+ * over Collapsible items with shared divider chrome. Manual visual
+ * stories only; the contract fixtures CT mounts live in the story file.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Accordion } from './index'

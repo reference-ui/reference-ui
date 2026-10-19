@@ -1,3 +1,7 @@
+/**
+ * Locale-name proof: month, weekday, and full-date names per locale.
+ * Pure Intl reads with no DOM; headers and labels render from them.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   formatLongMonth,

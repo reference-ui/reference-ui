@@ -1,4 +1,8 @@
-/** Mount-policy proof: precedence, Presence keep-alive, beforematch reveals. */
+/**
+ * Mount-policy proof: precedence, Presence keep-alive, and beforematch
+ * reveals. Pure stay-mounted decisions with no DOM; the content gate
+ * consumes them.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveMountPolicy, resolvePresent, shouldRevealOnBeforeMatch } from './policy'
 

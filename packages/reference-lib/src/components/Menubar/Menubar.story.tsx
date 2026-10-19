@@ -1,3 +1,8 @@
+/**
+ * Menubar CT fixtures: basic and submenu bars, controlled and loop
+ * harnesses, RTL, disabled menus, and the contract harness. Mounted by
+ * the e2e specs; not a public API.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'

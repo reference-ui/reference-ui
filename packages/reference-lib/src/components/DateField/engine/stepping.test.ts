@@ -1,3 +1,7 @@
+/**
+ * Segment-stepping proof: resolveStep across segments, carry, and
+ * constraints. Pure arithmetic with no DOM; caret stepping consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveStep } from './stepping'
 

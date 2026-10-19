@@ -1,4 +1,7 @@
-/** Isolation proof for the lock stack: per-document pause chains and pruning. */
+/**
+ * Lock-stack proof: per-document pause chains and pruning. Pure stack
+ * decisions with no DOM; activation registers through it.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   isTopLock,

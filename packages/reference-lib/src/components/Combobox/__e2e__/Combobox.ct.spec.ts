@@ -1,3 +1,9 @@
+/**
+ * Combobox browser proofs: input open/commit flows plus the
+ * reconciliation rows across DOM, open, edit, nav, commit, and close
+ * areas. Mounts the story logs and asserts controlled relationships,
+ * active-descendant discipline, and one-request commits in a real browser.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
