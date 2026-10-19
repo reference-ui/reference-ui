@@ -1,7 +1,8 @@
 # hooks
 
 React bindings over the domain folders: one hook per behavior, data and
-handlers out, no JSX. The session owns every ref and mirror, memory and
+handlers out, no JSX. The session owns every ref and mirror, shards resolve
+the connected set and the composed ref fans the container out, memory and
 restore wrap decisions into stable callbacks, and activation plus containment
 own the two effects in their original order — the root only composes them and
 renders the transparent child.

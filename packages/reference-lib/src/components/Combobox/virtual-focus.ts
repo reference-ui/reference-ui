@@ -1,7 +1,8 @@
 /**
  * Pure virtual-focus helpers (#5). Navigation validation, logical search,
  * and duplicate detection live here so unit tests pin them without a
- * browser; Combobox.tsx owns refs, pending timing, and diagnostics.
+ * browser; the virtual-core and cells hooks own refs, pending timing,
+ * and diagnostics.
  */
 import type { VirtualFocusItem } from '../Listbox'
 

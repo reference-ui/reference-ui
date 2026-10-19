@@ -1,7 +1,7 @@
 /**
- * Listbox hooks: session, registry, focus, selection, navigation,
- * typeahead, and option wiring. Re-exports the bindings the root
- * composes; no logic lives here.
+ * Listbox hooks: session, registry, focus, selection, unmatched-value
+ * warning, navigation, typeahead, and option wiring. Re-exports the
+ * bindings the root composes; no logic lives here.
  */
 export { useListboxSession } from './use-listbox-session'
 export type { ListboxSession } from './use-listbox-session'

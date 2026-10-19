@@ -1,8 +1,8 @@
-// Parse-kit contract: pure locale format/parse/step/constrain helpers.
-// Ported verbatim from 1150c8e6e (parse.ts); staged foundation,
-// NOT wired into DateField (wiring = locale display = visual change).
-// Titles carry no DF-* IDs: per TESTS.md, [unit] IDs are proven only by
-// DOM-light renders of public components, never by parser-helper tests.
+/**
+ * Parse-kit proof: locale formatting, parsing, segment stepping, and
+ * constraint checks. Pure helpers with no DOM; both field machines and
+ * the slot layouts consume them.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   assertValidDateBounds,

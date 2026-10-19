@@ -1,8 +1,9 @@
 /**
  * Listbox's root: the listbox container and compound assembly. It yields
  * commit authority to a containing Combobox, composes the session,
- * registry, focus, selection, navigation, and typeahead hooks, provides
- * the option scope, and renders the container Div. All decisions live in
+ * registry, focus, selection, navigation, and typeahead hooks plus the
+ * unmatched-value warning, provides the option scope, and renders the
+ * container Div. All decisions live in
  * the hooks and domain folders; this file ends in the public compound
  * assignment (Option, Section, Header, Empty).
  */
