@@ -1,3 +1,8 @@
+/**
+ * Layer-library-2 private-token demo. Registers `layerPrivateAccent2` inside
+ * this package's own CSS layer and renders it, the second leg for tests
+ * that need multiple `layers[]` entries (T9).
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'

@@ -1,3 +1,8 @@
+/**
+ * Extend-library-2 demo component. Registers the disjoint `secondaryDemo*`
+ * tokens and renders the `secondary-demo` swatches, so parallel `extends[]`
+ * adoption (T9) is observable apart from extend-library.
+ */
 import * as React from 'react'
 import { css } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'

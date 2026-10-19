@@ -1,3 +1,8 @@
+/**
+ * Extend-library light/dark demo. Registers `lightDarkDemoBg/Text` tokens
+ * with dark-mode overrides and renders side-by-side panels proving both
+ * values resolve for downstream `extends` consumers.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'

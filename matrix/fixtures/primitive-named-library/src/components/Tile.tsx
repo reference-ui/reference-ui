@@ -1,3 +1,7 @@
+/**
+ * `Tile`: the package's plain style-prop forwarding wrapper, published in
+ * `jsxElements` by tracing alone (chain T18's ownership probe).
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type { DivProps } from '@reference-ui/react'

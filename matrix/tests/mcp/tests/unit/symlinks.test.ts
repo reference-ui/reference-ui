@@ -1,7 +1,8 @@
 /**
- * MCP standard suite: symlink handling & resilience. Connects a client to the shared matrix MCP server
- * (booted once by `global-setup.ts`) and asserts the tool contract end to end
- * over mock projects from `./helpers`.
+ * MCP standard suite: symlink handling & resilience. Boots its own isolated
+ * MCP server in a tmp dir — this suite needs its own cwd/registry state —
+ * and asserts the symlink contract end to end over mock projects from
+ * `./helpers`.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'

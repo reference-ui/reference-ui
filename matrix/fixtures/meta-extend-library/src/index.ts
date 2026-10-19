@@ -3,7 +3,7 @@
  * Extends `@fixtures/extend-library`. Used to prove transitive `extends`
  * chains and shared-base diamond composition in the chain matrix.
  *
- * Run `core sync` before using.
+ * Run `ref sync` before using.
  */
 export { baseSystem } from '../.reference-ui/system/baseSystem.mjs'
 export { MetaExtendDemo } from './components/MetaExtendDemo'

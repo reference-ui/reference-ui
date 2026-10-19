@@ -1,6 +1,6 @@
 /**
  * Aliased-host-library assertion values. Single source of truth for the
- * shell's expected computed styles, imported by chain T16.
+ * shell's expected computed styles, exported for chain-tier assertions.
  */
 
 /** `display="inline-flex"` computes to `flex` in Chromium/`inline-flex` elsewhere. */

@@ -1,3 +1,9 @@
+/**
+ * Demo components the MCP tools observe: `PrimaryAction`, `FeatureCard`,
+ * `HeroBanner`, and the `ComponentShowcase` page section. Plain Reference UI
+ * primitives with props, slots, and nesting for inventory, props, examples,
+ * and style-prop queries to assert on.
+ */
 import type { ReactNode } from 'react'
 import { A, Article, Code, Div, H1, H2, Main, P, Section } from '@reference-ui/react'
 

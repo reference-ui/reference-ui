@@ -1,3 +1,8 @@
+/**
+ * Layer-library private-token demo. Registers `layerPrivateAccent` inside
+ * the layer scope and renders it: the component resolves because it lives
+ * in the layer, while a consumer's bare `bg="layerPrivateAccent"` cannot.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'

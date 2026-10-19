@@ -1,6 +1,7 @@
 /**
  * Aliased-host library fixture.
- * Exports baseSystem for downstream layers[] consumers (chain T16).
+ * Exports baseSystem for downstream layers[] consumers (chain T16, whose
+ * topology T17 reuses).
  *
  * Run `ref sync` in aliased-host-library before using.
  */

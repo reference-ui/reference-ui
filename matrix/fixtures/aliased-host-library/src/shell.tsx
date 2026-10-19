@@ -1,3 +1,9 @@
+/**
+ * Aliased shell behind the fixture's badges: style props land on an
+ * `as`-cast alias of `Div`, never a literal host, plus the `createBadge`
+ * factory that closes `forwardRef` components over it. No `jsxElements`
+ * roster — StyleTrace must follow the alias on its own (chain T16).
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type { DivProps } from '@reference-ui/react'

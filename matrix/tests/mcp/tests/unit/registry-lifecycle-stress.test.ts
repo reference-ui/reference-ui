@@ -1,7 +1,8 @@
 /**
- * MCP standard suite: registry lifecycle, deletion & self-healing. Connects a client to the shared matrix MCP server
- * (booted once by `global-setup.ts`) and asserts the tool contract end to end
- * over mock projects from `./helpers`.
+ * MCP standard suite: registry lifecycle, deletion & self-healing. Boots its
+ * own isolated MCP server in a tmp dir — this suite needs its own
+ * cwd/registry state — and asserts the lifecycle contract end to end over
+ * mock projects from `./helpers`.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
