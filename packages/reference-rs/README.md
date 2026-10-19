@@ -6,15 +6,9 @@ The **atomic style engine** is a stack of sibling crates under `modules/` — Ty
 
 ## Atomic style engine
 
-Sibling crates. Each verifies itself with `pnpm agentrs c <crate>`.
-
-| Module | What it is | Verify |
-| --- | --- | --- |
-| **canon** | The language: tags, CSS properties, `mt` / `r` / conditions. `@webref` + dialect. | `pnpm agentrs c canon` |
-| **base-system** | The definition. Fragment dump from TypeScript. Tokens, fonts, keyframes, globals, recipes. | `pnpm agentrs c base_system` |
-| **atomic** | Extract → atoms → stylesheet + class map. One namer. | `pnpm agentrs c atomic` · `pnpm agentrs v atomic` |
-| **typegen** | `.d.ts` unions from base-system + canon. Not a jsx farm. | `pnpm agentrs c typegen` |
-| **styletrace** | Which JSX names still carry StyleProps. Atomic extract calls this. | `pnpm agentrs c styletrace` · `pnpm agentrs v styletrace` |
+Sibling crates under `modules/` (canon, base-system, atomic, typegen,
+styletrace). Each verifies itself with `pnpm agentrs c <crate>`; ask
+Memex (`memex show modules/<crate>`) for what each one is.
 
 Other products in this package (`tasty`, `atlas`) are not this engine.
 
