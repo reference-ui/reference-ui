@@ -6,7 +6,7 @@ style props on an **aliased host** (`const BadgeShell = Div as …`) behind a
 `forwardRef` factory — the `@reference-ui/icons` `createIcon` shape in
 miniature.
 
-Its `ui.config.ts` deliberately carries **no `jsxElements`**: StyleTrace
+Its UI config deliberately carries **no `jsxElements`**: StyleTrace
 host detection must recognize the alias on its own. If it does not, the
 shell utilities (`d_inline-flex`, `ai_center`, `jc_center`, `leading_0`,
 `shrink_0`, `c_inherit`) compile to nothing and the consumer renders

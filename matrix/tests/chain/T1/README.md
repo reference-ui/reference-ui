@@ -1,4 +1,4 @@
-# matrix/chain/T1 — Extend one library
+# chain-t1 — Extend one library
 
 **Topology:**
 ```
@@ -9,7 +9,7 @@
 
 ## What this tests
 
-When a consumer declares `extends: [LibA]` in its `ui.config.ts`:
+When a consumer declares `extends: [LibA]` in its UI config:
 
 - The upstream library's `fragment` surface is pulled into Panda config generation
 - Upstream tokens are visible in the consumer's generated types and CSS variables
@@ -27,8 +27,8 @@ components. All are adopted by this package via `extends`.
 
 ## Tests
 
-- `tests/unit/runtime.test.ts` — Verifies the component tree renders and the marker is correct.
-- `tests/e2e/T1-contract.spec.ts` — Browser assertions confirming that upstream
+- The node-side runtime suite verifies the component tree renders and the marker is correct.
+- The browser contract spec confirms that upstream
   tokens resolve to the expected color values in computed styles, plus the
   `_private` boundary: the upstream private swatch does not resolve outside
   its data-layer scope and the downstream `_private.brand` attempt fails.

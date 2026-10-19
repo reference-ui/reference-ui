@@ -1,4 +1,4 @@
-# matrix/chain/T13 — Parallel chains + shared layer
+# chain-t13 — Parallel chains + shared layer
 
 ```
 extend-library    ──▶ extend ──▶ meta-extend-library    ──▶ extend ──┐

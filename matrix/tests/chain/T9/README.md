@@ -1,4 +1,4 @@
-# matrix/chain/T9 — Full mix
+# chain-t9 — Full mix
 
 **Topology:**
 ```

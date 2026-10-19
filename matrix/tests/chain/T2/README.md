@@ -1,4 +1,4 @@
-# matrix/chain/T2 — Layer one library
+# chain-t2 — Layer one library
 
 **Topology:**
 ```
@@ -9,7 +9,7 @@
 
 ## What this tests
 
-When a consumer declares `layers: [LibA]` in its `ui.config.ts`:
+When a consumer declares `layers: [LibA]` in its UI config:
 
 - Only the upstream library's `css` surface is imported during stylesheet assembly
 - The upstream `fragment` is NOT adopted — upstream tokens do not enter this package's Panda config or TypeScript surface
@@ -22,7 +22,7 @@ that is intentionally private to the layer), `LightDarkDemo`, and exports its `b
 
 ## Tests
 
-- `tests/unit/runtime.test.ts` — Verifies the component tree renders and the marker is correct.
-- `tests/e2e/T2-contract.spec.ts` — Browser assertions confirming that the
+- The node-side runtime suite verifies the component tree renders and the marker is correct.
+- The browser contract spec confirms that the
   layer-library's CSS is applied (LayerPrivateDemo's background resolves), while
   the upstream token is scoped inside the layer's own components.
