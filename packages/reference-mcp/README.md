@@ -9,15 +9,15 @@ For AI agent instructions and guiding principles, see **[instructions.md](./inst
 
 ## 3 Customization Tiers (`ui.config.ts`)
 
-Reference UI projects configure their component and asset surface via boolean flags in `ui.config.ts`:
+Reference UI projects configure their component and asset surface via boolean flags in `ui.config.ts` (the snake_case spellings `use_reference_library` and `use_reference_icons` also work):
 
 1. **Level 1: Primitives (`@reference-ui/react`)** (Always Enabled):
    - Mirror standard HTML elements 1:1 (`Div`, `Span`, `Button`, `Section`, `H1`–`H6`).
    - Driven entirely by type-safe, token-aware StyleProps.
-2. **Level 2: Reference Library (`@reference-ui/lib`)** (`use_reference_library`, default: `true`):
+2. **Level 2: Reference Library (`@reference-ui/lib`)** (`useReferenceLibrary`, default: `true`):
    - 24 compound, accessible components (`Accordion`, `Tabs`, `Splitter`, `Menu`, `Popover`, `Switch`, etc.).
    - When set to `false`, excluded from `list_components` and guarded with clear notices in `get_component`.
-3. **Level 3: Reference Icons (`@reference-ui/icons`)** (`use_reference_icons`, default: `true`):
+3. **Level 3: Reference Icons (`@reference-ui/icons`)** (`useReferenceIcons`, default: `true`):
    - 3,800+ Material Symbols React icon components.
    - When set to `false`, `list_icons` notifies that Reference Icons are disabled.
 

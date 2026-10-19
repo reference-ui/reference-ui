@@ -199,7 +199,7 @@ export const STYLE_PROP_CATEGORIES: StylePropCategory[] = [
   },
   {
     name: 'reference-ui',
-    description: 'Reference UI additions layered on top of Panda style props.',
+    description: 'Style props Reference UI adds beyond standard CSS properties.',
     tokenCategories: ['breakpoints', 'containers', 'fonts'],
     props: REFERENCE_PROPS,
   },
@@ -255,9 +255,9 @@ export function getStylePropsReference(input: McpGetStylePropsInput = {}) {
 
   return {
     description:
-      'Reference UI primitives accept Panda-style CSS props through StyleProps. Component responses only point here so inherited CSS-style props are not repeated for every component.',
+      'Reference UI primitives accept CSS properties as StyleProps. Component responses only point here so inherited CSS-style props are not repeated for every component.',
     valueModel:
-      'StyleProps are build-time compiled atomic CSS classes. They accept raw CSS values, tokens, responsive objects, and discrete static ternaries (e.g. active ? "primary" : "muted"). NOTE: Arbitrary runtime-calculated math (e.g. zIndex/opacity formulas) cannot be statically extracted by Panda and must use inline style={{ ... }} to bypass codegen.',
+      'StyleProps are build-time compiled atomic CSS classes. They accept raw CSS values, tokens, responsive objects, and discrete static ternaries (e.g. active ? "primary" : "muted"). NOTE: Arbitrary runtime-calculated math (e.g. zIndex/opacity formulas) cannot be statically extracted by the compiler and must use inline style={{ ... }} to bypass codegen.',
     tokenGuidance:
       'Use get_tokens to inspect project token paths and descriptions. Token category compatibility is summarized per style prop category, but a compatible category may be absent in the current project.',
     includeProps,

@@ -49,7 +49,7 @@ function primitiveProp(
 }
 
 const PRIMITIVE_STYLE_PROPS = [
-  primitiveProp('css', 'SystemStyleObject', 'Escape hatch for nested Panda style objects.', true),
+  primitiveProp('css', 'SystemStyleObject', 'Escape hatch for nested style objects.', true),
   primitiveProp('container', 'boolean | string', 'Creates an inline-size container query context.', true),
   primitiveProp('r', 'Record<number, StyleProps>', 'Container-query responsive StyleProps keyed by container width.', true),
   primitiveProp('display', STYLE_PROP_VALUE_STRING, 'CSS display style prop.', true),

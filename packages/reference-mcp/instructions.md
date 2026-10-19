@@ -9,7 +9,7 @@ When developing in a Reference UI codebase, follow these core principles:
 ## 1. Core Guiding Principles
 
 1. **StyleProps are Compile-Time Atomic CSS Classes (No External CSS Frameworks)**:
-   Reference UI uses a build-time static atomic CSS engine (Panda CSS). Every `StyleProp` (`padding="2r"`, `display="flex"`, `color="primary"`) is extracted from the AST at build time and compiled directly into atomic CSS utility classes. At runtime, components simply receive generated CSS class names—there is zero runtime CSS-in-JS injection overhead.
+   Reference UI compiles styles at build time into atomic CSS. Every `StyleProp` (`padding="2r"`, `display="flex"`, `color="primary"`) is extracted from the AST at build time and compiled directly into atomic CSS utility classes. At runtime, components simply receive generated CSS class names. Nothing is injected at runtime.
    - Do NOT use Tailwind CSS classes or arbitrary CSS class names.
    - All standard layout, typography, rhythm, and theme styling must be applied through type-safe, token-aware **StyleProps** directly on primitives and components.
    - Never use inline `style={{ ... }}` for static styling (colors, padding, layout).
@@ -125,7 +125,7 @@ When building or modifying UI with Reference UI:
 
 ## 5. Build-Time Static Codegen vs. Runtime Styling (The "Fine Line")
 
-Reference UI styling is powered by Panda CSS's **static AST extraction model**. Because styles are extracted and generated at compile-time rather than injected at runtime, understanding the boundary between **what codegen can extract** and **what it drops** is essential.
+Reference UI styling uses **static AST extraction**. Because styles are extracted and generated at compile-time rather than injected at runtime, understanding the boundary between **what codegen can extract** and **what it drops** is essential.
 
 ### The Mental Model: StyleProps ARE CSS Classes
 When you write `<Div padding="2r" color="primary" />`, the compiler extracts `.p_2r` and `.c_primary` at build time. The primitive at runtime simply renders `<div class="p_2r c_primary">`. If a prop value cannot be determined statically at build time, **the compiler drops it entirely**, resulting in silent styling failures (e.g. `zIndex` falling back to `auto`, `opacity` or `transform` disappearing).
@@ -145,7 +145,7 @@ When you write `<Div padding="2r" color="primary" />`, the compiler extracts `.p
    <Div padding={CARD_PAD} />
    ```
 3. **Known Static Ternaries / Runtime Branch Conditions**:
-   Panda analyzes both branches of conditional expressions and pre-generates CSS for both branches ahead of time. At runtime, React simply toggles between the two pre-compiled classes:
+   The compiler reads both branches of conditional expressions and pre-generates CSS for both branches ahead of time. At runtime, React simply toggles between the two pre-compiled classes:
    ```tsx
    // ✅ Both "primary" and "muted" classes are pre-compiled into the stylesheet
    <Div color={isActive ? "primary" : "muted"} />
