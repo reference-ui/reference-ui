@@ -6,6 +6,8 @@
  * - a prelinked /consumer/node_modules tree reused only when the full install
  *   graph is identical for a matrix entry, including the rust native tarballs
  *   the container installs (their content hash, not just their version)
+ *
+ * Keys derive from the effective install graph, so identical graphs share and any drift splits.
  */
 
 import { createHash } from 'node:crypto'

@@ -1,3 +1,8 @@
+/**
+ * Unit tests for managed Playwright config generation.
+ *
+ * Covers version/image lockstep and per-bundler project emission.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

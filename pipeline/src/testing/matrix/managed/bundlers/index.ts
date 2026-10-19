@@ -1,3 +1,10 @@
+/**
+ * Facade over the managed per-bundler config generators.
+ *
+ * Takes the active bundler set for a matrix entry and emits config sources, HTML
+ * shells, and bundler-owned dev dependencies by delegating to vite7/ and
+ * webpack5/. Keeps dispatch in one place so setup and runner code stays neutral.
+ */
 import type { MatrixBundlerStrategy, MatrixReactRuntime } from '../../discovery/index.js'
 import {
   createManagedVite7ConfigSource,

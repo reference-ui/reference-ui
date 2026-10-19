@@ -1,5 +1,9 @@
 /**
  * Dagger container and service helpers for matrix execution.
+ *
+ * Builds the base Node and Playwright containers, binds the host Verdaccio
+ * registry as a service, and mounts pnpm store and node_modules cache volumes.
+ * Keeps Dagger wiring in one place so runner stages compose containers uniformly.
  */
 
 import { dag } from '@dagger.io/dagger'

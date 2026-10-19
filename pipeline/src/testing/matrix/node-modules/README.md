@@ -1,41 +1,12 @@
 # Matrix Node Modules Cache
 
-This folder owns the cache policy for the matrix consumer install step.
+Cache policy for the matrix consumer install step: keep entries isolated at the dependency-graph level without a full `pnpm install` relink on every container run.
 
-The goal is to keep matrix entries isolated at the dependency-graph level without paying for a full `pnpm install` relink on every container run.
+Two reuse layers:
 
-## What Lives Here
+- pnpm store cache, shared while the staged registry manifest fingerprint matches; invalidates when packed internal tarball hashes change.
+- consumer `node_modules` cache, shared only for an identical effective install graph: staged internal versions, dependency lists, Node image, pnpm version, and React runtime. Fixture sources are excluded so code edits never trigger reinstalls.
 
-- helpers for computing the shared pnpm store cache key
-- helpers for computing the per-install-graph `node_modules` cache key
-- helpers for probing and populating warm fixture-local `node_modules` caches
-- unit tests for cache invalidation behavior
+Fixture-local volumes warm from a graph-shared seed copy on a cold cache. Keeping the policy here lets the Dagger runner orchestrate without hiding cache rules inline.
 
-## Isolation Model
-
-There are two reuse layers:
-
-- pnpm store cache
-  - shared when the staged registry manifest fingerprint is the same
-  - invalidates when packed internal tarball hashes change
-- consumer `node_modules` cache
-  - shared only when the effective install graph is the same
-  - includes staged internal versions, dependency lists, Node image, and pnpm version
-  - React runtime is part of that graph: pinned `--react` jobs must not reuse another major's `node_modules`
-  - intentionally excludes fixture source files so normal code edits do not trigger reinstall work
-
-## Why This Is Separate
-
-The Dagger runner should orchestrate matrix execution, not hide the cache policy inline.
-
-Keeping this in its own module makes it easier to reason about:
-
-- when a cache should be reused
-- when a cache must split for isolation
-- what future matrix dimensions such as React major versions or bundler-specific dependencies will do to install reuse
-
-## Tests
-
-- `pnpm --dir pipeline exec tsx --test src/testing/matrix/node-modules/cache.test.ts`
-- `pnpm --dir pipeline exec tsx --test src/testing/matrix/node-modules/install.test.ts`
-- `pnpm --dir pipeline exec tsc --noEmit`
+Parent: [matrix/README.md](../README.md).

@@ -1,3 +1,8 @@
+/**
+ * Unit tests for native binary compatibility checks.
+ *
+ * Covers export-contract acceptance plus host and non-host fallback paths.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

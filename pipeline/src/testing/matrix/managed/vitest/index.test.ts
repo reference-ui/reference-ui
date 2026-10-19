@@ -1,3 +1,8 @@
+/**
+ * Unit tests for managed Vitest config generation.
+ *
+ * Covers the shared include contract and optional globalSetup.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

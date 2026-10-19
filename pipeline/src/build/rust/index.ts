@@ -7,6 +7,8 @@
  * - `targets.ts` prepares target-package tarballs
  * - `state.ts` persists prepared Rust build state
  * - `registry-overrides.ts` applies that prepared state during registry staging
+ *
+ * Callers get registry-ready artifacts plus cache keys without touching napi-rs details.
  */
 
 import type { WorkspacePackage } from '../types.js'

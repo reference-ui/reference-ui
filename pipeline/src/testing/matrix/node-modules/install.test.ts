@@ -1,3 +1,8 @@
+/**
+ * Unit tests for install command builders.
+ *
+ * Covers probe, install, hydrate, and seed-population commands plus warm-hit detection.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {

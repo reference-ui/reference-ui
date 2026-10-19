@@ -1,3 +1,8 @@
+/**
+ * Unit tests for npm publication selection and ordering.
+ *
+ * Covers manifest filtering, target-first ordering, and root-publish safety.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

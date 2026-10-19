@@ -1,3 +1,11 @@
+/**
+ * Managed webpack 5 surface for matrix fixtures and synthetic consumers.
+ *
+ * Renders the webpack dev config and HTML shell from Liquid templates and
+ * re-exports the centrally pinned webpack 5 dev dependencies. Takes the React
+ * runtime for mount-id wiring; emits generated file sources stamped with the
+ * managed notice.
+ */
 import { MANAGED_WEBPACK5_DEV_DEPENDENCIES } from '../../../../../../dependencies.js'
 import type { MatrixReactRuntime } from '../../../discovery/index.js'
 import { getManagedReactProfile } from '../../react/index.js'

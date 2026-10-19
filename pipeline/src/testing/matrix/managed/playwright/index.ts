@@ -1,3 +1,10 @@
+/**
+ * Managed Playwright config generation for matrix fixtures and consumers.
+ *
+ * Takes the active bundler set and emits a Playwright config source with one
+ * project and dev-server block per bundler. Pins and image tags come from the
+ * central dependencies module so config and container stay in lockstep.
+ */
 import type { MatrixBundlerStrategy } from '../../discovery/index.js'
 import { managedGeneratedNotice, renderManagedTemplate } from '../template.js'
 

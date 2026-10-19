@@ -1,3 +1,10 @@
+/**
+ * Container-runtime preflight for Dagger-backed pipeline commands.
+ *
+ * Verifies Docker responds and, for matrix-sized gates, asserts CPU, memory, and
+ * disk minimums, starting or resizing Colima on macOS when needed. Throws with
+ * remediation guidance instead of letting Dagger fail obscurely later.
+ */
 import { spawnSync } from 'node:child_process'
 
 interface ContainerRuntimeOptions {

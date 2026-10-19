@@ -1,3 +1,8 @@
+/**
+ * Unit tests for container-build source excludes.
+ *
+ * Covers cargo outputs and repo scratch dirs the build never reads.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

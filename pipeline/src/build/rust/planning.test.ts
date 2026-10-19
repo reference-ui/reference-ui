@@ -1,3 +1,8 @@
+/**
+ * Unit tests for Rust target tarball planning.
+ *
+ * Covers local, cached, npm-fetch, skip, and release-only strategies.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

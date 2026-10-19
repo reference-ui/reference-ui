@@ -1,3 +1,8 @@
+/**
+ * Unit tests for dev workspace patch handling.
+ *
+ * Covers patchedDependencies parsing and per-package patch selection.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {

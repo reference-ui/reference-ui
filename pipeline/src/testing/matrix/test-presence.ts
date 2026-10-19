@@ -1,3 +1,10 @@
+/**
+ * Filesystem probes for matrix fixture test coverage.
+ *
+ * Takes a package directory and reports whether it holds Playwright (tests/e2e)
+ * or Vitest test files, so the runner can pick the right container image and skip
+ * empty phases. Empty directories count as no coverage.
+ */
 import { existsSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 

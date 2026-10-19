@@ -1,3 +1,8 @@
+/**
+ * Unit tests for local release plan resolution.
+ *
+ * Covers version materialization and early Rust support failures.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

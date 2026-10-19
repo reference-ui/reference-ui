@@ -1,3 +1,10 @@
+/**
+ * Worker-count resolution for matrix package execution.
+ *
+ * Takes the configured concurrency plus host and Docker CPU counts and emits the
+ * effective worker count, clamped to the number of selected packages. Invalid or
+ * missing inputs normalize down to a single worker rather than failing.
+ */
 import { availableParallelism } from 'node:os'
 
 export interface ResolveMatrixPackageConcurrencyOptions {

@@ -1,3 +1,8 @@
+/**
+ * Unit tests for the Rust build facade hashing helpers.
+ *
+ * Covers augmentation hashing and registry-artifact cache-key separation.
+ */
 import assert from 'node:assert/strict'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'

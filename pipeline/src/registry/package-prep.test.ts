@@ -1,3 +1,8 @@
+/**
+ * Unit tests for publish-time staging and workspace rewriting.
+ *
+ * Covers path pruning plus workspace:* version resolution.
+ */
 import assert from 'node:assert/strict'
 import { existsSync } from 'node:fs'
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'

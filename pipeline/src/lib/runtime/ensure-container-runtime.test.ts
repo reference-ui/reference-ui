@@ -1,3 +1,8 @@
+/**
+ * Unit tests for container-runtime preflight parsing.
+ *
+ * Covers Docker size/df parsing and disk-reclamation thresholds.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { parseDockerSizeToBytes, parseDockerSystemDfUsageBytes, shouldReclaimDockerDiskSpace } from './ensure-container-runtime.js'

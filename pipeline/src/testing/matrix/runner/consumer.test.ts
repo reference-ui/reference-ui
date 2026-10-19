@@ -1,3 +1,8 @@
+/**
+ * Unit tests for matrix consumer materialization helpers.
+ *
+ * Covers workspace dep collection, tarball specs, and log formatting.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { registryManifestVersion, type RegistryManifestPackage } from '../../../registry/types.js'

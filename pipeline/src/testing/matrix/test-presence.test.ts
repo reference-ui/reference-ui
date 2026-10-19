@@ -1,3 +1,8 @@
+/**
+ * Unit tests for fixture test-presence probes.
+ *
+ * Covers empty-dir handling and nested Playwright/Vitest detection.
+ */
 import assert from 'node:assert/strict'
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'

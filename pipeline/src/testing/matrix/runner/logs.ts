@@ -1,5 +1,9 @@
 /**
  * Shared file-backed logging for matrix runner stages.
+ *
+ * Writes per-stage logs under .pipeline/testing/matrix and resets consumer
+ * artifact dirs between runs while preserving log history. Keeps log layout in
+ * one module so reporting and cleanup agree on paths.
  */
 
 import { mkdir, rm, writeFile } from 'node:fs/promises'

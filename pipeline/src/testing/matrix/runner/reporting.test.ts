@@ -1,3 +1,8 @@
+/**
+ * Unit tests for matrix run reporting helpers.
+ *
+ * Covers environment summaries, failure sections, and output normalization.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {

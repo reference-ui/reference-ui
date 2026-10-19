@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Local machine bootstrap dispatcher for the pipeline.
+#
+# Routes to the platform-specific setup script under this folder (macOS only for
+# now) and fails on anything else. Invoked once per machine via `pnpm setup:local`.
 
 set -euo pipefail
 

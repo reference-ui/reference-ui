@@ -1,9 +1,5 @@
 # Managed Matrix Tsconfig
 
-This folder owns the generated `tsconfig.json` used by synthetic matrix consumers inside Dagger.
+Generated `tsconfig.json` for synthetic matrix consumers inside Dagger: the minimal downstream TypeScript contract the runner needs, explicit and testable here instead of duplicated inline.
 
-The matrix runner should not duplicate tsconfig shape inline. Keeping it here makes the downstream TypeScript contract explicit and testable.
-
-## Tests
-
-- `pnpm --dir pipeline exec tsx --test src/testing/matrix/managed/tsconfig/index.test.ts`
+Parent: [managed/README.md](../README.md).

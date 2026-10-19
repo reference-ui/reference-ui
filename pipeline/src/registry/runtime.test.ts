@@ -1,3 +1,8 @@
+/**
+ * Unit tests for managed Verdaccio process detection.
+ *
+ * Covers listening-PID parsing and adoptable command matching.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

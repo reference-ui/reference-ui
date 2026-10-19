@@ -1,3 +1,8 @@
+/**
+ * Unit tests for matrix package discovery.
+ *
+ * Covers matrix.json parsing, contract validation, and workspace name derivation.
+ */
 import assert from 'node:assert/strict'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'

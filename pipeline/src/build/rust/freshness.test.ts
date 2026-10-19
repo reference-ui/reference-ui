@@ -1,3 +1,8 @@
+/**
+ * Unit tests for Rust target freshness classification.
+ *
+ * Covers stamp matching, contract failures, and artifact stamp adoption.
+ */
 import assert from 'node:assert/strict'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'

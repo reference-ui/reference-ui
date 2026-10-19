@@ -1,12 +1,7 @@
 # Managed Matrix Config
 
-This folder contains the pipeline-owned generated config shapes for matrix execution.
+Pipeline-owned generated config shapes for matrix execution: manifests, bundler configs, React entrypoints, and shared test-runner configs. Each leaf module renders its files from Liquid templates and owns the centrally pinned versions behind them, keeping generated contracts isolated from orchestration code.
 
-- `package-json/` owns managed fixture and synthetic consumer package manifests
-- `bundlers/` owns managed bundler config files and bundler-owned dependency versions
-- `playwright/` owns the shared matrix Playwright config shape for standard fixtures and generated consumers
-- `react/` owns managed React runtime versions and generated browser mount entrypoints
-- `tsconfig/` owns the synthetic consumer TypeScript config
-- `vitest/` owns the shared matrix Vitest config shape for standard fixtures and generated consumers
+Consumed by fixture setup locally and by the Dagger runner inside containers.
 
-The goal is to keep generated config contracts isolated from orchestration code.
+Parent: [matrix/README.md](../README.md).

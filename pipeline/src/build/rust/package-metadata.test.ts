@@ -1,3 +1,8 @@
+/**
+ * Unit tests for Rust target package metadata validation.
+ *
+ * Covers override generation and version-alignment error reporting.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

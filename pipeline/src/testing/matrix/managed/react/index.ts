@@ -1,3 +1,10 @@
+/**
+ * Managed React runtime profiles for matrix fixtures and consumers.
+ *
+ * Takes a runtime (react17/18/19) and emits pinned dependencies, the mount API,
+ * and the generated src/main.tsx entrypoint source. React 17 uses `render`
+ * because `createRoot` did not exist yet.
+ */
 import {
   MANAGED_REACT_DEPENDENCIES,
   MANAGED_REACT_DEV_DEPENDENCIES,

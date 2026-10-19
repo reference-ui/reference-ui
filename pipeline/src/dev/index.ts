@@ -1,7 +1,9 @@
 /**
- * Pipeline dev: publish release tarballs to Verdaccio, npm-ping it from a Dagger
- * container, materialize a package tree under .pipeline/dev with packed deps,
- * run pnpm install against Verdaccio, then start the dev script on the host.
+ * Pipeline dev workspace orchestration.
+ *
+ * Publishes release tarballs to Verdaccio, verifies it from a Dagger container,
+ * materializes a package tree under .pipeline/dev with packed deps, runs pnpm
+ * install against Verdaccio, then starts the dev script on the host and opens a browser.
  */
 
 import * as dagger from '@dagger.io/dagger'

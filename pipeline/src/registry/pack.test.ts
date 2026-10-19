@@ -1,3 +1,8 @@
+/**
+ * Unit tests for staged tarball content checks.
+ *
+ * Covers acceptance of complete packs and rejection of missing outputs.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

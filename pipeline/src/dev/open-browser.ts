@@ -1,3 +1,10 @@
+/**
+ * Best-effort browser opener for `pipeline dev`.
+ *
+ * Polls the dev URL until it answers (or a timeout elapses), then opens the
+ * system browser once via the platform launcher. Failures stay silent so a
+ * headless run never breaks on browser handling.
+ */
 import { execFile } from 'node:child_process'
 import http from 'node:http'
 
