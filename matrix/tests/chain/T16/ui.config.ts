@@ -1,7 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem as libSystem } from '@reference-ui/lib/baseSystem'
-import { baseSystem as aliasedHostSystem } from '@fixtures/aliased-host-library'
-
 /**
  * T16 — Compose a prebuilt aliased-host package.
  *
@@ -22,6 +18,11 @@ import { baseSystem as aliasedHostSystem } from '@fixtures/aliased-host-library'
  * equals the icons baseSystem's published utilities count, pinning the
  * lib→icons layer coupling against duplication and drops.
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem as libSystem } from '@reference-ui/lib/baseSystem'
+import { baseSystem as aliasedHostSystem } from '@fixtures/aliased-host-library'
+
 export default defineConfig({
   name: 'chain-t16',
   include: ['src/**/*.{ts,tsx}'],

@@ -1,7 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem as branchB } from '@fixtures/meta-extend-library/baseSystem'
-import { baseSystem as branchC } from '@fixtures/meta-extend-library-sibling/baseSystem'
-
 /**
  * T12 — Diamond base, mixed branch composition.
  *
@@ -16,6 +12,11 @@ import { baseSystem as branchC } from '@fixtures/meta-extend-library-sibling/bas
  *   - branch C (meta-extend-library-sibling) is extended: its fragment
  *     contributes metaSiblingBg AND the shared base extend-library tokens.
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem as branchB } from '@fixtures/meta-extend-library/baseSystem'
+import { baseSystem as branchC } from '@fixtures/meta-extend-library-sibling/baseSystem'
+
 export default defineConfig({
   name: 'chain-t12',
   include: ['src/**/*.{ts,tsx}'],

@@ -1,3 +1,10 @@
+/**
+ * Token backing for the MCP matrix fixture app. Declares the `text` color and
+ * `card` spacing plus a `_private.matrixSecret` subtree that stays visible
+ * to this package's own MCP surface but is stripped downstream. Consumed by
+ * `ref sync`; the `get-tokens` suite proves the visibility rules.
+ */
+
 import { tokens } from '@reference-ui/system'
 
 tokens({

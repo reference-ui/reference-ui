@@ -1,5 +1,3 @@
-import { tokens } from '@reference-ui/core'
-
 /**
  * T18 novel probe tokens, one per probe. They are consumer-local: lib, icons
  * and the fixture never compiled them, so a backing rule for any of them can
@@ -7,6 +5,9 @@ import { tokens } from '@reference-ui/core'
  * its renderer names) never back another probe's class. The spec proves their
  * absence from every published sheet. Values mirror `T18_PROBES.computed`.
  */
+
+import { tokens } from '@reference-ui/core'
+
 tokens({
   colors: {
     t18LibInk: { value: 'rgb(161, 18, 92)', description: 'T18 lib/primitives Button probe.' },

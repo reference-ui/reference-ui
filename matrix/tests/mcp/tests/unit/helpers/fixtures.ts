@@ -1,3 +1,10 @@
+/**
+ * Mock-project builders for the MCP matrix suites. Takes component defs and
+ * project options and emits schemaVersion-1 project artifacts plus on-disk
+ * mock projects. The tool suites point the shared server at these instead of
+ * touching real packages.
+ */
+
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 

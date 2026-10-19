@@ -1,7 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem as metaExtend } from '@fixtures/meta-extend-library/baseSystem'
-import { baseSystem as layerW } from '@fixtures/layer-library'
-
 /**
  * T10 — Chain + layer at the app.
  *
@@ -14,6 +10,11 @@ import { baseSystem as layerW } from '@fixtures/layer-library'
  * Layered tokens (e.g. layerPrivateAccent) must NOT leak into the app's
  * Panda token namespace.
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem as metaExtend } from '@fixtures/meta-extend-library/baseSystem'
+import { baseSystem as layerW } from '@fixtures/layer-library'
+
 export default defineConfig({
   name: 'chain-t10',
   include: ['src/**/*.{ts,tsx}'],

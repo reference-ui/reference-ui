@@ -1,3 +1,11 @@
+/**
+ * Fixture setup: link this package to the prebuilt lib runtime.
+ * Takes the compiled `.reference-ui/{react,styled,system,types}` output of
+ * `packages/reference-lib` and symlinks it into this fixture's
+ * `node_modules/@reference-ui/`, so `ref sync` here resolves the shared
+ * runtime without rebuilding it. Fails fast when the bootstrap output is missing.
+ */
+
 import { access, mkdir, rm, symlink } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { dirname, resolve } from 'node:path'

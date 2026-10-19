@@ -1,3 +1,9 @@
+/**
+ * MCP standard suite: list_icons. Connects a client to the shared matrix MCP server
+ * (booted once by `global-setup.ts`) and asserts the tool contract end to end
+ * over mock projects from `./helpers`.
+ */
+
 import { mkdirSync, realpathSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

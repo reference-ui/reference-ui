@@ -1,5 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-
 /**
  * Aliased-host library fixture.
  *
@@ -11,6 +9,9 @@ import { defineConfig } from '@reference-ui/core'
  * on its own, or the shell utilities silently drop (CSS composition
  * investigation, H1).
  */
+
+import { defineConfig } from '@reference-ui/core'
+
 export default defineConfig({
   name: 'aliased-host-library',
   include: ['src/**/*.{ts,tsx}'],

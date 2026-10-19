@@ -1,3 +1,9 @@
+/**
+ * Chain T3 browser contract. Renders the chain-t3 root in Playwright and proves
+ * the extend-side DemoComponent is visible. The end-to-end proof of the T3 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test } from '@playwright/test'
 
 const fixtureDemoBgRgb = 'rgb(15, 23, 42)'

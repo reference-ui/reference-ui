@@ -1,3 +1,10 @@
+/**
+ * Chain T18 runtime suite (`describe('chain T18 runtime')`). Mounts the fixture
+ * entrypoint in node, without a browser, and asserts the matrix marker export,
+ * the expected root test id, and one mounted probe per import shape.
+ * Fast pre-check ahead of the Playwright contract in `../e2e/`.
+ */
+
 import { describe, expect, it } from 'vitest'
 import * as React from 'react'
 import { Index, matrixChainT18Marker } from '../../src/index'

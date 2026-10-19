@@ -1,3 +1,10 @@
+/**
+ * Chain T17 runtime suite (`describe('chain T17 runtime')`). Mounts the fixture
+ * entrypoint in node, without a browser, and asserts the matrix marker export
+ * plus the expected root test id. Fast pre-check ahead of the Playwright
+ * contract in `../e2e/`; runs under the chain-t17 sync output.
+ */
+
 import { describe, expect, it } from 'vitest'
 import * as React from 'react'
 import { CheckIcon, Field } from '@reference-ui/lib'

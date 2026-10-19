@@ -1,3 +1,11 @@
+/**
+ * Fixture pack step: assert the sync output this package publishes.
+ * Checks that `.reference-ui/system/baseSystem.*` and the `dist` entrypoints
+ * exist after `ref sync` and the lib build, creating `dist/` when needed.
+ * Emits nothing: a missing file fails the build with an access error instead
+ * of shipping a hollow package.
+ */
+
 import { access, mkdir } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { dirname, resolve } from 'node:path'

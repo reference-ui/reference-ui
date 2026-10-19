@@ -1,3 +1,9 @@
+/**
+ * Chain T1 browser contract. Renders the chain-t1 root in Playwright and proves
+ * the upstream extend-library DemoComponent is visible. The end-to-end proof of the T1 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test } from '@playwright/test'
 
 const fixtureDemoBgRgb = 'rgb(15, 23, 42)'

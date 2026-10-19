@@ -1,3 +1,9 @@
+/**
+ * MCP standard suite: registry lifecycle, deletion & self-healing. Connects a client to the shared matrix MCP server
+ * (booted once by `global-setup.ts`) and asserts the tool contract end to end
+ * over mock projects from `./helpers`.
+ */
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'

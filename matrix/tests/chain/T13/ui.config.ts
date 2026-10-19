@@ -1,8 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem as chain1 } from '@fixtures/meta-extend-library/baseSystem'
-import { baseSystem as chain2 } from '@fixtures/meta-extend-library-2/baseSystem'
-import { baseSystem as layerW } from '@fixtures/layer-library'
-
 /**
  * T13 — Parallel chains + shared layer.
  *
@@ -14,6 +9,12 @@ import { baseSystem as layerW } from '@fixtures/layer-library'
  * The hardest composition story: two transitive extend chains plus an
  * app-level layered library coexist in one build.
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem as chain1 } from '@fixtures/meta-extend-library/baseSystem'
+import { baseSystem as chain2 } from '@fixtures/meta-extend-library-2/baseSystem'
+import { baseSystem as layerW } from '@fixtures/layer-library'
+
 export default defineConfig({
   name: 'chain-t13',
   include: ['src/**/*.{ts,tsx}'],

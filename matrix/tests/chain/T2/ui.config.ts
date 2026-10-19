@@ -1,6 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem } from '@fixtures/layer-library'
-
 /**
  * T2 — Layer one library.
  *
@@ -10,6 +7,10 @@ import { baseSystem } from '@fixtures/layer-library'
  * the upstream fragment is NOT adopted. Layer-library tokens do not enter this
  * package's Panda config or TypeScript surface.
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem } from '@fixtures/layer-library'
+
 export default defineConfig({
   name: 'chain-t2',
   include: ['src/**/*.{ts,tsx}'],

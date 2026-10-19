@@ -1,3 +1,9 @@
+/**
+ * Chain T6 browser contract. Renders the chain-t6 root in Playwright and proves
+ * the MetaExtendDemo is visible. The end-to-end proof of the T6 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test } from '@playwright/test'
 
 const metaExtendBgRgb = 'rgb(49, 46, 129)'

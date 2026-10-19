@@ -1,7 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem as libSystem } from '@reference-ui/lib/baseSystem'
-import { baseSystem as aliasedHostSystem } from '@fixtures/aliased-host-library'
-
 /**
  * T17 — consumer style props on prebuilt components.
  *
@@ -31,6 +27,11 @@ import { baseSystem as aliasedHostSystem } from '@fixtures/aliased-host-library'
  *   5. matrix `setup --packages=@matrix/chain-t17 --sync`
  *   6. run the contract (`pnpm agent test --packages=@matrix/chain-t17`)
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem as libSystem } from '@reference-ui/lib/baseSystem'
+import { baseSystem as aliasedHostSystem } from '@fixtures/aliased-host-library'
+
 export default defineConfig({
   name: 'chain-t17',
   include: ['src/**/*.{ts,tsx}'],
