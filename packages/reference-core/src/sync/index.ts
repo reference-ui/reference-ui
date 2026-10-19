@@ -28,6 +28,7 @@ import {
   type PreparedFragments,
 } from '../collect/index.ts'
 import { hasUpstreamContainerRoot } from '../system/base/container-root.ts'
+import { extendedSystemNames } from '../system/base/extended.ts'
 import { portableFragmentOf, publishedFragmentNodes } from '../system/base/fragments.ts'
 import { resolveJsxElements, upstreamJsxHosts } from '../system/base/jsx.ts'
 import { applyNormalizeCss } from './reset.ts'
@@ -143,6 +144,9 @@ async function evaluateAndCompile(
         )
         .filter((name) => name !== spec.name)
     )
+    // The extends closure among them: the engine's token layer also claims their [data-layer] stamps,
+    // so the app's token values win inside their components; a layered system keeps its own.
+    const extendedSystems = extendedSystemNames(prepared.upstreamFragments, upstreamSystems, spec.name)
     const request = buildCompileRequest({
       spec,
       requested: requested.local,
@@ -155,6 +159,7 @@ async function evaluateAndCompile(
         hasUpstreamContainerRoot([...(config.extends ?? []), ...(config.layers ?? [])]) ||
         undefined,
       upstreamSystems,
+      extendedSystems,
       upstreamHosts: upstreamJsxHosts(config),
     })
     attachScanRetention(request, prepared)

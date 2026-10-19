@@ -45,6 +45,11 @@ struct NativeCompileRequest {
     /// authored order. Absent means standalone.
     #[serde(default)]
     upstream_systems: Option<Vec<String>>,
+    /// The upstreams whose tokens this compile's vocabulary carries (the
+    /// extends closure): the own token layer claims their stamps too.
+    /// Absent means none.
+    #[serde(default)]
+    extended_systems: Option<Vec<String>>,
     /// Component names each extended upstream publishes, by system name.
     /// Absent means none: every `jsxHosts` name stays on the own roster.
     #[serde(default)]
@@ -83,6 +88,7 @@ pub fn compile_system(request_json: String) -> Result<String> {
         base_system: system,
         upstream_container_root: req.upstream_container_root,
         upstream_systems: req.upstream_systems.unwrap_or_default(),
+        extended_systems: req.extended_systems.unwrap_or_default(),
         upstream_hosts: req.upstream_hosts.unwrap_or_default(),
         jsx_hosts: req.jsx_hosts,
         declaration_root: req.declaration_root,

@@ -150,6 +150,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         selections,
         upstream_container_root: request.upstream_container_root,
         upstream_systems: request.upstream_systems.clone(),
+        extended_systems: request.extended_systems.clone(),
     };
     assembly.append_static(system);
     let mut result = assembly.finish(system, &mut diag_session);

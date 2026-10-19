@@ -1,11 +1,13 @@
 // Theming for a published base system: extendSystem returns the same system with one override block
 // appended to its own token stream, so a consumer restyles tokens without forking the base.
 // It takes a base system and a token tree, checks every override against the tokens the base declares,
-// and emits a plain BaseSystem carrying an unpublished `extended` marker. Under extends, that marker
-// becomes one `extend:<base>` fragment node, which fragments.ts appends after the base's nodes.
+// and emits a plain BaseSystem carrying an unpublished `extended` marker. The block claims the stamps the
+// base's own token block claims: its own, then those of every system it extends. Under extends, the
+// marker becomes one `extend:<base>` fragment node, which fragments.ts appends after the base's nodes.
 
 import { isPlainObject, mergeTokenTree, tokenLeafPaths } from '../../collect/lib/merge.ts'
 import type { ReferenceTokenConfig } from '../../collect/surface/tokens.ts'
+import { extendedSystemsOf } from './extended.ts'
 import type { BaseSystem, FragmentNode, SystemStreams } from './types.ts'
 
 /** The overrides one call applies: a token tree shaped like the `tokens()` input. */
@@ -66,25 +68,36 @@ function cssVarOf(path: string): string {
   return `--${path.split('.').map(kebab).join('-')}`
 }
 
-// The engine's Portable selectors: the system's own [data-layer] stamp, with its light and dark modes.
-function lightSelector(name: string): string {
-  return `[data-layer="${name}"], [data-layer="${name}"][data-color-mode=light]`
+// The engine's Portable selectors: each stamp the base claims (its own first, then every system it
+// extends), with its light and dark modes.
+function lightSelector(stamps: readonly string[]): string {
+  return stamps.map((name) => `[data-layer="${name}"], [data-layer="${name}"][data-color-mode=light]`).join(', ')
 }
 
-function darkSelector(name: string): string {
+function darkSelector(stamps: readonly string[]): string {
+  return stamps.map(darkStamp).join(', ')
+}
+
+function darkStamp(name: string): string {
   return `[data-layer="${name}"][data-color-mode=dark]`
+}
+
+// The stamps the base's own token block claims, in the engine's order.
+function stampsOf(system: BaseSystem): string[] {
+  return [system.name, ...extendedSystemsOf(system)]
 }
 
 function declaredNames(css: string): Set<string> {
   return new Set([...css.matchAll(DECLARATION)].flatMap((match) => (match[1] ? [match[1]] : [])))
 }
 
-// The names the base's own dark rule declares: a light-only override must replace these too.
+// The names the base's own dark rule declares: a light-only override must replace these too. The rule
+// opens with the base's own dark stamp, alone or ahead of the stamps of the systems it extends.
 function darkBlockNames(tokensPortable: string, name: string): Set<string> {
-  const open = `${darkSelector(name)} {`
-  const start = tokensPortable.indexOf(open)
+  const start = tokensPortable.indexOf(darkStamp(name))
   if (start < 0) return new Set()
-  return declaredNames(tokensPortable.slice(start + open.length).split('}')[0] ?? '')
+  const body = tokensPortable.slice(tokensPortable.indexOf('{', start) + 1)
+  return declaredNames(body.split('}')[0] ?? '')
 }
 
 function ownStream(system: BaseSystem): SystemStreams | undefined {
@@ -220,17 +233,17 @@ function ruleLines(selector: string, pairs: readonly (readonly [string, string])
 
 /**
  * The override block, printed the way the engine prints a Portable token layer: a light rule on the
- * system's [data-layer] stamps, then a dark rule when a leaf sets a dark value or replaces a base dark
+ * stamps the base claims, then a dark rule when a leaf sets a dark value or replaces a base dark
  * value. A light-only rule would lose to the base's more specific dark rule, so that case prints one too.
  */
-function overrideBlock(name: string, decls: readonly Decl[], baseDark: ReadonlySet<string>): string {
+function overrideBlock(stamps: readonly string[], decls: readonly Decl[], baseDark: ReadonlySet<string>): string {
   if (decls.length === 0) return ''
   const lines = [
     '@layer tokens {',
-    ...ruleLines(lightSelector(name), decls.map((decl) => [decl.cssName, decl.light] as const)),
+    ...ruleLines(lightSelector(stamps), decls.map((decl) => [decl.cssName, decl.light] as const)),
   ]
   if (decls.some((decl) => decl.explicitDark || baseDark.has(decl.cssName))) {
-    lines.push(...ruleLines(darkSelector(name), decls.map((decl) => [decl.cssName, decl.dark] as const)))
+    lines.push(...ruleLines(darkSelector(stamps), decls.map((decl) => [decl.cssName, decl.dark] as const)))
   }
   lines.push('}', '')
   return lines.join('\n')
@@ -266,7 +279,7 @@ export function extendSystem(base: BaseSystem, overrides: ExtendSystemOverrides)
   const own = ownStream(root)
   const tokensPortable = own?.tokensPortable ?? ''
   const decls = declsOf(tokens, { base: root.name, declared: declaredNames(tokensPortable) })
-  const block = overrideBlock(root.name, decls, darkBlockNames(tokensPortable, root.name))
+  const block = overrideBlock(stampsOf(root), decls, darkBlockNames(tokensPortable, root.name))
   const result: BaseSystem = { ...root }
   if (root.streams) result.streams = streamsWithBlock(root.streams, root.name, block)
   return markExtended(result, { from: root.name, tokens, root })

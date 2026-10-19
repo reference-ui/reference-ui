@@ -28,13 +28,16 @@ fn extract_at_rules(atom: &Atom) -> Vec<String> {
 }
 
 /// Shared inputs for every sheet builder: the own and foreign atom sets, the
-/// composed qualifier list (own first), the base system, and the closed recipe
-/// classes. Borrowed fields make the struct `Copy`, so builders take it by reference.
+/// composed qualifier list (own first), the extended systems whose stamps the
+/// token layer also claims, the base system, and the closed recipe classes.
+/// Borrowed fields make the struct `Copy`, so builders take it by reference.
 #[derive(Clone, Copy)]
 pub struct SheetInput<'a> {
     pub own: &'a AtomSet,
     pub external: &'a AtomSet,
     pub qualifiers: &'a [String],
+    /// Upstreams this system extends, in qualifier order: its token values win in their components.
+    pub extended: &'a [String],
     pub system: &'a BaseSystem,
     pub recipes: &'a [CompiledRecipe],
 }
@@ -51,6 +54,7 @@ pub fn build_stylesheet(
             own: atom_set,
             external: &AtomSet::new(),
             qualifiers: &qualifiers,
+            extended: &[],
             system,
             recipes: &[],
         },
@@ -75,11 +79,13 @@ pub fn build_stylesheet_with(
         own,
         external,
         qualifiers,
+        extended,
         system,
         recipes,
     } = *input;
     let mut inner = LAYER_PREAMBLE.to_string();
-    append_system_layers(&mut inner, system, own_token_scope(qualifiers), diagnostics);
+    let scope = own_token_scope(qualifiers, extended);
+    append_system_layers(&mut inner, system, scope, diagnostics);
     append_recipes_layer(&mut inner, recipes);
     append_utilities_layer(&mut inner, own, external, qualifiers);
     prepend_root_default(&wrap_package_layer(&system.name, &inner))
@@ -94,11 +100,12 @@ pub fn build_portable_stylesheet_with(
         own,
         external,
         qualifiers,
+        extended,
         system,
         recipes,
     } = *input;
     let mut inner = LAYER_PREAMBLE.to_string();
-    append_portable_system_layers(&mut inner, system, diagnostics);
+    append_portable_system_layers(&mut inner, system, extended, diagnostics);
     append_recipes_layer(&mut inner, recipes);
     append_utilities_layer(&mut inner, own, external, qualifiers);
     prepend_root_default(&wrap_package_layer(&system.name, &inner))

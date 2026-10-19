@@ -150,6 +150,13 @@ export interface CompileRequest {
    */
   upstreamSystems?: string[]
   /**
+   * The upstream systems whose tokens this compile's vocabulary carries (the
+   * extends closure, never a layered system). The own token layer also
+   * declares on their `[data-layer]` stamps, so this system's token values win
+   * inside their components. Names outside `upstreamSystems` are ignored.
+   */
+  extendedSystems?: string[]
+  /**
    * Component names each extended upstream publishes, keyed by system name.
    * Never own hosts: a name here leaves the `jsxHosts` roster.
    */

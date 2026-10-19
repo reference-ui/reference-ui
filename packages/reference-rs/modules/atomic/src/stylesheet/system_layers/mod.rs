@@ -2,8 +2,8 @@
 //! Global is the stored CSS dump (fixture `:root --spacing-root`) plus `@keyframes`
 //! rules from the system's motion table and `@font-face` blocks from the font table.
 //! Tokens become custom properties under the selectors their `TokenScope` picks: `:root` with bare
-//! `[data-color-mode]` for a standalone system, `[data-layer]` for the portable sheet, and an isolated
-//! own-layer set under upstreams.
+//! `[data-color-mode]` for a standalone system, `[data-layer]` stamps for the portable sheet, and an
+//! isolated own-layer set under upstreams; both named scopes also claim each extended system's stamp.
 //! Empty layers and empty keyframe tables are omitted; recipes and utilities stay separate.
 //! Keyframe bodies resolve aliases, units, `{token}` refs, and `r` units through
 //! the utility passes; unresolvable values print verbatim, mirroring tokens.
@@ -35,7 +35,7 @@ use self::keyframes::{append_keyframes, has_printable_keyframes};
 pub fn append_system_layers(
     out: &mut String,
     system: &BaseSystem,
-    scope: TokenScope,
+    scope: TokenScope<'_>,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) {
     global::append_reset_css(out, system, diagnostics);
@@ -43,15 +43,17 @@ pub fn append_system_layers(
     append_tokens(out, system, scope, diagnostics);
 }
 
-/// Append globalCss and portable [data-layer] token custom-property layers.
+/// Append globalCss and portable [data-layer] token custom-property layers; `extended`
+/// names the systems whose stamps the token layer also claims.
 pub fn append_portable_system_layers(
     out: &mut String,
     system: &BaseSystem,
+    extended: &[String],
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) {
     global::append_reset_css(out, system, diagnostics);
     append_global(out, system, diagnostics);
-    append_tokens(out, system, TokenScope::Portable, diagnostics);
+    append_tokens(out, system, TokenScope::Portable { extended }, diagnostics);
 }
 
 /// Append `@layer global {…}` when fragments, fonts, or keyframes print.

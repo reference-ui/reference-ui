@@ -66,6 +66,17 @@ this file in the same pass.
   colour-mode attribute — `colorMode` prop in JSX, same concept on
   the DOM. `data-theme` is Toast chrome (lib), never Core colour
   mode; `data-panda-theme` stays retired.
+- **stamp** — a `data-layer` attribute on an element, naming the
+  system that renders it. Token values are scoped by stamps: each
+  system's token rule declares on its own stamps and on its
+  **extended systems'**.
+- **extended systems** — the extends closure of a system: the
+  composed systems whose fragments it evaluates, so whose public
+  tokens its vocabulary carries (`extendedSystemNames`). A layered
+  system is never one. On the compile request they ride as
+  `extendedSystems`; the engine's token rule claims their stamps, so
+  under `extends` the app's token values win inside their components.
+  (atomic)
 - **group** — one feature family under `tests/cases/`: `SPEC.md`,
   `TESTS.md`, leaf cases.
 - **status words** — `open`, `in-progress`, `done`, `blocked-on-rs`,

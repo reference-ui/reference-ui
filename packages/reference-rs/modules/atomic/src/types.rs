@@ -56,6 +56,13 @@ pub struct CompileRequest {
     /// `upstreamSystems`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub upstream_systems: Vec<String>,
+    /// The upstream systems whose tokens this compile's vocabulary carries:
+    /// the `extends` closure, never a layered system. The own token layer
+    /// also declares on their `[data-layer]` stamps, so this system's token
+    /// values win inside their components. Names outside `upstream_systems`
+    /// are ignored. Absent from the wire when empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub extended_systems: Vec<String>,
     /// Component names each extended upstream system publishes, keyed by
     /// system name. They are never own hosts: an upstream's component
     /// renders through that package's runtime. A name here leaves the
