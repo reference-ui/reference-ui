@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-010",
+  "name": "DateField CT renders exactly one input and one trigger without duplicate synthesis"
+}

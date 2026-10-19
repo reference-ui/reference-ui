@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SLIDER-079",
+  "name": "Slider pins SD-CTRL-05: uses current props when configuration changes during a drag"
+}

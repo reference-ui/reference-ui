@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-059",
+  "name": "DateField.Range (FEATURES #2) DF-RANGE-02: end-only drafts hold without reaching onChange or Calendar"
+}

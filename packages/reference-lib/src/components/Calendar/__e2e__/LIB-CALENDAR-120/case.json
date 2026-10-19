@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-120",
+  "name": "Calendar range machine (FEATURES #9) CA-RANGE-14: Tab leaving the grid commits a valid pending preview without preventing Tab"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-026",
+  "name": "DateField re-targets constrained picker selection outside bounds or unavailable is rejected without commit (FEATURES #3)"
+}

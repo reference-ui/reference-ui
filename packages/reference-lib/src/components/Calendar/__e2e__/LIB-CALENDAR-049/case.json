@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-049",
+  "name": "Calendar CT CA-SINGLE-01/02/03/05: activation requests its ISO once per gesture; re-activating the selected date is silent; rejection leaves selection"
+}

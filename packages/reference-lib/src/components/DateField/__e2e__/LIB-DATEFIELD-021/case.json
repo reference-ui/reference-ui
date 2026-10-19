@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-021",
+  "name": "DateField re-targets DF-FRM-01: submit sends canonical ISO, not display text"
+}

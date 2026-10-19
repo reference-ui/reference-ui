@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-125",
+  "name": "Calendar view defaulting + environments (VIEW-13, DAY-14, ENV) CA-ENV-03: focus, labels, announcements, and preview work inside an open ShadowRoot"
+}

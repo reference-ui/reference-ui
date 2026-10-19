@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-069",
+  "name": "Calendar CT CA-MONTH-04: bounds disable a direction only when its target month is fully blocked"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-070",
+  "name": "Calendar CT CA-DYNAMIC-02/CA-STATE-06: newly unavailable keeps focus but goes silent; newly out-of-bounds relocates; selection preserved"
+}

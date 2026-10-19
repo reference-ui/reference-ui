@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PORTAL-010",
+  "name": "Portal Composition Gates & Browser Proofs PT-DOM-01 & PT-CONTAINER-04: Places children directly in document.body when container is omitted or null"
+}

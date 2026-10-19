@@ -1,0 +1,4 @@
+{
+  "id": "LIB-BUTTON-003",
+  "name": "BT-EVENT-01: consumer cancellation prevents native submit for click and keyboard activation"
+}

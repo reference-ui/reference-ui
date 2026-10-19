@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-099",
+  "name": "Calendar day parts (FEATURES #5) CA-DAY-05: custom Day keeps children, native props, StyleProps, and a stable native ref across rerenders"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SLIDER-086",
+  "name": "Slider pins SD-ENV-02: keeps pointer sessions singular under StrictMode"
+}

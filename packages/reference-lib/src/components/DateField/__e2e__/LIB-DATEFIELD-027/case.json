@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-027",
+  "name": "DateField re-targets click-while-open positions caret without toggling (FEATURES #4b)"
+}

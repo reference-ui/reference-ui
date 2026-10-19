@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-127",
+  "name": "Calendar view defaulting + environments (VIEW-13, DAY-14, ENV) CA-A11Y-01 scan: axe reports zero violations across locale, constraint, and range states"
+}

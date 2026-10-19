@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-009",
+  "name": "DateField CT renders compound DateField, opens picker on trigger click, selects date and updates"
+}

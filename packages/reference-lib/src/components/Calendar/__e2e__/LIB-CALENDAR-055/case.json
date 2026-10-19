@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-055",
+  "name": "Calendar CT CA-LOC-07: runtime locale switch recomputes presentation without touching value or focus"
+}

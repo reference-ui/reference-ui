@@ -1,0 +1,4 @@
+{
+  "id": "LIB-SLIDER-081",
+  "name": "Slider pins SD-DYNAMIC-03: discards stale drag state on mid-gesture cardinality change"
+}

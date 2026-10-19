@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-015",
+  "name": "DateField re-targets DF-DOM-04: hidden input serializes only when name is supplied"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PORTAL-027",
+  "name": "Portal catalog coverage (CT re-target, no matrix on this branch) PT-DOM-06: Null, false, and empty-fragment children add nothing and log no errors"
+}
