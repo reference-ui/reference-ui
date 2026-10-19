@@ -2,17 +2,20 @@
 //!
 //! Each test builds a tiny in-memory project and asks where one import ends
 //! through `IdentityGraph::trace_origin`: a Reference export, a project
-//! declaration (`Local`), or an installed package's bare specifier. The
-//! probes pin relative barrels, star order, re-exported namespaces, the
-//! `tsconfig` alias arm (an aliased project file is never a package), and
-//! the graphless spelling rule. The compile seam is pinned beside the JSX
-//! gate in `extract/jsx/external_tag_tests.rs`.
+//! declaration (`Local`), or a package. These trees live in memory only, so
+//! every package spelling stays unresolved (foreign, no directory); the disk
+//! arm, where a bare specifier lands in a package directory, is pinned in
+//! `package_origin.rs`. The probes pin relative barrels, star order,
+//! re-exported namespaces, the `tsconfig` alias arm (an aliased project file
+//! is never a package), and the graphless spelling rule.
 
 use super::identity::graph;
 use crate::extract::identity::Origin;
+use crate::extract::PackageTag;
 
+/// A package the walk could not resolve on disk: its spelling, foreign.
 fn package(specifier: &str) -> Origin {
-    Origin::Package(specifier.into())
+    Origin::Package(PackageTag::unresolved(specifier))
 }
 
 #[test]

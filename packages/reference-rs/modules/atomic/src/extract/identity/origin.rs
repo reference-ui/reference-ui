@@ -3,18 +3,19 @@
 //!
 //! [`IdentityGraph::trace_origin`] follows the same hops as the Reference
 //! walk (named re-exports, re-exported imports, star barrels, with a cycle
-//! guard) through relative and `tsconfig`-aliased project files, and names
-//! the terminal: a Reference export, a project declaration (`Local`), or the
-//! bare specifier of an installed package (`Package`). A relative barrel that
-//! re-exports `@reference-ui/lib/primitives` therefore answers `Package`
-//! instead of nothing. It reuses the memoized export maps and parses nothing
-//! new; a walk that cannot see the terminal answers `Local`.
+//! guard) through relative, `tsconfig`-aliased and bare-specifier hops that
+//! land in compile sources, and names the terminal: a Reference export, a
+//! project declaration (`Local`), or the package directory a bare specifier
+//! resolved to, with its verdict (`Package`). A package that borrows this
+//! compile's own runtime answers `Local`. It reuses the memoized export maps
+//! and parses nothing new; a walk that cannot see the terminal answers `Local`.
 
-use super::alias::AliasHit;
+use super::alias::BareHit;
 use super::paths::{named_hop, strip_relative};
 use super::{Hop, IdentityGraph, Query};
 use crate::extract::bindings::is_reference_package;
 use crate::extract::identity_map::{ExportMap, NamedTarget};
+use crate::extract::package_system::{DirVerdict, PackageTag};
 use crate::extract::provenance::names_package;
 
 /// Where one import binding comes from once project re-exports are followed.
@@ -22,10 +23,12 @@ use crate::extract::provenance::names_package;
 pub(crate) enum Origin {
     /// A Reference package export (`@reference-ui/react` / `styled`).
     Reference,
-    /// A project declaration, or a project file the walk cannot see into.
+    /// A project declaration, a project file the walk cannot see into, or
+    /// a package that renders through this compile's own runtime.
     Local,
-    /// An installed package: the bare specifier the walk ended on.
-    Package(Box<str>),
+    /// A package: the bare specifier the walk ended on, the directory it
+    /// resolved to, and which system renders it.
+    Package(PackageTag),
 }
 
 impl Origin {
@@ -33,7 +36,9 @@ impl Origin {
     pub(crate) fn of_specifier(specifier: &str) -> Self {
         match locate_spelling(specifier) {
             Spelling::Reference => Self::Reference,
-            Spelling::Bare if names_package(specifier) => Self::Package(specifier.into()),
+            Spelling::Bare if names_package(specifier) => {
+                Self::Package(PackageTag::unresolved(specifier))
+            }
             _ => Self::Local,
         }
     }
@@ -114,14 +119,15 @@ impl IdentityGraph<'_> {
         }
     }
 
-    /// A bare specifier: a `tsconfig` alias when `paths` maps it, else a
-    /// package when its spelling can name one.
+    /// A bare specifier: a compile source continues the walk, a package
+    /// directory ends it with its verdict, and an unresolved spelling is a
+    /// package when it can name one.
     fn locate_bare(&self, from: &str, specifier: &str) -> Located {
-        match self.alias_hit(from, specifier) {
-            AliasHit::Source(path) => Located::Source(path),
-            AliasHit::Project => Located::Ends(Origin::Local),
-            AliasHit::Installed => package_end(specifier),
-            AliasHit::Miss => unmapped_bare(specifier),
+        match self.bare_hit(from, specifier) {
+            BareHit::Source(path) => Located::Source(path),
+            BareHit::Project => Located::Ends(Origin::Local),
+            BareHit::Package { dir, verdict } => package_end(specifier, dir, verdict),
+            BareHit::Miss => unmapped_bare(specifier),
         }
     }
 
@@ -227,16 +233,25 @@ impl IdentityGraph<'_> {
     }
 }
 
-/// A package terminal named by its bare specifier.
-fn package_end(specifier: &str) -> Located {
-    Located::Ends(Origin::Package(specifier.into()))
+/// A package directory ends the walk: one that borrows this compile's own
+/// runtime is project code (`Local`), any other is that package.
+fn package_end(specifier: &str, dir: Box<str>, verdict: DirVerdict) -> Located {
+    let DirVerdict::Package(verdict) = verdict else {
+        return Located::Ends(Origin::Local);
+    };
+    Located::Ends(Origin::Package(PackageTag {
+        specifier: specifier.into(),
+        dir: Some(dir),
+        verdict,
+    }))
 }
 
-/// A bare specifier no `paths` entry maps: a package when its spelling can
-/// name one, else an alias this walk cannot see (`~/ui` through a bundler).
+/// A bare specifier nothing resolves: a package when its spelling can name
+/// one (foreign, no directory), else an alias this walk cannot see (`~/ui`
+/// through a bundler).
 fn unmapped_bare(specifier: &str) -> Located {
     if names_package(specifier) {
-        return package_end(specifier);
+        return Located::Ends(Origin::Package(PackageTag::unresolved(specifier)));
     }
     Located::Missing
 }

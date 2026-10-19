@@ -3,18 +3,20 @@
 //!
 //! Ownership is decided by provenance, not by name. A root imported from
 //! `@reference-ui/react` / `styled` (directly or through project re-exports)
-//! is `Own`; one that ends at an installed package's bare specifier is
-//! `Package` and is never an own host, because that package renders through
-//! its own bundled runtime and mints its own system's classes. Project
-//! imports and same-file declarations are `Local`, and names with no binding
-//! are `Unbound`: both keep the roster match. [`HostGate`] is the one verdict
-//! the JSX walk and the `css`-threading pre-pass share.
+//! is `Own`; one that ends at a package directory is `Package`, carrying the
+//! directory's verdict (a published system, or foreign), and is never an own
+//! host, because that package renders through its own bundled runtime. Project
+//! imports, same-file declarations and packages borrowing this compile's
+//! runtime are `Local`, and names with no binding are `Unbound`: both keep
+//! the roster match. [`HostGate`] is the verdict the JSX walk and the
+//! `css`-threading pre-pass share.
 
 use rustc_hash::FxHashSet;
 
 use super::bindings::{is_shadowed, ExtractBindings, IdentityCtx};
 use super::identity::Origin;
 use super::jsx_hosts::JsxHosts;
+use super::package_system::PackageTag;
 
 /// Where one JSX tag root's binding comes from.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -23,8 +25,8 @@ pub enum TagProvenance {
     Own,
     /// A project import or declaration: own only through the host roster.
     Local,
-    /// An installed package (its bare specifier): never an own host.
-    Package(Box<str>),
+    /// A package (its specifier, directory and verdict): never an own host.
+    Package(PackageTag),
     /// No binding at all (a global): the host roster decides.
     Unbound,
 }
@@ -37,7 +39,7 @@ impl From<Origin> for TagProvenance {
         match origin {
             Origin::Reference => Self::Own,
             Origin::Local => Self::Local,
-            Origin::Package(specifier) => Self::Package(specifier),
+            Origin::Package(tag) => Self::Package(tag),
         }
     }
 }

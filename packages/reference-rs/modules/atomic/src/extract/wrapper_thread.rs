@@ -220,9 +220,9 @@ impl ForwardScan<'_> {
         if self.package.is_some() {
             return;
         }
-        if let TagProvenance::Package(specifier) = self.gate.bindings.provenance(tag_root(&tag)) {
+        if let TagProvenance::Package(package) = self.gate.bindings.provenance(tag_root(&tag)) {
             if self.forwards_css(elem) {
-                self.package = Some(specifier.clone());
+                self.package = Some(package.specifier.clone());
             }
         }
     }

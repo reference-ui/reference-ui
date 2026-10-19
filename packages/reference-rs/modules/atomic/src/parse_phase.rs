@@ -76,7 +76,9 @@ fn run_parse_serial(
     let live = stream::live_retained_sources(sources, &parsed, &retained, &slots);
     let mut graph = extract::resolver::ValueGraph::new(sources, &live, staged, &constants);
     let (identity_programs, trace_programs) = reuse_programs(&view);
-    let identity = extract::identity::IdentityGraph::with_programs(sources, &identity_programs);
+    let root = crate::hosts::trace_root(request);
+    let identity = extract::identity::IdentityGraph::with_programs(sources, &identity_programs)
+        .with_root(root.as_deref().and_then(std::path::Path::to_str));
     #[cfg(feature = "alloc-trace")]
     drop(_graphs);
     let (hosts, traced_jsx) =

@@ -61,7 +61,10 @@ pub(crate) fn walk_retained(shared: &Shared<'_>, indices: &[usize], parsed: &[Pa
     let Some(published) = phase_parallel::load_published(shared) else {
         return;
     };
-    let identity = IdentityGraph::from_shared(shared.sources, &published.maps);
+    // The own root tells this compile's generated runtime from a package's.
+    let root = crate::hosts::trace_root(shared.request);
+    let identity = IdentityGraph::from_shared(shared.sources, &published.maps)
+        .with_root(root.as_deref().and_then(std::path::Path::to_str));
     // Qualifier plumbing (G0 §E/R1): the same helper `finish` calls.
     let qualifiers = crate::assembly::qualifiers_for(shared.system, &shared.request.upstream_systems);
     let ctx = analysis::context(

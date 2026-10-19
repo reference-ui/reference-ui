@@ -15,8 +15,13 @@ accidentally write a JS evaluator.
 
 `constants/` is a lookup index for file-top `const` literals, not a
 fourth host. `bindings.rs` records every import's provenance (Reference,
-project or installed package) so extract can fail closed on shadowed
-`css` and untraced JSX. `provenance.rs` turns that into the one host gate
+project or package) so extract can fail closed on shadowed
+`css` and untraced JSX. A bare specifier is followed to where it lands on
+disk, as Node would: into this compile's sources it is project code (a
+workspace package one sync spans), and in a package directory
+`package_system.rs` reads what that directory publishes, its own system or
+nothing Reference; a linked package borrowing this compile's generated
+runtime is project code again. `provenance.rs` turns that into the one host gate
 the JSX walk and the `css`-threading pre-pass share: a Reference import
 is own by proof, a project or unbound name is own only through the host
 roster, and a tag whose import ends at an installed package is never own,

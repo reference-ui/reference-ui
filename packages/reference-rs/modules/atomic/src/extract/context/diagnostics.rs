@@ -164,7 +164,7 @@ impl<'a> ExtractContext<'a> {
         while seen.insert(current.clone()) {
             let Some((decl, target)) = self.chain.alias_edge(&current, scope) else {
                 return match provenance::classify(self.bindings, self.shadowed, &current) {
-                    TagProvenance::Package(specifier) => Some(specifier),
+                    TagProvenance::Package(package) => Some(&package.specifier),
                     _ => None,
                 };
             };

@@ -43,6 +43,10 @@ name = "ladder_fields"
 path = "tests/rust/ladder_fields.rs"
 
 [[test]]
+name = "ladder_located"
+path = "tests/rust/ladder_located.rs"
+
+[[test]]
 name = "ladder_relative"
 path = "tests/rust/ladder_relative.rs"
 

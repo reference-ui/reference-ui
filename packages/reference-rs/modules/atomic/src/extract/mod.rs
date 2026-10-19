@@ -22,6 +22,7 @@ pub mod identity_map;
 pub mod jsx;
 pub mod jsx_hosts;
 pub mod owned_props;
+pub mod package_system;
 pub mod provenance;
 pub mod recipes;
 pub mod resolver;
@@ -43,6 +44,7 @@ pub use bindings::{collect_bindings, collect_bindings_with_identity, ExtractBind
 pub use context::{ExtractConfig, ExtractContext, ExtractSinks};
 pub use jsx_hosts::JsxHosts;
 pub use owned_props::{LocalOwned, OwnedMap, OwnedProps};
+pub use package_system::{PackageTag, PackageVerdict, PublishedSystem, SystemNames};
 pub use provenance::{HostGate, TagProvenance};
 pub use visitor::ExtractVisitor;
 
