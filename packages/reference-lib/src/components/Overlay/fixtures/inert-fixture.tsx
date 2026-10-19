@@ -1,3 +1,8 @@
+/**
+ * Inert fixture: background isolation with clickable siblings and
+ * authored-inert ancestors. Serves the OV-INERT proofs for sibling
+ * hiding and ownership.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 

@@ -1,3 +1,8 @@
+/**
+ * Paper API fixture: proves the browser against a documented props
+ * interface. Declares `DocsReferencePaperProps` with JSDoc and renders
+ * its reference document as the default scene.
+ */
 import type { ReactNode } from 'react'
 import { Reference } from '../index'
 

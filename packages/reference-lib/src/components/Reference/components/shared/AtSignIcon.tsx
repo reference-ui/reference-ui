@@ -1,3 +1,7 @@
+/**
+ * At-sign glyph: the `@` marker for JSDoc tags and decorators. Forwards
+ * its ref to the SVG element and takes standard SVG props.
+ */
 import * as React from 'react'
 
 export type AtSignIconProps = React.SVGProps<SVGSVGElement> & {

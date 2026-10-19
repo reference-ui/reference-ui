@@ -1,3 +1,7 @@
+/**
+ * Proof for Presence id minting. Pins unique presence ids for nested
+ * and coordinated registration, with no collisions across instances.
+ */
 import { describe, expect, it } from 'vitest'
 import { nextPresenceId } from './ids'
 

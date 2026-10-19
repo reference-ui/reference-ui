@@ -1,3 +1,9 @@
+/**
+ * FocusLock × Overlay integration proof. Pins trapping while Content is
+ * closed-but-mounted, single restore after Presence teardown, proximity
+ * walks, nested-lock pausing, and modeless Content as a parent-lock
+ * shard, each against the shared focus fixtures.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('FocusLock × Overlay', () => {

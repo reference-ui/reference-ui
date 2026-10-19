@@ -19,3 +19,5 @@ locks focus, scroll, and pointer to the top layer; `gesture/` reads Handle
 swipes as dismiss-or-snap-back. `hooks/` and `parts/` compose those domains
 into the six public parts, and `shared/` carries the nameless plumbing they
 agree on.
+
+Up: [Components](../components.md).

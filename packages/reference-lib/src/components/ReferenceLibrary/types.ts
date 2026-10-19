@@ -1,3 +1,8 @@
+/**
+ * ReferenceLibrary public vocabulary: mount props and the toaster config
+ * shape (position, duration, limit, hotkey, theme, icons) resolved onto
+ * the Toast host. Imported by the component, parts, and warmup.
+ */
 import type * as React from 'react'
 import type { ToastClassNames, ToastOffset, ToastTheme } from '../Toast'
 

@@ -1,3 +1,9 @@
+/**
+ * ReferenceLibrary composition gates and browser proofs. Renders the
+ * application transparently, elects the earliest live mount as active
+ * host, serves imperative toasts with live-region updates, fails over to
+ * standby on unmount, and follows the mounting root's color mode.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('ReferenceLibrary Composition Gates & Browser Proofs', () => {

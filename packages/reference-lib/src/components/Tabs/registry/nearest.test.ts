@@ -1,3 +1,8 @@
+/**
+ * Proof for nearest-enabled tab fallback. Pins identity for enabled
+ * values, outward walks with preceding-tab ties, follower fallback, first-
+ * enabled for unknown values, and undefined when nothing is enabled.
+ */
 import { describe, expect, it } from 'vitest'
 import { nearestEnabledValue } from './nearest'
 

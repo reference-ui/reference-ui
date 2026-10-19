@@ -20,16 +20,6 @@ private `context.ts` scope. `shared/` holds the nameless plumbing —
 IDs, diagnostics, class names, pointers, direction — that every layer
 imports.
 
-| Folder | Role |
-| :--- | :--- |
-| [`api/`](./api) | Public calling surface: callable, promise, define, announce |
-| [`state/`](./state) | Per-document stores, routing, history, record core |
-| [`parts/`](./parts) | Chrome pieces: shell, text, buttons, loader, default card |
-| [`stack/`](./stack) | Position piles, item cards, tested placement geometry |
-| [`hooks/`](./hooks) | Timers, swipe, focus, measurement, store, media |
-| [`styling/`](./styling) | Host stylesheet and its timing contract |
-| [`shared/`](./shared) | IDs, diagnostics, class names, pointers, dir |
-
 Coupling: `toastQueue.ts` stays at the root instead of splitting into
 `timing/`/`swipe/`/`state/queue` because ReferenceLibrary deep-imports
 `DEFAULT_TOAST_HOTKEY` from that path (`parts/toast-props.ts` and its
@@ -43,3 +33,5 @@ swipe, countdowns, focus return, snapshots — proves out in CT. Note the
 preserved quirk: `ToastActionButton` at the index is a type alias of the
 action config, not the button value; the button itself ships on the
 `Toast` compound and as `ToastAction` inside `parts/`.
+
+Up: [Components](../components.md).

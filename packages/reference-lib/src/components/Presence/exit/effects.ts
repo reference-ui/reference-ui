@@ -1,3 +1,8 @@
+/**
+ * Finite-exit verdicts over style snapshots: whether a closing animation
+ * or transition is worth suspending the unmount for. Takes the before/after
+ * computed snapshots; newly finite effects hold, everything else releases.
+ */
 import { parseDuration } from './duration'
 
 /**

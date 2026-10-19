@@ -1,3 +1,8 @@
+/**
+ * Theme fixture: dark and light popovers for portal-scope color proofs.
+ * Serves the checks that portaled Content inherits its opener's theme,
+ * not the document's.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import { Overlay } from '../index'

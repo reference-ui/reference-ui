@@ -1,3 +1,9 @@
+/**
+ * Edge-sheet binding: pins Content to a viewport side with fixed
+ * positioning and the stack offset, publishes the stack position for
+ * `--reference-overlay-index`, and clears every written coordinate on
+ * teardown.
+ */
 import type { OverlayEdge } from '../types'
 
 const INSET = ['top', 'right', 'bottom', 'left'] as const

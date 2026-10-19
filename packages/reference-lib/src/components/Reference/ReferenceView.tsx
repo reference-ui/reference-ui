@@ -1,3 +1,8 @@
+/**
+ * ReferenceView: the provider-less API browser half. Reads the named
+ * document from the ambient runtime context and renders loading, error,
+ * empty, or document states; hosts install the provider themselves.
+ */
 import * as React from 'react'
 import {
   useReferenceDocumentFromContext,

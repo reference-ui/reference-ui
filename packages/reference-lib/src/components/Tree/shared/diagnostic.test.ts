@@ -1,3 +1,7 @@
+/**
+ * Proof for the Tree diagnostic channel. Pins the `[reference-ui] Tree`
+ * prefix outside production, and silence in production.
+ */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { treeDiagnostic } from './diagnostic'
 

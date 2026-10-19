@@ -1,3 +1,8 @@
+/**
+ * Clipping verdicts for floating Content: viewport hiding, full-clip
+ * tests, overflow-ancestor collection (ShadowRoot hosts included), and
+ * the hidden-by-clipping answer positioning reads before painting.
+ */
 export function rectHidden(rect: DOMRect, vw: number, vh: number, pad: number): boolean {
   return (
     rect.bottom < pad ||

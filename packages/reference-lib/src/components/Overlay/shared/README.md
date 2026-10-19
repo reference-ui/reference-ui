@@ -1,7 +1,5 @@
 # shared
 
-Utilities used by more than one Overlay module.
-
-- `events` — composed path, containment, primary pointer, consumed flags
-- `refs` — `assignRef`, stable `useComposedRef`
-- `warn` — dev-only `console.error`
+Utilities used by more than one Overlay module: composed-path
+containment, primary-pointer, and consumed-flag event helpers; ref
+assignment plus a stable composed ref; and a dev-only console channel.

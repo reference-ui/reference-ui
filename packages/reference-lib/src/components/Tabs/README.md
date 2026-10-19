@@ -22,12 +22,4 @@ diagnostic. Examples carries the userland system-variant demo. Pure
 decisions carry colocated unit tests; mounted behavior proves out in
 colocated Vitest and CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`parts/`](./parts) | List, Tab, Panel, selection sync |
-| [`hooks/`](./hooks) | Registry, order, value, diagnostics, trails, rescue, handoff |
-| [`recipes/`](./recipes) | Prepackaged line/pill system recipes |
-| [`registry/`](./registry) | Pure nearest-enabled and document-order kernel |
-| [`focus/`](./focus) | Deep active element, editable guards |
-| [`shared/`](./shared) | Layout effect, dev warning channel |
-| [`examples/`](./examples) | Userland system-variant demo (not API) |
+Up: [Components](../components.md).

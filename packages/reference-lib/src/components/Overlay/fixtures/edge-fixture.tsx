@@ -1,3 +1,8 @@
+/**
+ * Edge-sheet fixture: edge sheets with their handle-drag scenes,
+ * including trigger-as-opener. Serves edge binding, stacking, and
+ * swipe-dismiss proofs.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 import type { OverlayEdge } from '../index'

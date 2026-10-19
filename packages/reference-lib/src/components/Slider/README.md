@@ -17,10 +17,4 @@ snapping, and neighbor bounds. Interaction resolves track clicks and
 thumb presentation as pure, tested decisions. Shared holds the warn
 channel and registry ordering every hook asks.
 
-| Folder | Role |
-| :--- | :--- |
-| [`hooks/`](./hooks) | Direction, registry, value requests, drag, keyboard |
-| [`parts/`](./parts) | Track, Range, Thumb renderings |
-| [`math/`](./math) | Numeric model: validation, snap, bounds, paging |
-| [`interaction/`](./interaction) | Track-click choice, thumb presentation decisions |
-| [`shared/`](./shared) | Warn channel, registry ordering |
+Up: [Components](../components.md).

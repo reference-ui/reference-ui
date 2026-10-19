@@ -1,3 +1,10 @@
+/**
+ * Popover controlled-ownership and event-contract hardening. Rejected
+ * openings and Escape/Close requests preserve controlled DOM with current
+ * callbacks, consumer cancellation stops requests before transitions, Tab
+ * dismissal advances past the logical trigger once, and explicit Content
+ * ids stay the live control target.
+ */
 import type { ComponentProps } from 'react'
 import type { Page } from '@playwright/test'
 import { test, expect, pressTab } from '../../../../playwright/ct'

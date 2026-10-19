@@ -1,3 +1,9 @@
+/**
+ * Toast public barrel: re-exports only, zero logic. Ships the `toast`
+ * callable, the host and compound chrome, the item context, the store and
+ * history readers, and the option types — except `ToastActionButton`,
+ * which stays a type alias of the action config, not the button value.
+ */
 export { toast } from './api/toast'
 export { Toast, ToastHost } from './Toast'
 export { DefaultToast } from './parts/Default'

@@ -1,3 +1,8 @@
+/**
+ * Overlay Book gallery: named scenes for interactive visual review.
+ * Maps story names to renderable overlays so authors can browse every
+ * binding and isolation shape in the Book harness without mounting CT.
+ */
 import * as React from 'react'
 import { Div, Button, H3, H4, P, Span, Input } from '@reference-ui/react'
 import { Overlay } from './index'

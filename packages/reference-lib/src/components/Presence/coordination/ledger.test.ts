@@ -1,3 +1,9 @@
+/**
+ * Proof for the sibling-part coordinator ledger. Pins microtask notify
+ * once every registered part reports while closed, silence while present
+ * or unsubscribed, early completion on mid-exit unmount, reopen reset,
+ * and activity only for multi-part closed cycles.
+ */
 import { describe, expect, it, vi } from 'vitest'
 import { CoordinatorLedger } from './ledger'
 

@@ -1,3 +1,8 @@
+/**
+ * Floating-reference resolution: maps every accepted anchor form onto the
+ * concrete reference computePosition measures against. Takes the authored
+ * anchor and the Trigger node; edge and unbound Content never reach here.
+ */
 import type { OverlayAnchor, OverlayEdge } from '../types'
 import type { ReferenceType, VirtualAnchor } from './floating'
 

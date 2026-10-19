@@ -1,3 +1,8 @@
+/**
+ * Portal CT fixtures: default, shadow, and coverage scenes. Mounts plain
+ * relocation, ShadowRoot destinations, and the catalog-coverage composition
+ * the main spec drives for placement, theme, and event proofs.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import { Portal, type PortalContainer } from './index'

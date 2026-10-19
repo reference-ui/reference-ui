@@ -1,3 +1,8 @@
+/**
+ * Reference summary chip: the pill carrying condensed type and status
+ * labels in member summaries. Takes Span props extended with the chip's
+ * own options.
+ */
 import * as React from 'react'
 import { Span, recipe, type RecipeVariantProps } from '@reference-ui/react'
 import { MonoText } from './MonoText'

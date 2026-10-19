@@ -21,10 +21,4 @@ Shared holds anatomy, DOM plumbing, naming text, and the dev channel.
 Pure decisions carry colocated unit tests; browser behavior proves out
 in CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`hooks/`](./hooks) | Formatting, session, actions, handlers, guards, identity, forms |
-| [`parts/`](./parts) | Group, Input, Increment, Decrement, shared stepper engine |
-| [`draft/`](./draft) | Locale alphabet, parser, caret model, input-mode grammar |
-| [`step/`](./step) | Lattice math, step advance, commit decisions |
-| [`shared/`](./shared) | Anatomy, DOM, naming text, dev diagnostics |
+Up: [Components](../components.md).

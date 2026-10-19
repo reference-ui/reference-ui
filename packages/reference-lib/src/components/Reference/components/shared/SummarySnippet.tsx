@@ -1,3 +1,7 @@
+/**
+ * Reference summary snippet: the boxed block for type summaries and value
+ * sets. Takes Div props and layers authored css over the snippet style.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import { MonoText } from './MonoText'

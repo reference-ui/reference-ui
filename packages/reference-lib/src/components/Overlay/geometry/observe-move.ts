@@ -1,3 +1,8 @@
+/**
+ * IntersectionObserver layout-shift detector, porting Floating UI's
+ * `observeMove`. Fires when the anchor's rect actually moves so living
+ * position can reposition on layout shift without polling.
+ */
 import { rectsDiffer, readClientRect } from '../../../core/measure'
 
 /**

@@ -1,3 +1,7 @@
+/**
+ * StrictMode fixture: a modal toggled under double-render. Serves the
+ * OV-ENV-04 proof that mount, layer, and teardown stay singular.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 

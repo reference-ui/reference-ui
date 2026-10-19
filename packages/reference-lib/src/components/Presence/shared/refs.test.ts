@@ -1,3 +1,8 @@
+/**
+ * Proof for the Presence ref assignment helper. Pins object-ref assignment
+ * with null tolerance, callback-ref invocation with cleanup return, and
+ * undefined refs ignored.
+ */
 import { describe, expect, it, vi } from 'vitest'
 import { setRef } from './refs'
 

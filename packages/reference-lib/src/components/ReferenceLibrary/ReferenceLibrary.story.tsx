@@ -1,3 +1,9 @@
+/**
+ * ReferenceLibrary CT fixtures: runtime, StrictMode, and color-mode
+ * scenes. Mounts the transparent application render, the double-render
+ * election harness, and the color-mode root the main and hardening specs
+ * drive for election, toast, and theme proofs.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import { ReferenceLibrary } from './ReferenceLibrary'

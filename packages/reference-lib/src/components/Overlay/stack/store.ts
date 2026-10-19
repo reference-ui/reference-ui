@@ -1,3 +1,9 @@
+/**
+ * Document layer registry: zustand store holding every live layer with
+ * registration, cascade teardown, and a two-frame removed tombstone.
+ * Ships the store plus the z-index, subscription, and pointer-events
+ * hooks layers bind through.
+ */
 import { createStore } from 'zustand/vanilla'
 import { useStore } from 'zustand'
 import {

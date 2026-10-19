@@ -1,3 +1,10 @@
+/**
+ * Slider browser proof: parts, sessions, and focus rings. Renders the
+ * story fixtures to pin part anatomy and clamped ARIA, keyboard and
+ * pointer value changes, track-press thumb choice, RTL and vertical
+ * mapping, session lifecycles, StrictMode and ShadowRoot behavior, and
+ * keyboard-only focus-ring parity.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 

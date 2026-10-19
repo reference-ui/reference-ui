@@ -1,3 +1,8 @@
+/**
+ * Switch CT fixtures: interactive, resting-states, and parity scenes.
+ * Mounts the toggling control, the state overview, and the parity matrix
+ * the browser suite drives for anatomy, activation, and label proofs.
+ */
 import * as React from 'react'
 import { Div, Button, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'

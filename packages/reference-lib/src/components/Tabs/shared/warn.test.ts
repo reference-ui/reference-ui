@@ -1,3 +1,7 @@
+/**
+ * Proof for the Tabs dev warning channel. Pins the Tabs name and mismatch
+ * in dev, and silence in production.
+ */
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { warnTabs } from './warn'
 

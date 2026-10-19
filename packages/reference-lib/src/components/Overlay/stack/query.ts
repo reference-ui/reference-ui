@@ -1,3 +1,9 @@
+/**
+ * Pure layer-stack queries: documents, descendants, live layers, the top
+ * live layer, isolation and pointer-events enablement, and edge stacks.
+ * Every answer derives from a passed layer list — no store reads — so
+ * dismissal and isolation stay testable without React.
+ */
 import { isNodeInside } from '../shared/events'
 import type { Layer } from './types'
 

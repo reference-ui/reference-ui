@@ -1,3 +1,8 @@
+/**
+ * SD-ENV-04 cross-engine smoke: scalar keyboard plus range track-press and
+ * outside-drag, run on Chromium, Firefox, and WebKit through the colocated
+ * env04 config against the already-running CT gallery.
+ */
 import { test, expect } from '../../../../playwright/ct'
 
 test('SD-ENV-04 smoke: scalar keyboard plus range track-press and outside-drag', async ({

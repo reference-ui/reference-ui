@@ -1,16 +1,16 @@
-# Reference API Component
+# Reference
 
-This directory contains the canonical source of truth for the `<Reference />` and `<ReferenceView />` UI components.
+API reference browser: `<Reference name="SomeType" />` installs the
+`@reference-ui/types` runtime and renders the indexed document for that
+export — header, interface members or type definition, JSDoc, and
+loading/error/empty states. `ReferenceView` is the provider-less half
+for hosts that already install the runtime.
 
-## Architecture & Workflow
+The root holds the two public components plus the status states;
+`document/` renders whole documents by kind, `components/` renders
+member rows, lists, and frames, `theme/` carries the browser token
+config, and `fixtures/` hosts the Book cases proving the browser against
+sample interfaces, aliases, and StyleProps extensions. Server rendering
+pins through the colocated SSR suite.
 
-1. **Source of Truth**:
-   All component development, styling, and visual improvements happen here in `packages/reference-lib/src/components/Reference`.
-
-2. **Interactive Cosmos Harness**:
-   `reference-lib` runs a [React Cosmos](https://reactcosmos.org/) environment. The `fixtures/` directory contains visual fixtures (e.g. `Overview.fixture.tsx`, `ReferencePrototype.fixture.tsx`, `StylePropsApiReference.fixture.tsx`) allowing interactive design, responsiveness testing, and dark/light theme checks.
-
-3. **Mirroring to `reference-core` (retired)**:
-   The retired core package is no longer a mirror target: nothing copies these files into it, and no step adapts `@reference-ui/types` imports for it any more.
-
-For a full technical overview of how `<Reference />` is orchestrated across the monorepo, see [REFERENCE_COMPONENT.md](../../../../../REFERENCE_COMPONENT.md) at the repository root.
+Up: [Components](../components.md).

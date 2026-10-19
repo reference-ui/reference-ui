@@ -1,3 +1,8 @@
+/**
+ * Proof for the NumberField type contract. Pins the conventional root
+ * export, one controlled numeric authority, behavior-owned prop omission
+ * on parts, and required stepper accessible names at the type boundary.
+ */
 import * as React from 'react'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import {

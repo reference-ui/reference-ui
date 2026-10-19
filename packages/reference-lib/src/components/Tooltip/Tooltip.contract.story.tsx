@@ -1,3 +1,9 @@
+/**
+ * Tooltip contract harness: one fixture for the consumer and lifecycle
+ * suite. Mounts controlled and cancellation variants so the contract
+ * spec can pin description survival, prevention, controlled requests,
+ * and unmount cleanup.
+ */
 import * as React from 'react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Tooltip } from './index'

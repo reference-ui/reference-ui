@@ -1,3 +1,8 @@
+/**
+ * Tabs Book gallery: named scenes for interactive visual review.
+ * Maps story names to renderable tabsets so authors can browse variants,
+ * orientations, and modes in the Book harness without mounting CT.
+ */
 import * as React from 'react'
 import { A, Div, Span } from '@reference-ui/react'
 import { Tabs, tabsListRecipe, tabsTabRecipe } from './index'

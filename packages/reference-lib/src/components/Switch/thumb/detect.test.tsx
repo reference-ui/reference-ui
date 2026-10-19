@@ -1,3 +1,8 @@
+/**
+ * Proof for the static authored-thumb seed. Pins true only for a
+ * direct-authored thumb child, and false for Fragment-wrapped and
+ * HOC-forwarded thumbs that reconcile from the DOM after mount.
+ */
 import * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import { SwitchThumb } from '../parts/Thumb'

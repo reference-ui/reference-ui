@@ -1,3 +1,8 @@
+/**
+ * Tree Book gallery: named scenes for interactive visual review.
+ * Maps story names to renderable hierarchies so authors can browse
+ * expansion, selection, and nesting in the Book harness without CT.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Tree } from './index'

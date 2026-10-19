@@ -1,3 +1,8 @@
+/**
+ * Proof for the draft parser: plain, grouped, and locale numbers parse,
+ * foreign punctuation and malformed grammar reject. Pins exponents,
+ * percent scaling, affix stripping, and sign/double rejection.
+ */
 import { describe, expect, it } from 'vitest'
 import { isImpossibleInsertion, isValidGroupHead, parseDraftNumber } from './parse'
 import { draftNumberSymbols } from './symbols'

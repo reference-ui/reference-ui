@@ -1,3 +1,8 @@
+/**
+ * Switch Book gallery: named scenes for interactive visual review.
+ * Maps story names to renderable switches so authors can browse checked,
+ * disabled, and thumb shapes in the Book harness without mounting CT.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Switch } from './index'

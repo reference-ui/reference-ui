@@ -1,3 +1,8 @@
+/**
+ * Proof for the Tree unmatched-id decision. Pins undecidable on empty or
+ * collapsed registries, flagging unmatched values only once every branch
+ * is expanded, nullish values never flagged, and document-ordered ids.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   findUnmatchedTreeIds,

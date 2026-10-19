@@ -1,3 +1,7 @@
+/**
+ * Reference document header: the title band for one indexed document.
+ * Takes the document payload and renders its name, kind, and summary.
+ */
 import * as React from 'react'
 import { Div, H2, P } from '@reference-ui/react'
 import { formatReferenceTypeParameter, type ReferenceDocument } from '@reference-ui/types'

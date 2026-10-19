@@ -1,3 +1,8 @@
+/**
+ * Proof for the thumb presentation model. Pins active-thumb-on-top
+ * stacking with lower-index-above idle order, Minimum/Maximum and
+ * numbered-gang naming, and the aria-valuetext precedence chain.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveAriaValueText, resolveDefaultAriaLabel, resolveThumbZIndex } from './thumb-model'
 

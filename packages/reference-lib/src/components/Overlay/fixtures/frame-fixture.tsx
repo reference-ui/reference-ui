@@ -1,3 +1,8 @@
+/**
+ * Frame fixture: a minimal overlay for same-origin iframe stack isolation
+ * (OV-ESC-05, OV-LAYER-10). Serves Escape and layer-ordering proofs
+ * across frame boundaries.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 

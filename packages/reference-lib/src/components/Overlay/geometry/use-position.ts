@@ -1,3 +1,8 @@
+/**
+ * Content positioning effect: binds the living position to Content's
+ * layout lifecycle. Subscribes the anchor pair through auto-update and
+ * writes each computed placement, tearing down with the layer.
+ */
 import * as React from 'react'
 import type { OverlayAnchor, OverlayEdge } from '../types'
 import { overlayStackStore } from '../stack'

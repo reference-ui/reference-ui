@@ -1,3 +1,8 @@
+/**
+ * Overlay public vocabulary: placements, edges, strategies, anchors, and
+ * isolation flags over the Portal and FocusLock contracts. The one type
+ * module every Overlay part, hook, and domain imports from.
+ */
 import type * as React from 'react'
 import type { PortalProps } from '../Portal'
 import type { FocusTarget } from '../FocusLock'

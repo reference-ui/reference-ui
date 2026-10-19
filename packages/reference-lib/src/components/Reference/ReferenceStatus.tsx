@@ -1,3 +1,8 @@
+/**
+ * Reference status states: the loading, error, and empty notices rendered
+ * inside the frame. Take the requested name (plus the error message);
+ * each renders its copy through `ReferenceNotice` with mono highlights.
+ */
 import * as React from 'react'
 import { ReferenceNotice } from './components/ReferenceNotice'
 import { MonoText } from './components/shared/MonoText'

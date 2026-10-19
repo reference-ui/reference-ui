@@ -1,3 +1,9 @@
+/**
+ * Toast CT fixtures: one toaster scene per gate. Covers basic display,
+ * Gate 6 timers and hotkeys, Gate 7 themes and variants, and the
+ * hardening, limit, and premount scenes the browser suite drives for
+ * stacking, motion, and lifecycle proofs.
+ */
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { createRoot } from 'react-dom/client'

@@ -1,3 +1,10 @@
+/**
+ * Tabs controlled-gesture hardening. Rejected pointer gestures request
+ * once and preserve controlled panels, rejected automatic navigation
+ * roves focus with current callbacks, canceled native presses suppress
+ * their click, and click cancellation stops keyboard activation without
+ * undoing an earlier press request.
+ */
 import type { ComponentProps } from 'react'
 import { test, expect } from '../../../../playwright/ct'
 import type { ControlledContract } from '../Tabs.story'

@@ -1,3 +1,8 @@
+/**
+ * Layer-accounting fixture: a live readout of the layer stack — entry,
+ * open, and root counts plus parentId linkage — for the composition
+ * accounting audit (FEATURES #2, OV-LAYER-11).
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 import { useOverlayStore } from '../stack'

@@ -1,3 +1,8 @@
+/**
+ * Out-of-order-exit fixture: two slow layers closed in either order.
+ * Serves the OV-INERT-03 and OV-SCROLL-05 proofs that inert and scroll
+ * state survive non-stack-order exits.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 

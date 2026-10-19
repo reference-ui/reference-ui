@@ -1,3 +1,9 @@
+/**
+ * Popover CT fixtures: click, hover, and contract scenes. Covers basic
+ * and click-to-open, hover cards with grace travel, placements, nested
+ * layers, plus the controlled-contract harness and focus-return matrix
+ * the main and hardening specs mount.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'

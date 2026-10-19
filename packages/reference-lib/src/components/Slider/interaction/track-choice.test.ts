@@ -1,3 +1,8 @@
+/**
+ * Proof for track-click resolution. Pins snapped values from horizontal
+ * clicks with RTL and vertical mirroring, null for unmeasurable tracks,
+ * and nearest-movable choice with active-then-index tie breaks.
+ */
 import { describe, expect, it } from 'vitest'
 import { chooseTrackThumb, pointerToSnappedValue } from './track-choice'
 

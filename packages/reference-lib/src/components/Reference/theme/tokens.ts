@@ -1,3 +1,8 @@
+/**
+ * Reference browser token config: the color and type tokens the browser
+ * chrome reads, built over the system tokens. Consumed through the theme
+ * barrel by every member, document, and frame renderer.
+ */
 import { tokens } from '@reference-ui/system'
 
 type ReferenceBrowserTokenConfig = Parameters<typeof tokens>[0]

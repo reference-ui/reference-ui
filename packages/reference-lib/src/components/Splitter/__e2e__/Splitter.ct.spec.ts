@@ -1,3 +1,10 @@
+/**
+ * Splitter composition gates and browser proofs. Pins panel/handle anatomy
+ * and honest ARIA, keyboard and pointer resize sessions, Enter collapse
+ * and restore with memory, RTL reversal, CSS-variable geometry, measured
+ * constraints, controlled request shapes, pointer frame budgets, and
+ * StrictMode and ShadowRoot behavior.
+ */
 import type { Page } from '@playwright/test'
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'

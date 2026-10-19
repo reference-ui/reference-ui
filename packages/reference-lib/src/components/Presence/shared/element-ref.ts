@@ -1,3 +1,8 @@
+/**
+ * Child-ref reader: returns a child's ref without invoking React's
+ * version-specific warning getters. Lets Presence observe the authored
+ * child across React versions without tripping dev warnings.
+ */
 import * as React from 'react'
 
 /**

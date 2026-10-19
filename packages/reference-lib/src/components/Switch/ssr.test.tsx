@@ -1,3 +1,7 @@
+/**
+ * Proof for Switch server rendering. Pins checked and unchecked markup
+ * with exactly one thumb each (SW-ENV-01).
+ */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'

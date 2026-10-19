@@ -1,3 +1,8 @@
+/**
+ * Presence public vocabulary: props, the mounted/suspended/unmounted
+ * lifecycle states, both context values, and the kernel hook options.
+ * The one type module every Presence domain imports from.
+ */
 import type * as React from 'react'
 
 /**

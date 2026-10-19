@@ -1,3 +1,9 @@
+/**
+ * Slider CT fixtures: one value scene per behavior. Covers single and
+ * range sliders, constraints and cardinality, zero-extent tracks, ARIA
+ * auditing, StrictMode, Shadow DOM, and the diagnostic harness the
+ * browser suite drives for session and geometry proofs.
+ */
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'

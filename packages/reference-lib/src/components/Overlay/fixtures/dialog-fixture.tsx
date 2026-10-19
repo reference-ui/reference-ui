@@ -1,3 +1,8 @@
+/**
+ * Dialog fixture: the canonical modal scene with Backdrop, Content, and
+ * pointer isolation. Serves anatomy, isolation, and dismissal proofs
+ * across the main suite.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 

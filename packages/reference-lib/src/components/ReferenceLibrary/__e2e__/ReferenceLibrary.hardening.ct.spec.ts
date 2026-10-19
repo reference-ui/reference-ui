@@ -1,3 +1,8 @@
+/**
+ * ReferenceLibrary mounted-election hardening. A remounted former host
+ * stays standby behind its live successor, and StrictMode elects exactly
+ * one runtime while preserving queued work across the double render.
+ */
 import type { ComponentProps } from 'react'
 import { test, expect } from '../../../../playwright/ct'
 import type { StrictRuntimeHarness } from '../ReferenceLibrary.story'

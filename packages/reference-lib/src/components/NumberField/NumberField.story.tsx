@@ -1,3 +1,9 @@
+/**
+ * NumberField CT fixtures: one mounted field per behavior. Covers
+ * steppers (named, bounded, decimal), commit policies, currency and
+ * percent formatting, named forms, and the commit lab the browser suite
+ * drives for editing, commit, and form proofs.
+ */
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'

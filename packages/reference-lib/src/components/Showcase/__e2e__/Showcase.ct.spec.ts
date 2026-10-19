@@ -1,3 +1,9 @@
+/**
+ * Showcase suite: the composition gallery mounts resting with every
+ * primary section, survives active multi-component interactions, and
+ * stacks then unwinds the five-tier full-shebang overlay cascade.
+ * Case metadata lives in `case.json`; this spec is the execution.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('Showcase Suite', () => {

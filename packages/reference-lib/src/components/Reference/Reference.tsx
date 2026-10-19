@@ -1,3 +1,8 @@
+/**
+ * Reference: the public API browser. Installs the default
+ * `@reference-ui/types` runtime and renders the named export's document
+ * through `ReferenceView`; takes the export name only.
+ */
 import * as React from 'react'
 import {
   ReferenceRuntimeProvider,

@@ -1,3 +1,9 @@
+/**
+ * Primitives story: the Book gallery sections as CT fixtures. Re-exports
+ * the All overview plus Forms, Buttons, Selection, Tables, Typography,
+ * Code, Inline, Lists, and Disclosure from the shared gallery for the
+ * lib-smoke suite to mount.
+ */
 import * as React from 'react'
 import PrimitivesStories, { PrimitivesOverview } from '../Primitives.book'
 

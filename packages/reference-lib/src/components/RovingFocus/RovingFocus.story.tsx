@@ -1,3 +1,9 @@
+/**
+ * RovingFocus CT fixtures: one kernel scene per behavior. Covers linear
+ * and grid movement, reflow, dynamic membership, labels and typeahead,
+ * nesting, empty roots, strict refs, and the sibling-lifetime isolation
+ * the main and hardening specs mount.
+ */
 import * as React from 'react'
 import { RovingFocus } from './RovingFocus'
 

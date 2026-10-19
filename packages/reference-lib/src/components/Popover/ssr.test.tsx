@@ -1,3 +1,7 @@
+/**
+ * Proof for Popover server rendering. Pins a closed Trigger with no
+ * layout globals and no extra hosts (PO-ENV-01).
+ */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'

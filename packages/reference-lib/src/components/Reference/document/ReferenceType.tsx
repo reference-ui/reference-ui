@@ -1,3 +1,8 @@
+/**
+ * Reference type renderer: the definition-first presentation for aliases
+ * and memberless types. Takes the document payload; memberless shapes
+ * show their type definition instead of an interface notice.
+ */
 import * as React from 'react'
 import type { ReferenceDocument as ReferenceDocumentData } from '@reference-ui/types'
 import { ReferenceMemberList } from '../components/ReferenceMemberList'

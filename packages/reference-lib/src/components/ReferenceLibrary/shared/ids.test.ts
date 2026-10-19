@@ -1,3 +1,7 @@
+/**
+ * Proof for library host-id minting. Pins the `ref-lib-` prefix and
+ * never minting the same id twice across mounts.
+ */
 import { describe, expect, it } from 'vitest'
 import { nextLibraryHostId } from './ids'
 

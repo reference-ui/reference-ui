@@ -1,3 +1,11 @@
+/**
+ * Toast composition gates and browser proofs. Pins defined, default, and
+ * custom toasts with stacking and hover expansion; Gate 6 timers, swipe,
+ * hotkeys, and overlay pausing; Gate 7 enter/stack/exit motion, card
+ * anatomy, loaders, themes, offsets, and RTL; plus hardening for DOM
+ * identity, announcements, focus return, limits, premount replay, Shadow
+ * DOM, and StrictMode.
+ */
 import { test, expect, snap, isWebKit } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Page } from '@playwright/test'

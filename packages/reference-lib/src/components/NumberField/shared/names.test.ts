@@ -1,3 +1,8 @@
+/**
+ * Proof for the accessible-name text plumbing. Pins authored-name
+ * stringification with nullish blanking, and labelledby splitting into
+ * ids with empties blanked.
+ */
 import { describe, expect, it } from 'vitest'
 import { stepperNameIds, stepperNameText } from './names'
 

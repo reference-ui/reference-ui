@@ -1,3 +1,8 @@
+/**
+ * Proof for the pure commit decision behind every commit boundary. Pins
+ * null clearing, invalid-text failure, clamp-without-snap, lattice
+ * endpoint-first snapping, and validate-mode raw retention with reasons.
+ */
 import { describe, expect, it } from 'vitest'
 import { draftNumberSymbols } from '../draft/symbols'
 import { decideCommit, type CommitInput } from './commit'

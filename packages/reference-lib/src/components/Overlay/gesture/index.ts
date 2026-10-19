@@ -1,3 +1,9 @@
+/**
+ * Edge-sheet swipe math, ported from Vaul. Ships the dismiss thresholds
+ * with the pure delta and size helpers that reduce a drag to
+ * dismiss-or-snap-back; the Handle owns the gesture, this module owns
+ * the numbers.
+ */
 import type { OverlayEdge } from '../types'
 
 /** Ported from Vaul. Distance as a fraction of the surface, velocity in px/ms. */

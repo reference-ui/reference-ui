@@ -19,10 +19,4 @@ ARIA, and feasibility. Shared holds geometry, measurement merging,
 direction, refs, and the warn channel. Styles owns the injected guard
 stylesheet.
 
-| Folder | Role |
-| :--- | :--- |
-| [`hooks/`](./hooks) | Registry, direction, measurement, separators, sessions |
-| [`parts/`](./parts) | Panel, Handle, Thumb renderings |
-| [`math/`](./math) | Layout solver: deltas, ARIA, probes, validation |
-| [`shared/`](./shared) | Geometry, measured merge, direction, refs, warn |
-| [`styles/`](./styles) | Injected reduced-motion and hit-area stylesheet |
+Up: [Components](../components.md).

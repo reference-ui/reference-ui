@@ -1,3 +1,8 @@
+/**
+ * Member type summary: renders the condensed type shape with its value
+ * set where the member carries one. Takes the summary payload from the
+ * indexed document.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type {

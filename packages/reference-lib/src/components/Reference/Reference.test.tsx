@@ -1,3 +1,9 @@
+/**
+ * Proof for the Reference server-rendering contracts. Pins runtime
+ * installation with a loading state and no fetch during SSR, explicit
+ * failure without a provider, loading/empty distinction, escaped error
+ * text, and memberless aliases showing their type definition.
+ */
 import * as React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'

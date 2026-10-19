@@ -1,3 +1,8 @@
+/**
+ * Overview fixture: the styled primer scene for the Book gallery. Lays
+ * out reference primitives in a padded card so visual review starts from
+ * composed chrome, not bare components.
+ */
 import { A, Div, Span } from '@reference-ui/react'
 
 export default (

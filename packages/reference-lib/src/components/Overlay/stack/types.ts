@@ -1,3 +1,8 @@
+/**
+ * Layer-stack vocabulary: the `Layer` shape, per-layer handler contracts,
+ * and the zustand store state. Imported by queries, the store, and every
+ * module that reasons about layer identity.
+ */
 import type { IsolationFlags, OverlayEdge } from '../types'
 
 export type LayerHandlers = {

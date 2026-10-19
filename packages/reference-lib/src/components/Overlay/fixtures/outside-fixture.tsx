@@ -1,3 +1,8 @@
+/**
+ * Outside fixture: outside-press scenes with Shadow DOM hosts, same-tick
+ * opening, modeless layers, and touch delays (OV-OUT). Serves
+ * light-dismissal proofs across pointer kinds.
+ */
 import * as React from 'react'
 import { Overlay } from '../index'
 
