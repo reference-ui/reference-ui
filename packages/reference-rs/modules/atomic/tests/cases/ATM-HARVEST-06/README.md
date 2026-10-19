@@ -8,6 +8,6 @@ while the width sink still mints the `var()` reference and the CSS-wide
 keyword. Two `ATM-I-HARVEST-SINK` infos count 1 and 2.
 Symbols: `HarvestPool`, `Sink`, `harvest_accepts`, `HarvestSink`.
 Siblings: `ATM-HARVEST-01` (the floor), `ATM-HARVEST-02` (holey templates mint nothing), `ATM-HARVEST-04` (zero-harvest control).
-Contract: [SPEC.md](../../../SPEC.md).
+Contract: SPEC.
 
 > Search terms: color allowlist, var never mints color, oklch never mints, unlicensed named color, keyword rides everywhere

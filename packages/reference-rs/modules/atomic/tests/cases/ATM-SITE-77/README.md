@@ -31,14 +31,14 @@ entry of a dirty object stays silent; helpers bake captures whole, so
 a call whose descriptor closed over a dirty object warns even when
 the body reads only clean members (descriptor-level taint).
 
-Inputs: `tokens.ts` (the imported conditional, nullish, and partial
-const objects), `app.ts` (imported and same-file spreads and member
+Inputs: `tokens` (the imported conditional, nullish, and partial
+const objects), `app` (imported and same-file spreads and member
 reads, dynamic-prop, partial-prop, both-dynamic, and empty controls,
 plus element, key, chain, fence, deep, imported-partial, and the two
 union arms that prove residue threads through spread merging),
-`alias.ts` (aliased imports of the conditional objects), `barrel.ts`
-plus `via-barrel.ts` (re-exported conditional, nullish, and partial
-objects), and the `cycle-*` pair plus `cycled.ts` (re-export cycle).
+`alias` (aliased imports of the conditional objects), `barrel`
+plus `via-barrel` (re-exported conditional, nullish, and partial
+objects), and the `cycle-*` pair plus `cycled` (re-export cycle).
 
 Aliased
 imports of the conditional objects fan out exactly like the plain

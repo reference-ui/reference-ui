@@ -1,8 +1,8 @@
 # ATM-SITE-27 — object ternary arms, mid-array slots, ternary args
 
 Object-valued
-ternary arms route through the per-prop object machinery (`packages/reference-rs/modules/atomic/src/extract/recipes/walk.rs:177` /
-`packages/reference-rs/modules/atomic/src/extract/tests/responsive.rs:42`): `color: flag ? { base } : { base }` compiles both
+ternary arms route through the per-prop object machinery (`extract::recipes::walk` /
+the responsive extractor test): `color: flag ? { base } : { base }` compiles both
 arms. When one object arm is unfoldable the resolvable arm is kept and
 the other diagnosed — v2 drops the whole conditional, so this case promotes that finding. Mid-array
 ternary slots project both arms at the same breakpoint, elision (`[1, , 3]`)

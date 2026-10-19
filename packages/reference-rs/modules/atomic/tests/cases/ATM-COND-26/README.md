@@ -2,4 +2,4 @@
 
 Compound and multi-`&` shapes (`&&`, `&&&`, `&.b&`, `&&+&`, `&+&`,
 `&.b &`, `& .bar & .baz & .qux`) substitute every `&` textually at one
-level. Contract: [SPEC.md](../../../SPEC.md).
+level. Contract: SPEC.

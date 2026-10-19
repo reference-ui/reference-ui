@@ -14,7 +14,7 @@ plus one located `ATM-W-DYNAMIC-TEMPLATE` diagnostic naming the part, and
 static siblings still extract. A folded template under unary refuses the
 operator without leaking string wants past it.
 
-Both walkers call the shared `extract/fold/template.rs` node, so
+Both walkers call the shared `extract::fold::template` node, so
 want/plan parity is structural. `null`/`undefined` parts coerce to
 `"null"`, matching v2's `coerce_to_string` quirk.
 

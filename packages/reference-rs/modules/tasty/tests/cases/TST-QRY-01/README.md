@@ -5,8 +5,8 @@ Ensures expressions like typeof themeConfig and typeof tokens.spacing are accura
 Proves primary SPEC ID anchor TST-QRY-01.
 
 Cross-file `typeof`
-over named value imports (`consumer.ts` imports `tokens` from
-`values.ts`, plus the aliased `export { themeTokens as tokens }`
+over named value imports (`consumer` imports `tokens` from
+`values`, plus the aliased `export { themeTokens as tokens }`
 target) resolves to the same object payload the local twin carries,
 for aliases and interface members alike. Cycles fail closed:
 `cycle-a ↔ cycle-b` const aliases infer no value binding, so

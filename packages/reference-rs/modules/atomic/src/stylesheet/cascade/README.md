@@ -5,4 +5,4 @@ Sort key and shared at-rule grouping for `@layer utilities`. Rank is
 share one wrap sequence emit under one copy of that sequence. Two at-rule
 wraps nest in author order; the first wrap is only the sort key.
 
-Up: [stylesheet](../README.md).
+Up: stylesheet.

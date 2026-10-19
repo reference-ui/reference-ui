@@ -2,7 +2,7 @@
 
 A small wrapper that forwards its `css` prop is the common way to reuse a
 component: `const Wrap = ({ css }) => <Button css={css} />`. Here `Button` comes
-from `@reference-ui/lib/primitives`, an installed package (`input/node_modules`)
+from `@reference-ui/lib/primitives`, an installed package (installed for the case)
 whose runtime mints classes under the systems its published `baseSystem` names, and the call site writes
 `<Wrap css={{ color: 'blue' }} />`. The twin `OwnWrap` forwards its `css` into
 Reference's own `Div` and is called with `css={{ bg: 'red' }}`.

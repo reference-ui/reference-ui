@@ -5,7 +5,7 @@ harvest-sink, or dead-branch diagnostics. Those facts move to the opt-in
 compiler channel — `logs: ['compiler']` returns them only in the separate
 `compilerDiagnostics` list, never mixed into userspace `diagnostics`.
 
-`input/src/channel.ts` mirrors the `ATM-DIAG-05` refusal battery (a dynamic
+The `channel` fixture mirrors the `ATM-DIAG-05` refusal battery (a dynamic
 call argument, a dynamic member, two dynamic identifiers, an interpolated
 template, a computed key, an unknown prop, a dynamic spread, a non-object
 condition value, an unknown `r` breakpoint, and a mutated binding) plus a
@@ -21,5 +21,5 @@ Mechanism: additive-optional `logs?: LogChannel[]` on the request and
 default bytes are identical. Related:
 `ATM-DIAG-02` (fail-closed warnings), `ATM-DIAG-05` (diagnostic precision),
 `ATM-DIAG-11` (unknown values compiler-only), `ATM-HARVEST-01` (harvest
-floor), `ATM-LEAF-01` (dead-branch fold). Contract: [SPEC.md](../../../SPEC.md).
+floor), `ATM-LEAF-01` (dead-branch fold). Contract: SPEC.
 .

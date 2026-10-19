@@ -6,5 +6,5 @@ Tests that a value-position identifier resolves through the scope chain
 an inner `const tone` shadows the outer
 same-named const (innermost leaves only, no union bloat), and the outer
 const still resolves at the top level. Imported (`theme.primary`) and
-genuinely unbound (`color` in `Stub.tsx`) names keep resolving through
+genuinely unbound (`color` in `Stub`) names keep resolving through
 the import lookup stub, so the cross-file observable stands.

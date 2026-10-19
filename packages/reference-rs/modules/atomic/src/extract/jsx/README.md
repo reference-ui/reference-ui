@@ -1,7 +1,7 @@
 # Extract / jsx
 
 Finds StyleProps on JSX opening tags and hands each value to
-`extract/expressions`.
+`extract::expressions`.
 
 ```tsx
 import { Div } from '@reference-ui/react'
@@ -16,7 +16,7 @@ no hosts resolvable is a missing-graph error (ATM-SITE-13), once per file.
 ## Which system a tag lowers under
 
 The class belongs to the runtime that renders the tag, so the tag root's
-provenance decides, never its name. `../README.md` describes how an import
+provenance decides, never its name. The extract readme describes how an import
 is followed to where it lands on disk.
 
 - **Own host**: a component imported from `@reference-ui/react` /
@@ -39,7 +39,7 @@ is followed to where it lands on disk.
   back under own, which is what they render if they forward at all.
 
 The same gate decides whether a same-file wrapper threads its `css` prop
-into a host. The analysis mirror (`diagnostics/analysis/jsx`) asks the same
+into a host. The analysis mirror (`diagnostics::analysis::jsx`) asks the same
 `Composed`, so its expected keys name the systems extraction lowers under.
 
 ## ATM-W-EXTERNAL-UNBACKED
@@ -71,4 +71,4 @@ both are; assembly passes it through.
 - Guess primitives by PascalCase or a config name array.
 - Reimplement wrapper tracing — that is styletrace.
 
-Up: [extract](../README.md).
+Up: extract.

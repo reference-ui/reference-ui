@@ -6,7 +6,7 @@ Finite numeric strings (`'1e3'`, `'.5'`,
 `'01'`) canonicalize to the numeric atom and dedupe with the bare number;
 the fence is Rust `f64` parsing, exactly like v2's `trimmed.parse::<f64>()`, so hex, `Infinity`, and `NaN` spellings still refuse.
 
-Contrast arm (`contrast.ts` + the refuse asserts): v2's
+Contrast arm (`contrast` + the refuse asserts): v2's
 `canonical_number` returns `None`
 for `'01'` (leading-zero guard), `' 1'`/`'1 '` (no trim), and
 hex/`Infinity`/`NaN`/`''` — the finite ones stay distinct strings, the

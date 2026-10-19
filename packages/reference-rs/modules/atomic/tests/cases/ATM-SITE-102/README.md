@@ -1,14 +1,14 @@
 # ATM-SITE-102 — A workspace package with no system of its own, whose @reference-ui/react resolves to this project's generated runtime, renders through that runtime, so its tags are own
 
 The monorepo's built shape. `@acme/panel` is a workspace package linked at
-`node_modules/@acme/panel`; its `main` is its built `dist/index.mjs`, which keeps
-`@reference-ui/react` external, and its source (`packages/panel/src`) is in this
+`node_modules/@acme/panel`; its `main` is its built bundle, which keeps
+`@reference-ui/react` external, and its source is in this
 sync's include set. It publishes no system. From the package directory,
 `@reference-ui/react` resolves through `node_modules/@reference-ui/react` to this
 project's generated runtime, `.reference-ui/react` (reduced here to a
-`package.json`, `react.mjs` and `react.d.mts`).
+manifest, a runtime bundle, and types).
 
-`App.tsx` writes `<Panel bg="red" />`. The bare specifier lands in `dist`, which
+`App` writes `<Panel bg="red" />`. The bare specifier lands in `dist`, which
 is not a compile source, so the identity walk ends at the package directory and
 reads what is there: no published system, and a runtime import that resolves to
 this compile's own runtime. The package borrows this runtime, so its binding is

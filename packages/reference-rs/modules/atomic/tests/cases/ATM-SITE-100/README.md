@@ -6,8 +6,8 @@ classes only for systems it composes with `extends` or `layers`; when none of th
 package's systems is composed, its wants back under no system and nothing
 paints (plan gap 2).
 
-`App.tsx` imports `Button` from `@reference-ui/lib` and `AcmeCard` from
-`acme-ui`, both installed in the case (`input/node_modules`) with their systems
+`App` imports `Button` from `@reference-ui/lib` and `AcmeCard` from
+`acme-ui`, both installed in the case with their systems
 published (`reference-ui`, streaming icons too, and `acme`), with no upstream
 system composed. `<Button color="blue" p="2r" />` and
 `<AcmeCard bg="red" />` each get one `ATM-W-EXTERNAL-UNBACKED` warning, located

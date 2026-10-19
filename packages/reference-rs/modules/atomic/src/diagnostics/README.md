@@ -35,7 +35,7 @@ diagnostics stays silent. Core prints userspace warnings as one collapsed
    `DiagnosticsSession` plus the borrowed `AnalysisInput` (programs,
    each file's import bindings, host surface, constants, system name)
    after host resolution.
-2. `analysis/` walks the borrowed programs independently: for each
+2. `analysis` walks the borrowed programs independently: for each
    runtime style slot it records an `ExactLookupExpected` (every key
    component statically known) or a `DynamicSlot`, never inferring
    success from extraction's wants. Holes (`null`/`undefined`/`false`
@@ -44,28 +44,28 @@ diagnostics stays silent. Core prints userspace warnings as one collapsed
    verdict extraction also reads: the file's bindings are collected once
    and both gates consult their provenance, so they cannot disagree.
 3. Extract, harvest, resolve, and hosts report typed `DiagnosticFact`
-   values through the `adapters/` (producers send data, never prose).
-4. Assembly hands over the final emitted-key set; `proof/` joins
+   values through the `adapters` (producers send data, never prose).
+4. Assembly hands over the final emitted-key set; `proof` joins
    expected exacts against it. Absent + resolver-explained rewrites the
    legacy line into a proof warning (same code and site, names the
    declaration, keeps the legacy reason); absent + unexplained appends
    `ATM-W-MISSING-STYLE-PLAN`; covered sinks drop their funnel + sink
    lines from the default.
-5. `channels/` partitions: compiler-classified facts leave the default
+5. `channels` partitions: compiler-classified facts leave the default
    and, only when requested, render onto `compilerDiagnostics`.
 
 Positions: located diagnostics carry `file:line:col`; span-less global
 fragments honestly report their fragment source at 1:1; static-CSS
 warnings stay unlocated (the `BaseSystem` carries no source identity).
-Proof cases: `ATM-DIAG-01`–`14` (`tests/cases/`).
+Proof cases: `ATM-DIAG-01`–`14` (golden cases).
 
 ## ERROR CODES
 
 Every code the compiler can emit, with the channel that carries it and the
 minimal authored shape that raises it. `default` is `CompileResult.diagnostics`;
 `compiler` is the opt-in `compilerDiagnostics` backchannel (`logs: ['compiler']`).
-The shared registry (`modules/diagnostics/REGISTRY.md`) is the deliberate home
-for meanings and raise sites; Core's `repro.test.ts` pins one whole-compiler
+The shared `REGISTRY` is the deliberate home
+for meanings and raise sites; Core's `repro` suite pins one whole-compiler
 repro per warn/err row. Codes are wire contract: never rename, never remove.
 
 | Code | Channel | Trigger |
@@ -139,4 +139,4 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 - Emit a diagnostic without a code; the constructors require one.
 - Alias `debug: true` to the compiler channel.
 
-Up: [atomic](../../README.md).
+Up: atomic.

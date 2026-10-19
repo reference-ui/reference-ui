@@ -20,14 +20,14 @@ The silence controls pin what stays quiet: `css()`, `css({})`,
 {...})`), null ternary arms, guard logical lefts, and
 non-`css` tags.
 
-Inputs: `args.ts` (whole-object, member, imported, wrapped, call,
+Inputs: `args` (whole-object, member, imported, wrapped, call,
 scalar, missing, deep, logical, spread, mutated, string-head / hole /
-empty controls, merge list, param shadow), `shared.ts` (the imported
-const objects), `branches.ts` (identifier arms, member arms, logical
-arms, silent null arm, call arm, nested arms), `tags.ts` (live tag
-diagnoses, dead tag silent), `jsx.tsx` (identifier / member / logical /
+empty controls, merge list, param shadow), `shared` (the imported
+const objects), `branches` (identifier arms, member arms, logical
+arms, silent null arm, call arm, nested arms), `tags` (live tag
+diagnoses, dead tag silent), `jsx` (identifier / member / logical /
 call / wrapped / spread-list style props, condition-prop blocks),
-`compose.ts` (alias-chain whole object, destructured-rest whole object).
+`compose` (alias-chain whole object, destructured-rest whole object).
 
-Alias chains and destructured rest compose on top via `compose.ts`;
+Alias chains and destructured rest compose on top via `compose`;
 multi-hop members are not covered here.

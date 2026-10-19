@@ -22,4 +22,4 @@ values-only entries with literal bags and no descriptors. Refused,
 namespace, and default imports stay out of the map; mutated origins enter
 value-empty with the origin write, so uses drop naming that write.
 
-Up: [extract](../README.md).
+Up: extract.

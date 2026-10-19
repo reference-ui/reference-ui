@@ -13,8 +13,8 @@ value array yields zero wants (never shifts a sibling a breakpoint
 early) with zero plans, while merge-list siblings still merge. Reassigned
 arrays name the write.
 
-Inputs: `arrays.ts` (refused dynamic/object/stale spreads, literal and
-const twins, clean control), `merge.ts` (refused dynamic/stale spreads,
+Inputs: `arrays` (refused dynamic/object/stale spreads, literal and
+const twins, clean control), `merge` (refused dynamic/stale spreads,
 literal, const, and leaf-skip twins).
 
 Panda flattens literal spreads and drops unresolvable

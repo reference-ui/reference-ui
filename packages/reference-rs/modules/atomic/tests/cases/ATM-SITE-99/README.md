@@ -5,9 +5,9 @@ A package built on Reference UI publishes the wrappers it traced as
 names with its compile request, keyed by system (`upstreamHosts`) and apart
 from its own host roster. `acme-ui`, installed in the case with its system
 `acme` published, publishes `AcmeCard`. The consumer renders
-`<AcmeCard p="1r" />` imported from `acme-ui` (`Acme.tsx`), and also has its own
-`AcmeCard` in `src/AcmeCard.tsx`, a wrapper that forwards `StyleProps` into
-Reference's `Div`, rendered as `<AcmeCard p="2r" />` (`Local.tsx`).
+`<AcmeCard p="1r" />` imported from `acme-ui` (`Acme`), and also has its own
+`AcmeCard` in the project source, a wrapper that forwards `StyleProps` into
+Reference's `Div`, rendered as `<AcmeCard p="2r" />` (`Local`).
 
 Ownership comes from the binding, and the published name cannot override it.
 The `acme-ui` binding ends at an installed package, so that tag is external:

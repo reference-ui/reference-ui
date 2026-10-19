@@ -1,6 +1,6 @@
 # ATM-SITE-105 — A styled component tag no trace admits backs under own unless a package or a composed upstream renders it: project, runtime-borrowing and unbound tags are own, an upstream's published name is that upstream's
 
-The capitalised spelling no longer decides backing. `App.tsx` writes four styled
+The capitalised spelling no longer decides backing. `App` writes four styled
 component tags that no trace and no roster admit:
 
 - `<Badge bg="red" />`: a project component made by a higher-order function

@@ -2,7 +2,7 @@
 
 A package built on Reference UI bundles its own generated runtime, bound to its
 own system name, so every class its components mint carries that name. `acme-ui`
-is installed in the case (`input/node_modules/acme-ui`) and publishes its system,
+is installed in the case (the installed mock) and publishes its system,
 `acme`, at `.reference-ui/system/baseSystem.mjs`; it exports a `Button`. The consumer writes `<Button color="blue" />` with it, and
 also renders Reference's own `Button` (imported as `OwnButton` from
 `@reference-ui/react`) with `bg="red"` as the control.

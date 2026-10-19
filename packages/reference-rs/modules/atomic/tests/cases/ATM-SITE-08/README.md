@@ -7,4 +7,4 @@ list `Div` as an exported wrapper. File-local `@reference-ui/react`
 imports are treated as StyleProps hosts (the package styletrace
 consults for primitives). Local `<Foo>` is not a host and no PascalCase
 match makes it one; as a component nobody traces it lowers under own
-(styling plan S3). Contract: [SPEC.md](../../../SPEC.md).
+(styling plan S3). Contract: SPEC.

@@ -2,14 +2,14 @@
 
 The monorepo's built shape on its very first sync. `@acme/panel` is a workspace
 package linked at `node_modules/@acme/panel`; its `main` is its built
-`dist/index.mjs`, outside the compile sources, which imports `Div` from
+bundle, outside the compile sources, which imports `Div` from
 `@reference-ui/react` and keeps it external. It publishes no system. This project
 has not synced yet, so `.reference-ui/react` does not exist: the committed tree
 links `node_modules/@reference-ui/react` to it all the same (a link that points
 nowhere, as a clean leaves it), and the twin, built at verify time, has no
 `@reference-ui` scope in `node_modules` at all (a fresh checkout).
 
-`App.tsx` writes `<Panel bg="red" />` beside an own `<Div p="1r">`. The package's
+`App` writes `<Panel bg="red" />` beside an own `<Div p="1r">`. The package's
 code imports `@reference-ui/react`, and from its directory that import climbs to
 this project's `node_modules`, where the sync links the runtime it is about to
 generate. So the package borrows this compile's runtime whether or not the

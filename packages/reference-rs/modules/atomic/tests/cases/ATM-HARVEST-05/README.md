@@ -8,6 +8,6 @@ mints nothing — no length was written.
 Symbols: `HarvestPool`, `Sink`, `warn_dynamic`, `HarvestSink`.
 Siblings: `ATM-HARVEST-01` (string-literal floor), `ATM-HARVEST-02` (partial
 joins mint nothing), `ATM-SITE-51` (static templates fold at the site).
-Contract: [SPEC.md](../../../SPEC.md).
+Contract: SPEC.
 
 > Search terms: wholesale in hole, whole-value wrap, partial `${n}px`, inner literal harvest, join is not a value

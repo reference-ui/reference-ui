@@ -9,7 +9,7 @@ source-first for package roots (styletrace's default) and left atomic on
 manifest names `./dist/index.d.ts` as `types` beside
 `"exports": { ".": "./src/index.ts" }`. The declaration is body-less
 (`export declare const brand: string`); the source folds
-(`export const brand = 'purple'`). `App.tsx` paints `css({ color: brand })`, so
+(`export const brand = 'purple'`). `App` paints `css({ color: brand })`, so
 the value must fold from the source: the want, the plan and the sheet all carry
 `purple`, with zero diagnostics.
 

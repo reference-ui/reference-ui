@@ -13,7 +13,7 @@ accidentally write a JS evaluator.
    branches of a ternary are two wants. `undefined` is none. Do not
    eval `isSelected`.
 
-`constants/` is a lookup index for file-top `const` literals, not a
+`constants` is a lookup index for file-top `const` literals, not a
 fourth host.
 
 Does not print CSS. Does not name classes. Does not hash a whole object.
@@ -25,7 +25,7 @@ the file that writes it. Every want resolves in this compile's vocabulary,
 and each carries a **backing**: own, or the systems a package's runtime
 mints its class under.
 
-`bindings.rs` records every import's provenance, so extract can fail closed
+`bindings` records every import's provenance, so extract can fail closed
 on shadowed `css` and untraced JSX. A bare specifier is followed to where it
 lands on disk, as Node would: `tsconfig` paths, then each ancestor
 `node_modules`, canonicalised through symlinks. Where it lands decides what
@@ -37,7 +37,7 @@ it is:
   published a system of its own.
 - **A package that published a system** (`exports["./baseSystem"]`, else
   `.reference-ui/system/baseSystem.mjs`): that package, rendering through
-  its system. `package_system.rs` reads the system's `name` and
+  its system. `package_system` reads the system's `name` and
   `streams[].name` and nothing else, on first demand, once per file and
   mtime.
 - **A linked workspace directory that is Reference code for this app**:
@@ -48,18 +48,18 @@ it is:
   links its runtime. The landing is read without the generated runtime, so
   the first sync agrees with every later one; a linked package that never
   uses the runtime (a plain icon or utils package) is not Reference code
-  however the specifier would resolve from it (`own_runtime.rs`).
+  however the specifier would resolve from it (`own_runtime`).
 - **Anywhere else, or nowhere**: a package not built on Reference UI.
 
-Resolutions memoize per importing directory and specifier. `provenance.rs`
+Resolutions memoize per importing directory and specifier. `provenance`
 turns the answer into the one host gate the JSX walk and the
-`css`-threading pre-pass share, and `backing.rs` decides what a styled tag
+`css`-threading pre-pass share, and `backing` decides what a styled tag
 no host admits lowers under:
 
 | The tag root ends at | Backing |
 | --- | --- |
 | A Reference import, or a name the host roster admits | Own |
-| A package that published a system | The package's stream names this compile composes (`extends`, `layers`). None composed: no system, and `ATM-W-EXTERNAL-UNBACKED` at the tag (see `jsx/README.md`) |
+| A package that published a system | The package's stream names this compile composes (`extends`, `layers`). None composed: no system, and `ATM-W-EXTERNAL-UNBACKED` at the tag (see the `jsx` pass) |
 | A package not built on Reference UI | Nothing, and no diagnostic |
 | An unbound name a composed upstream publishes (`upstreamHosts`) | That upstream |
 | Any other project or unbound name | Own |
@@ -72,7 +72,7 @@ system never backs a package tag; only the package's own systems do.
 ## Example (Panda)
 
 Panda's JSX, call, and matcher modules are their “where”. Ours are named after the author API.
-Their evaluator is the one to walk like, not fold like. See [PANDA.md](../../PANDA.md).
+Their evaluator is the one to walk like, not fold like. See PANDA.
 
 ## Must not
 
@@ -84,4 +84,4 @@ Their evaluator is the one to walk like, not fold like. See [PANDA.md](../../PAN
 - Build a TypeRef-shaped tree.
 - Group wants into a hashed rule because they sat on one host.
 
-Up: [atomic](../../README.md).
+Up: atomic.

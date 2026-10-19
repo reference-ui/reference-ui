@@ -15,11 +15,11 @@ Fix, part one: expand the shorthand to longhands that **do not reset color**
 
 Fix, part two — expansion is **not sufficient on its own**. `borderColor` is
 itself a shorthand of four longhands, so `.bd-c_*` and `.bd-b-c_*` are two
-utilities that still need ordering. `stylesheet/cascade/` sorts by
+utilities that still need ordering. `stylesheet::cascade` sorts by
 `canon::property_cascade_rank`
 (`shorthands-of-shorthands → shorthands → logical longhands → physical
 longhands`) so the longhand always wins. Both halves are required; see
-`../../stylesheet/README.md`. Paren-depth in the splitter is closed
+the stylesheet readme. Paren-depth in the splitter is closed
 (`ATM-SHORT-07`): `(` and `)` each move depth by one.
 
 The factory is the *behavior spec* (0 / none / var() / token
@@ -32,4 +32,4 @@ classification). The parser implements it, emitting atoms the namer and
 - Expand in JS for runtime and in Rust for build.
 - Collapse sibling shorthands into a hashed rule.
 
-Up: [resolve](../README.md).
+Up: resolve.

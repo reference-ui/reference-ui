@@ -9,5 +9,5 @@ substrings survive verbatim (`content: '"x  y"'`, quoted font names). Extract
 keeps raw wants (7); resolve canonicalizes to 4 atoms; each twin pair shares
 one runtime class. Paint-identical either way, so no browser arm.
 
-Inputs: `twins.ts` (string twins), `grid.ts` (backtick grid twins),
-`quotes.ts` (quoted preservation arms).
+Inputs: `twins` (string twins), `grid` (backtick grid twins),
+`quotes` (quoted preservation arms).

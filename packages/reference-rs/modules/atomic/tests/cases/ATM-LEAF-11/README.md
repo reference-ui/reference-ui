@@ -7,4 +7,4 @@ never be served: `css({ width: { base: '50px!' } })` warns
 leaf `base`), the refused leaf pushes no want, and the plan still
 serves the stripped value as a diagnosed non-important fallback — no
 orphan `!` class mints. Sibling leaves (`md`) and sibling props
-(`color`) still extract. Contract: [SPEC.md](../../../SPEC.md).
+(`color`) still extract. Contract: SPEC.

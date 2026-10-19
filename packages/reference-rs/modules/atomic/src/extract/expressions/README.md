@@ -3,8 +3,8 @@
 Walks a **style expression** and inserts **wants**. Never fold. No
 evaluation. No execution.
 
-This is not a JSX module. `extract/jsx`, `extract/css`, and
-`extract/recipes` find the host; this pass decides what is inside it.
+This is not a JSX module. `extract::jsx`, `extract::css`, and
+`extract::recipes` find the host; this pass decides what is inside it.
 The same walkers run for:
 
 ```tsx
@@ -84,7 +84,7 @@ Nested:
 
 Two wants (`3px solid`, `3px solid transparent`). The `undefined`
 alternate is omitted. Sibling `borderColor` on the same host is a
-separate want. Shorthand cascade is `resolve/shorthands`, not “emit
+separate want. Shorthand cascade is `resolve::shorthands`, not “emit
 them as one hashed block.”
 
 Logical operators are **symmetric**. Collect literals from both
@@ -127,7 +127,7 @@ JSX is the same object walk:
 ```
 
 The `r` prop is an object whose **keys** are breakpoints, not style
-props. This pass asks `resolve/r` for the query, then walks the nested
+props. This pass asks `resolve::r` for the query, then walks the nested
 styles under that `when`:
 
 ```tsx
@@ -202,4 +202,4 @@ want, resolve never sees it.
 - Fold `undefined` to a `Null` leaf (Panda’s evaluator). Omission is
   the correct empty.
 
-Up: [extract](../README.md).
+Up: extract.

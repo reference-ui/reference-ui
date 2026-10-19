@@ -1,4 +1,4 @@
 # ATM-SITE-06 — Local-const
 
 Top-level local constants and style objects are indexed and resolved at
-extract sites. Contract: [SPEC.md](../../../SPEC.md).
+extract sites. Contract: SPEC.

@@ -10,4 +10,4 @@ A cleared factory clears its clones to a fixpoint, so no stale name
 survives through a copy. refines the shadowed arm: a callee
 shadowed by a same-file pure arrow is not a factory, but its call init
 folds through the pure-helper fence exactly like the direct call spelling
-(`scope/call_init.rs`), so the use paints with no diagnostic.
+(`scope::call_init`), so the use paints with no diagnostic.

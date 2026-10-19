@@ -21,9 +21,9 @@ fixture leaves it empty so AtomSet stays small. `layers` is not here yet.
 itself (omitted when empty); `from_json` keeps it, and atomic seeds its
 host gate from it.
 
-Extends composition lives in Core: see packages/reference-core/src/system/base/SPEC.md (E1–E15).
+Extends composition lives in Core: see the Core base-system spec (E1–E15).
 
-`lib_fixture()` loads the committed lib spec (`src/lib_fixture/lib.json`)
+`lib_fixture()` loads the committed lib spec
 through the public `from_spec` path, overlaying host/Panda conditions, the
 standard breakpoint scale, and `:root { --spacing-root: 0.25rem }`. The spec is
 produced by `pnpm --filter @reference-ui/rust base-system` from lib
@@ -47,7 +47,7 @@ Answers both consumers ask of the same definition:
 | What is its CSS value (and light/dark)? | atomic | `@layer tokens` custom properties. |
 | What wrap does `_hover` / `_dark` use? | atomic | Host `data-color-mode`, not `.dark`. |
 | What keyframes / global CSS / fonts exist? | atomic | `@layer global`, `@font-face`. |
-| What breakpoints exist? | atomic | Array slots and `r/` widths. |
+| What breakpoints exist? | atomic | Array slots and `r` widths. |
 | Which `staticCss` utilities to pre-emit? | atomic | Third want source; `['*']` is category enumeration. |
 
 The native compile request requires a `baseSystem` evaluated spec (or a frozen `spec`), lowered through `from_json`; `BaseSystem::lib_fixture()` is the Rust-side lib default for tests.
@@ -66,6 +66,6 @@ pnpm agentrs c base_system
 pnpm --filter @reference-ui/rust base-system --check
 ```
 
-> Up: [@reference-ui/rust](../../README.md)
+> Up: @reference-ui/rust
 
 > Search terms: system definition, theme artefact, base-system/spec, base-system/tokens, base-system/conditions, base-system/lib-fixture, rs:canon, rs:atomic, rs:typegen

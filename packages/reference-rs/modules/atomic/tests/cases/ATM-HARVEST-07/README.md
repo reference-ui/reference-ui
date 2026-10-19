@@ -7,6 +7,6 @@ tokenless `ATM-HARVEST-06` cannot), while the undeclared word still never
 mints a color. One `ATM-I-HARVEST-SINK` info counts 2.
 Symbols: `HarvestPool`, `Sink`, `is_allowlisted_color`, `token_category`, `HarvestSink`.
 Siblings: `ATM-HARVEST-06` (the tokenless allowlist), `ATM-HARVEST-01` (the floor), `ATM-HARVEST-04` (zero-harvest control).
-Contract: [SPEC.md](../../../SPEC.md).
+Contract: SPEC.
 
 > Search terms: color token license, declared color token mints, token_category, undeclared named color, harvest allowlist arm

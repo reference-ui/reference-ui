@@ -2,7 +2,7 @@
 
 One `input → output` file per lexical function and per procedure, plus the
 composed `name` probes. The compiler generates every file from its own
-functions (`src/goldens/`); the runtime namer reproduces each file exactly.
+functions; the runtime namer reproduces each file exactly.
 
 Runner contract: call the export named by `function` as `fn(input, tables)`,
 where `tables` is the compiling system's `runtime.namer`. Pure lexical
@@ -15,4 +15,4 @@ fails until re-blessed. `NAMER_UPDATE_GOLDENS=1` is the only rewrite path,
 and a re-bless without a `NAMER_RULES_VERSION` bump is a review failure when
 a naming rule intentionally changed a class.
 
-Up: [atomic](../../../README.md).
+Up: atomic.

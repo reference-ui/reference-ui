@@ -1,6 +1,6 @@
 # Styletrace
 
-`styletrace` takes a source tree and a Reference sync root and emits the sorted names of exported JSX components whose StyleProps reach a Reference primitive or the Reference style pipeline, plus located, coded diagnostics. `trace()` returns names; `traceDetailed()` returns bindings, diagnostics, and owned props. Part of [reference-rs](../../README.md); the frozen claim list and proofs live in [SPEC.md](./SPEC.md).
+`styletrace` takes a source tree and a Reference sync root and emits the sorted names of exported JSX components whose StyleProps reach a Reference primitive or the Reference style pipeline, plus located, coded diagnostics. `trace()` returns names; `traceDetailed()` returns bindings, diagnostics, and owned props. Part of reference-rs; the frozen claim list and proofs live in SPEC.
 
 ## Identity rules
 
@@ -11,7 +11,7 @@
 
 ## Diagnostics
 
-Entries that fail to parse or read yield one `STT-W-SKIPPED-FILE` each and siblings still trace; an unreadable source root or a declaration root with no StyleProps entrypoint refuses the request with a coded throw, never an outcome diagnostic. Codes are wire contract: never rename, never remove. Meanings and raise sites live in the [shared registry](../../diagnostics/REGISTRY.md).
+Entries that fail to parse or read yield one `STT-W-SKIPPED-FILE` each and siblings still trace; an unreadable source root or a declaration root with no StyleProps entrypoint refuses the request with a coded throw, never an outcome diagnostic. Codes are wire contract: never rename, never remove. Meanings and raise sites live in the shared registry.
 
 | Code | Severity | Trigger |
 | ---- | -------- | ------- |

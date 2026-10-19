@@ -5,6 +5,6 @@ fractional (`-2.5r`) rhythm compute to root calc formulas with zero
 diagnostics — on `minWidth`/`maxWidth`/`minHeight`, the props the legacy
 Panda path never covered, via both `css()` longhands and the JSX
 `maxW`/`minH` aliases. There is no closed scale table; the sheet carries
-whatever the scan harvests. Contract: [SPEC.md](../../../SPEC.md).
+whatever the scan harvests. Contract: SPEC.
 Siblings: `ATM-RHYTHM-01..05` (base/multiplier/fraction/compound/negative
 shapes); `CORE-CSS-16` (end-to-end sync, paint, and the unscanned-`r` miss).

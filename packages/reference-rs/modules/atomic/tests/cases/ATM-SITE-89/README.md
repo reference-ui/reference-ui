@@ -1,13 +1,13 @@
 # ATM-SITE-89 — An on-disk file whose style trace fails warns ATM-W-TRACE-SKIPPED once instead of silently losing its wrappers
 
-Card's props type comes from `types.ts`, which does not parse. Card's style
-trace fails at that import, so Card is not a traced host and `App.tsx`'s
+Card's props type comes from `types`, which does not parse. Card's style
+trace fails at that import, so Card is not a traced host and `App`'s
 `<Card mt="4r" />` extracts nothing. The host trace re-parses each on-disk
-entry and reports the failure once, naming `Card.tsx` and the styletrace error
+entry and reports the failure once, naming `Card` and the styletrace error
 text. The failed fold in the parallel lane stays silent for on-disk files on
-purpose, so the same failure is never named twice. `types.ts` reports its own
-parse failure, and `App.tsx` gets the missing-graph error from extraction.
-Contract: [SPEC.md](../../../SPEC.md). Siblings: ATM-SITE-57 (unparsable entry
+purpose, so the same failure is never named twice. `types` reports its own
+parse failure, and `App` gets the missing-graph error from extraction.
+Contract: SPEC. Siblings: ATM-SITE-57 (unparsable entry
 file, one located warning), ATM-SITE-13 (missing host graph).
 
 > Search terms: style trace failure, ATM-W-TRACE-SKIPPED, fold_trace_module, wrapper, silent, warning

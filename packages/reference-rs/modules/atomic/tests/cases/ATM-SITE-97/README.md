@@ -1,11 +1,11 @@
 # ATM-SITE-97 — A project barrel carries its terminal binding: a re-exported package Button is external, a re-exported Reference Button stays own
 
-Apps gather components behind a barrel. `src/ui/index.ts` re-exports `Button`
-from `@reference-ui/lib/primitives`, an installed package (`input/node_modules`)
+Apps gather components behind a barrel. The `ui` barrel re-exports `Button`
+from `@reference-ui/lib/primitives`, an installed package (installed for the case)
 whose runtime mints classes under the systems its published `baseSystem` streams
-name, `reference-icons` and `reference-ui`. `src/own/index.ts` re-exports `Button` from
-`@reference-ui/react`, the app's own runtime. `Main.tsx` renders
-`<Button color="blue" />` through `./ui`; `Page.tsx` renders `<Button bg="red" />`
+name, `reference-icons` and `reference-ui`. The `own` barrel re-exports `Button` from
+`@reference-ui/react`, the app's own runtime. `Main` renders
+`<Button color="blue" />` through `./ui`; `Page` renders `<Button bg="red" />`
 through `./own`. Both use sites spell the same name and both imports are
 relative, so only the end of each re-export chain tells them apart.
 
@@ -25,4 +25,4 @@ roster (`jsxHosts: ['Button']`) and both upstreams. Nothing is configured by the
 (direct package import), ATM-SITE-98 (`css` wrapper), ATM-SITE-99 (published
 wrapper name), ATM-SITE-56 (traced discovery).
 
-> Search terms: ownership, provenance, barrel, re-export, index.ts, identity walk, terminal binding, trace_origin, package import, external component, lib primitives, own host, upstreamSystems
+> Search terms: ownership, provenance, barrel, re-export, index, identity walk, terminal binding, trace_origin, package import, external component, lib primitives, own host, upstreamSystems

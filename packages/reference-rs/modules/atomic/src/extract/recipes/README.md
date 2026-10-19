@@ -14,7 +14,7 @@ recipe({
 })
 ```
 
-Closed classes and the variant table are `src/recipes` (`ATM-RECIPE-*`).
+Closed classes and the variant table are the `recipes` stage (`ATM-RECIPE-*`).
 This folder only finds the expressions. `sva` is not a site.
 
 ## Must not
@@ -23,4 +23,4 @@ This folder only finds the expressions. `sva` is not a site.
 - Push recipe leaves into the utility AtomSet.
 - Match the identifier `recipe` without an import binding.
 
-Up: [extract](../README.md).
+Up: extract.
