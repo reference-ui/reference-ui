@@ -1,7 +1,6 @@
 // Unit tests for the structured-stylesheet merge over per-system streams.
 // They take engine-shaped corpus entries and pin statement order, reset-drop
 // bytes, verbatim scoping, transitive composition, and the published payload.
-// Provenance: ported 1:1 from the packed-css battery the cutover deleted.
 // This file pins the streams-native single-statement form for transitive chains.
 // No strip unit exists: reset-drop
 // is structural (the chunk never prints), so unparseable payloads cannot occur.

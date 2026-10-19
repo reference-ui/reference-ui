@@ -1,6 +1,5 @@
 // Config loading and validation errors for Core.
 // It takes failure details and emits typed errors with actionable messages.
-// This module is a core-owned copy of the retired reference-core config errors trimmed to the surviving fields.
 
 const PREFIX = 'reference-ui: '
 

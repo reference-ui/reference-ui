@@ -1,5 +1,5 @@
 /**
- * The one thin extra check for what ESLint will never judge: file headers and READMEs.
+ * The one thin extra check for what no linter will ever judge: file headers and READMEs.
  * It takes file text and returns violations, keeping every threshold as a named constant.
  * run.ts discovers the files; this module only reads words and never parses code.
  */

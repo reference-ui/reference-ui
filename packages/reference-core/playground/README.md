@@ -26,7 +26,7 @@ The shell stamps `data-color-mode` on `<html>` (dark by default, synced to
 `src/tokens.ts` is the mini token set: tailwind's palette verbatim plus
 `ink`/`paper`/`brand` with dark leaves, animation tokens, spacing, and
 lib's radii. `src/motion.ts` holds the keyframes those animation tokens
-name, and `src/global.ts` the tag recipes.
+name, and `src/global.ts` the tag and class rules.
 
 There is no capture client: `pnpm playground` serves, and DevTools MCP
 does the looking (`navigate_page`, `take_screenshot`,
@@ -48,7 +48,7 @@ Minimal page (`src/pages/hello.tsx` → `#/hello`):
 
 ```tsx
 import type * as React from 'react';
-import { css } from '@reference-ui/styled';
+import { css } from '@reference-ui/react';
 
 export const meta = { title: 'Hello', blurb: 'scratch' };
 

@@ -1,6 +1,5 @@
 // Fragment file discovery over glob roots plus import or call signals.
 // It takes scan options and emits absolute paths of matching source files.
-// This module is a core-owned copy of the retired reference-core fragment scanner.
 
 import { readFileSync } from 'node:fs'
 import { extname } from 'node:path'

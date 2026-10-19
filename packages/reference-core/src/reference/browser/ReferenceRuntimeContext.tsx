@@ -1,7 +1,7 @@
 // Runtime provider: it takes a `ReferenceRuntime` plus children and emits a
 // context supplying documents-by-name to UI outside the generated types
-// bundle. Lib shells (Book, Cosmos) wrap their trees in this provider and
-// read documents through the context hook instead of owning a runtime.
+// bundle. Lib Book stories wrap their trees in this provider and read
+// documents through the context hook instead of owning a runtime.
 
 import * as React from 'react'
 import type { ReferenceRuntime } from './Runtime.ts'

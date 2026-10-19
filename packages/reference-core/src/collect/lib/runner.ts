@@ -1,6 +1,5 @@
 // Fragment bundling plus single and planner collection over user files.
 // It takes file paths with collectors and emits bundled code or plain data.
-// This module is a core-owned copy of the retired reference-core fragment runner without config templating.
 
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'

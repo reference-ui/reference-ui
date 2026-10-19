@@ -7,7 +7,7 @@
 // event included. A second watch covered by the resident session attaches to it
 // (block plus signal forwarding) instead of exiting, so supervisors never read
 // an early exit as completion. The watch driver itself (watchSync) lives in
-// The watch loop lives in lib/watch; this file only routes the flag to it.
+// lib/watch; this file only routes the flag to it.
 import type { NativeDiagnostic } from '../native/contract.ts'
 import type { ReferenceBuildResult } from '../reference/bridge/events.ts'
 import type { WatchHandle } from '../lib/watch/index.ts'

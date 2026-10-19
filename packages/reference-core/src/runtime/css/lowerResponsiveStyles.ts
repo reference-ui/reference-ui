@@ -1,6 +1,6 @@
 // Lower Reference UI-owned responsive sugar into plain container-query style
 // objects before resolving classes. It takes style objects and emits lowered
-// shapes. This module is a core-owned copy of the retired reference-core responsive lowering.
+// shapes.
 
 type ResponsiveStyleObject = Record<string, unknown>
 

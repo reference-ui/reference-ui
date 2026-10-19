@@ -1,7 +1,7 @@
 // Browser data runtime: it takes a tasty browser runtime plus a symbol name and
 // emits loaded symbol graphs shaped into `ReferenceDocument` state. The
 // default runtime lazily imports the `__REFERENCE_UI_TYPES_RUNTIME__`
-// placeholder, which the types-bundle leg rewrites to `./tasty/runtime.js`
+// placeholder, which the reference-types leg rewrites to `./tasty/runtime.js`
 // so app bundlers see the real edge for the lazy chunk graph.
 
 import * as React from 'react'

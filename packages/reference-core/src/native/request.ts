@@ -1,7 +1,7 @@
 // Native request assembly: the one builder for the frozen compile request.
 // It takes the spec, the own roster, the primitive names, the roots, the
-// scope and what the upstreams publish, and emits the six-key request every
-// compile call shares, plus optional upstream keys only when they say something.
+// scope and what the upstreams publish, and emits the frozen request every
+// compile call shares, plus upstream keys only when they say something.
 // One home, so the CORE-SYNC-04 pin never drifts across call sites again.
 
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'

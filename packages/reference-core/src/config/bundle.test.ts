@@ -1,7 +1,6 @@
 // Unit tests for the Core config bundler over temp project trees.
 // They take fixture configs and assert external handling (and the listed
 // external specifiers) plus dependency paths, including resolution of canon-base-relative metafile keys.
-// This file is a core-owned copy of the retired reference-core bundler tests.
 
 import { realpathSync } from 'node:fs'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'

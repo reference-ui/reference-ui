@@ -1,6 +1,5 @@
 // Shared shapes for the Core fragment collector seam.
 // It takes nothing and emits the collector, scan, and bundle contracts.
-// This module is a core-owned copy of the retired reference-core fragment types trimmed of config templating.
 
 export interface FragmentCollectorConfig<TInput = unknown, TOutput = TInput> {
   name: string

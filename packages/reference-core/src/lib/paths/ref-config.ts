@@ -1,6 +1,5 @@
 // Config file discovery for Core project roots.
 // It takes a working directory and emits the ui.config path or null.
-// This module is a core-owned copy of the retired reference-core ref-config seam.
 
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'

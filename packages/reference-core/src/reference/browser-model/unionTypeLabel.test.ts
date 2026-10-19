@@ -1,7 +1,7 @@
 // Union label cases: they compile the vendored union-label fixtures with the
 // public tasty build and assert the API table's union type lines (`Union`,
-// widenings) plus literal value-set chips. Core port of the retired reference-core union
-// display-label suite; the model decides the labels, so the cases pin them
+// widenings) plus literal value-set chips. The model decides the labels,
+// so the cases pin them
 // without rendering React.
 
 import { mkdtempSync, rmSync } from 'node:fs'

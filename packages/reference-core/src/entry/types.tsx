@@ -1,10 +1,8 @@
 // Reference types entry: it takes the browser runtime plus the generated
 // presentation mirror and emits the composed `Reference` singleton with the
-// shipped `@reference-ui/types` surface. The three state views live here
-// (entry composition owns them since the mirror shell was buried); the
-// factory, runtimes, provider, hooks, formatter, and document types all
-// re-export from the browser layer untouched, so the `?name=` pages render
-// exactly what the retired reference-core's entry shipped.
+// shipped `@reference-ui/types` surface. The three state views live here —
+// entry composition owns them — and the factory, runtimes, provider, hooks,
+// formatter, and document types re-export from the browser layer untouched.
 
 import { ReferenceDocumentView } from '../reference/browser-component/components/ReferenceDocumentView.tsx'
 import { ReferenceFrame } from '../reference/browser-component/components/ReferenceFrame.tsx'

@@ -5,8 +5,7 @@
 // the react stub only has to resolve the bindings mdx-rs emits, not execute them.
 // On a parse failure mdx-rs resolves with an empty fallback module and prints
 // the real error to the native stderr; this plugin detects the fallback shape
-// and throws a named diagnostic instead of silently shipping `export {}` — a
-// deliberate divergence from the legacy transform.
+// and throws a named diagnostic instead of silently shipping `export {}`.
 
 import { readFileSync } from 'node:fs'
 import type * as esbuild from 'esbuild'

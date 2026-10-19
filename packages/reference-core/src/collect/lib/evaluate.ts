@@ -1,6 +1,5 @@
 // Scan, bundle, and evaluate-once runner for Core fragments.
 // It takes a project root plus config and emits the evaluated system spec.
-// This module copies the retired reference-core base flow and replaces config output with spec output.
 
 import { randomBytes } from 'node:crypto'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'

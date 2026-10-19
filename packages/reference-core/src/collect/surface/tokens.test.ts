@@ -1,6 +1,5 @@
 // Unit tests for the Core tokens() collector plus file collection.
 // They take token trees and fixture files and assert collected fragments.
-// This file is a core-owned copy of the retired reference-core tokens tests.
 
 import { describe, expect, it, afterEach } from 'vitest'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'

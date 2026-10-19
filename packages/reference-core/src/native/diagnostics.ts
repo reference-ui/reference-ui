@@ -1,5 +1,5 @@
 // Native diagnostic compat layer: it takes engine result diagnostics and
-// emits the same CLI reports as before. The reporting implementation lives in
+// emits the CLI reports. The reporting implementation lives in
 // the standalone diagnostics module; this file re-exports it so existing
 // native consumers keep their import path. New consumers import the
 // diagnostics module directly. Behavior is pinned by the sync diagnostics

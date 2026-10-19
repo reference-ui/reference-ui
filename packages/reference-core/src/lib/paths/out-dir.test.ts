@@ -1,6 +1,5 @@
 // Unit tests for the Core out-dir path helper over mocked config stores.
 // They take default and custom out dirs and assert the resolved paths.
-// This file is a core-owned copy of the retired reference-core path tests trimmed of virtual.
 
 import { describe, expect, it, vi, afterEach } from 'vitest'
 

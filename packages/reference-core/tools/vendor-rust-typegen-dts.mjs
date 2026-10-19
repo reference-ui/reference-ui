@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Vendor tool for the typegen TypeScript declarations consumed by the Core diagnostics repro suite.
+// Vendor tool for the typegen TypeScript declarations consumed by the declaration leg plus the diagnostics repro suite.
 // It takes the dist d.ts closure of @reference-ui/rust/typegen and emits a
 // committed copy with explicit NodeNext specifiers, so core typechecks without touching
 // reference-rs. Run it explicitly after an RS rebuild; --check verifies freshness.
