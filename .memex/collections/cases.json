@@ -1,0 +1,1 @@
+{"description": "Core cases: one doc per case folder (case.json + README).", "id": "id", "kind": "folder", "marker": "case.json", "merge": ["README.md"], "name": "cases", "owner": "agent-core skill", "roots": ["packages/reference-core/tests/cases"], "title": "name", "weights": {"id": 4, "title": 3}}

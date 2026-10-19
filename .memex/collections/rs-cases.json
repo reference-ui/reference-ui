@@ -1,0 +1,1 @@
+{"description": "reference-rs cases: one doc per case folder (case.json + README + spec header).", "id": "id", "kind": "folder", "marker": "case.json", "merge": ["README.md", "spec.ts"], "name": "rs-cases", "owner": "agent-rs skill", "roots": ["packages/reference-rs/modules"], "title": "name", "weights": {"id": 4, "title": 3}}
