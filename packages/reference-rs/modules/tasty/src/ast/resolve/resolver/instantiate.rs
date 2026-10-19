@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Generic instantiation during resolution.
+//! Substitutes type arguments for alias parameters across a symbol's underlying type, evaluating defaults where earlier parameters already hold arguments.
 
 use std::collections::BTreeMap;
 

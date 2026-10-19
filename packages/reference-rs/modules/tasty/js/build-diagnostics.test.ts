@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Tests for structured build diagnostics and cross-root duplicate names.
  * Tests structured build diagnostics and cross-root duplicate symbols: scanner and manifest
  * warnings in one list, and ambiguous bare-name lookup across scan roots that share a name.
  */

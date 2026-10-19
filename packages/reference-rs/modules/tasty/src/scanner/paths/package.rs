@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Package-name derivation.
+//! Derives library names from external file ids and splits package specifiers into name plus subpath.
 
 use crate::constants::libraries::USER_LIBRARY_NAME;
 use crate::constants::scanner::{NODE_MODULES_DIR, PACKAGE_INDEX_BASENAME, TYPES_SCOPE_NAME};

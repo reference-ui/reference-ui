@@ -132,9 +132,9 @@ fn local_export_type_reexport_keeps_only_canonical_symbol() {
 
 #[test]
 fn leaves_cross_library_external_import_reference_without_target() {
-    // Contract restoration: the scan boundary in
-    // the scanner README is same-package-only from library files, so the
-    // `react` package is never scanned and the cross-library reference keeps
+    // Contract restoration: the scan boundary stays same-package-only from
+    // library files, so the `react` package is never scanned and the
+    // cross-library reference keeps
     // its name but resolves to no target. Formerly
     // `resolves_cross_library_external_import_reference`, which pinned the
     // depth-2 cross-package allowance at the resolve layer.

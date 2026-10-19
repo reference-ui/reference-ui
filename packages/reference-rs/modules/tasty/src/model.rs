@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Normalized in-memory IR for tasty.
+//! Defines the bundle, file, symbol, member, and TypeRef graph types that extraction builds and the generator serializes.
 
 use std::collections::{BTreeMap, BTreeSet};
 

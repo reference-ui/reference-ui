@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Unit tests for isTypeParameterReference.
+ * Pins when a raw reference counts as a bare type-parameter use versus a regular named reference.
  */
 import { describe, expect, it } from 'vitest'
 import { isTypeParameterReference } from './object-projection.js'

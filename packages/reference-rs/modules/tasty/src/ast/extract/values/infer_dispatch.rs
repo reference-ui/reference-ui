@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Expression-level dispatch for const value inference.
+//! Routes initializer expressions into the infer helpers with const-assertion context.
 
 use oxc_ast::ast::{
     Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind, PropertyKind,

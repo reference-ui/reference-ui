@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Module binding wiring.
+//! Declares the import and export binding collection passes behind one surface.
 
 mod exports;
 mod imports;

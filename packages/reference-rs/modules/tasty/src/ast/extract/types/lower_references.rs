@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Lowering for reference-like types.
+//! Lowers type references, indexed access, and interface heritage clauses, recording the source module each reference name resolves from.
 
 use oxc_span::GetSpan;
 

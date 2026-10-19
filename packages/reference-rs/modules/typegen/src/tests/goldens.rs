@@ -4,7 +4,7 @@
 //! {}` plus the FontProps string fallback) plus recursive SystemStyleObject.
 //! `styles-fonts.d.ts` is the same StyleProps dump with populated FontRegistry
 //! dump keys, not CSS numbers. `styles-strict.d.ts` is `emit_dts_with` for
-//! `strict: ['colors', 'radii', 'spacing']`. Open goldens keep the hatch.
+//! `strict: ['colors', 'radii', 'spacing']`, while open goldens keep the hatch.
 
 use super::{
     assert_matches_golden, catalog_dts, compound_dts, font_dts, font_style_dts, recipe_dts,

@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Top-level artifact-bundle assembly.
+//! Takes a resolved TypeScriptBundle and produces the manifest-first module set: manifest, chunk registry, runtime loader, per-symbol chunks, and declaration shims.
 
 use std::collections::BTreeMap;
 

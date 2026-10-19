@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Tests for projecting object-like aliases with partly opaque inputs.
  * Tests how object-like aliases project into members when their inputs are partly opaque, such as
  * an intersection with an unresolved part. Each case builds its manifest inline, with no compile.
  */

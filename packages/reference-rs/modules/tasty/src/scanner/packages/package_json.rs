@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! package.json metadata helpers.
+//! Reads package manifests and resolves export-map targets conservatively for declaration discovery.
 
 use std::fs;
 use std::path::Path;

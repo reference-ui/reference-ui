@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Unit tests for bundle module emission.
+//! Builds small TypeScriptBundles in memory and pins manifest, registry, and chunk export-name output.
 
 use std::collections::{BTreeMap, BTreeSet};
 

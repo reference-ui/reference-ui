@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Expression inference surface.
+//! Re-exports the object, array, and primitive inference helpers used by values.
 
 mod arrays;
 mod objects;

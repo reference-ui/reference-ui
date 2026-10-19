@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Tests for buildTasty sessions: artifacts, caching, and rebuilds.
  * Tests buildTasty and the build session: emitted artifacts, session caching, and rebuilds when
  * the sources or the include config change for the same session key.
  */

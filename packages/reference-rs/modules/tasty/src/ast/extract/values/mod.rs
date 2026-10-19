@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Value-binding surface for const inference.
+//! Collects top-level const bindings and dispatches their initializers to expression inference.
 
 mod collect;
 mod infer_dispatch;

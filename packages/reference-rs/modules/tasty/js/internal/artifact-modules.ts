@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Validators for the modules the artifact importer returns.
  * Validates what artifact modules export: the manifest, the browser runtime module and chunk
  * symbols. Each extractor returns a typed value or throws a message that names the export it
  * expected, so a malformed artifact fails at load time rather than later.

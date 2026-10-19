@@ -1,4 +1,5 @@
 //! Shared filesystem fixtures for Rust tests (temp dirs under the system temp path).
+//! Each fixture owns its root and removes it on drop.
 
 use std::fs;
 use std::path::{Path, PathBuf};

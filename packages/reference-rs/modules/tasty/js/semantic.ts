@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Semantic-kind classification for tasty members and types.
+ * Maps members and type references to a coarse TastySemanticKind for renderers, inferring literal kinds from values and collapsing single-kind unions.
  */
 import type { TastyMember, TastyTypeRef } from './api-types.js'
 import { normalizeTastyInlineValue } from './jsdoc.js'

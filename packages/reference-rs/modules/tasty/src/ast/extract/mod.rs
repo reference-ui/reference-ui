@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Extract submodule wiring.
+//! Declares the Oxc-facing parsing passes and shares the extraction context, scope, and shell-sink types across them.
 
 mod comments;
 mod context;

@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Re-export barrel for the generated tasty contract types.
+ * Collects every Tasty* payload shape and the TastySymbol union behind one import path for the runtime and api-types.
  */
 export type { TastyChunkModule } from './TastyChunkModule.js'
 export type { TastyFnParam } from './TastyFnParam.js'

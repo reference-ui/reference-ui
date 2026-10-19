@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Public entry point of the tasty JavaScript runtime.
+ * Re-exports the API factories, browser runtime, member, callable, JSDoc, semantic, display, and resolution helpers with their option and wrapper types.
  */
 export type {
   CreateTastyApiOptions,

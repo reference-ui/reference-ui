@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Emitted member contract types.
+//! Describes serialized interface and object members: properties, methods, call signatures, parameters, and tuple elements.
 
 use serde::Serialize;
 use ts_rs::TS;

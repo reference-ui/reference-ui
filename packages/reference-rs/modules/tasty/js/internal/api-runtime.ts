@@ -1,6 +1,7 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Node implementation of the TastyApi over emitted artifacts.
+ * Loads and validates the manifest, resolves symbols by id or name through the SymbolResolver, and serves members, references, display helpers, and diagnostics.
+ * Entry points are createTastyApi and createTastyApiFromManifest.
  */
 import type {
   CreateTastyApiOptions,

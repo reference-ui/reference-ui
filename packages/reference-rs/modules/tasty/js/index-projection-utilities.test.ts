@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Tests for member projection through Omit, Pick, and Pretty.
  * Tests member projection through utility types: Omit, Pick and Pretty over an intersection, and a
  * Pretty of a Parameters type-query. Each case builds its manifest inline, with no compile.
  */

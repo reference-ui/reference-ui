@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Shared walk helpers for reference collection.
+//! Recurses into optional types, slices, members, parameters, and template parts, pushing found references.
 
 use crate::model::{
     FnParam, TemplateLiteralPart, TsMember, TsTypeParameter, TupleElement, TypeRef,

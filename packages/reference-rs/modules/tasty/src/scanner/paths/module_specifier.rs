@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Module specifier derivation.
+//! Turns workspace and package file ids into the stable module specifiers later stages use.
 
 use std::path::Path;
 

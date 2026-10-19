@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Error constructors for the Tasty runtime.
  * Builds the Error values the runtime raises: a message with its cause attached, and an
  * ambiguous bare-name lookup that lists each candidate by id and library. Leaf module with
  * no runtime imports.

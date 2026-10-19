@@ -6,8 +6,8 @@
 //! those axis unions. StyleProps and recursive SystemStyleObject print when the
 //! dump has color or spacing tokens and declared breakpoints; an empty
 //! `FontRegistry {}` is inserted so FontProps cannot collapse StyleProps to
-//! `never`. The token catalog omits breakpoints, fonts, and SystemStyleObject.
-//! Strict wrappers are printer options, not dump fields.
+//! `never`. The token catalog omits breakpoints, fonts, and SystemStyleObject,
+//! and strict wrappers are printer options, not dump fields.
 
 mod breakpoints;
 mod fonts;

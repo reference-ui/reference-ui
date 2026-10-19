@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Scanner layer wiring.
+//! Discovers scan files, resolves imports to files, and normalizes ids; exposes scan_workspace plus the shared resolver and id helpers.
 
 mod imports;
 mod model;

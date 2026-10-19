@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Tests for symbol lookup, wrapper identity, and manifest search.
  * Tests symbol lookup over the tasty runtime: ambiguous bare names, precedence between a user
  * symbol and external libraries, symbol wrapper identity, and search over the manifest.
  */

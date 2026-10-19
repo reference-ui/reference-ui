@@ -1,5 +1,5 @@
 //! TYP-RECIPE-01/02: variant prop aliases and compound-variant types.
-//! RECIPE-01 dump has axes only. RECIPE-02 dump adds `compoundVariants`.
+//! RECIPE-01 dump has axes only; RECIPE-02 adds `compoundVariants`.
 //! Every axis stays optional; value unions are lexicographic. Compound `when`
 //! keys reuse those unions, never `string`. Unknown axis/value rows are skipped.
 //! Recipe names that are not TypeScript identifiers after PascalCase (`123`)

@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Fixed emitted module templates for bundle assembly.
+//! Emits the runtime loader, manifest and runtime declaration shims, chunk paths, and the chunk-registry module mapping chunk specifiers to dynamic imports.
 
 use std::collections::BTreeMap;
 

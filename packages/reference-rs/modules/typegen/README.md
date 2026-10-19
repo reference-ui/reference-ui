@@ -4,7 +4,8 @@
 registry, FontProps, StyleProps, recursive SystemStyleObject. Not a jsx farm.
 
 Primitives already exist as authored React. They need **types** that stay in
-sync with the base system. Typegen is that printer.
+sync with the base system. Typegen is that printer. Part of
+[reference-rs](../../README.md).
 
 ## What it takes
 
@@ -89,6 +90,16 @@ is `strict: ['colors', 'radii', 'spacing']`. `tones.d.ts` and
 `tones-strict.d.ts` are a colour-plus-tones dump in open and `strict: ['colors']`
 mode. Open goldens keep `(string & {})`.
 `pnpm agentrs v typegen` runs tsc consumer fixtures against those goldens.
+
+## Diagnostics
+
+Skips are typed `TGN-*` warnings, not silent. `emit_dts_with_diagnostics`
+prints byte-identical `.d.ts`, then reports unknown token categories, invalid or
+empty recipes, bad compound rows, unknown or absent strict categories, and empty
+font families as sorted, deduped rows. The one error, an invalid base system,
+throws coded instead of riding the payload. Meanings and raise sites live in the
+shared [registry](../diagnostics/REGISTRY.md); codes a golden pins are wire
+contract.
 
 ## Verify
 

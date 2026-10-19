@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Small shared extract helpers.
+//! Slices source text for a span so Raw summaries and identifiers carry exact source slices.
 
 use oxc_span::Span;
 

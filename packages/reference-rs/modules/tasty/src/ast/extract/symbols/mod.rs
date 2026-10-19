@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Symbol shell surface.
+//! Builds interface and type-alias shells for export bookkeeping before resolution.
 
 mod interface;
 mod type_alias;

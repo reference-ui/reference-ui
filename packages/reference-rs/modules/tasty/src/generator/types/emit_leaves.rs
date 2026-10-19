@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! String emission for small TypeRef payload fragments.
+//! Serializes JSDoc blocks, members, tuple elements, function parameters, and template literal parts into chunk payload syntax.
 
 use crate::generator::util::{emit_field, emit_object, to_js_literal};
 use crate::model::{

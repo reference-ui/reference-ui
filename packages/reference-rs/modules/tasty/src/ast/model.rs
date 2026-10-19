@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Parser-adjacent AST model.
+//! Holds per-file import bindings and symbol shells plus the whole-program parsed AST that resolve consumes.
 
 use std::collections::{BTreeMap, BTreeSet};
 

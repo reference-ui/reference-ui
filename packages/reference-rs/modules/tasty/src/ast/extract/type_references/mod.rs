@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Reference collection entry point.
+//! Collects TypeRef reference nodes from symbol shells for downstream resolution.
 
 mod walk;
 

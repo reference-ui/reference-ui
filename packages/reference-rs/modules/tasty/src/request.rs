@@ -1,6 +1,6 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Request shape for a tasty scan.
+//! Carries the workspace root directory and the include globs that seed file discovery.
+//! Built by the N-API boundary and consumed by the scan pipeline.
 
 use std::path::PathBuf;
 

@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Tests for symbol relations, type-alias helpers, and doc helpers.
  * Tests symbol relations and documentation over the tasty runtime: inherited members, user-owned
  * dependencies, type-alias helpers over the emitted shape, and jsdoc and signature helpers.
  */

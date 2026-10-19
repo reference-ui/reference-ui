@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Tests for the small tasty API utilities over a compiled case.
+ * Covers member helpers, callable signatures, semantic kinds, inline variants, and resolved value-derived types.
  */
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'

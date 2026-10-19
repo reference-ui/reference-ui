@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Type-alias symbol shells.
+//! Builds a lightweight shell — underlying type plus references — for a type alias declaration ahead of resolution.
 
 use oxc_ast::ast::TSTypeAliasDeclaration;
 use oxc_span::Span;

@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Callable parameter extraction for tasty types.
+ * Returns the name, described type, and optionality of each parameter, or an empty list when the type is not callable.
  */
 import type { TastyTypeRef } from './api-types.js'
 

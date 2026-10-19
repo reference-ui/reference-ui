@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Member identity and dedupe helpers for tasty members.
+ * Reads member ids and default values and drops duplicate members by id, keeping the last occurrence.
  */
 import type { TastyMember } from './api-types.js'
 

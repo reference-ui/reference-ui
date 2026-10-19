@@ -1,4 +1,5 @@
 //! Error-path coverage for scan → bundle: parse failures, unresolved imports, bad package.json, and cyclic re-exports.
+//! Each case scans a fixture workspace and checks the diagnostics or the fail-closed graph.
 
 use super::super::model::TypeRef;
 use super::super::{scan_typescript_bundle, ScanRequest};

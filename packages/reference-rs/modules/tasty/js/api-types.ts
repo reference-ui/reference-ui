@@ -1,6 +1,6 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Public TypeScript API surface of the tasty runtime.
+ * Declares the TastyApi, symbol, member, type-ref, JSDoc, and browser-runtime interfaces over the RawTasty* generated payloads it re-exports.
  */
 import type {
   TastyFnParam as RawTastyFnParam,

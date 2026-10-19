@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Extraction pass state.
+//! Threads the scanned file, resolver, import bindings, and shell sinks through statement extraction.
 
 use std::collections::{BTreeMap, BTreeSet};
 

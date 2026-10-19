@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Single import path for the helpers the internal runtime modules share.
  * Re-exports the helpers that the internal runtime modules share: type guards, runtime errors,
  * artifact loading, module extraction and user-owned reference collection. Each lives in its own
  * module, and this file keeps a single import path for the existing importers.

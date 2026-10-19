@@ -7,7 +7,7 @@
 //! them with dialect `container`/`r`, and intersects `FontProps`. STYLE-05
 //! prints recursive SystemStyleObject on this dump; proof is tsc, not these
 //! string contains. STYLE-06 pins open keys plus the custom-property index
-//! and the `variant`/`colorMode` exclusion. Catalog emit stays token-only.
+//! and the `variant`/`colorMode` exclusion, and catalog emit stays token-only.
 
 use super::{catalog_dts, style_dts};
 use crate::primitives_vocabulary_json;

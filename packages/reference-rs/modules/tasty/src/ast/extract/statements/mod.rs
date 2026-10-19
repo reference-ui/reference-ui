@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Top-level statement dispatch.
+//! Routes each program statement to import collection, export collection, or user-library symbol shells, and names the module-level statements tasty skips.
 
 mod exports;
 mod imports;

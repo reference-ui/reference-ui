@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! TypeRef variant dispatch for reference collection.
+//! Matches each structured variant and recurses into the child types that can name references.
 
 use crate::model::TypeRef;
 

@@ -1,6 +1,7 @@
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Projects object-like members from type aliases and interface heritage.
+ * Expands aliases under their type arguments, merges intersections, applies Omit and Pick over known keys, and stops at recursive boundaries.
+ * Unprojectable shapes return undefined so callers fall back to the declared definition.
  */
 import type {
   RawTastyStructuredTypeRef,

@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Object literal inference.
+//! Infers member TypeRefs from object literal properties for const bindings.
 
 use oxc_ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKind};
 

@@ -1,5 +1,5 @@
 /**
- * Typescript source file for Reference UI module.
+ * Key collection for Pick and Omit during object projection.
  * Collects the member keys named by a Pick or Omit key argument, following aliases and unions
  * to literal keys. Returns undefined when any part cannot be resolved to a literal key.
  */

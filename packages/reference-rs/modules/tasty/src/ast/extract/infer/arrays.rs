@@ -1,6 +1,5 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Array and tuple literal inference.
+//! Infers element types from array literals, collapsing unions where the elements agree.
 
 use oxc_ast::ast::{ArrayExpression, ArrayExpressionElement};
 use oxc_span::GetSpan;

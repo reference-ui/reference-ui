@@ -1,4 +1,5 @@
 //! Leading comment extraction and normalization for JSDoc and block comments.
+//! Returns the contiguous block before a span with normalized text.
 
 use oxc_ast::ast::Comment;
 use oxc_span::Span;
