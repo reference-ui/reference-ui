@@ -357,3 +357,8 @@ impl Hit {
 pub fn package_export_targets(manifest: &str, subpath: &str) -> Vec<String> {
     package::export_targets(manifest, subpath, RootEntryPolicy::SourceFirst)
 }
+
+/// A manifest's root entry targets, source-first (`exports` ".", `module`, `main`, `types`).
+pub fn package_root_targets(manifest: &str) -> Vec<String> {
+    package::root_targets(manifest, RootEntryPolicy::SourceFirst)
+}
