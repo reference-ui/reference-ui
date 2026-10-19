@@ -1,0 +1,7 @@
+SUPERVISOR: independent public recipe responsive-type reproduction
+$ npm exec -- tsc --noEmit --project tsconfig.repro.json
+typechecks/recipe-responsive.ts(17,10): error TS2322: Type '{ base: string; md: string; }' is not assignable to type '"sm" | "lg" | undefined'.
+typechecks/recipe-responsive.ts(21,3): error TS2322: Type '{ base: string; md: string; }' is not assignable to type '"sm" | "lg" | undefined'.
+
+Exit code: 2
+Scalar size=sm control is present in the same fixture; only responsive call and RecipeVariantProps assignment fail.

@@ -1,0 +1,6 @@
+Copied local consumer documentation, supplied by the framework author before public docs publication.
+Source: docs/system/recipes.mdx, section “Responsive variants”.
+
+A variant value can be responsive: `button({ size: { base: 'sm', md: 'lg' } })`.
+
+The “Types” section separately presents RecipeVariantProps<typeof button> as the inferred reusable-component props type.
