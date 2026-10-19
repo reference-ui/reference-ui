@@ -56,3 +56,5 @@ Utilities that share an at-rule wrap print inside one block. See
 - Put StyleProp atoms in `@layer recipes`.
 - Drop the preamble.
 - Change the six-layer order string.
+
+Up: [stylesheet](../README.md).

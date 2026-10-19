@@ -54,27 +54,6 @@ diagnostics stays silent. Core prints userspace warnings as one collapsed
 5. `channels/` partitions: compiler-classified facts leave the default
    and, only when requested, render onto `compilerDiagnostics`.
 
-## Map
-
-- `mod.rs` — subsystem seam (`Diagnostic`, re-exports).
-- `codes.rs` — stable wire codes, append-only (45 entries; `ATM-W-…`
-  warnings, `ATM-E-…` errors, `ATM-I-…` infos; `TokenCategoryMismatch`
-  retired but kept for wire stability).
-- `render.rs` — shared `{file}:{line}:{col} {code} {message}` rendering.
-- `site.rs` — `SourceId`/`SourceSite`, owned locations, UTF-16
-  `line_col` (columns count UTF-16 units, matching editor carets).
-- `facts.rs` — `DiagnosticFact` vocabulary, `OwnedLookupKey` (built and
-  serialized by the one runtime-key authority — no second
-  canonicalizer), `DiagnosticSink`.
-- `session.rs` — compile-long fact and expectation store (owns data,
-  never AST references).
-- `policy/` — proof-to-verdict table + per-family render arms.
-- `channels/` — userspace/compiler partition + opt-in renders.
-- `analysis/` — independent AST expectations (`css`, `jsx`, object
-  walkers, conditions, values, const/imports/gate helpers).
-- `adapters/` — extract/harvest/resolve/hosts producer adapters.
-- `proof/` — expected-key vs final-plan-key join + line surgery.
-
 Positions: located diagnostics carry `file:line:col`; span-less global
 fragments honestly report their fragment source at 1:1; static-CSS
 warnings stay unlocated (the `BaseSystem` carries no source identity).
@@ -159,3 +138,5 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 - Rename a code once a golden pins it; extend the table instead.
 - Emit a diagnostic without a code; the constructors require one.
 - Alias `debug: true` to the compiler channel.
+
+Up: [atomic](../../README.md).

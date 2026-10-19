@@ -14,9 +14,7 @@ source, so the identity walk continues into it, the trace admits `Card`, and
 `<Card bg="red" />` backs under own: `@reference-ui/lib__bg_red`, painted in the
 utilities layer, with no diagnostic. Composing lib (`upstreamSystems:
 ['reference-ui']`, Core's primitive roster) changes nothing: the class stays
-own and nothing is backed under `reference-ui`. Deciding by spelling alone made
-this tag a package's, unbacked, with a warning naming a system `@acme/ui` does
-not have.
+own and nothing is backed under `reference-ui`.
 
 Twin: the same tree after `packages/ui` runs a sync of its own, so it publishes
 `.reference-ui/system/baseSystem.mjs` naming `acme` (built in a scratch copy at

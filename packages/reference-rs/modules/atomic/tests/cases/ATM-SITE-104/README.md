@@ -15,9 +15,9 @@ Composed with icons, lib and an unrelated `acme` (`upstreamSystems:
 `reference-icons+reference-ui`: one plan and one painted rule each,
 `reference-icons__c_red` and `reference-ui__c_red`, in their own
 `/* foreign <system> */` groups, and no `acme__c_red`, because acme renders
-nothing here. Before, the want was sprayed under every composed system. With
-icons not composed (`['reference-ui', 'acme']`) it backs under `reference-ui`
-only: the package's streams meet what this compile composes. The default
+nothing here. With icons not composed (`['reference-ui', 'acme']`) it backs
+under `reference-ui` only: the package's streams meet what this compile
+composes. The default
 compile composes nothing, so the tag backs nowhere and warns once
 (`ATM-W-EXTERNAL-UNBACKED`, naming `@reference-ui/lib` and `reference-ui`).
 Nothing is configured by the user.

@@ -34,7 +34,7 @@ expands `borderBottom` so it never resets `border-bottom-color`. This module
 expansion alone cannot order two colour utilities against each other, because
 `border-color` is itself a shorthand of four longhands.
 
-`cascade.rs` sorts every utility by `CascadeKey`:
+`cascade/` sorts every utility by `CascadeKey`:
 
 1. rule bucket — unconditioned, selector-only, then at-rule / mixed
 2. at-rule kind — supports, media, container, print, other; then size queries
@@ -48,8 +48,8 @@ expansion alone cannot order two colour utilities against each other, because
 
 Identical at-rule wrap sequences share one wrapper tree; the sort unit is that
 tree, then the rules inside it. Two at-rule wraps nest in author order
-(`ATM-GHOST-05`). Adjacent identical declaration blocks do not yet
-coalesce into a selector list.
+(`ATM-GHOST-05`). Adjacent identical declaration blocks print
+separately; they do not coalesce into a selector list.
 
 Class names and rule order are **separate concerns**: condition order inside a
 class name is runtime-visible and must be preserved verbatim, while rule order is
@@ -66,3 +66,5 @@ happened in `atom`.
 - Print a hashed `.Box_a3f2 { mt; bg }` for StyleProps.
 - Rescan source to “fix” a missing atom.
 - Live in JS.
+
+Up: [atomic](../../README.md).

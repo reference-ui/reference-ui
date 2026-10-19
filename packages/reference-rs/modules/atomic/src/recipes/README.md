@@ -28,3 +28,5 @@ overrides win naturally by cascade ordering. `sva` is not an author API.
 - Invent a slot-recipe / `sva` helper.
 - Call `stylesheet::name` for these classes.
 - Fall back to variable binding names for recipe identity.
+
+Up: [atomic](../../README.md).

@@ -16,12 +16,7 @@ generate. So the package borrows this compile's runtime whether or not the
 runtime exists yet: its binding is project code (`Local`), and `bg` backs under
 own as `@reference-ui/lib__bg_red`, with no diagnostic. The twin composes lib
 (`upstreamSystems: ['reference-ui']`) and changes nothing: still own, nothing
-under `reference-ui`.
-
-Before, the verdict asked whether the link resolved to the generated runtime
-on disk. On the first sync it resolves to nothing, so the package was read as
-foreign and `bg` was dropped silently: no want, no class, no warning. The same
-sync run a second time painted it. Nothing is configured by the user.
+under `reference-ui`. Nothing is configured by the user.
 
 Siblings: ATM-SITE-105 (the same package after a sync, untraced, own),
 ATM-SITE-102 (its source in the include set, traced), ATM-SITE-107 (a linked

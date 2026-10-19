@@ -29,7 +29,5 @@ diagnoses, dead tag silent), `jsx.tsx` (identifier / member / logical /
 call / wrapped / spread-list style props, condition-prop blocks),
 `compose.ts` (alias-chain whole object, destructured-rest whole object).
 
-Our positional diagnostic beats the silent slot.
-Alias chains and destructured rest compose on
-top via `compose.ts`; multi-hop members compose when that
-slice lands.
+Alias chains and destructured rest compose on top via `compose.ts`;
+multi-hop members are not covered here.

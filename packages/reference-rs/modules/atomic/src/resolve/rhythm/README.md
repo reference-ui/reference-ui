@@ -16,3 +16,5 @@ Rhythm belongs here so stylesheet and `css()` share it. Matrix
 
 - Change the public `r` grammar.
 - Apply rhythm to non-length props by accident (color, `display`, …).
+
+Up: [resolve](../README.md).

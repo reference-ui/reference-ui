@@ -20,12 +20,14 @@ Order:
 5. **conditions** — `_hover` catalog and `&` application. Stored on
    the atom; stylesheet prints the wrap. Breakpoint keys go through `r/`.
 
-`font/` looks up family and weight from `config/fonts.rs`. CSS
-keyword fallback (`bold` → `700`) is language. `-0.01em` tracking
-is a `font('sans', { css: { letterSpacing } })` fragment.
+`font/` looks up family and weight from the ingested system fonts
+(`FontScale`, base-system crate). CSS keyword fallback (`bold` → `700`)
+is language. `-0.01em` tracking is a
+`font('sans', { css: { letterSpacing } })` fragment.
 
-`r/` looks up widths from `config/breakpoints.rs`. Numeric keys are
-language. `sm` → 640px is a CSS-generic default, not a baked lib theme.
+`r/` looks up widths from the ingested breakpoint scale
+(`BreakpointScale`, base-system crate). Numeric keys are language. `sm`
+→ 640px is a CSS-generic default, not a baked lib theme.
 
 `conditions` is the `when` list. Pseudo-props are the `_` catalog
 JSX can spell. Pseudo-selectors apply `&` templates to the utility
@@ -33,10 +35,11 @@ class. Extract is one object walk; JSX only spells `_` as an
 identifier. `@media` / `@container` pass through. `r/` already
 stamped those onto `when`.
 
-Still to fold into the same convention: `container/` and `size/` as
-the same small-folder convention. `tokens/` stays until a real
-base-system color table exists; it must not become a second property
-table next to canon.
+`container.rs` and `size.rs` are single files, not folders. `tokens/`
+looks up the base-system token table; it must not become a second
+property table next to canon.
 
 Does not print the stylesheet. `stylesheet/name` spells the class from
 the atom. Resolve runs here so the sheet and `css()` cannot disagree.
+
+Up: [atomic](../../README.md).

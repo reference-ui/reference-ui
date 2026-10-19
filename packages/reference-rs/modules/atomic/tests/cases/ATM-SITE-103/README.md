@@ -13,11 +13,8 @@ The import is followed to the package directory and that directory is read: no
 runtime import that resolves to this compile's own (the unresolved one has no
 directory at all). Both are `Foreign`: no want, no style plan, no class and no
 diagnostic, in the standalone compile and with lib composed (`upstreamSystems:
-['reference-ui']`, Core's primitive roster). Before, a capitalised tag from any
-package lowered as external and was backed under every composed system
-(`reference-ui__c_red`, `reference-ui__w_16`, ...), classes nothing renders.
-Reference's own `<Div p="1r">` is the control that paints. Nothing is
-configured by the user.
+['reference-ui']`, Core's primitive roster). Reference's own `<Div p="1r">`
+is the control that paints. Nothing is configured by the user.
 
 Siblings: ATM-SITE-100 (a Reference package nothing composes warns),
 ATM-SITE-102 (a package borrowing the app's runtime is own), ATM-SITE-96

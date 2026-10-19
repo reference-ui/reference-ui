@@ -19,14 +19,13 @@ js/index.ts  →  N-API compileSystem  →  atomic crate
         └─────────────────────┴──────────────┘
                               ▼
               .reference-ui/styled/styles.css
-              .reference-ui/styled/css
+              .reference-ui/styled/runtime-data.mjs
 ```
 
 ```ts
 import { compile } from '@reference-ui/rust/atomic'
-// live wire still: import { compileSync } from '@reference-ui/rust/system'
 
-const result = await compile({ rootDir, files })
+const result = await compile({ baseSystem, rootDir, files })
 
 result.stylesheet
 result.css
@@ -38,3 +37,5 @@ JS does not expand `borderBottom`, fold ternaries, or name classes. Browser
 
 N-API stays `compileSystem` so the native binary does not move with the
 folder rename.
+
+Up: [atomic](../README.md).

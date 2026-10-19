@@ -9,12 +9,11 @@ The engine takes `input/` and emits `output/{styles.css,css.json,diagnostics.jso
 The executor adds standing gauges on every (not extra case IDs):
 the six-layer preamble (`ATM-LAYER-01`) and zero ghost classes (`ATM-GHOST-01`).
 
-Add a folder here for a new ID. The rest of `tests/` is split by role:
-`suites/` (Vitest entries, `*.test.ts`), `harness/` (helpers the suites and
-cases import), `rust/` (cargo integration tests), `goldens/` (namer
-goldens), `fixtures/` (frozen inputs), and `cases/` (this folder). Do not
-hang a `*.test.ts` off `tests/` itself: new suites go in `suites/`.
-Remaining `[ ]` IDs in SPEC are folders-not-yet.
+Add a folder here for a new ID. Do not hang a `*.test.ts` off `tests/`
+itself: new suites go in `suites/`. Remaining `[ ]` IDs in SPEC are
+folders-not-yet.
 
 Goldens are the system’s outputs. `--update-goldens` rewrites them after a
 real emission change.
+
+Up: [atomic](../../README.md).

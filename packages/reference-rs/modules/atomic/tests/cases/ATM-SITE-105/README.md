@@ -17,15 +17,13 @@ A tag nobody traces or publishes renders through the own runtime if it forwards
 its style props at all, and they are dead weight if it does not, so each backs
 under own: the standalone compile paints `@reference-ui/lib__bg_red`,
 `@reference-ui/lib__bg_blue`, `@reference-ui/lib__p_2r` and
-`@reference-ui/lib__c_green` beside the `<Div p="1r">` control. Before, these
-backed under every composed system and, standalone, under none.
+`@reference-ui/lib__c_green` beside the `<Div p="1r">` control.
 
 Core's request composes lib and `acme` (`upstreamSystems: ['reference-ui',
 'acme']`) and says `acme` publishes `UpstreamCard` (`upstreamHosts`). The
 published name backs under `acme` alone (`acme__p_2r`); `Badge`, `Panel` and
 `Mystery` stay own; nothing is backed under `reference-ui`, and nothing warns.
-This replaces the spray pins in `extract/jsx/external_tag_tests.rs` and
-`hosts/upstream_tests.rs`. Nothing is configured by the user.
+Nothing is configured by the user.
 
 Siblings: ATM-SITE-102 (a traced runtime-borrowing package), ATM-SITE-99
 (published wrapper name), ATM-SITE-56 (zero-config discovery), ATM-SITE-103
