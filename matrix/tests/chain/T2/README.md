@@ -14,7 +14,6 @@ When a consumer declares `layers: [LibA]` in its `ui.config.ts`:
 - Only the upstream library's `css` surface is imported during stylesheet assembly
 - The upstream `fragment` is NOT adopted — upstream tokens do not enter this package's Panda config or TypeScript surface
 - Components that live inside the upstream library's CSS layer can still resolve their own layer-scoped tokens
-- A bare consumer primitive attempting to use an upstream layer token will NOT resolve it
 
 ## Fixture used
 

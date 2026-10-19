@@ -1,7 +1,8 @@
 /**
  * Chain T7 browser contract. Renders the chain-t7 root in Playwright and proves
- * both diamond branches render their components. The end-to-end proof of the T7 topology declared
- * in `../ui.config.ts`.
+ * both diamond branches resolve: each branch's local token plus the shared base
+ * `fixtureDemoAccent` on both eyebrows. The end-to-end proof of the T7 topology
+ * declared in `../../ui.config.ts`.
  */
 
 import { expect, test } from '@playwright/test'

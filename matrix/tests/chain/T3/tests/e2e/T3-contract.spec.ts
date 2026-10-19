@@ -1,7 +1,9 @@
 /**
  * Chain T3 browser contract. Renders the chain-t3 root in Playwright and proves
- * the extend-side DemoComponent is visible. The end-to-end proof of the T3 topology declared
- * in `../ui.config.ts`.
+ * both sides of the hybrid boundary: the extend-side DemoComponent resolves all
+ * three adopted upstream tokens, and the layer-side LayerPrivateDemo resolves
+ * its layer-scoped background. The end-to-end proof of the T3 topology declared
+ * in `../../ui.config.ts`.
  */
 
 import { expect, test } from '@playwright/test'
