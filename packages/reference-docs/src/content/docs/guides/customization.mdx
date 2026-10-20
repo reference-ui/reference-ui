@@ -3,43 +3,99 @@ title: Customization
 section: Guides
 order: 5
 slug: customization
-description: Put your brand on the components in @reference-ui/lib.
+description: Customize primitives, library components and anything built with Reference UI.
 ---
+
+import { Preview } from '../../../mdx/Preview'
+import { GlobalCssDemo, StylePropsDemo } from './customization-demo'
 
 # Customization
 
-Library components style themselves with the library's tokens. Override
-those tokens to restyle every component at once.
+This guide shows how to customize Reference UI's primitives, the components
+in `@reference-ui/lib`, and any other library built with Reference UI:
 
-## Override library tokens
+- **Style props**: one instance.
+- **Global CSS**: every primitive of one kind.
+- **Tokens**: every component.
+- **`css()`**: components from other libraries.
 
-`extendSystem()` takes the library's base system and your token values, and
-returns a branded copy. Put it in `extends`, where `ref init` put the
-library:
+## Style props
+
+Style props on a library component land on its outermost element, so you
+can change one button without touching anything else:
+
+<Preview>
+  <StylePropsDemo />
+</Preview>
+
+```tsx
+<Button
+  variant="primary"
+  bg="blue.600"
+  color="white"
+  borderRadius="full"
+  paddingInline="5r"
+>
+  Save changes
+</Button>
+```
+
+## Global CSS
+
+Each primitive includes a class named after its tag, such as `ref-button`,
+`ref-input` and `ref-a`. The names are stable, so you can style every
+primitive of one kind with `globalCss()`, without a class of your own:
+
+<Preview>
+  <GlobalCssDemo />
+</Preview>
 
 ```ts
-// ui.config.ts
-import { defineConfig, extendSystem } from '@reference-ui/core'
+// src/theme/global.ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  '.ref-button': {
+    borderRadius: '0',
+    fontSize: '3r',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+  },
+})
+```
+
+Your global CSS sits in a later [cascade layer](/cascade-layers) than the
+library's, so it wins.
+
+## Extend the library's tokens
+
+### Create a branded copy
+
+`extendSystem()` takes the library's base system and your token values, and
+returns a branded copy:
+
+```ts
+// src/theme/brand.ts
+import { extendSystem } from '@reference-ui/core'
 import { baseSystem } from '@reference-ui/lib/baseSystem'
 
-const brandedLib = extendSystem(baseSystem, {
+export const brandedLib = extendSystem(baseSystem, {
   tokens: {
     colors: {
-      ui: {
-        button: {
-          background: { light: '#0f766e', dark: '#5eead4' },
-          foreground: { light: '#ffffff', dark: '{colors.gray.950}' },
-        },
-        focus: {
-          ring: { light: '#0f766e', dark: '#5eead4' },
-        },
-      },
-    },
-    radii: {
-      md: { value: '0.75rem' },
+      ui: { button: { background: { light: '#0f766e', dark: '#5eead4' } } },
     },
   },
 })
+```
+
+### Add it to your config
+
+Put the branded copy in `extends`, where `ref init` put the library:
+
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/core'
+import { brandedLib } from './src/theme/brand'
 
 export default defineConfig({
   name: 'my-app',
@@ -48,49 +104,30 @@ export default defineConfig({
 })
 ```
 
-Run `ref sync`. Every component that reads an overridden token picks up your
-value, so `<Button variant="primary">` turns teal and every focus ring
-follows.
+Every primary button picks up your value, so `<Button variant="primary">`
+turns teal.
+
+### Token values
 
 A token takes `value`, or `light` and `dark`. A token with no `dark` value
 uses its light value in both modes. A value can point at another library
 token with `{colors.gray.950}`.
 
-## Tokens worth overriding
+## Other libraries
 
-| Tokens | What they style |
-| --- | --- |
-| `colors.design.*` | Page background, text and accent colours. See [Color](/color). |
-| `colors.ui.*` | One group per element, such as `ui.button.*`, `ui.field.*`, `ui.dialog.*` and `ui.focus.ring`. |
-| `radii.sm`, `radii.md`, `radii.lg` | Corner radii used across the library. |
-
-Many `ui.*` tokens point at `design.*` tokens, so overriding a `design.*`
-token reaches every element that uses it.
-
-## Limits
-
-`extendSystem()` checks each override when `ref sync` loads your config, and
-fails with a message that names the token when:
-
-- the library doesn't declare the token,
-- a value uses a rhythm unit such as `2r`,
-- a value points at a token the library doesn't declare.
-
-It overrides tokens only, not the library's global CSS.
-
-## Style one instance
-
-Style props on a library component land on its outermost element, so you
-can change one instance without touching the tokens:
+Any component that accepts `className` can take a `css()` class, including
+components from libraries not built with Reference UI:
 
 ```tsx
-<Switch borderRadius="sm" aria-label="Compact mode" />
+import { css } from '@reference-ui/react'
+
+<DatePicker className={css({ padding: '2r', borderRadius: 'md' })} />
 ```
 
 ## Further reading
 
 <LinkCards>
   <LinkCard href="/theming" title="Theming">Define your own tokens, fonts and animations.</LinkCard>
-  <LinkCard href="/color" title="Color">The library's palette and semantic tokens.</LinkCard>
+  <LinkCard href="/global-css" title="Global CSS">Selectors, layers and the CSS reset.</LinkCard>
   <LinkCard href="/share-a-design-system" title="Share a design system">How `extends` and `layers` differ.</LinkCard>
 </LinkCards>

@@ -1,0 +1,98 @@
+---
+title: Light and dark
+section: System
+order: 10
+slug: light-and-dark
+description: Give tokens a dark value and choose the mode for any part of your app.
+---
+
+# Light and dark
+
+Light mode is the default. A token with a dark value switches to it inside an
+element in dark mode, and your app decides which elements those are.
+
+## Dark values
+
+`value` is the light value, and `dark` replaces it in dark mode.
+
+```ts
+// src/theme/tokens.ts
+import { tokens } from '@reference-ui/system'
+
+tokens({
+  colors: {
+    surface: { value: '#ffffff', dark: '#0b0b0f' },
+    ink: { value: '#111827', dark: '#f3f4f6' },
+  },
+})
+```
+
+The token names stay the same in both modes, and only their values change.
+The library's semantic tokens, such as `design.background` and
+`design.text.base`, already have both values. See [Color](/color).
+
+## Setting the mode
+
+`colorMode` on any primitive sets the mode for it and everything inside it,
+library components included.
+
+```tsx
+<Div colorMode="dark" bg="surface" color="ink">
+  <App />
+</Div>
+```
+
+To switch the whole page, set `colorMode` on your root primitive.
+
+## Toggling
+
+Keep the mode in state and pass it to `colorMode`.
+
+```tsx
+import { useState } from 'react'
+import { Button, Div } from '@reference-ui/react'
+
+export function Root() {
+  const [mode, setMode] = useState<'light' | 'dark'>('light')
+
+  return (
+    <Div colorMode={mode} bg="surface" color="ink">
+      <Button onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}>
+        Toggle mode
+      </Button>
+    </Div>
+  )
+}
+```
+
+## System setting
+
+Tokens don't read the operating system's `prefers-color-scheme` setting. To
+follow it, start from the browser's answer:
+
+```tsx
+const [mode, setMode] = useState(() =>
+  matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+)
+```
+
+`matchMedia` doesn't exist on the server. If you render on the server, read
+the mode from the request instead. See [Server-side rendering](/ssr).
+
+## Per-mode styles
+
+`_dark` applies styles when an ancestor is in dark mode, so it doesn't apply
+on the element that sets `colorMode`. Use it for the odd value that has no
+token:
+
+```tsx
+<Div boxShadow="raised" _dark={{ boxShadow: 'none' }} />
+```
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/color" title="Color">Semantic tokens and how colour mode resolves.</LinkCard>
+  <LinkCard href="/tokens" title="Tokens">Light and dark values on any token.</LinkCard>
+  <LinkCard href="/ssr" title="Server-side rendering">Set the mode from the request.</LinkCard>
+</LinkCards>

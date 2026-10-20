@@ -15,6 +15,14 @@ import { CheckIcon, ContentCopyIcon } from '@reference-ui/lib'
 export const panelFrame = css({
   position: 'relative',
   marginBottom: '6r',
+  // Directly above a live Preview, the panel joins it (see Preview.tsx).
+  '&:is([data-rehype-pretty-code-figure]:has(+ [data-preview]) > *)': {
+    marginBottom: '0',
+    '& > [data-code-surface]': {
+      borderBottomLeftRadius: '0',
+      borderBottomRightRadius: '0',
+    },
+  },
   _hover: {
     '& [data-copy]': { opacity: 1 },
   },

@@ -4,9 +4,11 @@ import type { ReactNode } from 'react'
 import { Div, css } from '@reference-ui/react'
 
 /**
- * Flat specimen frame for live examples. A tinted panel with no border, so an
- * example reads as a distinct surface without adding another hairline to the
- * page. Content is centered and may wrap.
+ * Specimen frame for live examples: a hairline box on the page background, so
+ * the demo sits on the same surface as the prose. When a fenced code block
+ * follows, the two join into one unit: the frame drops its bottom corners and
+ * margin, and the code panel below drops its top border and corners, so the
+ * frame's bottom edge is the only line between demo and source.
  */
 const frame = css({
   display: 'flex',
@@ -16,9 +18,26 @@ const frame = css({
   gap: '4r',
   minHeight: '20r',
   padding: '8r',
+  border: '1px solid',
+  borderColor: 'docsBorder',
   borderRadius: 'md',
-  bg: 'docsPanelBg',
-  marginBottom: '4r',
+  marginBottom: '6r',
+  '&:has(+ [data-rehype-pretty-code-figure])': {
+    marginBottom: '0',
+    borderBottomLeftRadius: '0',
+    borderBottomRightRadius: '0',
+  },
+  '& + [data-rehype-pretty-code-figure] [data-code-surface]': {
+    borderTopWidth: '0',
+    borderTopLeftRadius: '0',
+    borderTopRightRadius: '0',
+  },
+  // Source shown before its demo joins the same way, code on top.
+  '&:is([data-rehype-pretty-code-figure] + *)': {
+    borderTopWidth: '0',
+    borderTopLeftRadius: '0',
+    borderTopRightRadius: '0',
+  },
 })
 
 export function Preview({ children }: { children: ReactNode }) {

@@ -96,6 +96,7 @@ export function CodeBlock({ children, className, ...rest }: ComponentPropsWithou
     <Div className={panelFrame}>
       <Div
         className={panelSurface}
+        data-code-surface=""
         style={collapsed ? { maxHeight: COLLAPSED_MAX } : undefined}
       >
         <pre ref={ref} className={className ? `${panelCode} ${className}` : panelCode} {...rest}>

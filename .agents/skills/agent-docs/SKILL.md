@@ -91,9 +91,17 @@ When the language evolves, update `DOCS.md` / `STRUCTURE.md` in the same pass.
 
 Docs prose starts from the docs corpus: production design-system docs
 (Panda, Radix, Chakra, Mantine, shadcn and ten more), normalized and searchable
-through Memex. Build it once with `bash .agents/docs-corpus/clone.sh`, then
+through Memex. It is already built in `vendor/docs/` (gitignored); rebuild it
+with `bash .agents/docs-corpus/clone.sh`, then
 `node .agents/docs-corpus/normalize/normalize.mjs` (see
 `.agents/docs-corpus/README.md`).
+
+> [!IMPORTANT]
+> **Check the corpus on every edit, however small.** A new section, a
+> reworded intro, a renamed heading, a split page: search the corpus first,
+> every time. Your report names the corpus pages each change follows (for
+> example `panda:recipes/atomic-recipe`). A change with no named source isn't
+> done.
 
 ```bash
 node .agents/memex/cli.mjs search "semantic tokens" --in docs-corpus --per-source 1   # each library's take

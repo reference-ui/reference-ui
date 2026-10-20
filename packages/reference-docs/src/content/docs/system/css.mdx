@@ -3,16 +3,15 @@ title: CSS
 section: System
 order: 6
 slug: css
-description: css() for class names, recipe() for variants.
+description: Turn a style object into a class name for any element.
 ---
 
 # CSS
 
-`css()` turns a style object into a class name for any element. `recipe()`
-turns a set of variants into a function that returns class names.
-
-Both are compiled ahead of time: the compiler reads the calls from your
-source and writes their rules into the stylesheet.
+`css()` turns a style object into a class name for any element. It is
+compiled ahead of time: the compiler reads the calls from your source and
+writes their rules into the stylesheet. For a component with variants, use a
+[recipe](/recipes).
 
 ## `css()`
 
@@ -131,63 +130,3 @@ export default defineConfig({
 ```
 
 Sync fails if an entry names a token that does not exist.
-
-## `recipe()`
-
-A recipe describes a component's variants once. The function it returns
-gives the class names for one choice of variants:
-
-```tsx
-import { recipe } from '@reference-ui/react'
-
-const button = recipe({
-  className: 'button',
-  base: { paddingInline: '4r', borderRadius: 'card' },
-  variants: {
-    tone: {
-      primary: { bg: 'brand', color: 'white' },
-      quiet: { bg: 'transparent', color: 'brand' },
-    },
-    size: {
-      sm: { height: '8r' },
-      lg: { height: '12r' },
-    },
-  },
-  defaultVariants: { tone: 'primary', size: 'sm' },
-  compoundVariants: [{ tone: 'quiet', size: 'lg', css: { fontWeight: '600' } }],
-})
-
-<button className={button({ tone: 'quiet' })}>Cancel</button>
-```
-
-| Option | Type | Description |
-| --- | --- | --- |
-| `className` | `string` | Names the recipe. Two recipes with the same name in one system fail sync. |
-| `base` | style object | Styles every choice gets. |
-| `variants` | `Record<string, Record<string, StyleObject>>` | One style object per value of each variant. Use `true` and `false` keys for a boolean variant. |
-| `defaultVariants` | `Record<string, string>` | The value used when a call leaves a variant out. |
-| `compoundVariants` | `Array<{ [variant]: value, css: StyleObject }>` | Styles that apply only when every listed variant matches. |
-
-A variant value can be responsive: `button({ size: { base: 'sm', md: 'lg' } })`.
-
-The returned function also has:
-
-- `raw(props)`, which returns the merged style object instead of class names;
-- `variantKeys` and `variantMap`, which list the variants and their values;
-- `splitVariantProps(props)`, which splits variant props from the rest.
-
-`RecipeVariantProps` gives the props type of a recipe:
-
-```ts
-import type { RecipeVariantProps } from '@reference-ui/react'
-
-type ButtonVariants = RecipeVariantProps<typeof button>
-// { tone?: 'primary' | 'quiet'; size?: 'sm' | 'lg' }
-```
-
-Recipe classes live in the `recipes` [cascade layer](/cascade-layers),
-below utilities. A style prop or `css()` class on the same element always
-wins over the recipe.
-
-Pass `recipe()` an object literal. A recipe the compiler cannot read fails
-sync.

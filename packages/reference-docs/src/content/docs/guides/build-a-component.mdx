@@ -11,13 +11,46 @@ import { CardDemo } from './build-a-component-demo'
 
 # Build a component
 
-A component is a primitive plus a recipe. The recipe holds the component's
-looks, and the primitive still takes style props.
+Reference UI compiles your styles at build time, and you can still build your
+own components the way you would with CSS-in-JS.
 
-<Step n={1}>Write a recipe</Step>
+The compiler follows your component's props down to the primitives it
+renders. When a style prop reaches a primitive, your component takes style
+props too, so `<Card padding="6r">` compiles just like `<Div padding="6r">`.
 
-`recipe()` takes base styles and named variants, and returns a function
-that gives you the class names for one selection.
+<Step n={1}>Define its style</Step>
+
+`css()` takes a style object and returns a class name.
+
+```tsx
+// src/components/Card.tsx
+import { css } from '@reference-ui/react'
+
+const card = css({
+  padding: '4r',
+  borderRadius: 'md',
+  bg: 'slate.500/strong',
+})
+```
+
+<Step n={2}>Build the component</Step>
+
+Give the class to a primitive and pass every other prop through:
+
+```tsx
+// src/components/Card.tsx
+import { Div, type DivProps } from '@reference-ui/react'
+
+export function Card(props: DivProps) {
+  return <Div {...props} className={card} />
+}
+```
+
+<Step n={3}>Add variants</Step>
+
+A recipe defines different variants for your component. Swap `css()` for
+`recipe()`: it takes base styles and named variants, and returns a function
+that gives you the class names for the variants you pick.
 
 ```tsx
 // src/components/Card.tsx
@@ -28,26 +61,21 @@ const card = recipe({
   base: {
     padding: '4r',
     borderRadius: 'md',
-    borderWidth: '1px',
-    borderStyle: 'solid',
   },
   variants: {
     tone: {
-      outline: { borderColor: 'design.accent.border' },
-      filled: { bg: 'design.bg.muted', borderColor: 'transparent' },
+      slate: { bg: 'slate.500/strong' },
+      violet: { bg: 'violet.500/strong' },
+      rose: { bg: 'rose.500/strong' },
     },
   },
-  defaultVariants: { tone: 'outline' },
+  defaultVariants: { tone: 'slate' },
 })
 ```
 
-`className` names the recipe. It must be unique in your system.
-
-<Step n={2}>Build the component</Step>
-
-Start from a primitive's props and add the recipe's variants with
-`RecipeVariantProps`. Pass the variant to the recipe and everything else to
-the primitive:
+Call the recipe with the variant props to get the class names.
+`RecipeVariantProps` infers their types, so `tone` is typed to
+`'slate' | 'violet' | 'rose'`:
 
 ```tsx
 // src/components/Card.tsx
@@ -55,24 +83,20 @@ import { Div, type DivProps, type RecipeVariantProps } from '@reference-ui/react
 
 type CardProps = DivProps & RecipeVariantProps<typeof card>
 
-export function Card({ tone, className, ...props }: CardProps) {
-  return <Div className={`${card({ tone })} ${className ?? ''}`} {...props} />
+export function Card({ tone, ...props }: CardProps) {
+  return <Div {...props} className={card({ tone })} />
 }
 ```
 
-`tone` is typed to `'outline' | 'filled'`.
+See [Recipes](/recipes) for the full reference.
 
-<Step n={3}>Run sync</Step>
-
-Sync compiles the recipe into the stylesheet. If `npx ref sync --watch` is
-running, saving the file is enough.
-
-## Use it
+## Usage
 
 ```tsx
-<Card>Outline by default</Card>
-<Card tone="filled">Filled</Card>
-<Card tone="filled" padding="6r">Filled, more padding</Card>
+<Card>Slate</Card>
+<Card tone="violet">Violet</Card>
+<Card tone="rose">Rose</Card>
+<Card tone="violet" padding="6r">More padding</Card>
 ```
 
 <Preview>
@@ -82,21 +106,10 @@ running, saving the file is enough.
 Style props override the recipe, because recipe rules sit in an earlier
 cascade layer. Here `padding="6r"` replaces the recipe's `4r`.
 
-## Style a component from another library
-
-`css()` returns a class name, so you can style any component that takes
-`className`:
-
-```tsx
-import { css } from '@reference-ui/react'
-
-<DatePicker className={css({ padding: '2r', borderRadius: 'md' })} />
-```
-
 ## Further reading
 
 <LinkCards>
-  <LinkCard href="/css" title="css() and recipe()">Compound variants, `raw()` and the full recipe config.</LinkCard>
+  <LinkCard href="/recipes" title="Recipes">Compound variants, responsive variants and the full recipe config.</LinkCard>
   <LinkCard href="/style-props" title="Style props">Every prop a primitive takes.</LinkCard>
   <LinkCard href="/share-a-design-system" title="Share a design system">Publish your components for other apps.</LinkCard>
 </LinkCards>

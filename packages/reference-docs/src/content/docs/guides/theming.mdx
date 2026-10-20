@@ -141,6 +141,31 @@ globalCss({
 })
 ```
 
+## Dark mode
+
+A token with a `dark` value switches when its element is in dark mode.
+
+```ts
+// src/theme/tokens.ts
+import { tokens } from '@reference-ui/system'
+
+tokens({
+  colors: {
+    surface: { value: '#ffffff', dark: '#0b0b0f' },
+  },
+})
+```
+
+### Usage
+
+`colorMode` sets the mode for an element and everything inside it.
+
+```tsx
+<Div colorMode="dark" bg="surface" />
+```
+
+See [Light and dark](/light-and-dark) for toggling and the system setting.
+
 ## Strict
 
 A strict category accepts only your tokens, so a raw value such as
@@ -169,4 +194,5 @@ Everything on this page becomes part of your base system when you run
   <LinkCard href="/spacing" title="Spacing">Rescale every rhythm unit at once.</LinkCard>
   <LinkCard href="/animation" title="Animation">Keyframes and reduced motion.</LinkCard>
   <LinkCard href="/global-css" title="Global CSS">Selectors, layers and the CSS reset.</LinkCard>
+  <LinkCard href="/light-and-dark" title="Light and dark">Toggling, the system setting and per-mode styles.</LinkCard>
 </LinkCards>
