@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Primitives component tests
 
 Executable smoke contracts for the theme primitives.

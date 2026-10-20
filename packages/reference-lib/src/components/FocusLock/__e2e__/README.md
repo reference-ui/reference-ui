@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # FocusLock component tests
 
 Playwright cases proving the focus containment solver.

@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Combobox component tests
 
 Playwright cases proving the editable and select-only coordinators.

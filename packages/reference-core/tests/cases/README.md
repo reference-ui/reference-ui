@@ -1,3 +1,7 @@
+---
+memex: cases
+---
+
 # Case groups, specs, and leaf cases
 
 One folder per feature family (group); one leaf folder per case. Groups

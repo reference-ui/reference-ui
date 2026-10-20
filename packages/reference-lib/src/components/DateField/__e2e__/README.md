@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # DateField component tests
 
 Playwright cases proving locale text fields bound to ISO dates.

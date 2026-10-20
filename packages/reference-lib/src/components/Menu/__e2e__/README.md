@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Menu component tests
 
 Playwright cases proving the popup menu tree.

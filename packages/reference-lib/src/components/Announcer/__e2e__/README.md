@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Announcer component tests
 
 Playwright cases proving live-region announcements.

@@ -1,3 +1,7 @@
+---
+memex: rs-cases
+---
+
 # Modules
 
 The compiler workspace: one Rust crate plus its TypeScript sibling per product. Each crate carries its own README and self-verification.

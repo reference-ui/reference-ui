@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Overlay component tests
 
 Playwright cases proving the controlled temporary-content foundation.

@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Menubar component tests
 
 Playwright cases proving the controlled-only menu bar.

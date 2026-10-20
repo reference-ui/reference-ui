@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # RovingFocus component tests
 
 Playwright cases proving the composite-widget keyboard kernel.

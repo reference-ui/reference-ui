@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Calendar component tests
 
 Playwright cases proving the four-mode date picker.

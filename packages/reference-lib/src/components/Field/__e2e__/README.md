@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Field component tests
 
 Playwright cases proving the status-carrying control host.

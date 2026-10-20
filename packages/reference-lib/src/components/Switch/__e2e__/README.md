@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Switch component tests
 
 Playwright cases proving the labeled on/off track.

@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Popover component tests
 
 Playwright cases proving non-isolating floating content.

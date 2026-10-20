@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # NumberField component tests
 
 Playwright cases proving the controlled locale-aware number field.

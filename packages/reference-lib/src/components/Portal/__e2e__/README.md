@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Portal component tests
 
 Playwright cases proving transparent relocation.

@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Tabs component tests
 
 Playwright cases proving the optional-value tabset.

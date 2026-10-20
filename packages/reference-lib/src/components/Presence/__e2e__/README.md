@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Presence component tests
 
 Playwright cases proving delayed unmount until exit completes.

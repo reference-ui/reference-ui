@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Showcase component tests
 
 Playwright cases proving the composition gallery.

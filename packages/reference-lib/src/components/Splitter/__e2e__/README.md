@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Splitter component tests
 
 Playwright cases proving the resizable panel group.

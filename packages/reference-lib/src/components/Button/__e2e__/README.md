@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Button component tests
 
 Playwright cases proving native-form contracts and visual states.

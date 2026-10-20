@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Collapsible component tests
 
 Playwright cases proving single-disclosure ownership.

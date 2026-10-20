@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Slider component tests
 
 Playwright cases proving single and multi-thumb sliders.

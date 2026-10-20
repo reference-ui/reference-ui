@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Accordion component tests
 
 Playwright cases proving single and multiple expansion policy.

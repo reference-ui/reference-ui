@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Measure component tests
 
 Playwright cases proving the published border box.

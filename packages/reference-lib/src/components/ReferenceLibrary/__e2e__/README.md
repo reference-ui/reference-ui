@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # ReferenceLibrary component tests
 
 Playwright cases proving host election and failover.

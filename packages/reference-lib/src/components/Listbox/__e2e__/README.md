@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Listbox component tests
 
 Playwright cases proving single- and multi-select lists.

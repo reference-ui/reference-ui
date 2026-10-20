@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Slot component tests
 
 Playwright cases proving named-region registration.

@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Tooltip component tests
 
 Playwright cases proving hover intent over the overlay layer.

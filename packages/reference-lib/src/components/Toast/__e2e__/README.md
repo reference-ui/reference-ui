@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Toast component tests
 
 Playwright cases proving ephemeral stacked notifications.

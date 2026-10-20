@@ -1,3 +1,7 @@
+---
+memex: lib-cases
+---
+
 # Tree component tests
 
 Playwright cases proving the single-select hierarchical tree.
