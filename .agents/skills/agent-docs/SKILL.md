@@ -104,9 +104,9 @@ with `bash .agents/docs-corpus/clone.sh`, then
 > done.
 
 ```bash
-node .agents/memex/cli.mjs search "semantic tokens" --in docs-corpus --per-source 1   # each library's take
-node .agents/memex/cli.mjs search "recipes" --in docs-corpus --source panda             # one library
-node .agents/memex/cli.mjs show panda:theming/tokens#semantic-tokens                    # read a section
+memex search semantic tokens --in docs-corpus                      # every library's take
+memex search recipes source:panda --in docs-corpus                 # one library
+memex show docs-corpus:panda:theming/tokens#semantic-tokens        # read a section
 ```
 
 1. Search the key terms and read three or four libraries' versions.

@@ -8,9 +8,9 @@
  * queries.json holds one entry per phrasing, grouped into intents.
  *
  * Faceted: each `libs` item is one library's expectation, checked as
- * `search <q> --in docs-corpus --source <s> --limit 3`; an `any` group passes
- * when one alternative does. Each intent also gets one `--per-source 1` check on
- * its first phrasing: every source its libs name must have a hit in that list.
+ * `memex search <q> source:<s> --in docs-corpus --limit 3`; an `any` group passes
+ * when one alternative does. Each intent also gets one per-source check on its
+ * first phrasing: every source its libs name must have at least one hit.
  * An intent passes when all its entries and that check pass.
  *
  * Strict: an entry passes when every `expect` regex matches a hit in the top k of
@@ -26,8 +26,8 @@ import { fileURLToPath } from 'node:url'
 import { REPO } from '../lib/paths.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-/** EVAL_CLI points the harness at another Memex copy (for example a HEAD checkout) to compare engines. */
-const CLI = process.env.EVAL_CLI ?? join(REPO, '.agents', 'memex', 'cli.mjs')
+/** EVAL_CLI points the harness at another memex binary (for example a local build) to compare engines. */
+const CLI = process.env.EVAL_CLI ?? 'memex'
 const QUERIES = join(HERE, 'queries.json')
 const STRICT = process.argv.includes('--strict')
 const LATENCY_BUDGET_MS = 1500
@@ -44,7 +44,7 @@ function search(args) {
   const key = args.join('\u0000')
   if (cache.has(key)) return cache.get(key)
   const started = performance.now()
-  const out = execFileSync(process.execPath, [CLI, 'search', ...args, '--in', 'docs-corpus', '--json'], {
+  const out = execFileSync(CLI, ['search', ...args, '--in', 'docs-corpus', '--json'], {
     cwd: REPO,
     encoding: 'utf8',
     maxBuffer: MAX_BUFFER,
@@ -52,12 +52,10 @@ function search(args) {
   })
   const ms = performance.now() - started
   latencies.push(ms)
-  const result = { hits: JSON.parse(out).hits }
+  const result = { hits: JSON.parse(out).groups.flatMap(group => group.hits) }
   cache.set(key, result)
   return result
 }
-
-const sourceOf = id => id.split(':')[0]
 
 /** The 1-based rank of the first hit within the top k whose id matches the pattern, or null. */
 function rankOf(hits, pattern, k) {
@@ -68,7 +66,7 @@ function rankOf(hits, pattern, k) {
 
 /** One library's expectation: is the expected page or section among that library's top FACET_LIMIT hits? */
 function judgeLib(q, lib) {
-  const { hits } = search([q, '--source', lib.source, '--limit', String(FACET_LIMIT)])
+  const { hits } = search([q, `source:${lib.source}`, '--limit', String(FACET_LIMIT)])
   return {
     source: lib.source,
     expect: lib.expect,
@@ -94,8 +92,6 @@ function labelOf(result) {
 
 /** The per-source check of an intent, from its first phrasing: each library its entries name has a best hit. */
 function judgePerSource(list) {
-  const { hits } = search([list[0].q, '--per-source', '1'])
-  const present = new Set(hits.map(hit => sourceOf(hit.id)))
   const required = new Map()
   for (const entry of list) {
     for (const item of entry.libs ?? []) {
@@ -104,10 +100,14 @@ function judgePerSource(list) {
       required.set(key, alternatives.map(lib => lib.source))
     }
   }
+  const sources = new Set([...required.values()].flat())
+  const present = new Set(
+    [...sources].filter(source => search([list[0].q, `source:${source}`, '--limit', '1']).hits.length > 0)
+  )
   const missing = [...required.entries()]
     .filter(([, sources]) => !sources.some(source => present.has(source)))
     .map(([key]) => key)
-  return { pass: missing.length === 0, missing, shown: hits.length, sources: present.size }
+  return { pass: missing.length === 0, missing, sources: present.size }
 }
 
 /** Strict: each expect regex must match a hit in the entry's top k of the unfiltered search. */
@@ -168,7 +168,7 @@ for (const [number, list] of intents) {
     const check = judgePerSource(list)
     intentPass = intentPass && check.pass
     console.log(
-      `      per-source 1 ("${list[0].q}"): ${check.pass ? 'PASS' : `FAIL missing ${check.missing.join(', ')}`} ` +
+      `      per-source ("${list[0].q}"): ${check.pass ? 'PASS' : `FAIL missing ${check.missing.join(', ')}`} ` +
         `(${check.sources} sources answered)`
     )
   }

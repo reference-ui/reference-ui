@@ -1,8 +1,0 @@
-{
-  "description": "Core cases — one doc per case from case.json + README + authorial specs.",
-  "kind": "core",
-  "name": "cases",
-  "owner": "agent-core skill",
-  "root": "packages/reference-core/tests/cases",
-  "weights": { "id": 4, "title": 3 }
-}

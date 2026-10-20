@@ -15,28 +15,12 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { buildSource, checkCollected } from './lib/build.mjs'
 import { REPO, VENDOR } from './lib/paths.mjs'
+import { writeRecords } from './lib/records.mjs'
 import { rebuildIndex, writeSource } from './lib/write.mjs'
-import { buildIndex, collectCollection, loadManifests } from '../../memex/lib.mjs'
-import { writePersistedIndex } from '../../memex/persist.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const OUT = join(VENDOR, '_normalized')
 const STAGING = join(VENDOR, '_staging')
-const CORPUS = 'docs-corpus'
-
-/**
- * The index Memex searches for docs-corpus, rebuilt from the finished tree
- * (see .agents/memex/persist.mjs). Memex falls back to live indexing when
- * this is absent, so a failure here costs speed, not results.
- */
-function writeCorpusIndex() {
-  const manifest = loadManifests().find(m => m.name === CORPUS)
-  if (!manifest?.index) return null
-  const { docs } = collectCollection(manifest, REPO)
-  const weights = Object.fromEntries(Object.entries(manifest.weights ?? {}))
-  const mini = buildIndex(docs, weights, manifest.fields ?? null)
-  return writePersistedIndex({ base: resolve(REPO, manifest.index), mini, docs, manifest })
-}
 const DEMO_EXTENSIONS = ['', '.tsx', '.ts', '.jsx', '.js', '.mjs', '.css']
 
 function readJson(file) {
@@ -146,8 +130,8 @@ async function main(argv) {
   const index = rebuildIndex(OUT)
   printTable(results)
   console.log(`index: ${relative(process.cwd(), join(OUT, 'pages.jsonl'))} (${index.rows} rows from ${index.sources} source indexes)`)
-  const corpus = writeCorpusIndex()
-  if (corpus) console.log(`search index: ${relative(process.cwd(), corpus.index)} (${corpus.count} docs for ${CORPUS})`)
+  const corpus = writeRecords(OUT, REPO)
+  console.log(`memex records: ${relative(process.cwd(), corpus.file)} (${corpus.count} docs for docs-corpus)`)
 }
 
 main(process.argv.slice(2)).catch(err => {

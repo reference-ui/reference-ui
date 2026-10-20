@@ -1,3 +1,6 @@
+---
+memex: components
+---
 # Components
 
 Composable behavior owners: each component centralizes one difficult,

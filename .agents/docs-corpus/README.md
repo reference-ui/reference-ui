@@ -1,8 +1,8 @@
 # docs-corpus
 
-The tooling for the `docs-corpus` Memex collection is tracked in this folder. Its data is gitignored vendor state: the source clones, the manifest, and the normalized output.
+The tooling for the `docs-corpus` memex collection is tracked in this folder. Its data is gitignored vendor state: the source clones, the manifest, and the normalized output.
 
-`clone.sh` makes the sparse per-source clones and writes the manifest; the normalizer turns the clones into normalized Markdown plus the search index Memex loads (see the normalizer readme).
+`clone.sh` makes the sparse per-source clones and writes the manifest; the normalizer turns the clones into normalized Markdown plus the records file the memex CLI reads (see the normalizer readme). Search it with `memex search <words> --in docs-corpus`, narrow to one library with `source:<name>`, and read a hit with `memex show docs-corpus:<id>`.
 
 The corpus is a read-only reference of other design systems' docs source (MDX/MD), with their demo and nav-config source and first-party `llms*.txt` files.
 Use it to study structure, topic coverage and voice, such as how production systems write getting-started and guide pages.

@@ -1,6 +1,6 @@
 # docs-corpus normalizer
 
-Turns each vendored source clone into plain Markdown that Memex reads as the `docs-corpus` collection, plus the search index Memex loads for it. The tool is tracked here; the clones it reads and the output it writes are gitignored vendor state.
+Turns each vendored source clone into plain Markdown that Memex reads as the `docs-corpus` collection, plus the records file the memex CLI reads for it. The tool is tracked here; the clones it reads and the output it writes are gitignored vendor state.
 
 ## Run
 
@@ -14,7 +14,7 @@ No source runs every adapter. Each source is built, then swapped into the normal
 - A section doc per headed section (see Sections), with id `<source>:<slug>#<heading>`. Sections nest under their page, so a child page never shares a file with a parent's section.
 - A per-source page index, one row per page.
 - A combined page index over every source in source order, rebuilt at the end of every run.
-- The search index Memex loads for `docs-corpus`, written at the end of every run via the memex persist helper. Without it Memex indexes live, which is slower but gives the same results.
+- The records file the memex CLI reads for `docs-corpus` (`docs-corpus.json`, one flat record per page and section doc, body included), rebuilt by `lib/records.mjs` at the end of every run. The manifest `.memex/collections/docs-corpus.json` lists this gitignored folder as its root, so a stale or missing file means stale or empty search results.
 
 Page frontmatter: `id`, `source`, `title`, `description`, `url`, `section`, `order`, `type`, `concepts`, `path`, `repo`, `commit`, `license`. Section frontmatter: `id`, `source`, `title` (`Page › H2 › H3`), `heading`, `page`, `url`, `section`, `order`, `type`, `concepts`, `path`, `repo`, `commit`, `license`. `repo`, `commit` and `license` come from the page when it overrides them, and otherwise from the source's manifest row.
 
@@ -83,7 +83,7 @@ Fenced code is never converted. Everything outside it:
 
 ## Eval
 
-`node .agents/docs-corpus/normalize/eval/eval.mjs` runs the eval query list (39 entries over 32 search intents) against `search --in docs-corpus`. The default is faceted, how a writer searches: each entry's `libs` item is checked per library (`--source <s> --limit 3`), and each intent gets one `--per-source 1` check on its first phrasing. `--strict` runs the old check instead: each entry's `expect` regexes against the top 10 of an unfiltered search. Both print a PASS or FAIL line per entry, the misses, and the latency over every CLI call. `EVAL_TOP=10` prints a full first page; `EVAL_CLI=<path>` scores another Memex copy. Regexes match hit ids; `(#|$)` accepts the named page or one of its sections.
+`node .agents/docs-corpus/normalize/eval/eval.mjs` runs the eval query list (39 entries over 32 search intents) against `memex search --in docs-corpus`. The default is faceted, how a writer searches: each entry's `libs` item is checked per library (`source:<s> --limit 3`), and each intent gets one per-source check on its first phrasing (one `source:<s> --limit 1` search per library it names). `--strict` runs the old check instead: each entry's `expect` regexes against the top 10 of an unfiltered search. Both print a PASS or FAIL line per entry, the misses, and the latency over every CLI call. `EVAL_TOP=10` prints a full first page; `EVAL_CLI=<path>` scores another memex binary. Regexes match hit ids; `(#|$)` accepts the named page or one of its sections.
 
 ## Concepts
 
@@ -91,4 +91,4 @@ The concept map pairs each concept with keywords. A concept applies when a keywo
 
 ## Failures and recovery
 
-Each source is written in one swap through a staging area, which holds sources in progress and is cleared after each swap. A run that fails part-way leaves the sources it already finished in place; the rest keep their last good output. The combined index and the search index are rebuilt at the end of every run that completes, so the next complete run heals any gap. A crashed run can leave a stale staging folder; it is safe to delete.
+Each source is written in one swap through a staging area, which holds sources in progress and is cleared after each swap. A run that fails part-way leaves the sources it already finished in place; the rest keep their last good output. The combined index and the memex records file are rebuilt at the end of every run that completes, so the next complete run heals any gap. A crashed run can leave a stale staging folder; it is safe to delete.
