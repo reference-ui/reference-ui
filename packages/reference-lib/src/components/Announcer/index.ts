@@ -1,5 +1,5 @@
 /**
- * Announcer public API — frozen (FEATURES.md #2).
+ * Announcer public API — frozen (see README).
  *
  * `announce` + `AnnounceOptions` only. Everything else (host, snapshot probe,
  * constants, document registry, diagnostics, store) lives in `./internal`

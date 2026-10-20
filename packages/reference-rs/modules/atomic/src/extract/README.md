@@ -83,5 +83,3 @@ Their evaluator is the one to walk like, not fold like. See PANDA.
 - Back a package tag under a system the package does not render through.
 - Build a TypeRef-shaped tree.
 - Group wants into a hashed rule because they sat on one host.
-
-Up: atomic.

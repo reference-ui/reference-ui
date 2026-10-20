@@ -8,5 +8,3 @@ unmatched controlled value in dev; and the three option hooks wire one
 row's registration, press, and keyboard handling. Effects run in
 their original order — reset, revalidate, recover — and every pure
 decision the hooks wrap lives in a tested domain module.
-
-Up: Listbox.

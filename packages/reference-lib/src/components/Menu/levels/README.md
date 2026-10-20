@@ -8,5 +8,3 @@ samples, and keyboard-open flag. The registry answers stable root
 identity, root-trigger and direction reads, descendant checks, and
 deepest-first open ordering for Escape, outside press, and selection.
 Pure over the registry and the cell; unit-tested in isolation.
-
-Up: Menu.

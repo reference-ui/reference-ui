@@ -15,5 +15,3 @@ IDs in SPEC are folders-not-yet.
 
 Goldens are the system’s outputs. `--update-goldens` rewrites them after a
 real emission change.
-
-Up: atomic.

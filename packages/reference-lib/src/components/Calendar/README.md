@@ -20,5 +20,3 @@ detection, and prop gate all of them ask. Pure decisions carry
 colocated unit tests; browser behavior proves out in CT.
 
 DateField imports the date kernel directly from the `iso` module; that deep edge is internal to the Calendar and DateField pair, not a public contract.
-
-Up: components.

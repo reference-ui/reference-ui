@@ -1,7 +1,7 @@
 # Measure SPEC
 
 Frozen contract, cases, and proof for the `src/core/measure` kernel and its
-public `useMeasure` hook. Design narrative: [Measure.md](./Measure.md).
+public `useMeasure` hook. Design narrative: [README.md](./README.md).
 Case catalog (checklist form): [TESTS.md](./TESTS.md).
 
 Unit proof: `src/core/measure/measure.test.ts` · `use-measure.test.tsx` ·

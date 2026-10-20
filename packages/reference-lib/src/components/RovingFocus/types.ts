@@ -9,7 +9,7 @@ import type { PrimitiveProps } from '@reference-ui/react'
 
 export type RovingFocusOrientation = 'horizontal' | 'vertical' | 'both'
 
-// Transparent-part surface (components.md `ReferenceSlotPartProps`): common
+// Transparent-part surface (components README `ReferenceSlotPartProps`): common
 // DOM events/ARIA plus the shared StyleProps surface, exactly one element
 // child, one ref. Local alias per the Listbox `ReferencePartProps` precedent;
 // no shared module owns this name yet.

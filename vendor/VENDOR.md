@@ -347,7 +347,7 @@ hit targets, flex-grow ownership of Panel layout.
 10. **Field:** no vendor lift. Generated Input/Textarea/Select recipes plus
     CSS `:has()`. Leave Base UI / Aria Field providers.
 
-When two vendors disagree, write the freeze-gate test first, then pick the behaviour that matches `components.md`.
+When two vendors disagree, write the freeze-gate test first, then pick the behaviour that matches the components README.
 
 ### `design-system/page-layout` (slots only)
 

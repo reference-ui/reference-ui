@@ -10,5 +10,3 @@ spec with visual snaps.
 Cases: the Button case catalog. Form fixtures:
 `Button.contracts.story`. States fixtures:
 `Button.story`.
-
-Up: components.

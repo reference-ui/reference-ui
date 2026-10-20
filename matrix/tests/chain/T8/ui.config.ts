@@ -6,7 +6,7 @@
  *                                ├──▶ User space
  *   extend-library ──▶ layer  ──┘
  *
- * Per `matrix/CHAIN_RULES.md`, the current policy is allow-and-document:
+ * Per `matrix/README.md`, the current policy is allow-and-document:
  * - the same package may appear in both buckets
  * - upstream CSS is not deduplicated
  * - extends-side fragment is adopted; layers-side adds the CSS again

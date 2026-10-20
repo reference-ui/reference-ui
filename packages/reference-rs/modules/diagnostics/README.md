@@ -18,8 +18,8 @@ hosts filter and render a single contract instead of one shape per producer.
    namespace table, the assignment convention per-module agents follow, and
    the never-rename rule. Parsing enforces shape; the registry enforces
    deliberateness. Namespaces are disjoint, so parallel agents never collide.
-   `SCHEMA` is the companion wire law: the JSON field table, the canonical
-   key order every encoder emits, and the examples the contract tests pin.
+   The wire form below is the companion law: the JSON field table and the
+   canonical key order every encoder emits.
 3. **Minimal transport.** Native functions return `encode_batch` JSON strings
    over napi; the `diagnostics` js entry parses them with `parseBatch`, which
    validates the same contract. The template holds no napi dependency — each
@@ -31,6 +31,24 @@ hosts filter and render a single contract instead of one shape per producer.
    what "good" looks like — subject-first one-liners, backticked subjects,
    suggestion and hint lines — and the worked examples in the test suites pin
    the style. Producers own presentation; the pattern spreads by convenience.
+
+## Wire form
+
+One batch on one line: a JSON array of diagnostics, UTF-8, no trailing newline inside the encoded string. Parsers accept any whitespace, so pretty-printed case goldens carry the same infoset as the compact wire.
+
+| Field | Type | Required | Meaning |
+| ----- | ---- | -------- | ------- |
+| `severity` | string | yes | `warning` (compile continues) or `error` (request refused); the code tag agrees |
+| `code` | string | yes | `NS-SEV-NAME` identity, documented in the registry |
+| `message` | string | yes | rich-text canvas, non-blank; first line a complete subject |
+| `file` | string | no | source path, when the failure has one |
+| `line` | integer | no | 1-based line, when known |
+| `column` | integer | no | 1-based column, when known |
+| `span` | object | no | `{start, end}` byte offsets, start inclusive, end exclusive |
+| `labels` | array | no | `[{span, message}]` labeled underlines, each note non-blank |
+| `help` | string[] | no | `= help:` lines, each non-blank |
+
+Encoders emit fields in exactly this order, omit absent optionals (never `null`), strip unknown keys, and drop empty `labels` / `help` — so the same diagnostic encodes byte-identically from Rust, the JS mirror, and the Core transport. Contract tests on all three sides pin these exact bytes.
 
 ## Mental model
 

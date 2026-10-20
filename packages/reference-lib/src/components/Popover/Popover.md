@@ -1,6 +1,6 @@
 # Popover
 
-Proof: [case.json](./case.json) indexes the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Popover --e2e`). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Proof: [__e2e__](./__e2e__/) proves the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Popover --e2e`). System: [Overlay README](../Overlay/README.md).
 Kernel: [Overlay](../Overlay/Overlay.md).
 
 **Thin policy on Overlay.** Popover is Overlay with `isolation` frozen off,

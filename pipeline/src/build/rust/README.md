@@ -13,5 +13,3 @@ A native binary is fresh only when its `reference-native.<triple>.inputs.sha256`
 - the release preflight counts a target as available only when this host can build it or a stamped artifact is present, so a release refuses before any build or delete
 
 Cross-builds are not attempted. Any `.rs` change makes the next linux build run in Dagger (about 50 s). CI stamps each binary in `rust-compile.yml`, and the stamp folds CRLF to LF so Windows checkouts hash the same as macOS and Linux. the `publish-native` step refuses to publish downloaded binaries without a matching stamp.
-
-Parent: the build index.

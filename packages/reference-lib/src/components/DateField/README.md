@@ -19,5 +19,3 @@ behavior proves out in CT.
 
 Two roots, not one: `DateField` and `DateFieldRange` are sibling
 hosts over the same engine, slots, and shared helpers. The deep import of Calendar's date kernel is internal to the Calendar and DateField pair, not a public contract.
-
-Up: components.

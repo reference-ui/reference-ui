@@ -69,7 +69,12 @@ API.
 - Generate a jsx factory, patterns (`BoxProps`), or recipes-as-modules (one file per recipe)
 - Emit runtime token JS (`token(`)
 - Depend on `atomic`
-- Dump all of `csstype.Properties` or import `@reference-ui/styled`
+- Dump all of `csstype.Properties`, or import `@reference-ui/styled` or `@pandacss/*`
+- Inherit viewport breakpoints as default conditions (container-first)
+- Execute author JS in Rust (reads the structured definition only)
+- Collapse `FontProps` to `never` on an empty registry, or intersect Fallback with Scoped on a populated one
+- Grow a type farm or AST machinery to print string unions
+- Parse the UI config (`strict` is `EmitOptions` on the printer)
 - Host-wire the printer into the packager (the `@reference-ui/core` packager)
 
 We author `css()`; we still generate the unions. The **input** is the base

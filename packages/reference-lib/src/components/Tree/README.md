@@ -24,4 +24,9 @@ root scope, groups and expanders read identity from the item scope, and
 groups bump the level scope — while Combobox nesting is read from the
 Combobox context directly.
 
-Up: Components.
+An item learns it owns a group by scanning its children at render time:
+no registration can inform that branch/leaf decision under
+`renderToString`, and `TR-ENV-01` pins branch-path server HTML. The
+Combobox virtual-focus bridge is Combobox-owned; Tree implements its
+side with no new props. Shadow roots ride the Portal event contract
+with owning-root reads only — no Tree event fork.

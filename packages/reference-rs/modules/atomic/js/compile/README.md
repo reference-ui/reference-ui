@@ -23,5 +23,3 @@ the compile entry (`compileNative` in `@reference-ui/core`).
 
 The sheet and `css()` cannot drift: both come from one `compile()`. See the crate
 stylesheet and runtime stages.
-
-Up: atomic JS.

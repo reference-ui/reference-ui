@@ -128,9 +128,43 @@ pnpm run sync   # Run ref sync once
 pnpm run dev    # Watch mode
 ```
 
+## Internal state
+
+Shared state that would otherwise need React Context uses Zustand as a
+direct dependency — never vendored, ported, or reimplemented. Stores
+stay internal: consumers never import `zustand`, a store factory, or a
+generic `useStore`. The public seam is Reference-owned, domain-specific
+hooks and actions where a component spec names them (`toast.show`,
+`announce`), plus the usual props and parts. Native Context is allowed
+only for genuine subtree scoping (a part finding its owner); it is
+never a public Provider. Applications are not required to wrap trees
+in a Provider — the library mount is a document-scoped mount, not a
+context boundary. Each owner's spec documents store shape, actions,
+selectors, hooks, lifecycle, isolation, and multi-root behavior.
+
 ## Testing
 
-Component primitives are implemented in this package and proven with Playwright in each component's browser suite. React 19 is the default agent loop; 17 and 18 are compatibility jobs (`pnpm agentct <Name> --e2e --react 17,18`). See the testing guide.
+Component primitives are implemented in this package and proven with
+Playwright in each component's browser suite. The proof rule: a case
+is proven when a passing test title contains its ID. Each component's
+contract doc states the API, its case catalog holds each case's setup,
+action, and assert rows (catalog checkboxes mean specified, not
+proven), its browser suite proves the public API, and colocated unit
+tests beside the code prove pure models. Book is for looking;
+Playwright is for asserting.
+
+```bash
+pnpm agentct <Name> --e2e              # one component's browser proof
+pnpm agentct <Name> -g "<CASE-ID>"     # one contract by stable ID
+pnpm agentct <Name> --e2e --react 17   # compatibility runtimes: 17, 18, 19, all
+```
+
+React 19 is the default agent loop; 17 and 18 are compatibility jobs.
+Here **freeze** means the current falsifiable design decision, not
+gospel: vendor regressions, platform evidence, type contradictions,
+and better ownership arguments change APIs, cases, defaults, parts, or
+inventory before manufacture. A test is never weakened to protect a
+prior decision.
 
 ## Component playground (Book)
 

@@ -1,0 +1,3 @@
+# Runtime namer
+
+Browser-safe mirror of the compiler namer: one authored declaration to slot and class-name pairs. The lexical, value, shorthand, when, slot, and shaping procedures mirror the Rust passes step for step (whitespace grammar, decimal rendering with tie-breaks, token splitting, condition lowering, cascade slots, the P9 build), and the lowering interpreter runs the ordered table steps with guards. The miss probe warns in dev when the live sheet proves a constructed class has no rule. The leaf import graph stays bundlable with no Node builtins, and the rules version must match the tables or registration refuses the pair.

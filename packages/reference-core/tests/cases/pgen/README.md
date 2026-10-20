@@ -1,7 +1,11 @@
 # CORE-PGEN — the vendored primitive shelf
 
-Proves the RS-emitted primitive shelf Core vendors through the native seam: the E1 element vocabulary as data, the E2 raw roster as a live module, and the E4 raw types as declarations. Two parity cases gate freshness at test time, six type cases prove the E4 surface assigns and rejects exactly where it must, and the PRIM re-anchors tie the old census to the new shelf. `shared/` holds the temp-project tsc harness and the set-parity helpers the specs share. The group spec carries the shelf contract; the cases below are the ledger.
+Proves the RS-emitted primitive shelf Core vendors through the native seam: the E1 element vocabulary as data, the E2 raw roster as a live module, and the E4 raw types as declarations. Two parity cases gate freshness at test time, six type cases prove the E4 surface assigns and rejects exactly where it must, and the PRIM re-anchors tie the old census to the new shelf. `shared/` holds the temp-project tsc harness and the set-parity helpers the specs share.
+
+Group shape: parity cases run node-side against three live legs each — the workspace RS build, the committed shelf, and the current canon sources or typegen napi. Type cases sync a colors-only world to publish narrow styled declarations, then compile temp-dir consumers against the vendored E4 composed with those declarations: positives exit 0, negatives exit non-zero with a pinned diagnostic code. Nothing red lives in the repo: every negative is materialized at spec time. Drift-injection negatives corrupt in-memory copies, never the shelf, and the gate must name the injected member or fail itself.
+
+Re-anchors: PRIM-09's census cross-checks its pinned tag table against the E1 dom set at 101, and PRIM-10's surface census cross-checks its pinned names against the E4 declarations. TYPE-01 compiles unchanged against the bound entry alongside TYPE-02/03/04/07/08, which keep passing unmodified on the per-system surface. No renumbers, ever: ids are append-only.
+
+Pinned: 101 in the three places that must move together (E1 element count, canon roster, live E2 exports minus helpers). The `css`-open and `variant`-open probes pin raw-E4 behavior the per-system bake deliberately breaks; their flip is specified in the case READMEs. The ref probe direction (div into input) is pinned by lib.dom subtyping. The namespace law retires the SVG wave, not defers it: no SVG-namespace children ever, classes land on the `svg` host itself, and PGEN-12 carries the 24-name tripwire against a silent fold-back. Recipe modules stay explicit non-emits in E4; variant narrows only at the per-system bake.
 
 > Search terms: primitive shelf, E1 vocabulary, E2 roster, E4 types, roster parity, prop parity, bound entry, per-system roster
-
-Parent: the case-group index.

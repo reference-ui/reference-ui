@@ -26,4 +26,19 @@ parts — children-only output is the contract — and no `context`
 because Portal creates no context of its own; it only resets the layer
 scope owned by `@reference-ui/react`.
 
-Up: Components.
+Portal owns the shadow event contract: listeners attach per container
+on mount, so shadow-root events dispatch with the true target and no
+retargeting shim exists. Handlers on React ancestors at or above the
+shadow host fire twice per shadow event (true target, then retargeted
+to the host) — consumers keep common-ancestor handlers idempotent.
+Placement lands children directly in the root in order with no
+wrapper; a late-resolving destination gets exactly one copy, never a
+transient body copy; content handlers fire exactly once in logical
+bubble order.
+
+Portal owns the theme contract too. The reset re-anchors the physical
+tree so the first primitive child emits `data-layer` and the canonical
+`data-color-mode`; resolution is explicit prop, then logical context,
+then the destination document, then unstamped — never an invented
+default. No surface grows its own color-mode bridge, DOM sniffer,
+wrapper, or dark fallback.

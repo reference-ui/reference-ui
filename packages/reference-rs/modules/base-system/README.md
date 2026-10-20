@@ -54,10 +54,16 @@ The native compile request requires a `baseSystem` evaluated spec (or a frozen `
 
 ## What it does not do
 
-- Evaluate author JS
+- Evaluate author JS, parse TSX, or walk files — fragments land as JSON
 - Print `.mt_2r`
 - Emit `StyleProps`
 - Own `Div`
+- Leak `layers` tokens into queryable dictionaries or types
+- Resolve `extends` (Core owns composition)
+- Grow a second config dialect (utility transforms, layout patterns, jsx lists)
+- Allocate or lock on hot lookups (`O(1)`, borrowed slices)
+- Synthesize runtime `css()` or `recipe()` closures
+- Act as a mutable global singleton (immutable values, `Send + Sync`)
 
 ## Verify
 
@@ -65,6 +71,8 @@ The native compile request requires a `baseSystem` evaluated spec (or a frozen `
 pnpm agentrs c base_system
 pnpm --filter @reference-ui/rust base-system --check
 ```
+
+Verification builds fixtures in memory — no sync worker, no packager, no bundler.
 
 > Up: @reference-ui/rust
 

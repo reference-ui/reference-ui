@@ -138,5 +138,3 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 - Rename a code once a golden pins it; extend the table instead.
 - Emit a diagnostic without a code; the constructors require one.
 - Alias `debug: true` to the compiler channel.
-
-Up: atomic.

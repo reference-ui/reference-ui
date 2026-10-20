@@ -37,5 +37,3 @@ JS does not expand `borderBottom`, fold ternaries, or name classes. Browser
 
 N-API stays `compileSystem` so the native binary does not move with the
 folder rename.
-
-Up: atomic.

@@ -1,6 +1,6 @@
 # Presence
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Presence --e2e`).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Presence --e2e`).
 
 Keeps unmounting elements in the DOM until CSS animations, CSS transitions, or finite GSAP tweens complete. Overlay and Popover use it internally for the `data-state` exit contract.
 
@@ -82,4 +82,4 @@ An exiting child is also retained while **finite GSAP tweens** run on the observ
 
 ## Convergence
 
-Primary: Radix Presence **lifecycle + bugfixes**, with Headless-style **transition** completion added so drawers work. Zag for zero-duration and hidden-tab. Do not copy animation-only blindly — `components.md` requires transitions.
+Primary: Radix Presence **lifecycle + bugfixes**, with Headless-style **transition** completion added so drawers work. Zag for zero-duration and hidden-tab. Do not copy animation-only blindly — the components README requires transitions.

@@ -41,7 +41,7 @@ export type AccordionItemProps = {
    * browser find can match it; a `beforematch` reveal expands the item
    * through existing policy (single mode swaps the open item, multiple
    * adds) with enter motion skipped once. Setting this prop IS the opt-in —
-   * there is no separate `findExpansion` switch (see FEATURES.md #1).
+   * there is no separate `findExpansion` switch (see README).
    */
   hiddenUntilFound?: boolean
 }

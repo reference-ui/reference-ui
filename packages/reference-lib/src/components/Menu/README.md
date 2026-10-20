@@ -19,5 +19,3 @@ discovery, and shadow-aware scope reads. Intent owns the pointer grace
 geometry. Parts render the root, nested scope, trigger, content, and
 every item kind. Pure decisions carry colocated unit tests; mounted
 behavior proves out in colocated Vitest and CT.
-
-Up: components.

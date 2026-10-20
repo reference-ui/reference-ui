@@ -8,5 +8,3 @@ Two reuse layers:
 - consumer `node_modules` cache, shared only for an identical effective install graph: staged internal versions, dependency lists, Node image, pnpm version, and React runtime. Fixture sources are excluded so code edits never trigger reinstalls.
 
 Fixture-local volumes warm from a graph-shared seed copy on a cold cache. Keeping the policy here lets the Dagger runner orchestrate without hiding cache rules inline.
-
-Parent: the matrix index.

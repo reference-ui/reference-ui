@@ -19,4 +19,6 @@ ARIA, and feasibility. Shared holds geometry, measurement merging,
 direction, refs, and the warn channel. Styles owns the injected guard
 stylesheet.
 
-Up: Components.
+The 9px Handle paints small but points large: a transparent `::before`
+strip extends 8px into each neighbor (25px total), so near-Handle
+clicks land on the separator instead of neighboring content.

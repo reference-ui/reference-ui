@@ -4,7 +4,7 @@
  * Test-only and ReferenceLibrary-only entry. Applications announce via the
  * public barrel (`./index`: `announce` + `AnnounceOptions`); `ReferenceLibrary`
  * is the only supported host. Direct `AnnouncerHost` mounts outside tests
- * double-speak. See FEATURES.md #2 (export freeze) and #3 (topology (a)).
+ * double-speak. See README (export freeze, multi-document topology).
  */
 export { AnnouncerHost } from './Announcer'
 export {

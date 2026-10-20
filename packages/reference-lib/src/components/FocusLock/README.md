@@ -22,5 +22,3 @@ There is no `parts/` — the lock has one transparent rendering, owned by the
 root — and no `context`: with no compound parts, there is no subtree to
 scope. Cross-component consumers (Toast's focus restore) import the domain
 folders directly; no compatibility re-exports live at root.
-
-Up: components.

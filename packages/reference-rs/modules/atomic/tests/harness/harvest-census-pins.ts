@@ -2,8 +2,8 @@
  * Pinned evidence for the enterprise harvest census: the sink census, the pool triple, the net-new
  * and gross counts, the backchannel histogram, and the byte cells the fixture compile must reproduce.
  * The census test compares its measured numbers against these exports and never edits them. Byte
- * cells move with each landing that changes emitted bytes; their dated history lives beside the
- * fixture in fixtures/harvest-enterprise/BYTE-PINS.md.
+ * cells move with each landing that changes emitted bytes; these exports are the current
+ * pins.
  */
 
 export type SinkRow = [prop: string, when: string[], kind: string, minted: number]
@@ -58,15 +58,15 @@ export const EXPECTED_TRIPLE: Record<string, [number, number, number]> = {
   url: [6, 2, 8],
 }
 
-/** Expected byte cells, re-pinned at each byte-moving landing (history: fixtures/harvest-enterprise/BYTE-PINS.md). */
+/** Expected byte cells, re-pinned at each byte-moving landing. */
 export const EXPECTED_BYTES = {
-  // styles.css cells; every css re-pin and its A/B is recorded in BYTE-PINS.md.
+  // styles.css cells.
   cssRaw: 241240,
   cssGzip: 28472,
   cssBrotli: 15592,
   stylePlans: 3689,
   harvestWants: EXPECTED_NET_NEW,
-  // react.mjs cells and the derived counts; per-landing evidence is in BYTE-PINS.md.
+  // react.mjs cells and the derived counts.
   reactRaw: 154277,
   reactGzip: 38048,
   fixtureRules: 3693,

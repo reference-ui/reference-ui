@@ -20,4 +20,8 @@ swipes as dismiss-or-snap-back. `hooks/` and `parts/` compose those domains
 into the six public parts, and `shared/` carries the nameless plumbing they
 agree on.
 
-Up: Components.
+One kernel, named policies: Popover and Tooltip are policy wrappers on
+this runtime (isolation off, anchored geometry), and Dialog, Drawer,
+Sheet, and Modal are compositions of it — never second runtimes. Toast
+is not Overlay: a separate queue/host/timers runtime whose one seam
+into the stack is pausing while an isolating overlay is open.

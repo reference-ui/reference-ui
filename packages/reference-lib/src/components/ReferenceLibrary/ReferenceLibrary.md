@@ -7,7 +7,7 @@ Mounts Reference UI's application-level runtime systems.
 Not a React context provider. Does not require descendants. Provides a stable
 React-level mount for Toast, `announce()`, and the Tooltip skip-delay group —
 document-scoped Zustand stores, not a context tree. See
-[hooks.md](../../core/hooks/hooks.md).
+[package README](../../../README.md).
 
 ```tsx
 <ReferenceLibrary
@@ -93,8 +93,8 @@ After one tooltip shows, neighbours open instantly for a short window. Vendors i
 **Prior art.** Radix `skipDelayDuration` on Provider. Aria `globalWarmedUp`. Zag `setGlobalId`. Floating UI `FloatingDelayGroup`.
 
 **Lift** the algorithm. **Leave** the public Provider. The group is a
-document-scoped Zustand store mounted here (`components.md`,
-[hooks.md](../../core/hooks/hooks.md)).
+document-scoped Zustand store mounted here (the components README,
+[package README](../../../README.md)).
 
 ### What does not live here
 

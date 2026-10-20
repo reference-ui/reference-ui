@@ -14,5 +14,3 @@ Freshness: `cargo test` regenerates every file in memory and diffs. A diff
 fails until re-blessed. `NAMER_UPDATE_GOLDENS=1` is the only rewrite path,
 and a re-bless without a `NAMER_RULES_VERSION` bump is a review failure when
 a naming rule intentionally changed a class.
-
-Up: atomic.

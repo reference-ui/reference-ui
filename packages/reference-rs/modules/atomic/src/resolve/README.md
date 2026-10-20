@@ -40,5 +40,3 @@ property table next to canon.
 
 Does not print the stylesheet. `stylesheet::name` spells the class from
 the atom. Resolve runs here so the sheet and `css()` cannot disagree.
-
-Up: atomic.

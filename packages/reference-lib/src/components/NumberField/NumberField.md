@@ -1,6 +1,6 @@
 # NumberField
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct NumberField --e2e`).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct NumberField --e2e`).
 
 Locale-aware numeric text editing and discrete stepping. NumberField owns the
 hard boundary between an ephemeral localized edit string and one controlled

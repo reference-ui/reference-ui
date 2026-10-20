@@ -1,6 +1,6 @@
 # Calendar
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Calendar --e2e`).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Calendar --e2e`).
 
 Date-grid engine. Locale-aware week start and weekday headings, padded month
 grids, 2D keyboard movement, disabled/unavailable skipping, min/max clamping,

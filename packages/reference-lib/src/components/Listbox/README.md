@@ -22,4 +22,9 @@ in CT.
 options read selection, focus, registration, typeahead, and navigation
 from it, and read the Combobox context directly when nested.
 
-Up: components.
+Selection types are discriminated overloads keyed on `selection`:
+single yields `TValue | null`, multiple yields `TValue[]`, shared by
+`Option`, the virtual adapter, and the multi-toggle reducer. Typeahead
+keeps a local model: the shared kernel has no empty-buffer cycle branch
+(`LB-KEY-04`) and detects repeats with `toLowerCase` where Listbox uses
+the collator (they diverge on `σ`/`ς`).

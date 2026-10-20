@@ -197,5 +197,3 @@ starts-with-`{`-and-ends-with-`}` refusal predicate
 integer-like per-prop keys is likewise not inherited: V8 destroys it at
 object creation, so the namer correctly emits the received (V8) order
 and the differential compares those members as sets.
-
-Up: atomic.

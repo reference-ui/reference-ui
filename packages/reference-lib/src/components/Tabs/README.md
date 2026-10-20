@@ -21,5 +21,3 @@ guards. Shared holds the isomorphic layout effect and the dev
 diagnostic. Examples carries the userland system-variant demo. Pure
 decisions carry colocated unit tests; mounted behavior proves out in
 colocated Vitest and CT.
-
-Up: Components.

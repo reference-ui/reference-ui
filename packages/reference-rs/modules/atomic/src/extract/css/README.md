@@ -18,5 +18,3 @@ css.object({ p: '1r' })
 - Choose values (expressions).
 - Extract `sva` / `cva` / unknown helpers.
 - Match the identifier `css` without an import binding.
-
-Up: extract.

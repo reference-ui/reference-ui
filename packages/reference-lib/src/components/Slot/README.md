@@ -32,5 +32,3 @@ host helpers, live container, ids, hooks — and the browser
 gates prove the composed compound: regions render, content refreshes
 in place without remount, prefix selection reacts, and visibility
 toggles without unregistering.
-
-Up: Components.

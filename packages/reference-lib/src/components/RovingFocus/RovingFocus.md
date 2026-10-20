@@ -1,6 +1,6 @@
 # RovingFocus
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct RovingFocus --e2e`).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct RovingFocus --e2e`).
 
 Composite-widget keyboard kernel: roving `tabindex`, arrow movement,
 Home/End/PageUp/PageDown boundary movement, disabled skipping, optional

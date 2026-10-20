@@ -14,8 +14,8 @@ import { announce } from './index'
 import { AnnouncerHost, getAnnouncerSnapshot } from './internal'
 
 /**
- * Manual + AT verification fixture for the invisible announcer runtime
- * (FEATURES.md #1). The live regions themselves are visually hidden; the
+ * Manual + AT verification fixture for the invisible announcer runtime.
+ * The live regions themselves are visually hidden; the
  * readout below mirrors their textContent via MutationObserver, so every
  * click proves an AT-observable insertion happened.
  */

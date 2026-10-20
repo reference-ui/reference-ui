@@ -15,5 +15,3 @@ geometry the intent hook and the bridge both compose. Content identity
 lives in `shared/` where trigger and content agree on one id. Pure
 decisions carry colocated unit tests; open/close, grace travel, and
 nesting prove out in CT.
-
-Up: Components.

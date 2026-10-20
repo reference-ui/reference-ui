@@ -70,5 +70,3 @@ both are; assembly passes it through.
 - Choose values (expressions).
 - Guess primitives by PascalCase or a config name array.
 - Reimplement wrapper tracing — that is styletrace.
-
-Up: extract.

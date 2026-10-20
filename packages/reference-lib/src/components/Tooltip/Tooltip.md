@@ -1,6 +1,6 @@
 # Tooltip
 
-Proof: [case.json](./case.json) indexes the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Tooltip --e2e`). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Proof: [__e2e__](./__e2e__/) proves the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Tooltip --e2e`). System: [Overlay README](../Overlay/README.md).
 Kernel: [Overlay](../Overlay/Overlay.md).
 
 **Thin policy on Overlay.** Tooltip is Overlay with `isolation={false}`,
@@ -92,7 +92,7 @@ After one tooltip shows, moving to the next opens **instantly** for a short wind
 
 **Lift** the algorithm onto a document-scoped Zustand group mounted with
 `ReferenceLibrary`. **Leave** `Tooltip.Provider` as a public API
-(`components.md`, [hooks.md](../../core/hooks/hooks.md)).
+(the components README, [package README](../../../README.md)).
 
 ### WCAG 1.4.13
 

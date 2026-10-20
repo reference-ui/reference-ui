@@ -34,7 +34,14 @@ atomic, never from a handwritten list in extract or resolve:
    explicit dialect extensions (`spaceX`, `hideFrom`).
 
 JavaScript is the ingest source because the specs live on npm. Rust is the
-consumer: static, sorted tables, binary search, zero allocation.
+consumer: static, sorted tables, binary search, zero allocation. Lookups are
+`is_reference_primitive`, `is_html_tag`, `is_known_style_prop`,
+`resolve_canonical_prop`, `class_prefix_for_prop`,
+`to_css_declaration_property`, `native_longhands_for_prop`, `is_color_prop`,
+`is_condition_prop`.
+
+Tier-0 vocabulary: the crate depends only on the standard library and never
+imports a downstream compiler crate or host package.
 
 ## Fail-closed inverted join
 

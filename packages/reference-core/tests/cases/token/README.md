@@ -6,4 +6,4 @@ Proves the named design values authored in fragments and emitted as CSS custom p
 
 CORE-EDGE-02 lives in this group: border radii resolve against radius tokens.
 
-Parent: the case-group index.
+Open engine row: RS-32 (recipe and `globalCss` diagnostics must be deduplicated and canonical — the token10 fixture expects one warning but gets six identical `opacity/"1"` warnings, and `globalCss` props must canonicalize before token lookup so `fontFamily: 'sans'` resolves instead of warning verbatim; the fix flips token10 green).

@@ -56,5 +56,3 @@ the stylesheet readme for the full `CascadeKey`.
 - Put StyleProp atoms in `@layer recipes`.
 - Drop the preamble.
 - Change the six-layer order string.
-
-Up: stylesheet.

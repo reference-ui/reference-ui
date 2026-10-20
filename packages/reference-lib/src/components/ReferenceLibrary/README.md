@@ -16,5 +16,3 @@ There is deliberately no `context/`: descendant transparency is the contract
 (RL-DOM-03), so the component owns no React context and submodules coordinate
 through document-scoped stores instead. Server renders emit children alone —
 no document, no election, no hosts.
-
-Up: Components.
