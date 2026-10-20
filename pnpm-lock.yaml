@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@aswemaythink/memex':
-        specifier: ^0.1.1
-        version: 0.1.1
+        specifier: ^0.2.1
+        version: 0.2.1
       '@changesets/cli':
         specifier: ^2.30.0
         version: 2.30.0(@types/node@25.1.0)
@@ -1408,8 +1408,8 @@ importers:
 
 packages:
 
-  '@aswemaythink/memex@0.1.1':
-    resolution: {integrity: sha512-V4ll2vi6dHNRSWA/Slci06qOdZimh1YbRORGI+gWdq0PrKMk0KZwFu9i5UsaO11kwCEeeyM/H8FMBOdaQLnqYA==}
+  '@aswemaythink/memex@0.2.1':
+    resolution: {integrity: sha512-3/QVyb0u8CfNDk466hT8JGMXtbY7P+ukRLnkhiocLfIK4+pLIrIVB2xhCX3Dp5teNpuS051NvrJ+2r8SwTDOXw==}
     engines: {node: '>=14.14', npm: '>=6'}
     hasBin: true
 
@@ -7098,7 +7098,7 @@ packages:
 
 snapshots:
 
-  '@aswemaythink/memex@0.1.1':
+  '@aswemaythink/memex@0.2.1':
     dependencies:
       detect-libc: 2.1.2
 

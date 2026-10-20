@@ -37,7 +37,7 @@
     "playground": "node packages/reference-core/playground/tools/serve.mjs"
   },
   "devDependencies": {
-    "@aswemaythink/memex": "^0.1.1",
+    "@aswemaythink/memex": "^0.2.1",
     "@changesets/cli": "^2.30.0",
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
