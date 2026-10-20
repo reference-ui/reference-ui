@@ -33,5 +33,3 @@ swipe, countdowns, focus return, snapshots — proves out in CT. Note the
 preserved quirk: `ToastActionButton` at the index is a type alias of the
 action config, not the button value; the button itself ships on the
 `Toast` compound and as `ToastAction` inside `parts/`.
-
-Up: Components.

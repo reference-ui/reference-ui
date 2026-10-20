@@ -1,6 +1,6 @@
 # Splitter
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Splitter --e2e`).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Splitter --e2e`).
 
 A 1D flex partition with a window-splitter Handle. Splitter owns layout
 along one axis, the pointer drag loop (direct DOM writes, no React commit
@@ -247,7 +247,7 @@ gesture. `touch-action: none` is a Handle default. `will-change` /
 
 ## Store and hooks
 
-Per [hooks.md](../../core/hooks/hooks.md). No public Provider, no public store.
+Per [package README](../../../README.md). No public Provider, no public store.
 
 **Store shape (per Splitter instance).** Controlled `value`, orientation,
 and callbacks stay props. The store holds part registration (Panel/Handle

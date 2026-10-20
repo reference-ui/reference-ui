@@ -7,5 +7,3 @@ no source component here: the story re-exports the gallery
 (`Showcase.book`) and the CT suite mounts it resting, drives it
 active, and unwinds the cascade. Case metadata lives in the case catalog;
 execution decides the verdict.
-
-Up: Components.

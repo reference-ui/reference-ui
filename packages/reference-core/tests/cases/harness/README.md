@@ -6,5 +6,3 @@ two probes pin multi-spec runs, cascade wins, theme flips, and the
 settled-snapshot bless flow with its committed baselines.
 
 > Search terms: harness probe, smoke canary, runner self-test, multi-spec, bless flow, harness/snapshots
-
-Parent: the case-group index.

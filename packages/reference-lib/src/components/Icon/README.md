@@ -7,5 +7,3 @@ the internal scope — and the gallery composes Field and Listbox hosts
 for context.
 
 Gallery: `Icon.book`.
-
-Up: components.

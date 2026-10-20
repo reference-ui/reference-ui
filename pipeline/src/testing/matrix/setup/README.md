@@ -9,5 +9,3 @@ pnpm pipeline setup --no-install                        # generate files only
 ```
 
 The Dagger runner reuses the same managed generators when materializing synthetic consumers inside containers.
-
-Parent: the matrix index.

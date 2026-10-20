@@ -67,5 +67,3 @@ There is no `parts/` — the host has one fixed rendering, owned by the
 root — and no `context`: with no compound parts, there is no subtree
 to scope. `internal` keeps its path because ReferenceLibrary imports
 the host entry directly; it re-exports, it is not a shim.
-
-Up: components.

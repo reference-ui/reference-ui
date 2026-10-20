@@ -1,6 +1,6 @@
 # Styletrace
 
-`styletrace` takes a source tree and a Reference sync root and emits the sorted names of exported JSX components whose StyleProps reach a Reference primitive or the Reference style pipeline, plus located, coded diagnostics. `trace()` returns names; `traceDetailed()` returns bindings, diagnostics, and owned props. Part of reference-rs; the frozen claim list and proofs live in SPEC.
+`styletrace` takes a source tree and a Reference sync root and emits the sorted names of exported JSX components whose StyleProps reach a Reference primitive or the Reference style pipeline, plus located, coded diagnostics. `trace()` returns names; `traceDetailed()` returns bindings, diagnostics, and owned props. Part of reference-rs.
 
 ## Identity rules
 
@@ -20,5 +20,17 @@ Entries that fail to parse or read yield one `STT-W-SKIPPED-FILE` each and sibli
 | `STT-W-UNRESOLVED-HOC-ARGUMENT` | warning | export-site HOC argument names no component |
 | `STT-E-SCAN-FAILED` | error | unreadable source root; trace refused |
 | `STT-E-UNRESOLVED-SURFACE` | error | no StyleProps entrypoint or sync root; trace refused |
+
+## Open gaps
+
+- **STT-23** — primitive identity from the synced declarations rather than name lookup is unproven: no case yet distinguishes declaration lookup from prop flow.
+
+## Tripwires
+
+- Never guess a missing surface or file: refuse with the coded throw, or skip the one file and keep its siblings.
+- Never reword the skip sentence; it is pinned byte-identical to the legacy prose.
+- Never expect tsconfig `paths` aliases to trace: an authoring alias must never win (deliberate).
+- Never expect a local `export default function Card` in an entry to mint `Card`: the entry's own default still mints `default`. Only a re-exported default takes the component's name.
+- Never expect an `Object.assign` root to trace, even when it is style-bearing (known limit).
 
 > Search terms: forwardRef, rest spread, style prop tracer, wrapper analysis, styletrace/resolution, styletrace/wrappers, styletrace/primitives, styletrace/forwarding, rs:canon, rs:atomic, rs:base-system

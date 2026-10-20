@@ -20,5 +20,3 @@ Step snaps, advances, and decides commits on the zero-anchored lattice.
 Shared holds anatomy, DOM plumbing, naming text, and the dev channel.
 Pure decisions carry colocated unit tests; browser behavior proves out
 in CT.
-
-Up: Components.

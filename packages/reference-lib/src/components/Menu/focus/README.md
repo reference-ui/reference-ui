@@ -7,5 +7,3 @@ one level, moves to first and edge items, and mirrors the 1D roving
 mapping on the container itself for pointer-opened menus. Owning-root
 reads run id and focus discovery against a shadow-hosted node's own
 root instead of the document. Unit-tested in happy-dom.
-
-Up: Menu.

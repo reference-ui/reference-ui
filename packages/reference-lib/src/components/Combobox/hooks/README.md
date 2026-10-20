@@ -10,5 +10,3 @@ wire the focus sources. Effects run in their original order — metadata
 reset, source check, transition, resolve, mount, follow, re-arm, busy,
 announce — and every pure decision the hooks wrap lives in a tested
 module.
-
-Up: Combobox.

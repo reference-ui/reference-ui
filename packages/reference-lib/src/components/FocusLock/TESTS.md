@@ -554,11 +554,10 @@ scroll, or Presence duration.
 
 - `as`, wrapper selection, public focus guards, sidecars, focus-lock groups,
   whitelist callbacks, and combining multiple trap engines.
-- Cross-document trapping (`crossFrame`): not implemented — see
-  [FEATURES.md](./FEATURES.md) §1. Revisit only on real consumer need; no
-  in-repo caller traverses frame content today.
-- TalkBack virtual-modality skip: not implemented — see
-  [FEATURES.md](./FEATURES.md) §2. Revisit only with a concrete repro.
+- Cross-document trapping (`crossFrame`): not implemented. Revisit only
+  on real consumer need; no in-repo caller traverses frame content today.
+- TalkBack virtual-modality skip: not implemented. Revisit only with a
+  concrete repro.
 - Escape, outside press, inert, scroll lock, geometry, Handle, Presence
   duration, shard **registration**, nested-modal **wiring**, restore
   **when**: `Overlay`.

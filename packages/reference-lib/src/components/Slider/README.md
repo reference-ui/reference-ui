@@ -17,4 +17,5 @@ snapping, and neighbor bounds. Interaction resolves track clicks and
 thumb presentation as pure, tested decisions. Shared holds the warn
 channel and registry ordering every hook asks.
 
-Up: Components.
+Modified arrows pass through untouched — no `preventDefault`, no
+request; Page keys own large steps.

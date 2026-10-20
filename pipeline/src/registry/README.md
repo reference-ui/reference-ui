@@ -12,5 +12,3 @@ Pipeline-local npm-compatible registry (managed Verdaccio) plus the publish-styl
 
 - `build/` pushes prepared artifacts in; `registry/` never builds.
 - `registry/` stores and serves; `release/` decides what leaves for npm.
-
-Parent: the src index.

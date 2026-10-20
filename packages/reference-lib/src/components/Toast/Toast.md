@@ -1,6 +1,6 @@
 # Toast
 
-Proof: [case.json](./case.json) indexes the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Toast --e2e`). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Proof: [__e2e__](./__e2e__/) proves the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Toast --e2e`). System: [Overlay README](../Overlay/README.md).
 
 **Separate runtime, one Overlay seam.** Toast is not Overlay: no trap, no
 page inert, no geometry. Queue + host + announce, mounted by
@@ -13,7 +13,7 @@ appearance. Semantic helpers (`toast.success` / `error` / `warning` /
 `info` / `loading` / `promise`) exist as typed shortcuts over `define()`;
 chrome and meaning stay in the definition's `render`.
 
-Toast is **not** Overlay: no focus trap, no page inert, no layer-stack modality. The toaster is mounted by `ReferenceLibrary`. It renders at the React root without a portal or a required React context. The queue is a document-scoped Zustand store ([hooks.md](../../core/hooks/hooks.md)).
+Toast is **not** Overlay: no focus trap, no page inert, no layer-stack modality. The toaster is mounted by `ReferenceLibrary`. It renders at the React root without a portal or a required React context. The queue is a document-scoped Zustand store ([package README](../../../README.md)).
 
 ```tsx
 <ReferenceLibrary

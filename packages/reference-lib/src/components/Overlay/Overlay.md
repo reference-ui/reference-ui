@@ -1,6 +1,6 @@
 # Overlay
 
-Proof: [case.json](./case.json) indexes the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Overlay --e2e`). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Proof: [__e2e__](./__e2e__/) proves the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Overlay --e2e`). System: [Overlay README](./README.md).
 
 One React primitive for content that sits above the application. Popover and
 Tooltip stay **thin policy** on this kernel. FocusLock is the containment
@@ -146,7 +146,7 @@ own the overlay content. Trigger never portals.
 
 Portaled Backdrop and Content render under `document.body`, outside the
 DOM layer ancestor — unless the shadow destination rule applies (below).
-Through the Portal Color Mode Protocol ([`LIB_PORTAL_COLOR_MODE.md`](./LIB_PORTAL_COLOR_MODE.md)),
+Through the Portal Color Mode Protocol ([Portal README](../Portal/README.md)),
 `Portal` resets `LayerScopeContext` to `false` and propagates `DocumentContext`,
 allowing the standard primitive hosts (`Div`) of Backdrop and Content to re-emit
 `data-layer` and `data-color-mode` from logical React context so token-aware StyleProps
@@ -608,7 +608,7 @@ AT must not reach background content. Double-hide breaks restore. Live regions a
 
 **Prior art.** aria-hidden — `hideOthers` / `inertOthers`, refcount, preserve pre-hidden, keep `[aria-live]`. Aria `ariaHideOutside.ts` — TreeWalker + MutationObserver, keep `[data-live-announcer]`, `role=row` VoiceOver special case. The inert polyfill: edge cases; prefer native `inert` in Overlay, steal tests not the polyfill.
 
-**Lift** sibling-walk + refcount + live-region exceptions. Prefer native `inert` on Overlay. Do not require an OverlayProvider as a public app wrapper. The shared layer stack is a document-scoped Zustand store ([hooks.md](../../core/hooks/hooks.md)).
+**Lift** sibling-walk + refcount + live-region exceptions. Prefer native `inert` on Overlay. Do not require an OverlayProvider as a public app wrapper. The shared layer stack is a document-scoped Zustand store ([package README](../../../README.md)).
 
 An already `aria-hidden` subtree is an opaque traversal boundary. Dynamic nodes
 reparented into a pre-hidden or Overlay-managed subtree stay isolated without
@@ -797,4 +797,4 @@ Hover grace, impatient click, and tooltip skip-delay stay Popover/Tooltip.
 Toast queue stays Toast. Overlay is the port frontend; it is not a nested
 consumer of Popover positioning.
 
-When vendors disagree, write the freeze-gate test first, then pick the behaviour that matches `components.md`.
+When vendors disagree, write the freeze-gate test first, then pick the behaviour that matches the components README.

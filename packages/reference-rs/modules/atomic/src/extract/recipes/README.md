@@ -22,5 +22,3 @@ This folder only finds the expressions. `sva` is not a site.
 - Invent a slot-recipe / `sva` author API.
 - Push recipe leaves into the utility AtomSet.
 - Match the identifier `recipe` without an import binding.
-
-Up: extract.

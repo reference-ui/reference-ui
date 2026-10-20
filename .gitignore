@@ -6,6 +6,7 @@ node_modules
 research/
 vendor/*
 !vendor/VENDOR.md
+!vendor/README.md
 # Build outputs
 dist
 target

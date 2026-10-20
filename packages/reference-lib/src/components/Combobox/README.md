@@ -20,5 +20,3 @@ colocated unit tests; browser behavior proves out in CT.
 
 `combobox-context` keeps its path because Listbox and Tree import the
 shared scope directly; its name is the exception that proves the shape.
-
-Up: components.

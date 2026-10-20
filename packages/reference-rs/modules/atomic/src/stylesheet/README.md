@@ -66,5 +66,3 @@ happened in `atom`.
 - Print a hashed `.Box_a3f2 { mt; bg }` for StyleProps.
 - Rescan source to “fix” a missing atom.
 - Live in JS.
-
-Up: atomic.

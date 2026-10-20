@@ -12,5 +12,3 @@ member rows, lists, and frames, `theme/` carries the browser token
 config, and `fixtures/` hosts the Book cases proving the browser against
 sample interfaces, aliases, and StyleProps extensions. Server rendering
 pins through the colocated SSR suite.
-
-Up: Components.

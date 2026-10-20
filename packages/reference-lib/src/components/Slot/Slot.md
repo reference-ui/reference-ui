@@ -1,6 +1,6 @@
 # Slot
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Slot --e2e`).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Slot --e2e`).
 
 Named-region registration for declarative component APIs. A part registers
 an element into a slot id; the host reads the shared registry and renders
@@ -172,13 +172,13 @@ provider.
 `createSlotCacheKey`, `transformSlotElements`) and the live-content
 registration contract. **Leave** PageLayout, sidebars,
 `getRegisteredSlots`, product part wrappers, and the hand-rolled listener
-set. The store is Zustand ([hooks.md](../../core/hooks/hooks.md)).
+set. The store is Zustand ([package README](../../../README.md)).
 Consumers never import it. `element` is not store state.
 
 ### Registration is not asChild merge
 
 Radix Slot merges props onto one child. That is
-`ReferenceSlotPartProps` in [components.md](../components.md)
+`ReferenceSlotPartProps` in [the components README](../README.md)
 (FocusLock, RovingFocus, Tooltip.Trigger).
 
 **Leave** Radix Slot, `asChild`, a public `Slottable`, and passing

@@ -1,6 +1,6 @@
 # Tree
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Tree --e2e`).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Tree --e2e`).
 
 A minimal APG `role="tree"`. Nested collapse, roving focus among **visible** items, single selection, typeahead. Built on `RovingFocus`.
 
@@ -103,7 +103,7 @@ Right expands or enters; Left collapses or moves to parent. RTL swaps.
 
 ### Single select + typeahead
 
-Multi-select and virtualized rows are application-owned (`components.md` omissions). Typeahead is RovingFocus with Tree’s visible set.
+Multi-select and virtualized rows are application-owned (components README omissions). Typeahead is RovingFocus with Tree’s visible set.
 
 ---
 

@@ -1,6 +1,6 @@
 # Slider
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Slider --e2e`).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Slider --e2e`).
 
 Pointer drag math, multi-thumb collision, keyboard stepping (arrows, PageUp/PageDown, Home/End), ARIA value ranges (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`).
 
@@ -107,7 +107,7 @@ Grabbing the thumb edge vs center jumps the value. Zag `thumbDragOffset` / `thum
 
 ### Form `name` / hidden inputs
 
-Vendors often bubble a hidden input for forms. Reference UI does not wrap form-field wiring (`components.md`). Application owns the form.
+Vendors often bubble a hidden input for forms. Reference UI does not wrap form-field wiring (the components README). Application owns the form.
 
 **Leave.**
 

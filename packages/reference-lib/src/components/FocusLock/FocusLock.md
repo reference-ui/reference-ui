@@ -1,6 +1,6 @@
 # FocusLock
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct FocusLock --e2e`). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct FocusLock --e2e`). System: [Overlay README](../Overlay/README.md).
 Used by: [Overlay](../Overlay/Overlay.md) when isolation `focus` is on.
 
 Contains keyboard focus inside a subtree: Tab cycles, programmatic focus is reclaimed, focus is restored when the lock deactivates. Overlay uses this internally. Distinct from `RovingFocus`, which moves `tabindex` among items inside a composite widget.

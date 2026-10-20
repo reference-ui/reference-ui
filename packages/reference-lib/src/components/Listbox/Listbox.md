@@ -1,6 +1,6 @@
 # Listbox
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Listbox --e2e`).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Listbox --e2e`).
 
 Selection and option-management engine. Single/multi selection, disabled skipping, typeahead, keyboard navigation. Built on `RovingFocus`.
 
@@ -145,7 +145,7 @@ Windowed options must preserve `aria-setsize` / `aria-posinset` and support scro
 
 **Prior art.** Aria `useOption.ts` `isVirtualized` → posinset/setsize via `getItemCount`. Zag `scrollToIndexFn` + `data-activedescendant` observe. TanStack Virtual's `virtual-core` — `scrollToIndex`, overscan, reconcile.
 
-**Lift** Aria attrs + Zag hook shape + TanStack scroll math. **Leave** a public Virtualizer component. One freeze-gate composition must be virtualized (`components.md`).
+**Lift** Aria attrs + Zag hook shape + TanStack scroll math. **Leave** a public Virtualizer component. One freeze-gate composition must be virtualized (the components README).
 
 ### Selection
 

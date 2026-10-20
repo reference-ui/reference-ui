@@ -201,5 +201,3 @@ want, resolve never sees it.
   the expression is this pass.
 - Fold `undefined` to a `Null` leaf (Panda’s evaluator). Omission is
   the correct empty.
-
-Up: extract.

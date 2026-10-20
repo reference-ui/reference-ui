@@ -22,5 +22,3 @@ Imports, `props.w`, functions, and spreads are out. `{...base}` where
 
 - Evaluate JavaScript.
 - Become a fourth extract surface next to jsx / css / recipes.
-
-Up: extract.

@@ -17,5 +17,3 @@ finishes, and `shared/` carries the nameless plumbing (ref reads, ref
 assignment, ids). Each domain owns isolated submodules with colocated unit
 tests proving them without a browser; the component tests prove the
 composition end to end.
-
-Up: Components.

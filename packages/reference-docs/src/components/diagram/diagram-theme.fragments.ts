@@ -7,7 +7,7 @@ import { tokens } from '@reference-ui/system'
  * Diagram palette. Chrome is the midnight slate ramp — the one environment every
  * panel belongs to. Tones are core: a panel says `blue.500/medium` and the amount
  * comes from the core scale. Tints never sit on tints: a toned panel sits on the
- * canvas and everything inside it is neutral (see DESIGN.md). What a tone cannot
+ * canvas and everything inside it is neutral (see README.md). What a tone cannot
  * express lives here: the neutral chrome, the legible inks, and one docs-only
  * strength for near-solid marks.
  */
@@ -24,7 +24,7 @@ tokens({
 
     /*
      * Tone text. Light steps to 700; amber takes 800 because 700 computes to
-     * about 4.3:1 on its tinted panel. Dark stays at 400. See DESIGN.md.
+     * about 4.3:1 on its tinted panel. Dark stays at 400. See README.md.
      */
     diagramBlueText: { value: '{colors.blue.700}', dark: '{colors.blue.400}' },
     diagramGreenText: { value: '{colors.green.700}', dark: '{colors.green.400}' },

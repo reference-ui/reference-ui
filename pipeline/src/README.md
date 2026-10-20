@@ -11,5 +11,3 @@ Execution graph for build, test, and release. The `cli` command tree defines `pn
 - `dev/` materializes registry-backed local dev workspaces; `clean/` wipes pipeline-managed state; `lib/` holds shared terminal and runtime helpers.
 
 Commands outside `pnpm pipeline` are thin aliases or helpers: `pnpm release`, `pnpm setup:local`, and small conditional wrappers in the pipeline scripts.
-
-Parent: the pipeline index.

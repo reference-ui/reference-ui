@@ -214,7 +214,7 @@ cases cover the omitted ARIA surface, `status`, and descendant chrome.
   portal: `Combobox`. This file proves only the Field bezel around that
   tree (`FI-COMP-04`).
 - Form submit/hidden inputs: those field components, not Field.
-- Transparent-part merge: `ReferenceSlotPartProps` in `components.md`.
+- Transparent-part merge: `ReferenceSlotPartProps` (components README).
 - Chip-row composite keyboard: `RovingFocus`, optional.
 
 ## Out of scope

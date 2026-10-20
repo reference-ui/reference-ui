@@ -33,7 +33,7 @@ grouping — cited for information, no dedicated Core row), LAYER-08 (reset dump
 prints first in `reset`), RECIPE-03 (utilities layer follows recipes, so host
 overrides win). LAYER-02 once waited on RS-4 (base-system `BAS-EXTEND-*`
 fragment adoption). RS-4 is in place with BAS-EXTEND-01..05 ticked, and LAYER-02
-is `done` (see `TESTS.md:8`).
+is `done`.
 
 ## Ownership split with TOKEN
 

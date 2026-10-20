@@ -24,4 +24,9 @@ Accordion hands openness to the Accordion value through the deep context
 import. There is no `store`: the
 disclosure store is the session hook, not a substrate.
 
-Up: components.
+Closed panels stay findable via `hiddenUntilFound` on the root or the
+Content, with the Content prop winning over the root; server markup
+renders plain `hidden` and upgrades to `until-found` in a layout effect.
+`forceMount` is pure author CSS — closed mounted Content carries no
+`hidden`, no inert, and no collapse inline styles, and focus evacuation
+does not run when nothing unmounts.

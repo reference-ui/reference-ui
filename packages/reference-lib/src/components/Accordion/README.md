@@ -23,4 +23,8 @@ Collapsible consumes the context through a deep import of the Accordion context 
 cross-component edge this collection owns. There is no `store`: the value
 store is a hook, not a substrate.
 
-Up: components.
+Find-in-page: item panels inherit `hiddenUntilFound` from their item
+Collapsible, and a `beforematch` reveal expands through existing policy —
+single mode swaps the open item, multiple adds — with enter motion skipped
+once. Setting `hiddenUntilFound` is the opt-in; there is no separate
+`findExpansion` switch. A match on the already-open item is a no-op.

@@ -16,5 +16,3 @@ scale is the spec. Do not change the public `r` grammar.
 
 - Change the public `r` grammar.
 - Apply rhythm to non-length props by accident (color, `display`, …).
-
-Up: resolve.

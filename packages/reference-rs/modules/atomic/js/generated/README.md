@@ -19,5 +19,3 @@ JS must not declare a second atom model.
 
 - Check in a parallel `utilities` string as source of truth.
 - Generate a jsx / types / patterns farm here.
-
-Up: atomic JS.

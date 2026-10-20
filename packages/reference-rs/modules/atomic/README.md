@@ -24,7 +24,7 @@ whether `mt` is a style prop. Do not fork either inside this crate.
 
 ## What it emits
 
-Two artefacts, one namer algorithm in two implementations, one differential gate:
+Two artefacts, one namer algorithm in two implementations, one differential gate. The stylesheet is package-scoped: the six layers nest inside `@layer <system>`.
 
 | Name | What | Disk |
 | :--- | :--- | :--- |
@@ -44,6 +44,28 @@ collected want that never became an atom is a P0.
 - Drive the compiler from JS by calling a parser over the boundary
 
 Tripwires. Any of these means we built the wrong machine.
+
+## Do not
+
+1. No JS runtime or evaluator for author code (`ATM-FORBID-02`): the fold table is constant folding, fail-closed outside it — refusals diagnose, never execute.
+2. One naming algorithm (`ATM-FORBID-03`, `ATM-GHOST-01`): the compiler namer is the oracle, the runtime namer its second implementation held byte-equal; no class-name synthesis anywhere else.
+3. No hashed whole-object classes (`ATM-FORBID-01`): runtime `css()` needs atomic utilities to concatenate.
+4. No generated `css.js` (`ATM-FORBID-04`): the runtime helper is authored TypeScript; the compiler emits only the data map.
+5. No synthesized `currentColor` for omitted shorthand components (`ATM-SHORT-01`).
+6. No PascalCase or regex tag guessing (`ATM-SITE-08`): identity comes from styletrace and canon.
+7. No splitting into micro-crates: one crate, module layout inside.
+8. No `tokens()` collection (fragments, in JS) and no `StyleProps` emission (typegen).
+9. No React primitives (they live in `@reference-ui/react`).
+10. No non-CSS values in declarations (`ATM-VALID-02`): `true`, `false`, `null` are diagnostics, not rules.
+11. No lexicographic rule sorting (`ATM-ORDER-01`, `ATM-ORDER-03`): cascade keys on parsed semantics.
+12. No denylist escaper (`ATM-NAME-07`): allowlist, plus a hex escape for a leading digit.
+13. The harness never constructs names (`ATM-FORBID-06`), not even in test helpers.
+14. State only what this module enforces; unbuilt behavior is an open gap below, never prose.
+
+## Open gaps
+
+- **ATM-GHOST-04** — namer injectivity: an unknown condition warns and emits nothing, but `p` and `padding` still collapse onto one prefix (quarantined). Open until the injectivity quarantine is empty.
+- **ATM-PERF-01** — no declared time or memory budget test yet: an app-sized tree compile must stay within bounds, with the atom count equal to the distinct `(prop, value, when, important)` tuples.
 
 ## Domain Concepts
 
@@ -109,7 +131,7 @@ Grain is one class per leaf. Spelling is ours.
 ## Verify
 
 v1 must be provable without the host pipeline in `@reference-ui/core`. The engine is a pure function —
-sources + base system in, CSS + class map out.
+sources + base system in, CSS + class map out. Proof is unit-only and self-contained: in-process cargo tests plus Vitest across the N-API seam — no browser, no dev server, no network; a case needs only its inputs, a base system, and the compiler. Emitted CSS is validated by a parser, not a renderer — a golden proves stability, never correctness. Goldens are portable (no absolute checkout paths), and the golden writer refuses to bless a stylesheet that does not validate.
 
 ```bash
 pnpm agentrs c atomic
@@ -120,12 +142,10 @@ pnpm agentrs v atomic --update-goldens
 | # | Gate | Home | Touches core? |
 | :--- | :--- | :--- | :--- |
 | A | Crate internals | `#[cfg(test)]` next to each module | no |
-| B | Golden cases | `rs-cases:ATM-*` — sources in, style sheet plus CSS and diagnostics JSON out | no |
+| B | Golden cases | atomic golden cases — sources in, style sheet plus CSS and diagnostics JSON out | no |
 | C | Production parity | Same cases through both engines; coverage of `(prop, value, when)`, not spelling | no |
 | D | Matrix | integration, after A–C | yes |
 
 The live compiler stays in production until D.
 
 > Search terms: atom compiler, extract/css(), extract/recipe(), namer/class-map, tokens/lookup, conditions/lowering, rs:canon, rs:styletrace, rs:base-system
-
-Up: @reference-ui/rust.

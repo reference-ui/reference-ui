@@ -1,0 +1,3 @@
+# Declaration printers
+
+Section printers assembled into the `.d.ts` document. Tokens print category-relative unions plus the aggregate index; styles print `StyleProps`, value and condition-key unions, and the recursive style object from canon-derived prop definitions; recipes print optional variant props with compound types for valid rows; strict narrows the open object through composed wrapper props; fonts print the registry plus `FontProps`; breakpoints print the accepted key set; `ts.rs` holds the identifier and literal helpers.

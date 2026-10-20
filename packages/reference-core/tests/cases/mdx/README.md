@@ -5,5 +5,3 @@ the native mdx-rs loader — a real `font()` call in a doc fragment
 collects, while the same needle fenced in a decoy fragment never does.
 
 > Search terms: mdx fragments, mdx-rs loader, fence decoy, fragment collection
-
-Parent: the case-group index.

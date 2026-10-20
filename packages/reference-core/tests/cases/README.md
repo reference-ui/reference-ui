@@ -16,10 +16,13 @@ or folder first, then an id prefix, so `agentcore run CORE-LAYER` also runs
 `CORE-LAYERS-*`; `agentcore run CORE-LAYER-` runs only the `CORE-LAYER-*` ids, and
 `agentcore run CORE-LAYERS` runs this group.
 
-Most groups hold a spec (behaviour, decisions, approved absences, the
-out-of-scope table) and a case ledger (one row per id with
-a status word), fronted by a short group README; the cli, harness,
-mdx, and ref groups are README-only. Leaf shape everywhere:
+Fourteen groups hold a spec (behaviour, decisions, approved absences,
+the out-of-scope table), fronted by a short group README; the chain,
+diag, layers, namer, pgen, and watch contracts live in their group
+READMEs, and the cli, harness, mdx,
+and ref groups are README-only. There is no ledger file: a case folder
+exists only once its proof is green, so the folders are the ledger.
+Leaf shape everywhere:
 a case index entry (id, name, `"sync": true` to opt into the sync loop),
 a README (first line is the claim), a world folder (TypeScript sources
 built to `dist/` and served over HTTP), run specs (default-export `run`:

@@ -14,5 +14,3 @@ Changesets owns intent and version/changelog text; the pipeline owns execution, 
 - `build/` builds and pushes artifacts into the local registry.
 - `testing/` validates those artifacts in realistic environments.
 - `release/` gates promotion of validated artifacts to the public registry.
-
-Parent: the src index.

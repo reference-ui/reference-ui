@@ -7,5 +7,3 @@ registry. The effect hooks compose onto the parts: entry focus,
 close restore, contextmenu dismiss, menu-owned outside press, and
 grace-polygon travel. Choice dismissal is shared by every choice item.
 Each hook takes plain values and returns data and handlers — no JSX.
-
-Up: Menu.

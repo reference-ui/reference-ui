@@ -7,5 +7,3 @@ document, hidden, and StrictMode edges prove out in the browser spec
 against the single story fixture.
 
 Cases: the Measure case catalog. Fixture: `Measure.story`.
-
-Up: components.

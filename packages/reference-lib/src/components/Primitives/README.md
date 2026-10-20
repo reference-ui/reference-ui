@@ -8,5 +8,3 @@ component here: the story re-exports the gallery sections and the CT
 suite boots the harness, renders the fixture root, and drives the
 controls. Case metadata lives in the case catalog; execution decides the
 verdict.
-
-Up: Components.

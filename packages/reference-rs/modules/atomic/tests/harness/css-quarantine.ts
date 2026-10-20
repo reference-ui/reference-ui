@@ -5,7 +5,7 @@
  * fixed. A meta-test asserts that no entry now validates, so fixing a bug
  * without emptying its slot fails the build. Do not "fix"
  * BaseSystem::lib_fixture() or the token passthrough policy from here —
- * passthrough is deferred (testing.md §5 step 8). Intentional parity pins
+ * passthrough is deferred (open architectural decision). Intentional parity pins
  * (absurd authoring both engines reproduce textually, each citing its v2
  * test) are permanent and never defects.
  */
@@ -16,7 +16,7 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   'ATM-NAME-05': ['box-shadow: 3px solid'],
   'ATM-RHYTHM-04': ['background-position: 10px auto'],
 
-  // Token-passthrough policy. Deferred, testing.md §5 step 8.
+  // Token-passthrough policy. Deferred, open architectural decision.
   'ATM-DIAG-04': ['Unexpected input', 'caret-color: ui.missing.path'],
   'ATM-DIAG-13': ['Unexpected input', 'background: ui.missing.path'],
   'ATM-SHORT-03': ['Unexpected input', 'border: borders.card'],

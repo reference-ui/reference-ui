@@ -1,6 +1,6 @@
 # Switch
 
-Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Switch --e2e`).
+Proof: [__e2e__](./__e2e__/) proves the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Switch --e2e`).
 
 A compact on/off control with variable specificity. Mount `Switch` alone and
 it is a complete control: StyleProps land on the track, and a default thumb

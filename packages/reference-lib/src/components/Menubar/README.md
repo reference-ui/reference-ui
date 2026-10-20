@@ -17,5 +17,3 @@ open and which comes next; the nav kernel computes the move itself as a
 pure function of keys and ordered values. Shared holds the dev diagnostic
 every part warns through. Pure moves carry colocated unit tests; mounted
 behavior proves out in colocated Vitest and CT.
-
-Up: components.

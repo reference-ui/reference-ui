@@ -1,0 +1,3 @@
+# Native pack tooling
+
+Build, stamp, and publish tools for the platform `.node` binaries. `ensure-native` rebuilds via napi-rs only when Cargo inputs drift; `write-native-stamp` records the inputs hash beside binaries built elsewhere; `verify-native-freshness` fails closed at pack time on stale or unstamped binaries; `stage-local-artifacts` assembles local multi-platform builds; `publish-native` stages platform packages with provenance and restores the manifest afterwards; `create-dts-entrypoints` generates the root declaration stubs for published subpaths.

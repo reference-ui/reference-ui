@@ -14,5 +14,3 @@ Spelling is ours (`mt_2r`). It must be a pure function of the leaf so lib
 - Own `Want` / `Atom` (`atom`).
 - A second spelling in JS: the namer mirror holds this algorithm
   byte-equal by the namer goldens.
-
-Up: stylesheet.

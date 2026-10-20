@@ -113,5 +113,3 @@ Panda's encoder builds `Atom { prop, value,
 conditions }` records in `process_atomic` and dedups them with `FxHashSet`. That record is the
 grain. Their input is `Literal` from the evaluator; ours is a `Want`
 from leaves.
-
-Up: atomic.

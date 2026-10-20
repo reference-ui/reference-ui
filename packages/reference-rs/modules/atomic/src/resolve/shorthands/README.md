@@ -31,5 +31,3 @@ classification). The parser implements it, emitting atoms the namer and
 - Emit `border-bottom: 1px solid` as a utility that clobbers color.
 - Expand in JS for runtime and in Rust for build.
 - Collapse sibling shorthands into a hashed rule.
-
-Up: resolve.

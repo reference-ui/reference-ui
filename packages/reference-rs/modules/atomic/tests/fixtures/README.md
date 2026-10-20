@@ -11,5 +11,3 @@ The file is generated from base-system's `lib` fixture plus the exact envelope
 staticCss, omitted breakpoints/conditions so profile defaults apply). It is a
 frozen copy by design: if the lib source ever changes, case goldens stay put
 and the drift is a conscious re-freeze, not silent suite motion.
-
-Up: atomic.

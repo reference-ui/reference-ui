@@ -77,10 +77,11 @@ this file in the same pass.
   `extendedSystems`; the engine's token rule claims their stamps, so
   under `extends` the app's token values win inside their components.
   (atomic)
-- **group** — one feature family under `tests/cases/`: `SPEC.md`,
-  `TESTS.md`, leaf cases.
+- **group** — one feature family under `tests/cases/`: leaf cases plus
+  a README; union groups additionally carry a `SPEC.md` the census reads.
 - **status words** — `open`, `in-progress`, `done`, `blocked-on-rs`,
-  `approved-absence`, `retired`: the `TESTS.md` ledger states.
+  `approved-absence`, `retired`: carried per-case, in case files and
+  group README open rows.
 - **host** — a JSX name whose style props extract under the app's own
   system: primitives carry every tag, wrappers earn it by forwarding.
   Ownership follows the import to where it lands on disk, never the

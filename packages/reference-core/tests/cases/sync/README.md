@@ -5,5 +5,3 @@ Proves that after `sync()` the `.reference-ui/` tree matches the §4.1 folder in
 CORE-LAYER-04 and CORE-TOKEN-10 live in this group: the remainder rung is SYNC-owned.
 
 > Search terms: generated folder, sync inventory, byte-deterministic, compile request, baseSystem, authoring surface, watch resync, stale cleanup, extends merge
-
-Parent: the case-group index.

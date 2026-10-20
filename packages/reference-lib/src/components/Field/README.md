@@ -17,5 +17,3 @@ There is no `context` — with no compound parts, there is no subtree to
 scope — and no `parts/` or `hooks/`: the single transparent rendering is
 owned by the root. External consumers (Combobox, Tree, Icon) import the
 index only.
-
-Up: components.
