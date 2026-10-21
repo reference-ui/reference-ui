@@ -31,7 +31,11 @@ pnpm agentcore list            # all cases: id, name, folder, README first line
 pnpm agentcore search <query>  # find cases by id, name, or README text
 pnpm agentcore run [case-id]   # run one case, or all cases when omitted
 pnpm agentcore q [paths]       # quality gate (section 6)
+pnpm agent vt packages/reference-core   # Core's unit suite (src/**/*.test.ts)
 ```
+
+Cases and unit tests are separate suites: before landing, run both
+(`pnpm agentcore run` and the unit suite).
 
 - **No matrix, no Dagger in the inner loop.** One React, one fast bundler
   (Vite). Matrix install/bundler-chain proof is run by test-core, not this loop.
