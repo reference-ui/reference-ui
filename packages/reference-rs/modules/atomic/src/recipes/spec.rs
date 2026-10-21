@@ -37,6 +37,7 @@ pub fn from_spec(
 fn from_definition(name: &str, definition: &RecipeDefinition) -> Recipe {
     Recipe {
         class_name: name.to_string(),
+        slot: None,
         base: style_map_to_wants(&definition.base),
         variants: variants_to_wants(&definition.variants),
         default_variants: definition.default_variants.clone(),

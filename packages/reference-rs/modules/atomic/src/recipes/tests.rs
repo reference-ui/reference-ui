@@ -4,6 +4,7 @@
 use super::*;
 use crate::atom::{AtomValue, WhenKind};
 use crate::diagnostics::DiagnosticLocation;
+use crate::extract::recipes::selection::RecipeSelection;
 use base_system::BaseSystem;
 
 fn want(prop: &str, value: &str, when: &[&str]) -> Want {
@@ -34,6 +35,7 @@ fn base_atoms_sort_before_conditionals_at_equal_specificity() {
     };
     let recipe = Recipe {
         class_name: "card".to_string(),
+        slot: None,
         base: vec![
             want("color", "blue.600", &["sm"]),
             want("color", "red.500", &[]),
@@ -84,6 +86,7 @@ fn responsive_variants_emit_container_rules_after_plain_ones() {
     variants.insert("variant".to_string(), axis);
     let recipe = Recipe {
         class_name: "buttonStyle".to_string(),
+        slot: None,
         base: vec![],
         variants,
         default_variants: IndexMap::new(),
@@ -125,4 +128,40 @@ fn responsive_variants_emit_container_rules_after_plain_ones() {
         );
     }
     assert!(compiled[0].table.responsive_variant_map.is_empty());
+}
+
+#[test]
+fn slot_recipes_gate_on_their_slotted_call() {
+    let system = BaseSystem::lib_fixture();
+    let mut diagnostics = Vec::new();
+    let mut session = ResolveSession {
+        system,
+        diagnostics: &mut diagnostics,
+        location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
+    };
+    let recipe = Recipe {
+        class_name: name::slot_class_name("card", "root"),
+        slot: Some(RecipeSlot { recipe: "card".to_string(), name: "root".to_string() }),
+        base: vec![want("display", "flex", &[])],
+        variants: IndexMap::new(),
+        default_variants: IndexMap::new(),
+        compounds: vec![],
+        location: DiagnosticLocation::default(),
+    };
+    let called = SelectionIndex::new(
+        &[RecipeSelection { class_name: "card".to_string(), responsive: Default::default(), dynamic: false }],
+        &[],
+    );
+    let compiled = compile(std::slice::from_ref(&recipe), "test-system", &mut session, &called);
+    assert_eq!(compiled[0].table.qualified_name, "test-system__card__root");
+    assert!(
+        compiled[0].rules.iter().any(|rule| rule.class_name == "test-system__card__root__base"),
+        "a called slotted recipe prints its slot rules: {:?}", compiled[0].rules
+    );
+    let uncalled = SelectionIndex::new(&[], &[]);
+    let shaken = compile(std::slice::from_ref(&recipe), "test-system", &mut session, &uncalled);
+    assert!(shaken[0].rules.is_empty(), "an uncalled slotted recipe prints no rules");
+    assert_eq!(shaken[0].table.qualified_name, "test-system__card__root");
 }

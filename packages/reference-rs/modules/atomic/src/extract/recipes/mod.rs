@@ -56,6 +56,7 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     record_result_binding(ctx, &class_name);
     ctx.recipes.push(Recipe {
         class_name,
+        slot: None,
         base: draft.base,
         variants: draft.variants,
         default_variants: draft.default_variants,

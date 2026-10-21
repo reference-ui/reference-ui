@@ -29,16 +29,38 @@ pub use crate::runtime::RecipeRuntimeTable as RecipeTable;
 pub use crate::runtime::{RecipeCompoundRecord, RecipeCompoundRecord as RecipeMatch};
 pub use spec::from_spec;
 
+/// The slotted `recipe()` call one slot recipe lowers from (a recipe slot, not a cascade slot).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecipeSlot {
+    /// Authored `className` of the slotted recipe, such as `card`.
+    pub recipe: String,
+    /// The slot's name from its `slots` list, such as `root`.
+    pub name: String,
+}
+
 /// Extracted recipe definition. Style wants stay here, never entering utility AtomSet.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Recipe {
+    /// Class stem identity: the authored className, or `{className}__{slot}` for a slot recipe.
     pub class_name: String,
+    /// Set when this recipe is one slot of a slotted `recipe()` call.
+    pub slot: Option<RecipeSlot>,
     pub base: Vec<Want>,
     pub variants: IndexMap<String, IndexMap<String, Vec<Want>>>,
     pub default_variants: IndexMap<String, String>,
     pub compounds: Vec<RecipeCompound>,
     /// Source call site for refusal diagnostics. Empty for spec-owned recipes.
     pub location: DiagnosticLocation,
+}
+
+impl Recipe {
+    /// The authored className call-site selections key on: the slotted call's for a slot recipe.
+    pub fn selection_name(&self) -> &str {
+        match &self.slot {
+            Some(slot) => &slot.recipe,
+            None => &self.class_name,
+        }
+    }
 }
 
 /// One compound variant definition matching variant predicates to style wants.
@@ -97,7 +119,7 @@ fn compile_one(
     // plain rules plus exactly the observed responsive triples; unobserved
     // recipes print nothing while their runtime table still builds below.
     let (variant_map, compounds) =
-        match ResponsiveFilter::for_gate(&qualified_name, selections.get(&recipe.class_name)) {
+        match ResponsiveFilter::for_gate(&qualified_name, selections.get(recipe.selection_name())) {
             None => (
                 variant_class_map(&qualified_name, &recipe.variants),
                 compound_names(&qualified_name, &recipe.compounds),

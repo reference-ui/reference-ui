@@ -14,6 +14,11 @@ pub fn qualified_stem(system: &str, class_name: &str) -> String {
     }
 }
 
+/// Slot recipe className: `${class_name}__${slot}`, the stem one slot of a slotted recipe compiles under.
+pub fn slot_class_name(class_name: &str, slot: &str) -> String {
+    format!("{class_name}__{slot}")
+}
+
 /// Qualified base class name: `${stem}__base`.
 pub fn base_class(stem: &str) -> String {
     format!("{stem}__base")
@@ -107,5 +112,13 @@ mod tests {
             responsive_variant_class("md", "lib-test-system__button", "variant", "outline"),
             "md:lib-test-system__button_v_outline"
         );
+    }
+
+    #[test]
+    fn slot_class_name_joins_with_double_underscore() {
+        assert_eq!(slot_class_name("card", "root"), "card__root");
+        let stem = qualified_stem("sys", &slot_class_name("card", "root"));
+        assert_eq!(stem, "sys__card__root");
+        assert_eq!(base_class(&stem), "sys__card__root__base");
     }
 }
