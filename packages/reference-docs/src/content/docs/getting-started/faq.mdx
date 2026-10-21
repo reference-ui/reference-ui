@@ -1,0 +1,45 @@
+---
+title: FAQ
+section: Get started
+order: 40
+slug: faq
+description: Common questions, short answers.
+---
+
+# FAQ
+
+## Which browsers does Reference UI support?
+
+Any browser that supports CSS cascade layers, container queries and `color-mix()`.
+
+## Why are the styles in `@layer`?
+
+Every rule sits in a cascade layer, so a style prop beats a recipe on the same
+element with no `!important`. CSS you write outside a layer wins over every
+Reference UI rule. See [Cascade layers](/cascade-layers#your-own-css).
+
+## Which React versions does it work with?
+
+Reference UI is tested with React 19.
+
+## Is Reference UI only for React?
+
+Yes. Primitives from `@reference-ui/react` and components from
+`@reference-ui/lib` are React components. See [Primitives](/primitives).
+
+## Should I commit `.reference-ui/`?
+
+No. Sync rebuilds the folder on every run, so add `.reference-ui/` to
+`.gitignore` and run `ref sync` before each build. See [Sync](/sync).
+
+## Does it work with my bundler?
+
+Sync writes ordinary packages to `.reference-ui/`, and the bundler reads them
+like any other package. Run `ref sync` before the bundler starts. See
+[Vite](/vite) and [webpack](/webpack).
+
+## Why is a style missing?
+
+Sync compiles styles ahead of time, so a missing style usually means sync has
+not run, or the file is outside `include`. See
+[Troubleshooting](/troubleshooting).
