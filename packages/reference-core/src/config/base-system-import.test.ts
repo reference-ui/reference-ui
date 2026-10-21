@@ -39,15 +39,19 @@ const MIGRATED = [
   'matrix/tests/chain/T16/ui.config.ts',
 ]
 
+// Sibling folders are read concurrently: awaiting each folder in turn left the walk
+// latency-bound over ~5.7k directories, which is what pushed this test past its budget.
 async function walk(dir: string, acc: string[]): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => [])
+  const subdirs: string[] = []
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      if (!SKIP_DIR.has(entry.name)) await walk(join(dir, entry.name), acc)
+      if (!SKIP_DIR.has(entry.name)) subdirs.push(join(dir, entry.name))
     } else if (CONFIG_FILE.test(entry.name)) {
       acc.push(join(dir, entry.name))
     }
   }
+  await Promise.all(subdirs.map((subdir) => walk(subdir, acc)))
   return acc
 }
 
