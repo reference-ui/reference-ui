@@ -52,7 +52,7 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     let Some(class_name) = extract_class_name(obj, ctx) else {
         return;
     };
-    let draft = walk::walk_recipe_object(obj, origin.as_str(), ctx);
+    let draft = walk::walk_recipe_object(obj, origin.as_str(), None, ctx);
     record_result_binding(ctx, &class_name);
     ctx.recipes.push(Recipe {
         class_name,

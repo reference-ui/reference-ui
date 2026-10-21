@@ -1,8 +1,9 @@
 //! Recipe object walker: base styles, variant matrices, defaults, and compounds.
-//! Takes a validated recipe object literal plus its origin and emits a
-//! `RecipeDraft` of style wants. Identity refusal (className, spreads,
-//! non-object args) stays in `mod.rs`; this file only walks well-formed
-//! leaves into wants.
+//! Takes a validated recipe object literal, its origin and an optional slot, and
+//! emits a `RecipeDraft` of style wants. With a slot, every style position (base,
+//! each variant value, each compound `css`) reads only that slot's entry, and axes
+//! with no entry for the slot drop out. Identity refusal (className, spreads,
+//! non-object args) stays in `mod.rs`; this file only walks well-formed leaves.
 
 use indexmap::IndexMap;
 use oxc_ast::ast::{
@@ -27,37 +28,75 @@ pub(crate) struct RecipeDraft {
 pub(crate) fn walk_recipe_object(
     obj: &ObjectExpression<'_>,
     origin: &str,
+    slot: Option<&str>,
     ctx: &mut ExtractContext<'_>,
 ) -> RecipeDraft {
     let mut draft = RecipeDraft::default();
+    let mut walk = RecipeWalk {
+        origin,
+        slot,
+        ctx,
+        draft: &mut draft,
+    };
     for prop_kind in &obj.properties {
         if let ObjectPropertyKind::ObjectProperty(prop) = prop_kind {
-            handle_recipe_property(prop, origin, ctx, &mut draft);
+            handle_recipe_property(&mut walk, prop);
         }
     }
     draft
 }
 
+/// One walk over a recipe object: its origin, the slot it reads (`None` for a
+/// plain recipe), the extract context, and the draft it fills.
 struct RecipeWalk<'a, 'b> {
     origin: &'a str,
+    slot: Option<&'a str>,
     ctx: &'a mut ExtractContext<'b>,
     draft: &'a mut RecipeDraft,
 }
 
-fn handle_recipe_property(
-    prop: &ObjectProperty<'_>,
-    origin: &str,
-    ctx: &mut ExtractContext<'_>,
-    draft: &mut RecipeDraft,
-) {
+impl RecipeWalk<'_, '_> {
+    /// Wants for one style position: the whole object for a plain recipe, or
+    /// the slot's entry for a slotted one. `None` when that slot is absent.
+    fn style_at(&mut self, val: &Expression<'_>) -> Option<Vec<Want>> {
+        let target = match self.slot {
+            None => val,
+            Some(slot) => slot_entry(val, slot)?,
+        };
+        let mut wants = Vec::new();
+        walk_style_into(target, self.origin, self.ctx, &mut wants);
+        Some(wants)
+    }
+}
+
+/// The value a slot map gives `slot`; the last entry wins, as in an object literal.
+fn slot_entry<'a, 'b>(val: &'b Expression<'a>, slot: &str) -> Option<&'b Expression<'a>> {
+    let Expression::ObjectExpression(map) = unwrap_expression(val) else {
+        return None;
+    };
+    map.properties.iter().rev().find_map(|kind| match kind {
+        ObjectPropertyKind::ObjectProperty(prop)
+            if static_key(&prop.key).as_deref() == Some(slot) =>
+        {
+            Some(&prop.value)
+        }
+        _ => None,
+    })
+}
+
+fn handle_recipe_property(walk: &mut RecipeWalk<'_, '_>, prop: &ObjectProperty<'_>) {
     let Some(key) = static_key(&prop.key) else {
         return;
     };
     match key.as_str() {
-        "base" => walk_style_into(&prop.value, origin, ctx, &mut draft.base),
-        "variants" => handle_recipe_variants(&prop.value, origin, ctx, draft),
-        "defaultVariants" => handle_recipe_defaults(&prop.value, draft),
-        "compoundVariants" => handle_recipe_compounds(&prop.value, origin, ctx, draft),
+        "base" => {
+            if let Some(wants) = walk.style_at(&prop.value) {
+                walk.draft.base.extend(wants);
+            }
+        }
+        "variants" => handle_recipe_variants(walk, &prop.value),
+        "defaultVariants" => handle_recipe_defaults(&prop.value, walk.draft),
+        "compoundVariants" => handle_recipe_compounds(walk, &prop.value),
         _ => {}
     }
 }
@@ -96,16 +135,10 @@ fn walk_style_into(
     scope::apply_to_wants(&mut wants[wants_at..]);
 }
 
-fn handle_recipe_variants(
-    val: &Expression<'_>,
-    origin: &str,
-    ctx: &mut ExtractContext<'_>,
-    draft: &mut RecipeDraft,
-) {
+fn handle_recipe_variants(walk: &mut RecipeWalk<'_, '_>, val: &Expression<'_>) {
     let Expression::ObjectExpression(variants_obj) = unwrap_expression(val) else {
         return;
     };
-    let mut walk = RecipeWalk { origin, ctx, draft };
     for group_kind in &variants_obj.properties {
         let ObjectPropertyKind::ObjectProperty(group_prop) = group_kind else {
             continue;
@@ -116,7 +149,7 @@ fn handle_recipe_variants(
         let Expression::ObjectExpression(items_obj) = unwrap_expression(&group_prop.value) else {
             continue;
         };
-        walk_variant_items(&mut walk, items_obj, &group_name);
+        walk_variant_items(walk, items_obj, &group_name);
     }
 }
 
@@ -130,35 +163,27 @@ fn walk_variant_items(
         let ObjectPropertyKind::ObjectProperty(item_prop) = item_kind else {
             continue;
         };
-        let Some(raw_val) = static_key(&item_prop.key) else {
+        let Some(value_name) = static_key(&item_prop.key) else {
             continue;
         };
-        let value_name = raw_val;
-        let mut wants = Vec::new();
-        walk_style_into(&item_prop.value, walk.origin, walk.ctx, &mut wants);
-        items.insert(value_name, wants);
+        if let Some(wants) = walk.style_at(&item_prop.value) {
+            items.insert(value_name, wants);
+        }
     }
-    walk.draft.variants.insert(group_name.to_string(), items);
+    // A slot keeps only the axes it styles; a plain recipe keeps every authored axis.
+    if walk.slot.is_none() || !items.is_empty() {
+        walk.draft.variants.insert(group_name.to_string(), items);
+    }
 }
 
-fn handle_recipe_compounds(
-    val: &Expression<'_>,
-    origin: &str,
-    ctx: &mut ExtractContext<'_>,
-    draft: &mut RecipeDraft,
-) {
+fn handle_recipe_compounds(walk: &mut RecipeWalk<'_, '_>, val: &Expression<'_>) {
     let Expression::ArrayExpression(arr) = unwrap_expression(val) else {
         return;
     };
-    walk_compound_variants(arr, origin, ctx, draft);
+    walk_compound_variants(walk, arr);
 }
 
-fn walk_compound_variants(
-    arr: &ArrayExpression<'_>,
-    origin: &str,
-    ctx: &mut ExtractContext<'_>,
-    draft: &mut RecipeDraft,
-) {
+fn walk_compound_variants(walk: &mut RecipeWalk<'_, '_>, arr: &ArrayExpression<'_>) {
     for elem in &arr.elements {
         let Some(expr) = elem.as_expression() else {
             continue;
@@ -166,16 +191,15 @@ fn walk_compound_variants(
         let Expression::ObjectExpression(item_obj) = unwrap_expression(expr) else {
             continue;
         };
-        if let Some(compound) = extract_compound(item_obj, origin, ctx) {
-            draft.compounds.push(compound);
+        if let Some(compound) = extract_compound(walk, item_obj) {
+            walk.draft.compounds.push(compound);
         }
     }
 }
 
 fn extract_compound(
+    walk: &mut RecipeWalk<'_, '_>,
     item_obj: &ObjectExpression<'_>,
-    origin: &str,
-    ctx: &mut ExtractContext<'_>,
 ) -> Option<RecipeCompound> {
     let mut predicates = IndexMap::new();
     let mut wants = Vec::new();
@@ -187,7 +211,9 @@ fn extract_compound(
             continue;
         };
         if key == "css" {
-            walk_style_into(&prop.value, origin, ctx, &mut wants);
+            if let Some(css) = walk.style_at(&prop.value) {
+                wants.extend(css);
+            }
             continue;
         }
         extract_compound_predicate(&prop.value, key, &mut predicates);
