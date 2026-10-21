@@ -220,6 +220,20 @@ export const DEFAULT_ROWS: ReproRow[] = [
     },
   },
   {
+    code: 'ATM-E-RECIPE-SLOT',
+    severity: 'error',
+    channel: 'diagnostics',
+    configExtra: '',
+    files: {
+      'theme/recipe-slot.ts': [
+        "import { recipe } from '@reference-ui/react'",
+        '',
+        "export const r = recipe({ className: 'slotted', slots: ['root'], base: { header: { color: 'red' } } })",
+        '',
+      ].join('\n'),
+    },
+  },
+  {
     code: 'ATM-W-MISSING-STYLE-PLAN',
     severity: 'warning',
     channel: 'diagnostics',
