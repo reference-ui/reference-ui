@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
-/** Composition proof for Switch: StyleProps stay isolated between track
- * and authored Thumb (SW-DOM-08), a settings row composes a
- * low-specificity labelled Switch (SW-COMP-01), and activation plus
- * labeling stay local inside an open ShadowRoot (SW-ENV-03). */
+/** Composition proof for Switch (SW-DOM-08, SW-COMP-01, SW-ENV-03).
+ * StyleProps stay isolated between track and authored Thumb, a settings row
+ * composes a low-specificity labelled Switch, and activation plus labeling
+ * stay local inside an open ShadowRoot. */
 import * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'
@@ -27,11 +27,11 @@ describe('Switch style isolation, composition, and ShadowRoot', () => {
             data-testid="sw"
             checked={false}
             width="6r"
-            bg="accent"
+            bg="design.accent.background"
             r={{ 320: { width: '7r' } }}
           >
             {authored && (
-              <Switch.Thumb data-testid="sw-thumb" width="2r" bg="bg" r={{ 320: { width: '3r' } }} />
+              <Switch.Thumb data-testid="sw-thumb" width="2r" bg="design.bg.muted" r={{ 320: { width: '3r' } }} />
             )}
           </Switch>
         )
@@ -43,14 +43,14 @@ describe('Switch style isolation, composition, and ShadowRoot', () => {
     // Each declaration lands only on its own element (class tokens emitted
     // by the StyleProps runtime; no stylesheet needed to prove isolation).
     expect(rootEl().className).toContain('w_6r')
-    expect(rootEl().className).toContain('bg_accent')
+    expect(rootEl().className).toContain('bg_design.accent.background')
     expect(rootEl().className).not.toContain('w_2r')
-    expect(rootEl().className).not.toContain('bg_bg')
+    expect(rootEl().className).not.toContain('bg_design.bg.muted')
     expect(thumbEl().getAttribute('data-testid')).toBe('sw-thumb')
     expect(thumbEl().className).toContain('w_2r')
-    expect(thumbEl().className).toContain('bg_bg')
+    expect(thumbEl().className).toContain('bg_design.bg.muted')
     expect(thumbEl().className).not.toContain('w_6r')
-    expect(thumbEl().className).not.toContain('bg_accent')
+    expect(thumbEl().className).not.toContain('bg_design.accent.background')
     // Responsive overrides stay on their own element too.
     expect(rootEl().className).toContain('w_7r')
     expect(rootEl().className).not.toContain('w_3r')
@@ -62,7 +62,7 @@ describe('Switch style isolation, composition, and ShadowRoot', () => {
     expect(container.querySelectorAll('[data-reference-switch-thumb]').length).toBe(1)
     expect(rootEl().className).toContain('w_6r')
     expect(thumbEl().className).not.toContain('w_2r')
-    expect(thumbEl().className).not.toContain('bg_bg')
+    expect(thumbEl().className).not.toContain('bg_design.bg.muted')
     expect(thumbEl().className).not.toContain('w_3r')
 
     await React.act(async () => {

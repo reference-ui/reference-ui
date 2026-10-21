@@ -103,12 +103,12 @@ Switch-specific type cases cover only managed-prop omissions.
   `type="button"` and that toggling does not submit.
 - [x] `SW-DOM-08` `[reference]` `[browser]` —
   **Switch should isolate StyleProps between the track and an authored
-  Thumb.** Render `width="6r"` `bg="accent"` on Switch and `width="2r"`
-  `bg="bg"` on `Switch.Thumb`, including a responsive `r` override on each.
-  Assert each declaration lands only on its own element, Root styles do not
-  copy onto Thumb, Thumb styles do not copy onto Root, and swapping back to
-  a default thumb drops authored Thumb styles without leaving them on the
-  default span.
+  Thumb.** Render `width="6r"` `bg="design.accent.background"` on Switch and
+  `width="2r"` `bg="design.bg.muted"` on `Switch.Thumb`, including a
+  responsive `r` override on each. Assert each declaration lands only on
+  its own element, Root styles do not copy onto Thumb, Thumb styles do not
+  copy onto Root, and swapping back to a default thumb drops authored Thumb
+  styles without leaving them on the default span.
 
 ### Controlled activation
 
