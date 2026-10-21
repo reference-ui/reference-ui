@@ -9,16 +9,17 @@ import path from 'node:path';
 import type { CoreCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 import { sync } from '../../../../../src/sync/index.ts';
-import { watchSync } from '../../../../../src/lib/watch/index.ts';
+import { watchSync, type WatchHandle } from '../../../../../src/lib/watch/index.ts';
 
 interface SpecInput {
   page: SpecPage;
   case: CoreCase;
 }
 
-// Canonical contents, normalized before the watch starts and restored in
-// a finally, so the world is byte-clean for the next run even when an
-// assertion fails midway.
+// Baseline and edited contents the proof writes into the world. The files
+// it edits are captured before the first write and restored in a finally,
+// so the world is byte-clean for the next run even when an assertion fails
+// midway.
 const USES_START = `import { css } from '@reference-ui/react'\n\nexport const cls = css({ color: 'brand' })\n`;
 const CONFIG_NARROW = `import { defineConfig } from '@reference-ui/core'\n\nexport default defineConfig({\n  name: 'core-sync14',\n  include: ['theme/**/*.{ts,tsx}'],\n})\n`;
 const CONFIG_WIDE = `import { defineConfig } from '@reference-ui/core'\n\nexport default defineConfig({\n  name: 'core-sync14',\n  include: ['theme/**/*.{ts,tsx}', 'extra/**/*.{ts,tsx}'],\n})\n`;
@@ -167,23 +168,26 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   const extraDir = path.join(c.worldDir, 'extra');
   const sheetPath = path.join(c.worldDir, '.reference-ui', 'styled', 'styles.css');
   const sheet = (): string => fs.readFileSync(sheetPath, 'utf8');
+  // Captured before the first write; the finally writes these exact bytes back.
+  const usesOriginal = fs.readFileSync(target);
+  let handle: WatchHandle | undefined;
 
-  fs.writeFileSync(configPath, CONFIG_NARROW);
-  fs.writeFileSync(target, USES_START);
-  fs.rmSync(stray, { force: true });
-  fs.rmSync(extraDir, { recursive: true, force: true });
-  await sync(c.worldDir);
-  assert.doesNotMatch(sheet(), INK_FILL_RULE, 'baseline sheet has no ink fill yet');
-
-  const events: string[] = [];
-  let resyncs = 0;
-  const handle = await watchSync(c.worldDir, {
-    onChange: (change) => events.push(`${change.event}:${change.relativePath.replaceAll('\\', '/')}`),
-    onResync: () => {
-      resyncs += 1;
-    },
-  });
   try {
+    fs.writeFileSync(configPath, CONFIG_NARROW);
+    fs.writeFileSync(target, USES_START);
+    fs.rmSync(stray, { force: true });
+    fs.rmSync(extraDir, { recursive: true, force: true });
+    await sync(c.worldDir);
+    assert.doesNotMatch(sheet(), INK_FILL_RULE, 'baseline sheet has no ink fill yet');
+
+    const events: string[] = [];
+    let resyncs = 0;
+    handle = await watchSync(c.worldDir, {
+      onChange: (change) => events.push(`${change.event}:${change.relativePath.replaceAll('\\', '/')}`),
+      onResync: () => {
+        resyncs += 1;
+      },
+    });
     // Let the subscriptions go fully live before the first mutation, so
     // no pre-watch write backfills as a surprise event mid-proof.
     await sleep(1500);
@@ -198,10 +202,10 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
     await proveWidenLeg(proof);
     await proveNarrowLeg(proof);
   } finally {
-    await handle.stop();
+    await handle?.stop();
     fs.rmSync(extraDir, { recursive: true, force: true });
     fs.rmSync(stray, { force: true });
-    fs.writeFileSync(target, USES_START);
+    fs.writeFileSync(target, usesOriginal);
     fs.writeFileSync(configPath, configStart);
     await sync(c.worldDir);
   }

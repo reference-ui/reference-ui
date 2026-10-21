@@ -9,15 +9,16 @@ import path from 'node:path';
 import type { CoreCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 import { sync } from '../../../../../src/sync/index.ts';
-import { watchSync } from '../../../../../src/lib/watch/index.ts';
+import { watchSync, type WatchHandle } from '../../../../../src/lib/watch/index.ts';
 
 interface SpecInput {
   page: SpecPage;
   case: CoreCase;
 }
 
-// Canonical contents, normalized before the watch starts and restored in
-// a finally, so the world is byte-clean for the next run even when an
+// Baseline and edited contents the proof writes into the world. The bytes
+// of uses.ts are captured before the first write and restored exactly in a
+// finally, so the world is byte-clean for the next run even when an
 // assertion fails midway.
 const USES_START = `import { css } from '@reference-ui/react'\n\nexport const cls = css({ color: 'brand' })\n`;
 const USES_CHANGED = `import { css } from '@reference-ui/react'\n\nexport const cls = css({ color: 'ink' })\n`;
@@ -52,23 +53,26 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   const extra = path.join(c.worldDir, 'theme', 'extra.ts');
   const sheetPath = path.join(c.worldDir, '.reference-ui', 'styled', 'styles.css');
   const sheet = (): string => fs.readFileSync(sheetPath, 'utf8');
+  // Captured before the first write; the finally writes these exact bytes back.
+  const usesOriginal = fs.readFileSync(target);
+  let handle: WatchHandle | undefined;
 
-  fs.writeFileSync(target, USES_START);
-  fs.rmSync(extra, { force: true });
-  await sync(c.worldDir);
-  assert.match(sheet(), COLOR_RULE, 'baseline sheet carries the brand utility');
-  assert.doesNotMatch(sheet(), INK_FILL_RULE, 'baseline sheet has no ink fill yet');
-
-  const events: string[] = [];
-  let resyncs = 0;
-  const seen = (entry: string): boolean => events.includes(entry);
-  const handle = await watchSync(c.worldDir, {
-    onChange: (change) => events.push(`${change.event}:${change.relativePath.replaceAll('\\', '/')}`),
-    onResync: () => {
-      resyncs += 1;
-    },
-  });
   try {
+    fs.writeFileSync(target, USES_START);
+    fs.rmSync(extra, { force: true });
+    await sync(c.worldDir);
+    assert.match(sheet(), COLOR_RULE, 'baseline sheet carries the brand utility');
+    assert.doesNotMatch(sheet(), INK_FILL_RULE, 'baseline sheet has no ink fill yet');
+
+    const events: string[] = [];
+    let resyncs = 0;
+    const seen = (entry: string): boolean => events.includes(entry);
+    handle = await watchSync(c.worldDir, {
+      onChange: (change) => events.push(`${change.event}:${change.relativePath.replaceAll('\\', '/')}`),
+      onResync: () => {
+        resyncs += 1;
+      },
+    });
     // Let the subscriptions go fully live before the first mutation, so
     // no pre-watch write backfills as a surprise event mid-proof.
     await sleep(500);
@@ -102,9 +106,9 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
     assert.ok(seen('unlink:theme/uses.ts'), `watcher reports the deletion, saw [${events.join(', ')}]`);
     assert.ok(seen('unlink:theme/extra.ts'), `watcher reports the second deletion, saw [${events.join(', ')}]`);
   } finally {
-    await handle.stop();
+    await handle?.stop();
     fs.rmSync(extra, { force: true });
-    fs.writeFileSync(target, USES_START);
+    fs.writeFileSync(target, usesOriginal);
     await sync(c.worldDir);
   }
 }
