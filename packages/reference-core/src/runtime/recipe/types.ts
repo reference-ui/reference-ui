@@ -2,6 +2,7 @@
 // They cover the selections an author passes, the recipe config they write, and the resolver a recipe() call
 // returns. They are types only, shared by the resolver and the class derivation, and recipe.ts re-exports them
 // under their public names. splitVariantProps keeps the caller's props generic so a wrapper's rest stays typed.
+// Slotted configs key every style position by slot, and their fn returns one class string per slot.
 
 import type { SystemStyleObject } from '../css/css.ts'
 
@@ -42,5 +43,33 @@ export interface RecipeRuntimeFn {
   variantKeys: string[]
   variantMap: Record<string, string[]>
   /** Variant keys are not known here, so rest keeps the caller's props as Partial; the bake narrows it per recipe. */
+  splitVariantProps<P extends object>(props: P): [RecipeProps, Partial<P>]
+}
+
+/** Slot name to that slot's styles: what each style position holds in a slotted recipe. */
+export type RecipeSlotStyles = Record<string, SystemStyleObject>
+
+/** One compound rule of a slotted recipe: axis predicates plus per-slot styles. */
+export interface SlottedRecipeCompoundConfig {
+  css: RecipeSlotStyles
+  [axis: string]: unknown
+}
+
+/** Authored recipe with `slots`: base, each variant value and each compound css are keyed by slot. */
+export interface SlottedRecipeConfig {
+  className: string
+  slots: readonly string[]
+  base?: RecipeSlotStyles
+  variants?: Record<string, Record<string, RecipeSlotStyles>>
+  defaultVariants?: Record<string, string>
+  compoundVariants?: readonly SlottedRecipeCompoundConfig[]
+}
+
+/** Resolved slotted recipe: one class string, and one raw style object, per slot, plus variant metadata. */
+export interface SlottedRecipeRuntimeFn<S extends string = string> {
+  (props?: RecipeProps): Record<S, string>
+  raw(props?: RecipeProps): Record<S, SystemStyleObject>
+  variantKeys: string[]
+  variantMap: Record<string, string[]>
   splitVariantProps<P extends object>(props: P): [RecipeProps, Partial<P>]
 }

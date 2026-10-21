@@ -20,4 +20,8 @@ export {
   type RecipeProps,
   type RecipePropValue,
   type RecipeRuntimeFn,
+  type RecipeSlotStyles,
+  type SlottedRecipeCompoundConfig,
+  type SlottedRecipeConfig,
+  type SlottedRecipeRuntimeFn,
 } from './recipe/recipe.ts'

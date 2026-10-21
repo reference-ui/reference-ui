@@ -6,6 +6,7 @@
 // compose base the same way and append one derived per-breakpoint class each
 // (ATM-RECIPE-07). Tables ship derivation inputs only: key stem, map-key
 // axes, index defaults, unexpanded predicates.
+// A config with `slots` resolves as one plain recipe per slot projection (slots.ts).
 
 import type { RecipeRuntimeTable } from '@reference-ui/rust/contracts'
 import type { SystemStyleObject } from '../css/css.ts'
@@ -19,7 +20,16 @@ import {
   splitResponsiveProps,
   tableDefaults,
 } from './classes.ts'
-import type { RecipeCompoundConfig, RecipeConfig, RecipeProps, RecipeRuntimeFn } from './types.ts'
+import { isSlottedConfig, slottedRecipe } from './slots.ts'
+import type {
+  RecipeCompoundConfig,
+  RecipeConfig,
+  RecipeProps,
+  RecipeRuntimeFn,
+  SlottedRecipeConfig,
+  SlottedRecipeRuntimeFn,
+} from './types.ts'
+import { variantHelpers } from './variants.ts'
 
 export type {
   PlainRecipeProps,
@@ -28,7 +38,11 @@ export type {
   RecipePropValue,
   RecipeProps,
   RecipeRuntimeFn,
+  RecipeSlotStyles,
   ResponsiveRecipeValue,
+  SlottedRecipeCompoundConfig,
+  SlottedRecipeConfig,
+  SlottedRecipeRuntimeFn,
 } from './types.ts'
 
 interface ActiveRecipes {
@@ -159,9 +173,8 @@ function mergeRawStyles(
  * class per breakpoint, and unknown recipes resolve to nothing (dev warns once
  * per key).
  */
-export function recipe(config: RecipeConfig): RecipeRuntimeFn {
+function plainRecipe(config: RecipeConfig): RecipeRuntimeFn {
   const lowered = lowerRecipeDefinition(config)
-  const axes = Object.keys(lowered.variants ?? {})
   const runtimeFn = ((props: RecipeProps = {}) => {
     if (!active) {
       throw new Error('recipe() called before registerRecipeData: sync the project first')
@@ -184,18 +197,20 @@ export function recipe(config: RecipeConfig): RecipeRuntimeFn {
     const { plain } = splitResponsiveProps(props)
     return mergeRawStyles(lowered, resolveSelection(lowered.defaultVariants ?? {}, plain))
   }
-  runtimeFn.variantKeys = axes
-  runtimeFn.variantMap = Object.fromEntries(
-    Object.entries(lowered.variants ?? {}).map(([axis, options]) => [axis, Object.keys(options)])
-  )
-  runtimeFn.splitVariantProps = <P extends object>(props: P): [RecipeProps, Partial<P>] => {
-    const selection: RecipeProps = {}
-    const rest: Record<string, unknown> = {}
-    for (const [key, value] of Object.entries(props)) {
-      if (axes.includes(key)) selection[key] = value
-      else rest[key] = value
-    }
-    return [selection, rest as Partial<P>]
-  }
-  return runtimeFn
+  return Object.assign(runtimeFn, variantHelpers(lowered.variants))
+}
+
+/**
+ * Build a resolver for one authored recipe. A config with `slots` resolves as one plain
+ * recipe per slot (`${className}__${slot}` tables) and returns one class string per slot;
+ * any other config resolves as `plainRecipe` describes.
+ */
+export function recipe<const C extends SlottedRecipeConfig>(
+  config: C
+): SlottedRecipeRuntimeFn<C['slots'][number]>
+export function recipe(config: RecipeConfig): RecipeRuntimeFn
+export function recipe(
+  config: RecipeConfig | SlottedRecipeConfig
+): RecipeRuntimeFn | SlottedRecipeRuntimeFn {
+  return isSlottedConfig(config) ? slottedRecipe(config, plainRecipe) : plainRecipe(config)
 }
