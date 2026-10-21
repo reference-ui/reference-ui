@@ -32,9 +32,9 @@ const card = recipe({
   defaultVariants: { size: 'sm' },
 })
 
-type CardProps = DivProps & { size?: 'sm' | 'lg'; heading: string }
+type PartsCardProps = DivProps & { size?: 'sm' | 'lg'; heading: string }
 
-function Card({ size = 'sm', heading, children, ...props }: CardProps) {
+function Card({ size = 'sm', heading, children, ...props }: PartsCardProps) {
   const classes = card({ size })
   return (
     <Div data-slot="root" {...props} className={classes.root}>
