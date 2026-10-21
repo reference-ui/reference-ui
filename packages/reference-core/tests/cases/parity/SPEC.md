@@ -38,7 +38,7 @@ Colour mode is `data-color-mode` only; the matrix `data-panda-theme` pin is a re
 
 Panda bugs are not parity. P-DELTA-4 extends that rule with boolean leaks and dotted passthroughs.
 
-Responsive containers use `@container` only.
+Style-prop breakpoints use `@container` only; globalCss breakpoint keys print viewport `@media` (global/SPEC.md, Breakpoints).
 
 `types/` is deferred; PARITY-03 re-checks the 13-importer caveat.
 
@@ -60,7 +60,7 @@ P-DELTA-4. `(b)` blocked rows are known-unproven and never appear here.
 | resp | 3+7 | @media breakpoints · hideFrom/hideBelow · {sizes.x} ‖ @breakpoint macro · rem epsilon · RTL×resp · named container statics · sort-mq · recipe resp variants (→RECIPE-08) · globalCss resp keys (→GLOBAL) |
 | merge | 4+5 | red-then-blue · mergeProps · walkObject leaves · GHOST-04 ‖ sort comparators · hideFrom/hideBelow · shared className · token() · sva merge |
 | recipe | 4+6 | sva slot recipes · cva name · _base inner layer · static expansion ‖ sva/slots layer · cva · nested layers · static combo expansion · staticCss.recipes · const-bound indirection |
-| global | 6+10 | banner+var-dump · base global.css artifact · tokens-layer keyframes · comma-merge · colorPalette/size_md/leftover/dup-dark · data-theme rules in global ‖ themes JSON · :where(html)+@property · @position-try · divideX/Y · static cardinality · viewport breakpoints · groupHover/peerFocus · sva · token() · preflight |
+| global | 8+8 | banner+var-dump · base global.css artifact · tokens-layer keyframes · comma-merge · colorPalette/size_md/leftover/dup-dark · data-theme rules in global · viewport breakpoints · @position-try ‖ themes JSON · :where(html)+@property · divideX/Y · static cardinality · groupHover/peerFocus · sva · token() · preflight |
 | site | 9+7 | tagged templates · Vue/Svelte · compiled JSX · importMap · matchTag/PascalCase · token() inlining · css.raw · element-access refusal · computed-key refusal ‖ styled() factory · patterns pack · cva/sva · template-literal syntax · jsxFramework modes · strictTokens type-level · staticCss config |
 | prim | 3+5 | Box/Flex/Grid · as · cx/splitCssProps ‖ styled()/factory · pattern fns · data-panda-theme/data-theme · liquid/forwardRef · sva on primitives |
 | static | 4+5 | static recipes · static slots/patterns · colorPalette wildcards · named container statics ‖ cache/memo/bench · freeform condition strings · sva statics · text/layer statics · prefix/hash |
@@ -68,7 +68,7 @@ P-DELTA-4. `(b)` blocked rows are known-unproven and never appear here.
 | type | 6+6 | strict hatches · pattern+factory types · recipes d.ts + tokens.mjs/token() · styled global.d.ts · TokenCategory/ColorPalette unions · text/layer/animation+asset+formatTokenName+hashed ‖ @sm breakpoint keys · ConditionalValue variants · csstype dump · atomic names in d.ts · cva/css.raw · token.var/globalVars |
 | ★ parity-owned | 1 | P-DELTA-4: boolean leaks (`.focus_true`, `.isolation_true`, …) + dotted passthroughs (`background: ui.panel.background`) — parity-owned extension of the rule that Panda bugs are not parity |
 
-Group union: 158 entries (78 approved + 80 out-of-scope, incl. 10
+Group union: 158 entries (80 approved + 78 out-of-scope, incl. 10
 `★`); census list = 159 with P-DELTA-4. strictTokens needs no new
 line — type/SPEC.md already absents its hatch names. The `strict`
 category list is wired (config → typegen) and is not a new absence.
