@@ -4,7 +4,7 @@
 //! which analysis reads before the caller walks each retained program with them.
 //! The parallel phase parses on the worker that will walk the file and calls
 //! [`extract_program`] with the resolved imports, so the tree never crosses a
-//! thread. Shard outputs commit in input order through [`FileOut::commit`].
+//! thread. Shard outputs commit in input order through [`FileOut::commit`]. Pool threads come from `lanes::spawn_lane`, so each carries the large lane stack.
 
 use oxc_ast::ast::Program;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -350,7 +350,7 @@ mod tests {
             .collect();
         std::thread::scope(|scope| {
             for slot in &slots {
-                scope.spawn(|| {
+                crate::lanes::spawn_lane(scope, || {
                     let mut file = crate::phase_lane::lock(slot);
                     file.errors.push(("probe".to_string(), None));
                 });

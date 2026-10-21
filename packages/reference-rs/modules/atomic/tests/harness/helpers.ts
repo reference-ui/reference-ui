@@ -5,7 +5,8 @@
  * Gauges enforce the package-wrapped six-layer preamble, CSS grammar (ATM-VALID-01 / ATM-VALID-02),
  * utilities-layer membership for every runtime class, idempotence, input-order
  * independence, and namer injectivity. Class selectors come from css-tree, never
- * from a TypeScript escaper.
+ * from a TypeScript escaper. Cases listed in ISOLATED_CASES compile in a child process through
+ * runIsolated, so a native abort or a hang is a named failure of that case.
  */
 import path from 'node:path'
 import fs from 'node:fs'
@@ -15,6 +16,7 @@ import { compile } from '../../js/index.js'
 import type { CompileRequest, CompileResult } from '../../js/types.js'
 import type { EvaluatedSystemSpec } from '../../../../contracts/types.js'
 import libSystemSpecJson from '../fixtures/lib-system-spec.json'
+import { expectBounded, runIsolated } from '../../../../testing/isolated.js'
 import type {
   GoldenDefinition,
   StandingGauge,
@@ -103,16 +105,38 @@ export function getCaseOutputDir(caseName: string): string {
   return path.join(getCaseDir(caseName), 'output')
 }
 
+/**
+ * Cases whose compile runs in a child process. A native abort or a hang then ends the case as a named
+ * failure, and the compile must finish inside ISOLATED_BUDGET_MS, Node startup included.
+ */
+const ISOLATED_CASES: ReadonlySet<string> = new Set(['ATM-BOUND-01'])
+const ISOLATED_BUDGET_MS = 5000
+const ISOLATED_KILL_MS = 60_000
+
 export async function compileCase(
   caseName: string,
   extras: Partial<CompileRequest> = {}
 ): Promise<CompileResult> {
+  if (ISOLATED_CASES.has(caseName)) {
+    return compileIsolated(caseName, extras)
+  }
   const rootDir = path.resolve(getCaseInputDir(caseName))
   const baseSystem =
     extras.baseSystem ?? readOptionalBaseSystem(rootDir) ?? LIB_SYSTEM_SPEC
   // Cases read the compile-internal rows, so the harness always requests
   // the proof channel; an explicit extras.logs still wins for slim-path tests.
   return compile({ logs: ['proof'], rootDir, ...extras, baseSystem })
+}
+
+/** Compile one case in a child process; a signal, a hang or an over-budget run fails the case by name. */
+function compileIsolated(caseName: string, extras: Partial<CompileRequest>): CompileResult {
+  const run = runIsolated<CompileResult>({
+    module: path.join(getCaseDir(caseName), 'driver.mjs'),
+    fn: 'compileInput',
+    args: [path.resolve(getCaseInputDir(caseName)), extras],
+    timeoutMs: ISOLATED_KILL_MS,
+  })
+  return expectBounded(run, { ms: ISOLATED_BUDGET_MS })
 }
 
 function readOptionalBaseSystem(rootDir: string): EvaluatedSystemSpec | undefined {

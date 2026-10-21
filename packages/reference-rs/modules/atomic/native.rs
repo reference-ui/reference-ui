@@ -2,11 +2,12 @@
 //! Ingests serialized compilation requests carrying virtual sources and an EvaluatedSystemSpec.
 //! Accepts the legacy `{ baseSystem, rootDir?, files? }` shape and the frozen
 //! `{ schemaVersion: 2, spec, jsxHosts, sourceRoot, declarationRoot, include? }` shape for now.
-//! Lowers the spec through base-system's public lowering path, mirroring typegen's seam.
+//! Lowers the spec through base-system's public lowering path, mirroring typegen's seam, and runs each export on a contained thread.
 //! Foreign or malformed specs are rejected with path-bearing error diagnostics, never silently emptied.
 //! Emits the slim serialized result (sheets, runtime, diagnostics, hosts) by default; the
 //! 'proof' logs channel restores the compile-internal rows cases and the differential read.
 
+use crate::contained;
 use napi::Result;
 use napi_derive::napi;
 use std::collections::BTreeMap;
@@ -56,8 +57,15 @@ struct NativeCompileRequest {
     upstream_hosts: Option<BTreeMap<String, Vec<String>>>,
 }
 
-#[napi]
+#[napi(catch_unwind)]
 pub fn compile_system(request_json: String) -> Result<String> {
+    contained::run("compile_system", contained::NATIVE_STACK, move || {
+        compile_request(request_json)
+    })
+}
+
+/// The compile body, run on the contained thread `compile_system` spawns; the spans sit inside it.
+fn compile_request(request_json: String) -> Result<String> {
     #[cfg(feature = "alloc-trace")]
     let mut _span = ::atomic::alloc_trace::CompileSpan::enter(request_json.len());
     #[cfg(feature = "alloc-trace")]
@@ -101,8 +109,14 @@ pub fn compile_system(request_json: String) -> Result<String> {
     serialize(&result, proof)
 }
 
-#[napi]
+#[napi(catch_unwind)]
 pub fn scan_system(scan_request_json: String) -> Result<String> {
+    contained::run("scan_system", contained::NATIVE_STACK, move || {
+        scan_request(scan_request_json)
+    })
+}
+
+fn scan_request(scan_request_json: String) -> Result<String> {
     let req: ::atomic::scan::ScanRequest = serde_json::from_str(&scan_request_json)
         .map_err(|err| napi::Error::from_reason(format!("Invalid scan request JSON: {err}")))?;
     let response = ::atomic::scan::scan(&req);
@@ -122,8 +136,14 @@ struct NativeReleaseResponse {
     released: bool,
 }
 
-#[napi]
+#[napi(catch_unwind)]
 pub fn release_scan(token_json: String) -> Result<String> {
+    contained::run("release_scan", contained::NATIVE_STACK, move || {
+        release_request(token_json)
+    })
+}
+
+fn release_request(token_json: String) -> Result<String> {
     let req: NativeReleaseRequest = serde_json::from_str(&token_json)
         .map_err(|err| napi::Error::from_reason(format!("Invalid release request JSON: {err}")))?;
     let response = NativeReleaseResponse {

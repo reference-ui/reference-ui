@@ -5,7 +5,7 @@
 //! in source order, traces from those modules, and resolves imports. Workers
 //! then walk the trees they still hold. Programs never cross a thread; shards
 //! commit in input order. A dead lane fails its rendezvous instead of hanging
-//! the phase, so panics surface as compile errors, never hangs.
+//! the phase, so panics surface as compile errors, never hangs. Lanes come from `lanes::spawn_lane`, so each has the large lane stack.
 
 use std::any::Any;
 use std::path::Path;
@@ -19,7 +19,7 @@ use crate::extract::constants::LocalConstants;
 use crate::extract::identity_map::ExportMap;
 use crate::extract_parallel;
 use crate::hosts::{self, ResolvedHosts};
-use crate::lanes::PoolGuard;
+use crate::lanes::{self, spawn_lane, PoolGuard};
 use crate::phase_gate::{CoordGate, LaneFailure, LaneGate, PhaseCmd, Stage};
 use crate::phase_lane::{self, OwnedFile, RecordIn};
 use crate::stream::SourceSlot;
@@ -119,7 +119,7 @@ fn orchestrate(
         let links = crate::phase_gate::links(shards.len());
         let mut handles = Vec::with_capacity(shards.len());
         for (shard, gate) in shards.iter().zip(links.lanes) {
-            handles.push(scope.spawn(move || run_lane(shared, shard, gate)));
+            handles.push(spawn_lane(scope, move || run_lane(shared, shard, gate)));
         }
         drive_rounds(shared, &links.coord, handles, &mut *sinks)?;
         Ok(crate::phase_commit::settle(shared, slots, sinks))
@@ -196,12 +196,10 @@ fn join_all<'scope>(handles: Vec<std::thread::ScopedJoinHandle<'scope, ()>>) {
 /// already exited and joined: unwinding dropped their command senders, so no
 /// lane waited while the coordinator died.
 fn coordinator_panic_message(payload: &(dyn Any + Send)) -> String {
-    let detail = payload
-        .downcast_ref::<&str>()
-        .copied()
-        .or_else(|| payload.downcast_ref::<String>().map(String::as_str))
-        .unwrap_or("unknown panic payload");
-    format!("parallel phase: coordinator panicked ({detail}); compile aborted")
+    format!(
+        "parallel phase: coordinator panicked ({}); compile aborted",
+        lanes::panic_text(payload)
+    )
 }
 
 /// One shard on its own thread: parse, report, then walk after the publish.

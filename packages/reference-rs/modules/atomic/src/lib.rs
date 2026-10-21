@@ -1,6 +1,7 @@
 //! Root crate for the Reference UI native atomic CSS compiler.
 //! Orchestrates AST extraction, condition resolution, atomic class naming, and stylesheet assembly across virtual and disk sources.
 //! Exposes the primary compilation pipeline and public data structures consumed by build tooling and runtime environments.
+//! When a pooled lane panics, `compile` returns the panic as its `Err` string rather than unwinding into the caller.
 
 #[cfg(feature = "alloc-trace")]
 pub mod alloc_counters;
@@ -154,7 +155,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         extended_systems: request.extended_systems.clone(),
     };
     assembly.append_static(system);
-    let mut result = assembly.finish(system, &mut diag_session);
+    let mut result = assembly.finish(system, &mut diag_session)?;
     #[cfg(feature = "alloc-trace")]
     drop(_assembly);
     #[cfg(feature = "alloc-trace")]

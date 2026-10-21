@@ -1,5 +1,5 @@
 //! Plan assembly for one compile: `PlanBuilder` borrows the own atom set, the foreign groups and the diagnostics sink through `PlanSinks`.
-//! `build`, `build_diet`, and `build_with_keys` walk declarations in order, deduplicating canonical keys so each plan is emitted once per target system.
+//! `build`, `build_diet`, and `build_with_keys` walk declarations in order, deduplicating canonical keys so each plan is emitted once per target system. The keyed variants return `Result`, because a pooled lane that panics is reported as an error, not resumed.
 //! `resolve_detached` resolves one declaration on private placeholder sets, the entry point the parallel plan pool uses on its workers.
 
 use base_system::BaseSystem;
@@ -89,7 +89,7 @@ impl<'a> PlanBuilder<'a> {
     pub fn build_with_keys(
         &mut self,
         decls: &[AuthoredDeclaration],
-    ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
+    ) -> Result<(Vec<RuntimeStylePlan>, Vec<String>), String> {
         self.build_keyed(decls, false)
     }
 
@@ -100,17 +100,18 @@ impl<'a> PlanBuilder<'a> {
     pub fn build_diet(
         &mut self,
         decls: &[AuthoredDeclaration],
-    ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
+    ) -> Result<(Vec<RuntimeStylePlan>, Vec<String>), String> {
         self.build_keyed(decls, true)
     }
 
     /// Keyed build shared by the full and diet paths. Keys ride alongside
     /// pushed plans only, so `keys.len() == plans.len()` in plan order.
+    /// A pooled lane that panics returns as an error; the serial path never fails.
     fn build_keyed(
         &mut self,
         decls: &[AuthoredDeclaration],
         diet: bool,
-    ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
+    ) -> Result<(Vec<RuntimeStylePlan>, Vec<String>), String> {
         if let Some(guard) = Lanes::Auto.guard(WorkKind::TailWants, decls.len()) {
             return crate::runtime::plan_pool::build_keyed(self, decls, diet, &guard);
         }
@@ -126,7 +127,7 @@ impl<'a> PlanBuilder<'a> {
             keys.append(&mut decl_keys);
         }
 
-        (plans, keys)
+        Ok((plans, keys))
     }
 
     /// Resolve one declaration and expand it into plans plus canonical keys

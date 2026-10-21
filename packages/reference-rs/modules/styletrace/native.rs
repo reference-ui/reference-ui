@@ -1,14 +1,21 @@
 //! Node-API bindings for Styletrace wrapper graph tracing and StyleProps extraction.
 //! Accepts source root paths and staged declaration root paths from TypeScript callers.
 //! Traces imported component wrappers and resolves custom JSX element identifiers.
-//! Serializes discovered style-bearing JSX component names or module-qualified bindings into JSON strings.
+//! Serializes discovered style-bearing JSX component names or module-qualified bindings into JSON strings, each call on a contained thread.
 
+use crate::contained;
 use napi::Result;
 use napi_derive::napi;
 use std::path::PathBuf;
 
-#[napi]
+#[napi(catch_unwind)]
 pub fn analyze_styletrace(root_dir: String, sync_root_hint: Option<String>) -> Result<String> {
+    contained::run("analyze_styletrace", contained::NATIVE_STACK, move || {
+        trace_root(root_dir, sync_root_hint)
+    })
+}
+
+fn trace_root(root_dir: String, sync_root_hint: Option<String>) -> Result<String> {
     let normalized_root = PathBuf::from(&root_dir);
     let sync_root_hint = sync_root_hint.as_deref().map(PathBuf::from);
     let result =
@@ -21,11 +28,19 @@ pub fn analyze_styletrace(root_dir: String, sync_root_hint: Option<String>) -> R
     })
 }
 
-#[napi]
+#[napi(catch_unwind)]
 pub fn analyze_styletrace_bindings(
     source_root: String,
     declaration_root: Option<String>,
 ) -> Result<String> {
+    contained::run(
+        "analyze_styletrace_bindings",
+        contained::NATIVE_STACK,
+        move || trace_bindings(source_root, declaration_root),
+    )
+}
+
+fn trace_bindings(source_root: String, declaration_root: Option<String>) -> Result<String> {
     let normalized_source = PathBuf::from(&source_root);
     let normalized_decl = declaration_root.as_deref().map(PathBuf::from);
     let result =
@@ -38,11 +53,19 @@ pub fn analyze_styletrace_bindings(
     })
 }
 
-#[napi]
+#[napi(catch_unwind)]
 pub fn analyze_styletrace_detailed(
     source_root: String,
     declaration_root: Option<String>,
 ) -> Result<String> {
+    contained::run(
+        "analyze_styletrace_detailed",
+        contained::NATIVE_STACK,
+        move || trace_detailed(source_root, declaration_root),
+    )
+}
+
+fn trace_detailed(source_root: String, declaration_root: Option<String>) -> Result<String> {
     let normalized_source = PathBuf::from(&source_root);
     let normalized_decl = declaration_root.as_deref().map(PathBuf::from);
     let result =

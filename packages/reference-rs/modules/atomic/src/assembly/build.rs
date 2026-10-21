@@ -1,7 +1,8 @@
 //! Build helpers for assembly: partition the wants into the own atom set and the foreign groups
 //! their backing names, lower each partition into its atoms, resolve the recipes against the consumer system, and
 //! emit the css runtime map. Each helper reads the filled sinks and the consumer
-//! `BaseSystem` and returns its product, so the stage order stays in `finish`.
+//! `BaseSystem` and returns its product, so the stage order stays in `finish`. A pooled lane that panics
+//! comes back as a `Result` error through these helpers, never as a resumed unwind.
 
 use super::*;
 use crate::atom::{Atom, ForeignAtoms};
@@ -13,13 +14,13 @@ pub(super) fn build_plans(
     builder: &mut runtime::PlanBuilder<'_>,
     authored: &[runtime::AuthoredDeclaration],
     proof: bool,
-) -> (Vec<runtime::RuntimeStylePlan>, Option<BTreeSet<String>>) {
+) -> Result<(Vec<runtime::RuntimeStylePlan>, Option<BTreeSet<String>>), String> {
     if proof {
-        (builder.build(authored), None)
+        Ok((builder.build(authored), None))
     } else {
-        let (plans, keys) = builder.build_diet(authored);
+        let (plans, keys) = builder.build_diet(authored)?;
         let emitted: BTreeSet<String> = keys.into_iter().collect();
-        (plans, Some(emitted))
+        Ok((plans, Some(emitted)))
     }
 }
 
@@ -34,7 +35,7 @@ pub(super) fn build_atom_sets(
     system: &BaseSystem,
     diagnostics: &mut Vec<Diagnostic>,
     mut sink: Option<&mut DiagnosticsSession>,
-) -> (AtomSet, ForeignAtoms) {
+) -> Result<(AtomSet, ForeignAtoms), String> {
     let (own_wants, foreign_wants): (Vec<&crate::atom::Want>, Vec<&crate::atom::Want>) =
         wants.iter().partition(|want| want.backing.is_own());
     let mut own = AtomSet::new();
@@ -43,15 +44,15 @@ pub(super) fn build_atom_sets(
         diagnostics: &mut *diagnostics,
         sink: sink.as_deref_mut(),
     }
-    .resolve_into(&own_wants, &mut own);
+    .resolve_into(&own_wants, &mut own)?;
     let mut foreign = ForeignAtoms::new();
     PartitionSession {
         system,
         diagnostics,
         sink,
     }
-    .resolve_into(&foreign_wants, &mut foreign);
-    (own, foreign)
+    .resolve_into(&foreign_wants, &mut foreign)?;
+    Ok((own, foreign))
 }
 
 /// Where one partition's resolved atoms land: the own set takes them as they
@@ -83,10 +84,17 @@ struct PartitionSession<'a, 's> {
 impl PartitionSession<'_, '_> {
     /// Resolve one partition's wants into `target`, reporting resolve facts in
     /// want order: on the tail pool when the lane guard admits, else serially.
-    fn resolve_into<T: AtomTarget>(&mut self, wants: &[&crate::atom::Want], target: &mut T) {
+    fn resolve_into<T: AtomTarget>(
+        &mut self,
+        wants: &[&crate::atom::Want],
+        target: &mut T,
+    ) -> Result<(), String> {
         match Lanes::Auto.guard(WorkKind::TailWants, wants.len()) {
             Some(guard) => self.resolve_pooled(wants, &guard, target),
-            None => self.resolve_serial(wants, target),
+            None => {
+                self.resolve_serial(wants, target);
+                Ok(())
+            }
         }
     }
 
@@ -96,8 +104,8 @@ impl PartitionSession<'_, '_> {
         wants: &[&crate::atom::Want],
         guard: &crate::lanes::PoolGuard,
         target: &mut T,
-    ) {
-        let resolved = crate::resolve_pool::resolve_wants(wants, self.system, guard);
+    ) -> Result<(), String> {
+        let resolved = crate::resolve_pool::resolve_wants(wants, self.system, guard)?;
         for (&want, item) in wants.iter().zip(resolved) {
             if let Some(slot) = self.sink.as_deref_mut() {
                 slot.extend_facts(item.facts);
@@ -107,6 +115,7 @@ impl PartitionSession<'_, '_> {
                 target.take(want, atom);
             }
         }
+        Ok(())
     }
 
     /// Resolve serially through one resolve session.

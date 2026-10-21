@@ -3,7 +3,8 @@
 //! harvest still counts as present (incidental-coverage rule), because
 //! runtime will paint. Only absent expected keys become userspace warnings.
 //! Plans serialize through [`OwnedLookupKey`], the one owned key type, so
-//! diagnostics grows no second canonicalizer.
+//! diagnostics grows no second canonicalizer. Its tests drive the keyed plan builders, which return
+//! `Result`, and expect each build to succeed on a clean lane.
 
 use std::collections::BTreeSet;
 
@@ -187,7 +188,7 @@ mod tests {
                 diagnostics: &mut diagnostics,
             },
         );
-        let (plans, keys) = builder.build_with_keys(&decls);
+        let (plans, keys) = builder.build_with_keys(&decls).expect("keyed build");
         assert_eq!(plans.len(), 2);
         assert_eq!(
             keys,
@@ -215,7 +216,7 @@ mod tests {
                 diagnostics: &mut diet_diagnostics,
             },
         );
-        let (plans, keys) = diet_builder.build_diet(&decls);
+        let (plans, keys) = diet_builder.build_diet(&decls).expect("diet build");
         assert_eq!(plans.len(), 2);
         assert_eq!(
             keys,
@@ -242,7 +243,7 @@ mod tests {
                 diagnostics: &mut full_diagnostics,
             },
         );
-        let (full_plans, _) = full_builder.build_with_keys(&decls);
+        let (full_plans, _) = full_builder.build_with_keys(&decls).expect("full build");
         assert_eq!(diet_set.len(), full_set.len());
         for atom in diet_set.iter() {
             assert!(full_set.contains(atom));

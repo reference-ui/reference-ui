@@ -7,7 +7,8 @@
 //! emits the own group plus one appended group per system the foreign atoms
 //! name, and the token layer claims the stamps of every extended qualifier. The
 //! portable sheet shares the printed suffix and sinks its own system-layer
-//! diagnostics so warnings surface once.
+//! diagnostics so warnings surface once. A pooled lane that panics in the resolve or plan stage
+//! returns as an error from `finish`, so `compile` reports it instead of unwinding.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -103,7 +104,7 @@ impl AssembleCtx {
         self,
         system: &BaseSystem,
         sink: &mut DiagnosticsSession,
-    ) -> CompileResult {
+    ) -> Result<CompileResult, String> {
         let Self {
             wants,
             extracted_recipes,
@@ -126,7 +127,7 @@ impl AssembleCtx {
             proof,
             upstream_container_root,
         };
-        let mut atoms = build_atoms(&wants, system, &mut diagnostics, sink);
+        let mut atoms = build_atoms(&wants, system, &mut diagnostics, sink)?;
         check_root(&scope, &atoms, &mut diagnostics, sink);
         let compiled_recipes = compile_recipes(
             &RecipeInputs::new(&extracted_recipes, &selections),
@@ -134,7 +135,7 @@ impl AssembleCtx {
             &mut diagnostics,
             Some(&mut *sink),
         );
-        let plans = build_plan_stage(&scope, &mut atoms, &authored, &mut diagnostics);
+        let plans = build_plan_stage(&scope, &mut atoms, &authored, &mut diagnostics)?;
         let runtime = runtime_artifact(system, &compiled_recipes);
 
         // Own + foreign atoms both count (G0 D6/§J); the proof css map stays
@@ -155,7 +156,7 @@ impl AssembleCtx {
         };
         let style_plans = plans.render_into(&scope, sink, &mut diagnostics);
 
-        CompileResult {
+        Ok(CompileResult {
             stylesheet,
             portable_stylesheet,
             streams,
@@ -169,7 +170,7 @@ impl AssembleCtx {
             traced_jsx_hosts: traced,
             traced_jsx_owned: crate::hosts::owned_wire(owned),
             compiler_diagnostics: None,
-        }
+        })
     }
 }
 
@@ -237,9 +238,9 @@ fn build_atoms(
     system: &BaseSystem,
     diagnostics: &mut Vec<Diagnostic>,
     sink: &mut DiagnosticsSession,
-) -> AtomSets {
-    let (own, foreign) = build_atom_sets(wants, system, diagnostics, Some(&mut *sink));
-    AtomSets { own, foreign }
+) -> Result<AtomSets, String> {
+    let (own, foreign) = build_atom_sets(wants, system, diagnostics, Some(&mut *sink))?;
+    Ok(AtomSets { own, foreign })
 }
 
 /// Container-root check over the own group. The upstream signal arrives through the scope.
@@ -270,7 +271,7 @@ fn build_plan_stage(
     atoms: &mut AtomSets,
     authored: &[runtime::AuthoredDeclaration],
     diagnostics: &mut Vec<Diagnostic>,
-) -> PlanStage {
+) -> Result<PlanStage, String> {
     let mut plan_builder = runtime::PlanBuilder::new(
         &scope.system.name,
         scope.system,
@@ -280,11 +281,11 @@ fn build_plan_stage(
             diagnostics,
         },
     );
-    let (style_plans, carried_keys) = build_plans(&mut plan_builder, authored, scope.proof);
-    PlanStage {
+    let (style_plans, carried_keys) = build_plans(&mut plan_builder, authored, scope.proof)?;
+    Ok(PlanStage {
         style_plans,
         carried_keys,
-    }
+    })
 }
 
 /// The runtime artifact: recipe tables from the compiled recipes, the namer, and the

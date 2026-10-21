@@ -1,13 +1,20 @@
 //! Node-API bindings for Atlas codebase analysis and component indexing.
 //! Accepts project root directories and optional configuration JSON payloads from JavaScript.
 //! Analyzes JSX component usage patterns, property structures, and diagnostic warnings.
-//! Serializes detailed Atlas analysis results into JSON strings for Node.js callers.
+//! Serializes detailed Atlas analysis results into JSON strings for Node.js callers, each call on a contained thread.
 
+use crate::contained;
 use napi::Result;
 use napi_derive::napi;
 
-#[napi]
+#[napi(catch_unwind)]
 pub fn analyze_atlas(root_dir: String, config_json: Option<String>) -> Result<String> {
+    contained::run("analyze_atlas", contained::NATIVE_STACK, move || {
+        analyze(root_dir, config_json)
+    })
+}
+
+fn analyze(root_dir: String, config_json: Option<String>) -> Result<String> {
     let mut config = match config_json {
         Some(raw) => serde_json::from_str::<atlas::AtlasConfig>(&raw)
             .map_err(|err| napi::Error::from_reason(format!("Invalid Atlas config JSON: {err}")))?,

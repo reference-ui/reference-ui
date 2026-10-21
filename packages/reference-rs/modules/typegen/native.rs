@@ -3,8 +3,9 @@
 //! Lowers the spec through base-system's public lowering path and calls emit_dts_with.
 //! Emits pure TypeScript declaration text directly without performing filesystem operations.
 //! The detailed twin returns the same text plus the `TGN-W-*` skip warnings as JSON.
-//! Also exposes the system-independent StyleProps vocabulary as JSON for codegen.
+//! Also exposes the system-independent StyleProps vocabulary as JSON for codegen, and runs each export on a contained thread.
 
+use crate::contained;
 use napi::Result;
 use napi_derive::napi;
 
@@ -16,8 +17,14 @@ struct NativeEmitRequest {
     strict: Vec<String>,
 }
 
-#[napi]
+#[napi(catch_unwind)]
 pub fn emit_dts_sync(request_json: String) -> Result<String> {
+    contained::run("emit_dts_sync", contained::NATIVE_STACK, move || {
+        emit_dts(request_json)
+    })
+}
+
+fn emit_dts(request_json: String) -> Result<String> {
     let (system, options) = lower_request(&request_json)?;
     Ok(::typegen::emit_dts_with(&system, &options))
 }
@@ -25,8 +32,14 @@ pub fn emit_dts_sync(request_json: String) -> Result<String> {
 /// Emit the `.d.ts` plus skip warnings as a JSON `{ dts, diagnostics }` payload.
 /// The `dts` string is byte-identical to `emit_dts_sync`; `diagnostics` carries
 /// the `TGN-W-*` rows the printers skipped, sorted and deduped.
-#[napi]
+#[napi(catch_unwind)]
 pub fn emit_dts_detailed(request_json: String) -> Result<String> {
+    contained::run("emit_dts_detailed", contained::NATIVE_STACK, move || {
+        emit_dts_detailed_body(request_json)
+    })
+}
+
+fn emit_dts_detailed_body(request_json: String) -> Result<String> {
     let (system, options) = lower_request(&request_json)?;
     let detailed = ::typegen::emit_dts_with_diagnostics(&system, &options);
     serde_json::to_string(&detailed).map_err(|err| {
@@ -38,8 +51,16 @@ pub fn emit_dts_detailed(request_json: String) -> Result<String> {
 /// Same `PropDefs` the `.d.ts` style printer prints from: prop names, value
 /// domains, condition keys, aliases, and dialect keys. No system input; the
 /// vocabulary is constant per binary.
-#[napi]
+#[napi(catch_unwind)]
 pub fn primitives_vocabulary() -> Result<String> {
+    contained::run(
+        "primitives_vocabulary",
+        contained::NATIVE_STACK,
+        vocabulary_body,
+    )
+}
+
+fn vocabulary_body() -> Result<String> {
     ::typegen::primitives_vocabulary_json().map_err(|err| {
         napi::Error::from_reason(format!("Failed to serialize typegen vocabulary: {err}"))
     })
