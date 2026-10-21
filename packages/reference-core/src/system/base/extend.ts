@@ -147,10 +147,10 @@ function leafAt(tree: Record<string, unknown>, path: string): Record<string, unk
   return isPlainObject(node) ? node : {}
 }
 
+// The compiler reads token slots as strings only, so a number here would pass extendSystem and then fail sync.
 function scalarText(path: string, value: unknown): string {
   if (typeof value === 'string') return value
-  if (typeof value === 'number') return String(value)
-  throw new ExtendSystemError(`extendSystem: token ${path} must be a string or a number.`)
+  throw new ExtendSystemError(`extendSystem: token ${path} must be a string; write the number in quotes.`)
 }
 
 function slotOf(path: string, leaf: Record<string, unknown>, key: 'value' | 'light' | 'dark'): string | undefined {

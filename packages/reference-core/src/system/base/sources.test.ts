@@ -134,6 +134,15 @@ export interface ReferenceUIConfig {
   staticCss?: Record<string, string[]>
   normalizeCss?: boolean
   logs?: LogChannel[]
+  mcp?: ReferenceUIMcpConfig
+  useReferenceLibrary?: boolean
+  use_reference_library?: boolean
+  useReferenceIcons?: boolean
+  use_reference_icons?: boolean
+}
+export interface ReferenceUIMcpConfig {
+  include?: string[]
+  exclude?: string[]
 }
 export declare function defineConfig(config: ReferenceUIConfig): ReferenceUIConfig
 export declare function tokens(config: Record<string, unknown>): void
