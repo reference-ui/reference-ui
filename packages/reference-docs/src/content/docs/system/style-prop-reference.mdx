@@ -1,0 +1,206 @@
+---
+title: Style prop reference
+section: System
+order: 18
+slug: style-prop-reference
+description: Shorthands, token categories and special values for each area of CSS.
+---
+
+# Style prop reference
+
+Every standard CSS property is a style prop, in camelCase. This page lists
+only the props that have a shorthand, read a token category or take a
+special value, grouped by area. For how style props work, see
+[Style props](/style-props).
+
+In each table, **Tokens** is the category a bare token name is looked up in.
+A full path, such as `colors.brand` or `spacing.gutter`, works on every
+property.
+
+## Values on any property
+
+| Syntax | Example | Effect |
+| --- | --- | --- |
+| Token path | `bg="colors.brand"` | The token's variable, from any category. |
+| `{path}` inside a value | `border="1px solid {colors.brand}"` | Each reference becomes the token's variable. |
+| Rhythm units | `p="2r 4r"`, `gap="1/3r"` | Multiples of the spacing root. See [Spacing](/spacing). |
+| Leading `-` | `mt="-gutter"` | Negates a token: `calc(-1 * var(--spacing-gutter))`. |
+| Trailing `!` | `mt="2r!"` | Adds `!important`. ` !important` works too. |
+| Number | `width={42}` | `42px` on a length. Bare on the unitless props marked below. |
+
+On colour properties, a token also takes an opacity or a tone after a
+slash: `bg="brand/40"`, `borderColor="brand/soft"`. See [Tones](/tones).
+
+## Layout and display
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `container` | `container-type`, `container-name` | | Makes the element a container. See [Responsive](/responsive). |
+| `aspectRatio` | `aspect-ratio` | | Unitless. |
+| `columns`, `columnCount` | `columns`, `column-count` | | Unitless. |
+| `columnRuleColor` | `column-rule-color` | `colors` | |
+
+## Flex and grid
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `flexDir` | `flex-direction` | | Shorthand for `flexDirection`. |
+| `flex` | `flex` | | Unitless. See the keywords below. |
+| `flexGrow`, `flexShrink` | `flex-grow`, `flex-shrink` | | Unitless. |
+| `order` | `order` | | Unitless. |
+| `gap`, `rowGap`, `columnGap` | `gap`, `row-gap`, `column-gap` | `spacing` | |
+| `gridColumn`, `gridColumnStart`, `gridColumnEnd` | `grid-column`, … | | Unitless. |
+| `gridRow`, `gridRowStart`, `gridRowEnd` | `grid-row`, … | | Unitless. |
+
+Four `flex` keywords print a full value:
+
+| Value | CSS |
+| --- | --- |
+| `1` | `1 1 0%` |
+| `auto` | `1 1 auto` |
+| `initial` | `0 1 auto` |
+| `none` | `none` |
+
+## Sizing
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `w`, `width` | `width` | `sizes` | |
+| `h`, `height` | `height` | `sizes` | |
+| `minW`, `minWidth` | `min-width` | `sizes` | |
+| `maxW`, `maxWidth` | `max-width` | `sizes` | |
+| `minH`, `minHeight` | `min-height` | `sizes` | |
+| `maxH`, `maxHeight` | `max-height` | `sizes` | |
+| `size` | `width`, `height` | `sizes` | Sets both to one value. |
+
+A name that is no `sizes` token is looked up in `spacing` next, so
+`w="gutter"` works.
+
+## Spacing
+
+| Prop | CSS property | Tokens |
+| --- | --- | --- |
+| `p`, `padding` | `padding` | `spacing` |
+| `pt`, `pr`, `pb`, `pl` | `padding-top`, `padding-right`, `padding-bottom`, `padding-left` | `spacing` |
+| `px`, `paddingX`, `paddingInline` | `padding-inline` | `spacing` |
+| `py`, `paddingY`, `paddingBlock` | `padding-block` | `spacing` |
+| `m`, `margin` | `margin` | `spacing` |
+| `mt`, `mr`, `mb`, `ml` | `margin-top`, `margin-right`, `margin-bottom`, `margin-left` | `spacing` |
+| `mx`, `marginX`, `marginInline` | `margin-inline` | `spacing` |
+| `my`, `marginY`, `marginBlock` | `margin-block` | `spacing` |
+
+`padding` and `margin` with two to four values, such as `p="2r 4r"`, print
+the four side properties.
+
+## Position
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `inset` | `inset` | `spacing` | Two to four values print `top`, `right`, `bottom` and `left`. |
+| `top`, `right`, `bottom`, `left` | `top`, `right`, `bottom`, `left` | `spacing` | |
+| `zIndex` | `z-index` | `zIndex` | Unitless. |
+
+Logical insets such as `insetInline` take a full path: `spacing.gutter`.
+
+## Typography
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `font` | `font-family`, `font-weight` | | A family from `font()`. See [Fonts](/fonts). |
+| `weight` | `font-weight` | | A weight from the element's family. See [Fonts](/fonts#weights). |
+| `fontFamily` | `font-family` | `fonts` | |
+| `fontSize` | `font-size` | `fontSizes` | |
+| `fontWeight` | `font-weight` | `fontWeights` | Unitless. |
+| `lineHeight` | `line-height` | `lineHeights` | Unitless. |
+| `letterSpacing` | `letter-spacing` | `letterSpacings` | |
+| `color` | `color` | `colors` | |
+| `textDecorationColor`, `textEmphasisColor` | `text-decoration-color`, `text-emphasis-color` | `colors` | |
+| `textGradient` | `background-image`, `-webkit-background-clip`, `color` | `gradients` | Fills the text with a gradient. |
+| `lineClamp` | `line-clamp` | | Unitless. |
+| `orphans`, `widows`, `tabSize` | `orphans`, `widows`, `tab-size` | | Unitless. |
+
+## Colour and background
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `bg`, `background` | `background` | `colors` | |
+| `backgroundColor` | `background-color` | `colors` | |
+| `backgroundImage` | `background-image` | `gradients` | |
+| `accentColor` | `accent-color` | `colors` | |
+| `caretColor` | `caret-color` | `colors` | |
+| `scrollbarColor` | `scrollbar-color` | `colors` | |
+
+`bg` reads colours, so give a gradient on `bg` its full path:
+`bg="gradients.hero"`.
+
+## Border and radius
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `borderRadius` | `border-radius` | `radii` | |
+| `borderTopLeftRadius`, `borderTopRightRadius`, `borderBottomRightRadius`, `borderBottomLeftRadius` | Each corner | `radii` | |
+| `borderStartStartRadius`, `borderStartEndRadius`, `borderEndStartRadius`, `borderEndEndRadius` | Each logical corner | `radii` | |
+| `borderTopRadius`, `borderRightRadius`, `borderBottomRadius`, `borderLeftRadius` | The two corners on that side | `radii` | |
+| `borderStartRadius`, `borderEndRadius` | The two corners on the inline start or end | `radii` | |
+| `borderColor` and each side's colour | `border-color`, `border-top-color`, … | `colors` | |
+| `border`, `borderTop`, `borderRight`, `borderBottom`, `borderLeft` | `border`, … | `colors` | See the shorthand rules below. |
+| `borderBlockStart`, `borderBlockEnd`, `borderInlineStart`, `borderInlineEnd` | `border-block-start`, … | `colors` | |
+| `outlineColor` | `outline-color` | `colors` | |
+| `borderImageOutset`, `borderImageSlice`, `borderImageWidth` | `border-image-outset`, … | | Unitless. |
+
+`border`, `borderTop`, `borderRight`, `borderBottom`, `borderLeft` and
+`outline` print separate width, style and colour properties, so a later
+`borderColor` still applies. The colour part takes a colour token:
+`borderBottom="1px solid ink"`.
+
+Three values print a fixed result:
+
+| Value | CSS |
+| --- | --- |
+| `border` (`true`) | `border-width: 1px; border-style: solid` |
+| `border={0}` | `border-width: 0px` |
+| `outline="none"` | `outline: 2px solid transparent; outline-offset: 2px` |
+
+## Effects and shadows
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `boxShadow` | `box-shadow` | `shadows` | |
+| `opacity` | `opacity` | | Unitless. |
+
+A shadow written in place can still use a colour token:
+`boxShadow="0 0 0 3px {colors.brand/30}"`.
+
+## Transforms
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `scale` | `scale` | | Unitless. |
+| `zoom` | `zoom` | | Unitless. |
+
+## Transitions and animation
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `transitionDuration` | `transition-duration` | `durations` | |
+| `transitionTimingFunction` | `transition-timing-function` | `easings` | |
+| `animation` | `animation` | `animations` | See [Animation](/animation). |
+| `animationName` | `animation-name` | `animations` | |
+| `animationIterationCount` | `animation-iteration-count` | | Unitless. |
+
+Write a time with its unit, as in `transitionDuration="200ms"`.
+
+## SVG
+
+| Prop | CSS property | Tokens | Notes |
+| --- | --- | --- | --- |
+| `fill` | `fill` | `colors` | |
+| `stroke` | `stroke` | `colors` | |
+| `stopColor`, `floodColor`, `lightingColor` | `stop-color`, `flood-color`, `lighting-color` | `colors` | |
+| `fillOpacity`, `strokeOpacity`, `stopOpacity`, `floodOpacity` | `fill-opacity`, … | | Unitless. |
+| `strokeDasharray`, `strokeDashoffset`, `strokeMiterlimit` | `stroke-dasharray`, … | | Unitless. |
+
+## Vendor properties
+
+Vendor properties take either spelling, such as `WebkitLineClamp` or
+`webkitLineClamp`. Both are the same property.

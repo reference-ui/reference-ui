@@ -84,46 +84,18 @@ that condition:
 <Button
   bg="brand"
   _hover={{ bg: 'brand/80' }}
-  _focusVisible={{ outline: '2px solid {colors.brand}' }}
   _disabled={{ opacity: 0.5 }}
 />
 ```
 
-State conditions also match a data attribute, so a script can set the state:
-`_hover` matches `:hover` and `[data-hover]`, and `_disabled` matches
-`:disabled`, `[disabled]`, `[data-disabled]` and `[aria-disabled=true]`.
-Conditions nest: `_hover={{ _dark: { … } }}` applies only when both match.
-
-| Group | Conditions |
-| --- | --- |
-| Interaction | `_hover`, `_active`, `_focus`, `_focusVisible`, `_focusWithin`, `_visited`, `_target`, `_dragging`, `_grabbed`, `_loading` |
-| Form state | `_disabled`, `_enabled`, `_checked`, `_indeterminate`, `_required`, `_optional`, `_readOnly`, `_readWrite`, `_valid`, `_invalid`, `_userValid`, `_userInvalid`, `_autofill`, `_placeholderShown`, `_default` |
-| Disclosure and selection | `_open`, `_closed`, `_expanded`, `_selected`, `_current`, `_currentPage`, `_currentStep` |
-| Structure | `_first`, `_last`, `_only`, `_even`, `_odd`, `_firstOfType`, `_lastOfType`, `_onlyOfType`, `_empty` |
-| Pseudo-elements | `_before`, `_after`, `_placeholder`, `_selection`, `_marker`, `_file`, `_backdrop` |
-| Group and peer | `_groupHover`, `_groupFocus`, `_groupFocusVisible`, `_groupActive`, `_groupChecked`, `_groupDisabled`, `_groupExpanded`, `_groupInvalid`, `_peerHover`, `_peerFocus`, `_peerFocusVisible`, `_peerActive`, `_peerChecked`, `_peerDisabled`, `_peerExpanded`, `_peerInvalid` |
-| Colour mode | `_light`, `_dark` (an ancestor's `data-color-mode`), `_osLight`, `_osDark` (the operating system setting) |
-| Media | `_motionReduce`, `_motionSafe`, `_print`, `_portrait`, `_landscape`, `_highContrast`, `_moreContrast`, `_lessContrast`, `_fullscreen` |
-| Direction | `_ltr`, `_rtl` |
-
-Group conditions match when an ancestor with the class `group` or the
-attribute `data-group` is in that state. Peer conditions match a preceding
-sibling with the class `peer` or the attribute `data-peer`.
-
-An unknown condition, such as a misspelt `_hovr`, adds no CSS, and
-`ref sync` warns.
-
-For other selectors and at-rules, use the `css` prop with `&`, `@media` or
-`@container` keys. See [CSS](/css#selectors-and-at-rules).
+See [Conditions](/conditions) for every named condition and its selector.
 
 ### Conditions on one property
 
 To change a single property, put the condition on its value instead:
 
 ```tsx
-<Button color={{ base: 'ink', _hover: 'brand', md: 'ink/80' }} />
+<Button color={{ base: 'ink', _hover: 'brand' }} />
 ```
 
-`base` is the value with no condition. The other keys are any condition from
-the table above or a breakpoint name. Each key takes a plain value, one level
-deep. To combine conditions, nest the condition props instead.
+See [Conditions on one value](/conditions#conditions-on-one-value).

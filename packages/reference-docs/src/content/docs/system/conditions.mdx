@@ -1,0 +1,295 @@
+---
+title: Conditions
+section: System
+order: 19
+slug: conditions
+description: Apply styles on hover, in dark mode, at a breakpoint or under any selector.
+---
+
+# Conditions
+
+A condition applies styles only when it matches: a state such as hover, an
+attribute, a colour mode or a media query. Named conditions start with `_`.
+The compiler wraps each one in the selector or at-rule listed on this page.
+
+```tsx
+<Button
+  bg="brand"
+  _hover={{ bg: 'brand/80' }}
+  _focusVisible={{ outline: '2px solid {colors.brand}' }}
+  _disabled={{ opacity: 0.5 }}
+/>
+```
+
+## Use a condition
+
+On a [primitive](/primitives), a condition is a prop that takes a style
+object. The same key works in any style object: [`css()`](/css), the `css`
+prop, [recipes](/recipes) and [`globalCss()`](/global-css).
+
+```tsx
+import { css, recipe } from '@reference-ui/react'
+
+const link = css({
+  color: 'ink',
+  _hover: { color: 'brand' },
+  _visited: { color: 'ink/60' },
+})
+
+const button = recipe({
+  className: 'button',
+  base: { bg: 'brand', _active: { bg: 'brand/80' } },
+  variants: {
+    tone: {
+      quiet: { bg: 'transparent', _hover: { bg: 'brand/10' } },
+    },
+  },
+})
+```
+
+In `globalCss()`, the condition applies to the rule's selector:
+
+```ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  '.field': {
+    borderColor: 'line',
+    _invalid: { borderColor: 'danger' },
+  },
+})
+```
+
+## Conditions on one value
+
+To change a single property, key its value by condition. `base` is the value
+with no condition:
+
+```tsx
+<Button color={{ base: 'ink', _hover: 'brand', _disabled: 'ink/40' }} />
+```
+
+The keys are any named condition or breakpoint name. Each key takes a plain
+value, one level deep. To combine conditions, nest condition props instead.
+
+## Combine conditions
+
+Conditions nest. A nested style applies only when every condition around it
+matches:
+
+```tsx
+<Div
+  bg="surface"
+  _hover={{
+    bg: 'surface/90',
+    _dark: { bg: 'surface/70' },
+  }}
+/>
+```
+
+Breakpoint keys such as `md` nest the same way. See
+[Responsive](/responsive).
+
+```tsx
+<Div p="2r" md={{ p: '4r', _hover: { p: '5r' } }} />
+```
+
+Inside a pseudo-element condition, a state condition still applies to the
+element, and the pseudo-element stays last in the selector:
+`_before={{ _hover: { … } }}` writes `:is(:hover, [data-hover])::before`.
+
+## Named conditions
+
+In each selector, `&` is the element's class. Most state conditions also
+match a `data-` or `aria-` attribute, so a script or a headless component can
+set the state.
+
+### Interaction
+
+| Condition | Selector |
+| --- | --- |
+| `_hover` | `&:is(:hover, [data-hover])` |
+| `_active` | `&:is(:active, [data-active])` |
+| `_focus` | `&:is(:focus, [data-focus])` |
+| `_focusVisible` | `&:is(:focus-visible, [data-focus-visible])` |
+| `_focusWithin` | `&:is(:focus-within, [data-focus-within])` |
+| `_visited` | `&:visited` |
+| `_target` | `&:target` |
+| `_dragging` | `&:is([data-dragging], [data-state="dragging"])` |
+| `_grabbed` | `&:is([aria-grabbed=true], [data-grabbed])` |
+| `_loading` | `&:is([data-loading], [aria-busy=true])` |
+
+### Form state
+
+| Condition | Selector |
+| --- | --- |
+| `_disabled` | `&:is(:disabled, [disabled], [data-disabled], [aria-disabled=true])` |
+| `_enabled` | `&:enabled` |
+| `_checked` | `&:is(:checked, [data-checked], [aria-checked=true], [data-state="checked"])` |
+| `_indeterminate` | `&:is(:indeterminate, [data-indeterminate], [aria-checked=mixed])` |
+| `_required` | `&:required` |
+| `_optional` | `&:optional` |
+| `_readOnly` | `&:is(:read-only, [data-read-only])` |
+| `_readWrite` | `&:read-write` |
+| `_valid` | `&:is(:valid, [data-valid])` |
+| `_invalid` | `&:is(:invalid, [data-invalid], [aria-invalid=true])` |
+| `_userValid` | `&:is(:user-valid, [data-user-valid])` |
+| `_userInvalid` | `&:is(:user-invalid, [data-user-invalid])` |
+| `_autofill` | `&:is(:autofill, [data-autofill])` |
+| `_placeholderShown` | `&:is(:placeholder-shown, [data-placeholder-shown])` |
+| `_default` | `&:default` |
+
+### Disclosure and selection
+
+| Condition | Selector |
+| --- | --- |
+| `_open` | `&:is([data-state="open"], [data-open], [open])` |
+| `_closed` | `&:is([data-state="closed"], [data-closed])` |
+| `_expanded` | `&:is([aria-expanded=true], [data-expanded], [data-state="expanded"])` |
+| `_selected` | `&:is([aria-selected=true], [data-selected], [data-state="selected"])` |
+| `_current` | `&[aria-current=true]` |
+| `_currentPage` | `&[aria-current=page]` |
+| `_currentStep` | `&[aria-current=step]` |
+
+### Structure
+
+| Condition | Selector |
+| --- | --- |
+| `_first` | `&:first-child` |
+| `_last` | `&:last-child` |
+| `_only` | `&:only-child` |
+| `_even` | `&:nth-of-type(even)` |
+| `_odd` | `&:nth-of-type(odd)` |
+| `_firstOfType` | `&:first-of-type` |
+| `_lastOfType` | `&:last-of-type` |
+| `_onlyOfType` | `&:only-of-type` |
+| `_empty` | `&:empty` |
+
+`_even` and `_odd` count siblings of the same element type.
+
+### Pseudo-elements
+
+| Condition | Selector |
+| --- | --- |
+| `_before` | `&::before` |
+| `_after` | `&::after` |
+| `_placeholder` | `&::placeholder, &[data-placeholder]` |
+| `_selection` | `&::selection` |
+| `_marker` | `&::marker` |
+| `_file` | `&::file-selector-button` |
+| `_backdrop` | `&::backdrop` |
+
+`_before` and `_after` need a `content` value to render, such as
+`content: '""'`.
+
+### Group and peer
+
+Group conditions style an element by the state of an ancestor. Mark the
+ancestor with the class `group` or the attribute `data-group`:
+
+```tsx
+<Div className="group" p="4r">
+  <Span color="ink/60" _groupHover={{ color: 'brand' }}>
+    Details
+  </Span>
+</Div>
+```
+
+Peer conditions style an element by the state of a preceding sibling. Mark
+the sibling with the class `peer` or the attribute `data-peer`:
+
+```tsx
+<input className="peer" type="checkbox" />
+<Span _peerChecked={{ fontWeight: '600' }}>Remember me</Span>
+```
+
+Each one wraps the matching state selector from the tables above:
+
+| State | Group | Peer |
+| --- | --- | --- |
+| hover | `_groupHover` | `_peerHover` |
+| focus | `_groupFocus` | `_peerFocus` |
+| focus-visible | `_groupFocusVisible` | `_peerFocusVisible` |
+| active | `_groupActive` | `_peerActive` |
+| checked | `_groupChecked` | `_peerChecked` |
+| disabled | `_groupDisabled` | `_peerDisabled` |
+| expanded | `_groupExpanded` | `_peerExpanded` |
+| invalid | `_groupInvalid` | `_peerInvalid` |
+
+For example, `_groupHover` and `_peerHover` write:
+
+```css
+&:is(:where(.group, [data-group]):is(:hover, [data-hover]) *)
+&:is(:where(.peer, [data-peer]):is(:hover, [data-hover]) ~ *)
+```
+
+### Colour mode
+
+| Condition | Selector or at-rule |
+| --- | --- |
+| `_light` | `[data-color-mode=light] &` |
+| `_dark` | `[data-color-mode=dark] &` |
+| `_osLight` | `@media (prefers-color-scheme: light)` |
+| `_osDark` | `@media (prefers-color-scheme: dark)` |
+
+`_light` and `_dark` match when an ancestor's `colorMode` is in that mode, so
+they don't apply on the element that sets `colorMode`. `_osLight` and
+`_osDark` follow the operating system setting. See
+[Light and dark](/light-and-dark).
+
+### Media
+
+| Condition | At-rule |
+| --- | --- |
+| `_motionReduce` | `@media (prefers-reduced-motion: reduce)` |
+| `_motionSafe` | `@media (prefers-reduced-motion: no-preference)` |
+| `_print` | `@media print` |
+| `_portrait` | `@media (orientation: portrait)` |
+| `_landscape` | `@media (orientation: landscape)` |
+| `_highContrast` | `@media (forced-colors: active)` |
+| `_moreContrast` | `@media (prefers-contrast: more)` |
+| `_lessContrast` | `@media (prefers-contrast: less)` |
+
+`_fullscreen` is a selector, `&:fullscreen`.
+
+### Direction
+
+| Condition | Selector |
+| --- | --- |
+| `_ltr` | `[dir=ltr] &` |
+| `_rtl` | `[dir=rtl] &` |
+
+Both match an ancestor's `dir` attribute.
+
+## Other selectors and at-rules
+
+For a selector with no named condition, write it as a key in `css()`, the
+`css` prop, a recipe or `globalCss()`. A key that starts with `&` is relative
+to the element, and `&` can also sit later in the key to match an ancestor:
+
+```ts
+css({
+  '& > svg': { flexShrink: 0 },
+  '&:not(:first-child)': { marginTop: '2r' },
+  '&[data-orientation="vertical"]': { flexDirection: 'column' },
+  '[data-sidebar="collapsed"] &': { display: 'none' },
+})
+```
+
+Keys that start with `@media`, `@container` or `@supports` wrap the styles in
+that at-rule:
+
+```ts
+css({
+  '@media (hover: hover)': { _hover: { bg: 'surface/90' } },
+  '@supports (backdrop-filter: blur(4px))': { backdropFilter: 'blur(4px)' },
+})
+```
+
+An at-rule key with no query, such as a bare `@supports`, adds no CSS.
+
+## Unknown conditions
+
+An unknown `_` key, such as a misspelt `_hovr`, adds no CSS, and `ref sync`
+warns. The `StyleConditionKey` type lists every named condition. See
+[Types](/types).

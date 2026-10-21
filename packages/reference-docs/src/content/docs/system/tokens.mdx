@@ -77,11 +77,11 @@ is a CSS string, printed into the token's variable as written.
 | `letterSpacings` | `letterSpacing` | A length: `'0.01em'` |
 | `shadows` | `boxShadow` | A shadow: `'0 1px 2px rgb(0 0 0 / 0.1)'` |
 | `zIndex` | `zIndex` | An integer: `'10'` |
-| `gradients` | `background`, `backgroundImage` | A gradient: `'linear-gradient(to right, red, blue)'` |
+| `gradients` | `backgroundImage` (on `background`, write the full path: `gradients.hero`) | A gradient: `'linear-gradient(to right, red, blue)'` |
 | `easings` | `transitionTimingFunction` | A timing function: `'cubic-bezier(0.4, 0, 0.2, 1)'` |
 | `durations` | `transitionDuration` | A time: `'200ms'` |
 | `animations` | `animation`, `animationName` (see [Animation](/animation)) | An animation: `'spin 1s linear infinite'` |
-| `tones` | The amount after a colour's slash (see [Tones](#tones)) | A percentage: `'10%'` |
+| `tones` | The amount after a colour's slash (see [Tones](/tones)) | A percentage: `'10%'` |
 
 Write numbers as strings: `zIndex: { modal: { value: '50' } }`. A number,
 array or object value fails `ref sync` as an invalid token leaf.
@@ -142,37 +142,17 @@ part of it:
 Modes nest: a `colorMode="light"` element inside a dark one is light again.
 See [Primitives](/primitives#colour-mode).
 
-## Opacity
+## Opacity and tones
 
-Add `/` and a percentage to a colour token to make it translucent:
-
-```tsx
-<Div bg="brand/40" />
-```
-
-This prints `color-mix(in srgb, var(--colors-brand) 40%, transparent)`. It
-also works inside references, such as `{colors.brand/30}` in a shadow.
-
-## Tones
-
-A tone is a named opacity in the `tones` category. Write its name after the
-slash:
-
-```ts
-tokens({
-  tones: {
-    soft: { surface: { value: '10%' }, line: { value: '30%' } },
-  },
-})
-```
+Add `/` and an amount to a colour token to make it translucent. A number sets
+the amount directly, and a tone name uses a named amount from the `tones`
+category:
 
 ```tsx
-<Div bg="brand/soft" borderColor="brand/soft" />
+<Div bg="brand/40" borderColor="brand/soft" />
 ```
 
-The property picks the amount. Text, borders, outlines, strokes and shadows
-use `line`. Backgrounds and everything else use `surface`. A tone with a
-single `value` serves both.
+See [Tones](/tones) to define tones and choose between them.
 
 ## Private tokens
 

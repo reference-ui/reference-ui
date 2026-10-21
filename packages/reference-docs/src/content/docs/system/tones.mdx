@@ -1,0 +1,137 @@
+---
+title: Tones
+section: System
+order: 20
+slug: tones
+description: Mix a colour token with transparency at a named, theme-owned amount.
+---
+
+# Tones
+
+A tone is a named opacity. Write it after a colour token and a slash, as in
+`bg="blue.500/medium"`, and the colour is mixed with transparency at the
+tone's amount.
+
+## Define tones
+
+Tones are tokens in the `tones` category. Each value is a percentage. Give a
+tone a `surface` amount and a `line` amount:
+
+```ts
+// src/theme/tokens.ts
+import { tokens } from '@reference-ui/system'
+
+tokens({
+  tones: {
+    soft: { surface: { value: '8%' }, line: { value: '30%' } },
+    hush: { value: '6%' },
+  },
+})
+```
+
+A tone with a single `value`, like `hush`, serves both roles. A tone with only
+`surface` uses it for both roles too. A tone value can also reference another
+tone, such as `'{tones.soft.surface}'`.
+
+Values must be percentages, such as `'10%'` or `'12.5%'`. A fraction such as
+`'0.1'` makes the tone unusable.
+
+The library ships four tones: `ghost`, `medium`, `firm` and `strong`.
+See [Color](/color#tones) for their amounts.
+
+## Apply a tone
+
+Use `shade/tone` in any colour prop:
+
+```tsx
+import { Div } from '@reference-ui/react'
+
+<Div bg="blue.500/soft" borderColor="blue.500/soft" />
+```
+
+The tone prints as a variable, not a literal amount:
+
+```css
+background: color-mix(in srgb, var(--colors-blue-500) var(--tones-soft-surface), transparent);
+border-color: color-mix(in srgb, var(--colors-blue-500) var(--tones-soft-line), transparent);
+```
+
+Change the tone token and every use of it follows, with no change to the
+colours.
+
+## Surface and line
+
+The prop decides which amount a tone draws:
+
+| Role | Props |
+| --- | --- |
+| `line` | `border*`, `outline*`, `color`, `caretColor`, `textDecoration`, `textDecorationColor`, `textEmphasisColor`, `columnRuleColor`, `stroke`, `boxShadow`, `textShadow` |
+| `surface` | Every other colour prop, including `bg` and `fill` |
+
+Make `line` stronger than `surface`, so edges and text stay visible over the
+area they sit on.
+
+## Numeric opacity
+
+For a one-off amount, write a number after the slash:
+
+```tsx
+<Div bg="blue.500/40" />
+```
+
+This prints `color-mix(in srgb, var(--colors-blue-500) 40%, transparent)`. The
+amount is fixed in the class, so a theme cannot retune it. Use a tone for any
+amount you repeat.
+
+## Inside references
+
+Tones also work inside a braced token reference. The outer prop picks the
+role:
+
+```ts
+import { css } from '@reference-ui/react'
+
+css({
+  border: '1px solid {colors.blue.500/soft}',
+  boxShadow: '0 0 0 3px {colors.blue.500/soft}',
+})
+```
+
+Both draw `line`, since `border` and `boxShadow` are line props.
+
+## Light and dark
+
+A tone mixes with transparency, so it takes on whatever sits behind it in
+either mode. To change the amount in dark mode, give the tone a `dark` value:
+
+```ts
+tokens({
+  tones: {
+    soft: {
+      surface: { value: '8%', dark: '12%' },
+      line: { value: '30%' },
+    },
+  },
+})
+```
+
+The colour side follows its own token. A tone over a colour with a dark value
+uses that dark value. See [Light and dark](/light-and-dark).
+
+## Strict colours
+
+With `strict: ['colors']` in your config, colour props accept tones and reject
+numeric opacity such as `blue.500/40`. `tones` is not a strict category. See
+[Restrict values to tokens](/tokens#restrict-values-to-tokens).
+
+## Unknown tones
+
+A tone name that is not declared warns with `ATM-W-UNKNOWN-TONE` and suggests
+the closest name. The value prints as written. Inside braces, an unknown tone is
+an error and its declaration is dropped. See [Diagnostics](/diagnostics).
+
+## Related
+
+- [Tokens](/tokens): define colours and other design values.
+- [Color](/color): the library's palette and tones.
+- [Light and dark](/light-and-dark): dark values and colour mode.
