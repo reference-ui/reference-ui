@@ -19,6 +19,26 @@ to strip spread keys — plus `font()` and `keyframes()` fragments. Selectors ar
 literal (commas, `:has()`, vendor pseudos pass through); dark mode is token
 islands, never `[data-*]` rules in this layer.
 
+### Breakpoints and top-level at-rules
+
+- Viewport `@media` breakpoints in globals print as `@media`, not `@container`.
+  A scale key (`sm`, `lg`) lowers to `@media (min-width: …px)`, and `base` prints
+  bare. CORE-PARITY-01 (P21) proves the `sm` and `lg` arms on `#p21` at two
+  viewport widths. A responsive array (`width: ['40px', '90px']`) prints entry 0
+  bare and entry 1 under the first named breakpoint (`sm`), entry 2 under `md`,
+  and so on; no reference-core case yet proves arrays in globals. Range keys (`mdDown`, `mdOnly`, `<from>To<to>`) keep their
+  `@container` bounds, rewritten as `@media`; no reference-core case yet proves
+  them in globals.
+- Top-level at-rules brace their inner selectors inside `@layer global`.
+  CORE-PARITY-01 (P20) proves `@media (min-width: 1px)` around `#p20`.
+  `@position-try` takes the same top-level branch, so
+  `globalCss({ '@position-try --x': { top: '0' } })` is authorable: the
+  `GlobalCssConfig` key type accepts any selector string. No case yet proves a
+  `@position-try` block paints. There is no `positionTry()` factory; positioning
+  belongs to lib's Overlay (ruled 2026-10-21).
+- Literal nested `@media` and `@container` keys print as written; CORE-GLOBAL-07
+  proves both wrap their rule in `@layer global`.
+
 ## Reference-rs cases
 
 All confirmed present (`ls` + README in
@@ -58,10 +78,8 @@ pins the absence from the stylesheet side (no file, no banner, no var dump).
 | --- | --- |
 | Panda `themes` JSON / `_themePrimary` | Brand packs, not colour mode |
 | `:where(html)` vars + `@property` (Panda global-vars tests) | Panda global-vars shape; Core token vars live on `:root,[data-color-mode=…]` |
-| `@position-try` (Panda position-try tests) | Not in Reference authoring |
 | `divideX`/`divideY` in global hover | Pattern pack, out (corpus §5) |
 | Static colour/spacing cardinality | STATIC group, not globalCss |
-| Viewport `@media` breakpoints in globals | `@container` only; nested `@media` itself is still proven (GLOBAL-07) |
 | `groupHover` / `peerFocus` | COND-11, not globalCss |
 | Slot recipes / `sva` | not globalCss: slots are a `recipe()` key (RECIPE group); lib parts use global CSS + `data-slot` (Trace C) |
 | `token()` string helper | `{path}` refs only |
