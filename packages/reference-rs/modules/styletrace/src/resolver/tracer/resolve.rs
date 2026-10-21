@@ -13,7 +13,8 @@ use crate::resolver::model::TypeExpr;
 
 use super::builtins::resolve_builtin_props;
 use super::context::{is_surface_type_name, TraceContext};
-use decls::{resolve_decl_props, resolve_decl_props_into, DeclTarget};
+use super::guard::TracePass;
+use decls::{resolve_decl_props, resolve_named_decl_into, NamedReference};
 use literals::resolve_literal_names_into;
 
 pub(super) use literals::resolve_literal_names;
@@ -134,13 +135,12 @@ fn resolve_reference_expr_props_into(
         return resolve_prop_names_into(&mut next_ctx, &bound.expr, names);
     }
 
-    match ctx.resolve_declaration(ctx.module_path, name)? {
-        Some((resolved_module, declaration)) => {
-            let target = DeclTarget::new(&resolved_module, &declaration, args);
-            resolve_decl_props_into(ctx, &target, names)
-        }
-        None => Ok(()),
-    }
+    let reference = NamedReference {
+        pass: TracePass::Props,
+        name,
+        args,
+    };
+    resolve_named_decl_into(ctx, &reference, names)
 }
 
 fn resolve_indexed_access_props_into(

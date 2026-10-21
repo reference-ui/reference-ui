@@ -2,7 +2,8 @@
 //!
 //! The `TraceSession` holds long-lived caches like loaded modules.
 //! The `TraceContext` provides scoped state for deep recursive type walks,
-//! avoiding argument soup and keeping track of visited nodes.
+//! avoiding argument soup and keeping track of visited nodes; the session's
+//! `ExpansionGuard` bounds declaration expansions so recursive generics stop.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -16,6 +17,7 @@ use crate::resolver::model::{
     ParsedModule, TypeAliasDecl, TypeDeclaration, TypeEnv, TypeExpr,
 };
 use crate::resolver::parser::parse_module;
+use super::guard::ExpansionGuard;
 use crate::resolver::path::{
     is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
     resolve_specifier,
@@ -33,6 +35,8 @@ pub struct TraceSession {
     /// Owned-mode prune: references to the surface type names contribute
     /// no names, so the expansion is the host's own declared props.
     pub prune_surface: bool,
+    /// Declaration expansions in progress; refuses repeats and runaway recursion.
+    pub guard: ExpansionGuard,
 }
 
 impl TraceSession {
@@ -43,6 +47,7 @@ impl TraceSession {
             unresolved_style_props: None,
             unresolved_primitive_names: None,
             prune_surface: false,
+            guard: ExpansionGuard::default(),
         }
     }
 }

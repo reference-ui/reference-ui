@@ -5,6 +5,7 @@
 
 mod builtins;
 mod context;
+mod guard;
 mod resolve;
 
 use std::collections::BTreeSet;

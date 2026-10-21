@@ -9,7 +9,8 @@ use crate::resolver::model::TypeExpr;
 
 use super::super::builtins::resolve_builtin_literals;
 use super::super::context::{is_surface_type_name, TraceContext};
-use super::decls::{resolve_decl_literals_into, DeclTarget};
+use super::super::guard::TracePass;
+use super::decls::{resolve_named_decl_into, NamedReference};
 use super::{resolve_prop_names_into, take_or_extend, take_or_extend_owned};
 
 pub(in crate::resolver::tracer) fn resolve_literal_names(
@@ -113,13 +114,12 @@ fn resolve_reference_expr_literals_into(
         return resolve_literal_names_into(&mut next_ctx, &bound.expr, names);
     }
 
-    match ctx.resolve_declaration(ctx.module_path, name)? {
-        Some((resolved_module, declaration)) => {
-            let target = DeclTarget::new(&resolved_module, &declaration, args);
-            resolve_decl_literals_into(ctx, &target, names)
-        }
-        None => Ok(()),
-    }
+    let reference = NamedReference {
+        pass: TracePass::Literals,
+        name,
+        args,
+    };
+    resolve_named_decl_into(ctx, &reference, names)
 }
 
 fn resolve_indexed_access_literals_into(

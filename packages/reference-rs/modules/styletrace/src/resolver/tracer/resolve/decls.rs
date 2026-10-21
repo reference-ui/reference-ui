@@ -2,6 +2,7 @@
 //! It takes a `DeclTarget` (the declaration, its module and the type arguments bound at the use site) and a pass accumulator.
 //! It binds the declaration's type parameters into a child environment before recursing, so its own references resolve against those arguments.
 //! Each argument keeps the caller's environment, so a parameter forwarded under its own name (`Forward<T> = Wrap<T>`) never resolves to itself.
+//! Named references expand through the session's expansion guard, so a recursive generic stops instead of overflowing the stack.
 
 use std::borrow::Cow;
 use std::collections::BTreeSet;
@@ -11,6 +12,7 @@ use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{BoundTypeExpr, TypeDeclaration, TypeEnv, TypeExpr};
 
 use super::super::context::TraceContext;
+use super::super::guard::{ExpansionSite, TracePass};
 use super::literals::resolve_literal_names_into;
 use super::{resolve_prop_names_into, take_or_extend};
 
@@ -35,6 +37,44 @@ impl<'a> DeclTarget<'a> {
     }
 }
 
+/// A named type reference as one pass meets it: `name<args>` written in the current module.
+pub(super) struct NamedReference<'a> {
+    pub pass: TracePass,
+    pub name: &'a str,
+    pub args: &'a [TypeExpr],
+}
+
+/// Expand the declaration a reference names in the current module for its pass, through the guard.
+/// An unresolvable name, a repeat of an expansion in progress, and a guard limit all contribute nothing.
+pub(super) fn resolve_named_decl_into(
+    ctx: &mut TraceContext<'_>,
+    reference: &NamedReference<'_>,
+    names: &mut BTreeSet<String>,
+) -> Result<(), StyleTraceError> {
+    let Some((module_path, declaration)) =
+        ctx.resolve_declaration(ctx.module_path, reference.name)?
+    else {
+        return Ok(());
+    };
+    let site = ExpansionSite {
+        pass: reference.pass,
+        module_path: &module_path,
+        name: declaration.name(),
+        args: reference.args,
+        env: ctx.env,
+    };
+    if !ctx.session.guard.enter(&site) {
+        return Ok(());
+    }
+    let target = DeclTarget::new(&module_path, &declaration, reference.args);
+    let result = match reference.pass {
+        TracePass::Props => resolve_decl_props_into(ctx, &target, names),
+        TracePass::Literals => resolve_decl_literals_into(ctx, &target, names),
+    };
+    ctx.session.guard.leave();
+    result
+}
+
 pub(super) fn resolve_decl_props(
     ctx: &mut TraceContext<'_>,
     decl_module_path: &Path,
@@ -47,7 +87,7 @@ pub(super) fn resolve_decl_props(
     Ok(names)
 }
 
-pub(super) fn resolve_decl_props_into(
+fn resolve_decl_props_into(
     ctx: &mut TraceContext<'_>,
     target: &DeclTarget<'_>,
     names: &mut BTreeSet<String>,
@@ -80,7 +120,7 @@ pub(super) fn resolve_decl_props_into(
     }
 }
 
-pub(super) fn resolve_decl_literals_into(
+fn resolve_decl_literals_into(
     ctx: &mut TraceContext<'_>,
     target: &DeclTarget<'_>,
     names: &mut BTreeSet<String>,

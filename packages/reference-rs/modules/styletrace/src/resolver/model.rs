@@ -30,6 +30,15 @@ pub(super) enum TypeDeclaration {
     TypeAlias(TypeAliasDecl),
 }
 
+impl TypeDeclaration {
+    pub fn name(&self) -> &str {
+        match self {
+            Self::Interface(decl) => &decl.name,
+            Self::TypeAlias(decl) => &decl.name,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct InterfaceDecl {
     pub name: String,
