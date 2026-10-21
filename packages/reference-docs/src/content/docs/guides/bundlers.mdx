@@ -8,9 +8,8 @@ description: Run Reference UI with Vite or webpack.
 
 # Bundlers
 
-Reference UI has no bundler plugin. `ref sync` writes your stylesheet and
-packages to `.reference-ui/` before the bundler runs, so the bundler reads
-them like any other package.
+`ref sync` writes your stylesheet and packages to `.reference-ui/` before
+the bundler runs. The bundler reads them like any other package.
 
 Each setup below needs the same three things: sync before the build, watch
 mode beside the dev server, and one stylesheet import.

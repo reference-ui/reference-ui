@@ -14,9 +14,9 @@ import { CardPartsDemo } from './multi-part-components-demo'
 Some components are more than one element. A card has a root, a title and a
 body, and one `size` prop should style every part.
 
-Reference UI has no slot recipe for this. Each part is an element with its
-own class, and a `data-slot` attribute names it so a rule on another element
-can reach it. The compound components in `@reference-ui/lib`, such as `Tabs`,
+Each part is its own element, so give each one a class with `recipe()`,
+`css()` or style props. A `data-slot` attribute names a part so a rule on
+another element can reach it. The compound components in `@reference-ui/lib`, such as `Tabs`,
 `Tree` and `Listbox`, are styled this way.
 
 ## Your own component
