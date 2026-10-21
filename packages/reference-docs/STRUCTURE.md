@@ -23,7 +23,7 @@ context). File headers describe each module; Memex indexes the package map.
 ### `src/app` (shell chrome)
 
 The shell is a row: a full-height `DocSidebar` rail that owns navigation
-(section, then group, then pages) and the wordmark, beside a `Main` that scrolls independently. Inside `Main`, the
+(sections of pages and page groups, interleaved by `order`) and the wordmark, beside a `Main` that scrolls independently. Inside `Main`, the
 article and the `DocToc` outline share a centered row — the outline appears at
 `>=1280px`. There is no opaque header bar — `DocHeader` floats over the article
 with each control carrying its own `controlSurface`. Small viewports hide the

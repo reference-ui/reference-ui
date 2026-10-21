@@ -50,8 +50,8 @@ Flat and quiet, in the spirit of shadcn/ui:
   extensions are ignored.
 - Frontmatter contract: `title`, `section`, `order`, `slug`, and optional
   `group` (a sub-section heading in the sidebar) and `description` (the page
-  header's lead). Pages without a group sit first in their section; a group
-  sits where its lowest `order` puts it. Orders step by 10 so new pages slot in.
+  header's lead). Pages and groups interleave in `order`; a group sits
+  where its lowest-order page would. Orders step by 10 so new pages slot in.
 - `src/collections/` owns schema, transforms, and slug-to-module lookup.
 - Vite owns MDX module loading; content-collections owns metadata only.
 

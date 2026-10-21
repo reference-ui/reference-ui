@@ -21,11 +21,13 @@ export interface NavGroup {
   items: DocMeta[]
 }
 
-/** One sidebar section: ungrouped pages first, then groups. */
+/** One row of a section: a lone page or a group of pages. */
+export type NavEntry = { kind: 'page'; doc: DocMeta } | { kind: 'group'; group: NavGroup }
+
+/** One sidebar section: pages and groups interleaved by `order`. */
 export interface NavSection {
   name: string
-  items: DocMeta[]
-  groups: NavGroup[]
+  entries: NavEntry[]
 }
 
 /** Sidebar section order; unknown sections sort last, then alphabetically. */
@@ -39,17 +41,24 @@ function sectionRank(section: string): number {
 const byOrder = (a: DocMeta, b: DocMeta) => a.order - b.order
 
 function buildSection(name: string, pages: DocMeta[]): NavSection {
-  const sorted = [...pages].sort(byOrder)
-  const groups = new Map<string, DocMeta[]>()
-  for (const doc of sorted) {
-    if (doc.group) groups.set(doc.group, [...(groups.get(doc.group) ?? []), doc])
+  const entries: NavEntry[] = []
+  const groups = new Map<string, NavGroup>()
+  // Pages arrive sorted, so a group lands where its lowest-order page would sit.
+  for (const doc of [...pages].sort(byOrder)) {
+    if (!doc.group) {
+      entries.push({ kind: 'page', doc })
+      continue
+    }
+    const group = groups.get(doc.group)
+    if (group) {
+      group.items.push(doc)
+      continue
+    }
+    const created = { name: doc.group, items: [doc] }
+    groups.set(doc.group, created)
+    entries.push({ kind: 'group', group: created })
   }
-  // Pages arrive sorted, so each group's first page holds its lowest order: Map keeps that.
-  return {
-    name,
-    items: sorted.filter(doc => !doc.group),
-    groups: [...groups].map(([group, items]) => ({ name: group, items })),
-  }
+  return { name, entries }
 }
 
 const sectionNames = [...new Set(allDocs.map(doc => doc.section))].sort(
@@ -64,10 +73,9 @@ export const navSections: NavSection[] = sectionNames.map(name =>
 )
 
 /** Every page in sidebar order, so the pager walks the rail top to bottom. */
-export const docs: DocMeta[] = navSections.flatMap(section => [
-  ...section.items,
-  ...section.groups.flatMap(group => group.items),
-])
+export const docs: DocMeta[] = navSections.flatMap(section =>
+  section.entries.flatMap(entry => (entry.kind === 'page' ? [entry.doc] : entry.group.items))
+)
 
 export const slugToModule = Object.fromEntries(
   docs.map(doc => [doc.slug, docModules[doc.path]?.default])

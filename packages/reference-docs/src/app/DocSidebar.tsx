@@ -5,7 +5,7 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 import { Aside, Div, Nav, css } from '@reference-ui/react'
-import { type DocMeta, type NavSection, navSections } from '../collections/runtime'
+import { type DocMeta, type NavGroup, type NavSection, navSections } from '../collections/runtime'
 import { Brand } from './Brand'
 
 /**
@@ -114,20 +114,34 @@ function NavLinks({ items, onNavigate }: { items: DocMeta[]; onNavigate: OnNavig
   ))
 }
 
+function NavGroupBlock({ group, onNavigate }: { group: NavGroup; onNavigate: OnNavigate }) {
+  return (
+    <Div display="flex" flexDirection="column" marginY="2r">
+      <Div className={groupLabel}>{group.name}</Div>
+      <Div className={groupItems}>
+        <NavLinks items={group.items} onNavigate={onNavigate} />
+      </Div>
+    </Div>
+  )
+}
+
 function NavSectionBlock({ section, onNavigate }: { section: NavSection; onNavigate: OnNavigate }) {
   return (
     <Div display="flex" flexDirection="column">
       <Div className={sectionLabel}>{section.name}</Div>
       <Div display="flex" flexDirection="column" gap="0.5r">
-        <NavLinks items={section.items} onNavigate={onNavigate} />
-        {section.groups.map(group => (
-          <Div key={group.name} display="flex" flexDirection="column" marginTop="2r">
-            <Div className={groupLabel}>{group.name}</Div>
-            <Div className={groupItems}>
-              <NavLinks items={group.items} onNavigate={onNavigate} />
-            </Div>
-          </Div>
-        ))}
+        {section.entries.map(entry =>
+          entry.kind === 'page' ? (
+            <NavDocLink
+              key={entry.doc.slug}
+              slug={entry.doc.slug}
+              title={entry.doc.title}
+              onNavigate={onNavigate}
+            />
+          ) : (
+            <NavGroupBlock key={entry.group.name} group={entry.group} onNavigate={onNavigate} />
+          )
+        )}
       </Div>
     </Div>
   )
