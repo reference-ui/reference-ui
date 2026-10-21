@@ -131,6 +131,12 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
   - Docs: "a recipe nothing calls emits no CSS" goes in troubleshooting (ruling).
 - [ ] Docs from map.md: P1 (Imports and packages, Base systems, What sync can read (short, authoring only), Vite),
       P2 (webpack, FAQ, Style HTML you don't control, Element styles), P3 (Sizes); sidebar groups (`group` field + DocSidebar).
-- [ ] Owner decisions still open: fragment import rule (recommended: ui.config -> core, theme files -> system with real
-      types, components -> react); webpack suite; browser floor; Next.js; srOnly as a feature; colorMode typed unknown;
-      Context exports public?
+- [x] Owner decisions (2026-10-22, owner "yes" to recommendations; orchestrator filled the rest):
+  1. Imports: ui.config.ts -> @reference-ui/core; theme files -> @reference-ui/system (give it the real
+     TokenConfig/FontOptions/... types); components -> @reference-ui/react. Imports and packages page documents it.
+  2. colorMode typed 'light' | 'dark'.
+  3. srOnly stays out (plain CSS bundle, writable with css()).
+  4. Webpack: keep the docs; restore a kept webpack5 matrix suite (test-core).
+  5. Browser support stated by feature: CSS cascade layers, container queries, color-mix().
+  6. Next.js: not documented until a test covers it.
+  7. ColorModeContext/DocumentContext/LayerScopeContext stay exported (lib uses them), undocumented (internal).
