@@ -1,0 +1,48 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"readOnly\"",
+    "file": "input/src/App.tsx",
+    "line": 15,
+    "column": 33,
+    "span": {
+      "start": 541,
+      "end": 548
+    },
+    "help": [
+      "remove 'readOnly' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"onPointerDown\"",
+    "file": "input/src/App.tsx",
+    "line": 15,
+    "column": 33,
+    "span": {
+      "start": 541,
+      "end": 548
+    },
+    "help": [
+      "remove 'onPointerDown' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"css\"",
+    "file": "input/src/App.tsx",
+    "line": 15,
+    "column": 33,
+    "span": {
+      "start": 541,
+      "end": 548
+    },
+    "help": [
+      "did you mean `cue`?",
+      "remove 'css' or check its spelling"
+    ]
+  }
+]

@@ -6,7 +6,9 @@
 //! ride object keys onto condition scopes, mirroring the responsive walker.
 //! Spread positions lower folded objects with full style-object semantics —
 //! conditions nest, `r` keys resolve, unknown keys warn — mirroring the
-//! inline-spread path. Plans mirror the plan walker leaf for leaf: single
+//! inline-spread path. A JSX attribute bag instead keeps unknown keys silent
+//! and lowers its `css` and `r` keys as their attributes, mirroring the
+//! const-object bag path. Plans mirror the plan walker leaf for leaf: single
 //! positions take the first fold, multi positions fan out.
 
 use oxc_span::Span;
@@ -17,7 +19,7 @@ use super::fence::FenceValue;
 use crate::atom::AtomValue;
 use crate::diagnostics::DiagnosticCode;
 use crate::extract::expressions::literal::split_important_flag;
-use crate::extract::expressions::{ExpressionWalk, ObjectWalk};
+use crate::extract::expressions::{BagSemantics, ExpressionWalk, ObjectWalk};
 use crate::extract::suggest;
 use canon::is_known_style_prop;
 
@@ -96,7 +98,8 @@ fn push_call_leaf(
 }
 
 /// Lower a folded spread object exactly as if spread: conditions nest, `r`
-/// keys resolve, known props lower with plans, unknown keys warn and drop.
+/// keys resolve, known props lower with plans. Unknown keys warn and drop in
+/// style objects; a JSX attribute bag owns them and keeps them silent.
 pub fn lower_call_spread(
     walk: &mut ObjectWalk<'_>,
     entries: &[(Box<str>, FenceValue)],
@@ -104,34 +107,110 @@ pub fn lower_call_spread(
     span: Span,
 ) {
     for (key, value) in entries {
-        if key.as_ref() == "r" && matches!(value, FenceValue::Object(_)) {
-            lower_call_r(walk, value, when, span);
-        } else if super::super::expressions::object::is_condition_key(key, walk.breakpoints) {
-            let mut nested_when = when.clone();
-            nested_when.push(key.clone());
-            let site = ConditionSite {
-                when: &nested_when,
-                span,
-                key,
-            };
-            lower_call_condition(walk, value, site);
-        } else if is_known_style_prop(key) {
-            plan_call_entry(walk, key, value, when);
-            let mut expr_walk = walk.expression_walk(key);
-            lower_call_value(&mut expr_walk, value, when, span);
-        } else {
-            let help = suggest::suggestion_lines(
-                suggest::suggest_property(key),
-                format!("remove '{key}' or check its spelling"),
-            );
-            walk.warn_help(
-                span,
-                DiagnosticCode::UnknownProperty,
-                suggest::unknown_property_message(key),
-                help,
-            );
-        }
+        lower_call_entry(walk, value, EntrySite { when, span, key });
     }
+}
+
+/// Lower one folded spread entry by its key. A JSX attribute bag claims `css`
+/// and `r` first; every other key takes the first style-object route that fits.
+fn lower_call_entry(walk: &mut ObjectWalk<'_>, value: &FenceValue, site: EntrySite<'_>) {
+    let key = site.key;
+    let jsx_attrs = matches!(walk.bag, BagSemantics::JsxAttributes);
+    if jsx_attrs && key == "css" {
+        lower_call_css(walk, value, site.when, site.span);
+        return;
+    }
+    if jsx_attrs && key == "r" {
+        lower_call_r_attr(walk, value, site.when, site.span);
+        return;
+    }
+    if key == "r" && matches!(value, FenceValue::Object(_)) {
+        lower_call_r(walk, value, site.when, site.span);
+        return;
+    }
+    if super::super::expressions::object::is_condition_key(key, walk.breakpoints) {
+        let mut nested_when = site.when.clone();
+        nested_when.push(key.into());
+        let nested = EntrySite {
+            when: &nested_when,
+            span: site.span,
+            key,
+        };
+        lower_call_condition(walk, value, nested);
+        return;
+    }
+    if is_known_style_prop(key) {
+        plan_call_entry(walk, key, value, site.when);
+        let mut expr_walk = walk.expression_walk(key);
+        lower_call_value(&mut expr_walk, value, site.when, site.span);
+        return;
+    }
+    warn_unknown_call_key(walk, key, site.span);
+}
+
+/// Warn an unknown folded key in a style object, naming the closest canon
+/// name. A JSX attribute bag owns every key outside style and condition
+/// space, so it stays silent.
+fn warn_unknown_call_key(walk: &mut ObjectWalk<'_>, key: &str, span: Span) {
+    if matches!(walk.bag, BagSemantics::JsxAttributes) {
+        return;
+    }
+    let help = suggest::suggestion_lines(
+        suggest::suggest_property(key),
+        format!("remove '{key}' or check its spelling"),
+    );
+    walk.warn_help(
+        span,
+        DiagnosticCode::UnknownProperty,
+        suggest::unknown_property_message(key),
+        help,
+    );
+}
+
+/// Lower a folded JSX-bag `css` value as the css attribute does: an object
+/// lowers its style entries, a merge-list array lowers element by element,
+/// and scalars stay silent the way literal css attribute values do.
+fn lower_call_css(
+    walk: &mut ObjectWalk<'_>,
+    value: &FenceValue,
+    when: &SmallVec<[Box<str>; 2]>,
+    span: Span,
+) {
+    match value {
+        FenceValue::Object(entries) => lower_call_spread(walk, entries, when, span),
+        FenceValue::Array(items) => {
+            for item in items {
+                lower_call_css(walk, item, when, span);
+            }
+        }
+        FenceValue::Leaves(_) => {}
+    }
+}
+
+/// Lower a folded JSX-bag `r` value as the r attribute does: an object
+/// resolves its container queries, an array refuses, and scalars stay silent
+/// as they do in const bags.
+fn lower_call_r_attr(
+    walk: &mut ObjectWalk<'_>,
+    value: &FenceValue,
+    when: &SmallVec<[Box<str>; 2]>,
+    span: Span,
+) {
+    match value {
+        FenceValue::Object(_) => lower_call_r(walk, value, when, span),
+        FenceValue::Array(_) => warn_r_array(walk, span),
+        FenceValue::Leaves(_) => {}
+    }
+}
+
+/// Refuse a folded `r` array: the r attribute takes one static style object.
+fn warn_r_array(walk: &mut ObjectWalk<'_>, span: Span) {
+    walk.warn_help(
+        span,
+        DiagnosticCode::NonObjectJsxStyle,
+        "JSX 'r' prop value is not a static style object (array)",
+        vec!["pass a static style object to 'r' (got array)".to_string()],
+    );
 }
 
 /// Lower one folded `r` object, resolving each key to a container query.
@@ -163,7 +242,7 @@ fn lower_call_r(
         };
         let mut nested_when = when.clone();
         nested_when.push(query.into());
-        let site = ConditionSite {
+        let site = EntrySite {
             when: &nested_when,
             span,
             key: trimmed,
@@ -173,7 +252,7 @@ fn lower_call_r(
 }
 
 /// Lower a folded condition value: objects recurse, anything else warns.
-fn lower_call_condition(walk: &mut ObjectWalk<'_>, value: &FenceValue, site: ConditionSite<'_>) {
+fn lower_call_condition(walk: &mut ObjectWalk<'_>, value: &FenceValue, site: EntrySite<'_>) {
     match value {
         FenceValue::Object(entries) => lower_call_spread(walk, entries, site.when, site.span),
         _ => {
@@ -187,9 +266,9 @@ fn lower_call_condition(walk: &mut ObjectWalk<'_>, value: &FenceValue, site: Con
     }
 }
 
-/// One condition block being lowered: its nested `when` scope, its authored span, and the key that
-/// names it.
-struct ConditionSite<'a> {
+/// One folded spread entry being lowered: the scope its keys nest under, its authored span, and
+/// the key that names it.
+struct EntrySite<'a> {
     when: &'a SmallVec<[Box<str>; 2]>,
     span: Span,
     key: &'a str,
