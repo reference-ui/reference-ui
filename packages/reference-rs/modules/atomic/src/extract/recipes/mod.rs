@@ -3,6 +3,7 @@
 //! Extracts base styles, variant leaves, defaults, and multi-value compound predicates.
 //! Admits identity from the prop or from a `<Name>Recipe` binding (core parity);
 //! refuses dynamic or otherwise absent identity and enforces fail-closed compilation.
+//! A `slots` key lowers the call to one plain recipe per slot (`slots.rs`).
 
 use oxc_ast::ast::{
     CallExpression, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind,
@@ -11,12 +12,13 @@ use oxc_span::{GetSpan, Span};
 
 use crate::diagnostics::{byte_span, line_col, Diagnostic, DiagnosticCode, DiagnosticLocation};
 use crate::extract::ExtractContext;
-use crate::recipes::Recipe;
+use crate::recipes::{Recipe, RecipeSlot};
 
 pub(crate) mod selection;
+mod slots;
 mod walk;
 
-/// Collect a live Reference `recipe(...)` call into `ctx.recipes`.
+/// Collect a live Reference `recipe(...)` call into `ctx.recipes`: one recipe, or one per slot.
 pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     let Some(origin) = ctx.bindings.recipe_origin(&call.callee, ctx.shadowed) else {
         return;
@@ -52,17 +54,46 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     let Some(class_name) = extract_class_name(obj, ctx) else {
         return;
     };
-    let draft = walk::walk_recipe_object(obj, origin.as_str(), None, ctx);
+    let location = call_location(ctx, call.span);
+    let recipes = match slots::find_slots_prop(obj) {
+        None => {
+            let draft = walk::walk_recipe_object(obj, origin.as_str(), None, ctx);
+            vec![from_draft(draft, class_name.clone(), None, location)]
+        }
+        Some(slots_prop) => {
+            let definition = slots::SlottedDefinition {
+                obj,
+                slots_prop,
+                class_name: &class_name,
+                origin: origin.as_str(),
+                location: &location,
+            };
+            let Some(lowered) = slots::lower(&definition, ctx) else {
+                return;
+            };
+            lowered
+        }
+    };
     record_result_binding(ctx, &class_name);
-    ctx.recipes.push(Recipe {
+    ctx.recipes.extend(recipes);
+}
+
+/// Recipe IR for one walked draft under its stem; `slot` names the slotted call it lowers from.
+fn from_draft(
+    draft: walk::RecipeDraft,
+    class_name: String,
+    slot: Option<RecipeSlot>,
+    location: DiagnosticLocation,
+) -> Recipe {
+    Recipe {
         class_name,
-        slot: None,
+        slot,
         base: draft.base,
         variants: draft.variants,
         default_variants: draft.default_variants,
         compounds: draft.compounds,
-        location: call_location(ctx, call.span),
-    });
+        location,
+    }
 }
 
 /// Record the result binding a later call resolves through: the enclosing
