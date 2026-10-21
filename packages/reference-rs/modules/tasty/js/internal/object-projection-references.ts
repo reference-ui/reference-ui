@@ -101,7 +101,7 @@ export function depthExhaustedNotice(symbolName: string): string {
   return `Member projection of "${symbolName}" stopped at nesting depth ${MAX_PROJECTION_DEPTH}; members of types nested past that point may be omitted.`
 }
 
-/** The code every walk-limit notice carries. Minted in this module; REGISTRY.md holds its row. */
+/** The code every walk-limit notice carries. Minted in this module; codes.rs pins its wire string and REGISTRY.md its row. */
 const PROJECTION_BUDGET_CODE = 'TST-W-PROJECTION-BUDGET'
 
 /**

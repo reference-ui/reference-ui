@@ -30,7 +30,7 @@ consumers never break on codes minted after they shipped.
 | `RS`      | template    | Self: `RS-W-EXAMPLE-*` / `RS-E-EXAMPLE-*` for tests and docs only; never emitted by shipped code |
 | `ATM`     | atomic      | Live: 54-code table in `modules/atomic/src/diagnostics/codes.rs`, aligned onto the template (wire-identical, tag-matched); `-I-` telemetry stays module-local |
 | `ATL`     | atlas       | Live: 5-code table in `modules/atlas/src/diagnostics/codes.rs`; props warnings plus the scan refusal |
-| `TST`     | tasty       | Live: 9-code table in `modules/tasty/src/diagnostics/codes.rs`; scanner, merge, star, manifest, unresolved-import, unsupported-syntax, and augmentation warnings plus the scan refusal |
+| `TST`     | tasty       | Live: 10-code table in `modules/tasty/src/diagnostics/codes.rs`; scanner, merge, star, manifest, unresolved-import, unsupported-syntax, and augmentation warnings plus the scan refusal, and the projection-budget warning the tasty JS runtime mints (its row pins the wire string) |
 | `STT`     | styletrace  | Live: 6-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips, the class-component, unresolved-HOC-argument and type-expansion-limit warnings, plus the scan and surface refusals |
 | `TGN`     | typegen     | Live: 9-code table in `modules/typegen/src/diagnostics/codes.rs`; printer skips plus the spec refusal |
 | `CAN`     | canon       | Reserved, unminted                                     |
@@ -164,7 +164,7 @@ grows an info level.
 | `TST-W-UNRESOLVED-IMPORT` | A relative or absolute import, `export *`, or `export { x } from` names no file on disk; its names stay external | `modules/tasty/src/ast/extract/statements/module_requests.rs` |
 | `TST-W-UNSUPPORTED-AUGMENTATION` | A `declare module './x' { … }` augments a path-shaped module in a user file; tasty does not merge the augmenting declarations | `modules/tasty/src/ast/extract/statements/unsupported.rs` |
 | `TST-W-UNSUPPORTED-SYNTAX` | A user file holds `declare global`, `import x = require()` or `import x = …`, or `export =`; tasty skips the statement and names the construct | `modules/tasty/src/ast/extract/statements/unsupported.rs` |
-| `TST-W-PROJECTION-BUDGET` | A display projection's walk hit a walk limit that dropped members, so its member list is partial: the 10,000-step budget or the 32-level nesting-depth guard. The notice names the symbol and the limit; the consumer that presents it names the subject. Minted by the tasty JS runtime, not the Rust table | `modules/tasty/js/internal/object-projection-references.ts` |
+| `TST-W-PROJECTION-BUDGET` | A display projection's walk hit a walk limit that dropped members, so its member list is partial: the 10,000-step budget or the 32-level nesting-depth guard. The notice names the symbol and the limit; the consumer that presents it names the subject. Minted by the tasty JS runtime; the JS-runtime-only row in `modules/tasty/src/diagnostics/codes.rs` pins the wire string | `modules/tasty/js/internal/object-projection-references.ts` |
 | `ATL-W-UNRESOLVED-PROPS-TYPE` | Named props type resolves nowhere; a partial component is kept with empty props | `modules/atlas/src/resolver/template.rs` |
 | `ATL-W-UNSUPPORTED-PROPS-ANNOTATION` | Inline props object annotation; the component is omitted from the inventory | `modules/atlas/src/resolver/template.rs` |
 | `ATL-W-UNRESOLVED-INCLUDE-PACKAGE` | Included package resolves nowhere; the package is skipped | `modules/atlas/src/analyzer.rs` |

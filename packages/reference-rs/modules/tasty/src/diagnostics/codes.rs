@@ -4,7 +4,8 @@
 //! can filter a known warning, group diagnostics in a report, and document them without
 //! parsing free-text messages. Codes are part of the serialized contract and must never
 //! be renamed once a golden or repro pins them. New failure classes extend this enum;
-//! they never reuse a code for a different class.
+//! they never reuse a code for a different class. One class, `ProjectionBudget`, is minted
+//! by the tasty JS runtime rather than by Rust; its row pins the wire string all the same.
 
 use std::fmt;
 use std::str::FromStr;
@@ -33,12 +34,15 @@ pub enum TastyDiagnosticCode {
     UnsupportedAugmentation,
     /// `ast/extract/statements/unsupported`: a module-level statement tasty does not model (`declare global`, `export =`, `import x = require()`, or an `import x = <entity>` with an undeclared head) is skipped.
     UnsupportedSyntax,
+    /// JS runtime only (`modules/tasty/js/internal/object-projection-references.ts`): a walk limit, the step budget or the
+    /// nesting-depth guard, dropped members from a display projection. Rust never mints this code.
+    ProjectionBudget,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(TastyDiagnosticCode, &str); 9] = [
+const CODE_TABLE: [(TastyDiagnosticCode, &str); 10] = [
     (TastyDiagnosticCode::ParseError, "TST-W-PARSE-ERROR"),
     (
         TastyDiagnosticCode::DuplicateDeclaration,
@@ -65,6 +69,10 @@ const CODE_TABLE: [(TastyDiagnosticCode, &str); 9] = [
     (
         TastyDiagnosticCode::UnsupportedSyntax,
         "TST-W-UNSUPPORTED-SYNTAX",
+    ),
+    (
+        TastyDiagnosticCode::ProjectionBudget,
+        "TST-W-PROJECTION-BUDGET",
     ),
 ];
 
@@ -157,6 +165,7 @@ mod tests {
             TastyDiagnosticCode::UnresolvedImport,
             TastyDiagnosticCode::UnsupportedAugmentation,
             TastyDiagnosticCode::UnsupportedSyntax,
+            TastyDiagnosticCode::ProjectionBudget,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

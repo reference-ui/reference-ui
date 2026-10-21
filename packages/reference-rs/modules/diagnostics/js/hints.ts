@@ -60,6 +60,7 @@ const WARNING_HINTS: Record<string, string> = {
   'TST-W-UNRESOLVED-IMPORT': 'create the file it names or correct the specifier',
   'TST-W-UNSUPPORTED-AUGMENTATION': 'declare the members in the augmented module itself',
   'TST-W-UNSUPPORTED-SYNTAX': 're-declare what it provides as named exports',
+  'TST-W-PROJECTION-BUDGET': 'flatten the nested alias or extends chain the member list walks',
   'ATL-W-UNRESOLVED-PROPS-TYPE': 'import the props type or define it in scope',
   'ATL-W-UNSUPPORTED-PROPS-ANNOTATION': 'name the props type instead of inlining the object',
   'ATL-W-UNRESOLVED-INCLUDE-PACKAGE': 'check the package name or install it alongside the app',
