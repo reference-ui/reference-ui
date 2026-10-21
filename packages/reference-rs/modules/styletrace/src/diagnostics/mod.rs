@@ -11,6 +11,8 @@ mod codes;
 pub use codes::StyletraceDiagnosticCode;
 pub use diagnostics::{Diagnostic, DiagnosticError};
 
+use crate::resolver::{CutReason, GuardCut};
+
 /// Styletrace diagnostics are template diagnostics: severity plus validated code plus message.
 /// No sibling shape — the submodule owns the vocabulary, the template owns the representation.
 pub type StyletraceDiagnostic = Diagnostic;
@@ -91,6 +93,31 @@ pub(crate) fn unresolved_hoc_argument(
             index + 1
         ),
     )
+}
+
+/// Type-expansion warning: the trace stopped expanding `cut.name`, declared in `cut.module`, at a guard
+/// limit, so the props that expansion would add are not traced. Located at `file`, the module whose
+/// props type was being traced, since that is where the chain can be shortened; the trace keeps going.
+pub(crate) fn type_expansion_limit(file: &str, cut: &GuardCut) -> Option<StyletraceDiagnostic> {
+    located_warning(
+        StyletraceDiagnosticCode::TypeExpansionLimit,
+        file,
+        format!(
+            "StyleTrace: stopped expanding `{}` in {} at the {} limit; props it would add are not traced",
+            cut.name,
+            cut.module.display(),
+            limit_word(cut.reason),
+        ),
+    )
+}
+
+/// The limit as the warning names it: the depth cap, the argument-size cap or the session budget.
+fn limit_word(reason: CutReason) -> &'static str {
+    match reason {
+        CutReason::Depth => "depth",
+        CutReason::Argument => "argument",
+        CutReason::Budget => "budget",
+    }
 }
 
 /// A located warning with a stable code. Both callers pass non-blank messages, so construction
@@ -195,6 +222,40 @@ mod tests {
              \"message\":\"StyleTrace: `Fancy` is not traced: `withPad` forwards style props into argument 1, which names no component\",\
              \"file\":\"/src/index.tsx\"}"
         );
+    }
+
+    #[test]
+    fn type_expansion_limit_pins_code_location_and_message() {
+        let cut = GuardCut {
+            reason: CutReason::Depth,
+            name: "StyleProps".to_string(),
+            module: std::path::PathBuf::from("/sync/style-props.d.mts"),
+        };
+        let warning = type_expansion_limit("/src/chain.tsx", &cut).unwrap();
+        assert_eq!(warning.code.as_str(), "STT-W-TYPE-EXPANSION-LIMIT");
+        assert_eq!(warning.severity, Severity::Warning);
+        assert_eq!(warning.file.as_deref(), Some("/src/chain.tsx"));
+        assert_eq!(
+            warning.message,
+            "StyleTrace: stopped expanding `StyleProps` in /sync/style-props.d.mts at the depth limit; props it would add are not traced"
+        );
+        assert_eq!(
+            serde_json::to_string(&warning).unwrap(),
+            "{\"severity\":\"warning\",\"code\":\"STT-W-TYPE-EXPANSION-LIMIT\",\
+             \"message\":\"StyleTrace: stopped expanding `StyleProps` in /sync/style-props.d.mts at the depth limit; props it would add are not traced\",\
+             \"file\":\"/src/chain.tsx\"}"
+        );
+        for (reason, word) in [
+            (CutReason::Argument, "argument"),
+            (CutReason::Budget, "budget"),
+        ] {
+            let limited = GuardCut {
+                reason,
+                ..cut.clone()
+            };
+            let warning = type_expansion_limit("/src/chain.tsx", &limited).unwrap();
+            assert!(warning.message.contains(&format!("at the {word} limit")));
+        }
     }
 
     #[test]

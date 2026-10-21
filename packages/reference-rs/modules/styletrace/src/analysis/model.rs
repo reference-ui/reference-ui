@@ -9,6 +9,7 @@ use oxc_ast::ast::Expression;
 use rustc_hash::FxHashMap;
 
 use super::util::transparent_inner;
+use crate::resolver::GuardCut;
 
 #[derive(
     Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
@@ -36,6 +37,8 @@ pub struct TraceModule {
     pub(super) export_all_sources: Vec<String>,
     pub(super) namespace_exports: Vec<NamespaceExport>,
     pub(super) class_components: Vec<String>,
+    /// Guard limits the module's prop-type traces hit, reported as one warning each.
+    pub(super) type_cuts: Vec<GuardCut>,
     pub(super) imports: FxHashMap<String, TraceImport>,
     pub(super) member_aliases: Vec<MemberAlias>,
     pub(super) identifier_aliases: FxHashMap<String, String>,
@@ -53,6 +56,7 @@ impl TraceModule {
             export_all_sources: Vec::new(),
             namespace_exports: Vec::new(),
             class_components: Vec::new(),
+            type_cuts: Vec::new(),
             imports: FxHashMap::default(),
             member_aliases: Vec::new(),
             identifier_aliases: FxHashMap::default(),

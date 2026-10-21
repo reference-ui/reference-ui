@@ -30,12 +30,15 @@ pub enum StyletraceDiagnosticCode {
     /// `analysis/hoc`: a higher-order component forwards style props into an argument that
     /// names no component. The binding it initializes stays untraced, rather than guessed.
     UnresolvedHocArgument,
+    /// `resolver/tracer` + `analysis/report`: a declaration expansion hit the depth, argument-size
+    /// or session-budget limit, so the props it would add are not traced. Repeats never raise it.
+    TypeExpansionLimit,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(StyletraceDiagnosticCode, &str); 5] = [
+const CODE_TABLE: [(StyletraceDiagnosticCode, &str); 6] = [
     (StyletraceDiagnosticCode::SkippedFile, "STT-W-SKIPPED-FILE"),
     (StyletraceDiagnosticCode::ScanFailed, "STT-E-SCAN-FAILED"),
     (
@@ -46,6 +49,10 @@ const CODE_TABLE: [(StyletraceDiagnosticCode, &str); 5] = [
     (
         StyletraceDiagnosticCode::UnresolvedHocArgument,
         "STT-W-UNRESOLVED-HOC-ARGUMENT",
+    ),
+    (
+        StyletraceDiagnosticCode::TypeExpansionLimit,
+        "STT-W-TYPE-EXPANSION-LIMIT",
     ),
 ];
 
@@ -134,6 +141,7 @@ mod tests {
             StyletraceDiagnosticCode::UnresolvedSurface,
             StyletraceDiagnosticCode::ClassComponent,
             StyletraceDiagnosticCode::UnresolvedHocArgument,
+            StyletraceDiagnosticCode::TypeExpansionLimit,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

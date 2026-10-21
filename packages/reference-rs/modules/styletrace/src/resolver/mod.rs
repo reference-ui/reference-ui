@@ -14,7 +14,7 @@ mod tracer;
 pub use error::StyleTraceError;
 pub use tracer::{
     collect_declared_prop_names, collect_reference_style_prop_names, collect_style_prop_names,
-    SurfaceTrust,
+    CutReason, GuardCut, SurfaceTrust, TracedNames,
 };
 
 pub(crate) use path::{

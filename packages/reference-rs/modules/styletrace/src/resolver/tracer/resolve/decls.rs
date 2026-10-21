@@ -2,7 +2,7 @@
 //! It takes a `DeclTarget` (the declaration, its module and the type arguments bound at the use site) and a pass accumulator.
 //! It binds the declaration's type parameters into a child environment before recursing, so its own references resolve against those arguments.
 //! Each argument keeps the caller's environment, so a parameter forwarded under its own name (`Forward<T> = Wrap<T>`) never resolves to itself.
-//! Named references expand through the session's expansion guard, so a recursive generic stops instead of overflowing the stack.
+//! Named references expand through the session's expansion guard, so a recursive generic stops instead of overflowing the stack, and a limit that stops one is recorded on the session.
 
 use std::borrow::Cow;
 use std::collections::BTreeSet;
@@ -12,7 +12,7 @@ use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{BoundTypeExpr, TypeDeclaration, TypeEnv, TypeExpr};
 
 use super::super::context::TraceContext;
-use super::super::guard::{ExpansionSite, TracePass};
+use super::super::guard::{Entry, ExpansionSite, TracePass};
 use super::literals::resolve_literal_names_into;
 use super::{resolve_prop_names_into, take_or_extend};
 
@@ -45,7 +45,8 @@ pub(super) struct NamedReference<'a> {
 }
 
 /// Expand the declaration a reference names in the current module for its pass, through the guard.
-/// An unresolvable name, a repeat of an expansion in progress, and a guard limit all contribute nothing.
+/// An unresolvable name, a repeat of an expansion in progress, and a guard limit all contribute nothing;
+/// only a limit is recorded on the session, since only a limit loses names.
 pub(super) fn resolve_named_decl_into(
     ctx: &mut TraceContext<'_>,
     reference: &NamedReference<'_>,
@@ -56,14 +57,7 @@ pub(super) fn resolve_named_decl_into(
     else {
         return Ok(());
     };
-    let site = ExpansionSite {
-        pass: reference.pass,
-        module_path: &module_path,
-        name: declaration.name(),
-        args: reference.args,
-        env: ctx.env,
-    };
-    if !ctx.session.guard.enter(&site) {
+    if !admit_expansion(ctx, reference, &module_path, &declaration) {
         return Ok(());
     }
     let target = DeclTarget::new(&module_path, &declaration, reference.args);
@@ -73,6 +67,32 @@ pub(super) fn resolve_named_decl_into(
     };
     ctx.session.guard.leave();
     result
+}
+
+/// Ask the guard whether this expansion may run. A limit cut is recorded on the session; a repeat is
+/// silent, since the expansion it repeats already contributes its names.
+fn admit_expansion(
+    ctx: &mut TraceContext<'_>,
+    reference: &NamedReference<'_>,
+    module_path: &Path,
+    declaration: &TypeDeclaration,
+) -> bool {
+    let site = ExpansionSite {
+        pass: reference.pass,
+        module_path,
+        name: declaration.name(),
+        args: reference.args,
+        env: ctx.env,
+    };
+    match ctx.session.guard.enter(&site) {
+        Entry::Run => true,
+        Entry::Repeat => false,
+        Entry::Cut(reason) => {
+            ctx.session
+                .note_cut(reason, declaration.name(), module_path);
+            false
+        }
+    }
 }
 
 pub(super) fn resolve_decl_props(

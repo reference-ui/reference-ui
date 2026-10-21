@@ -1,25 +1,27 @@
 //! Gathers what the walk reports beyond its bindings: the owned props each traced name keeps, the owned props each module's own components keep, and the warnings the finished walk owns.
-//! Edge-target skips are recorded while walking; class components are read from the parsed modules and unresolved higher-order arguments from the walk's facts, once the walk has settled.
+//! Edge-target skips are recorded while walking; class components and prop-type limit cuts are read from the parsed modules, and unresolved higher-order arguments from the walk's facts, once the walk has settled.
 //! Takes the analyzer's accumulated state and emits the drained owned-props map and the diagnostics in a stable order.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use crate::diagnostics::{class_component, unresolved_hoc_argument, StyletraceDiagnostic};
+use crate::diagnostics::{
+    class_component, type_expansion_limit, unresolved_hoc_argument, StyletraceDiagnostic,
+};
 
 use super::analyzer::StyleTraceAnalyzer;
 
 impl StyleTraceAnalyzer<'_> {
-    /// Drain the walk's diagnostics: edge-target skips recorded while walking, then the class and
-    /// unresolved-argument warnings that the finished walk owns.
+    /// Drain the walk's diagnostics: edge-target skips recorded while walking, then the class,
+    /// limit-cut and unresolved-argument warnings that the finished walk owns.
     pub(super) fn take_diagnostics(&mut self) -> Vec<StyletraceDiagnostic> {
         let mut diagnostics = std::mem::take(&mut self.diagnostics);
         diagnostics.extend(self.structural_warnings());
         diagnostics
     }
 
-    /// Class-component warnings in module order, then unresolved-argument warnings in binding order,
-    /// so the report is the same on every run.
+    /// Class-component warnings in module order, then type-expansion-limit warnings in module order,
+    /// then unresolved-argument warnings in binding order, so the report is the same on every run.
     fn structural_warnings(&self) -> Vec<StyletraceDiagnostic> {
         let classes = self.modules.iter().flat_map(|(path, module)| {
             let file = path.to_string_lossy().to_string();
@@ -28,13 +30,20 @@ impl StyleTraceAnalyzer<'_> {
                 .iter()
                 .filter_map(move |name| class_component(&file, name))
         });
+        let limits = self.modules.iter().flat_map(|(path, module)| {
+            let file = path.to_string_lossy().to_string();
+            module
+                .type_cuts
+                .iter()
+                .filter_map(move |cut| type_expansion_limit(&file, cut))
+        });
         let holes = self
             .unresolved_hocs
             .iter()
             .filter_map(|((path, binding), (hoc, index))| {
                 unresolved_hoc_argument(&path.to_string_lossy(), binding, hoc, *index)
             });
-        classes.chain(holes).collect()
+        classes.chain(limits).chain(holes).collect()
     }
 
     /// Drain the owned-props map: each export name that declares props to the prop

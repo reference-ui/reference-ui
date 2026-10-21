@@ -69,6 +69,7 @@ const WARNING_HINTS: Record<string, string> = {
     'rewrite it as a function component so its style props are traced',
   'STT-W-UNRESOLVED-HOC-ARGUMENT':
     'pass a component by name in that argument, not a call result',
+  'STT-W-TYPE-EXPANSION-LIMIT': 'flatten the alias chain or shorten the recursive type',
   'TGN-W-UNKNOWN-TOKEN-CATEGORY': 'move the tokens into a printed category',
   'TGN-W-INVALID-RECIPE-NAME': 'rename the recipe so it forms a TypeScript type name',
   'TGN-W-EMPTY-RECIPE': 'fill in the variant axes or drop the recipe',

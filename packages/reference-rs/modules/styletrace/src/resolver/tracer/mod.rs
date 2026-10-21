@@ -2,6 +2,7 @@
 //! Resolves TypeScript types across files to trace style properties from declaration roots.
 //! It uses a recursive resolution strategy handling imports, builtins, and generics.
 //! The resolved property names are emitted as a flat set of strings or explicit failure diagnostics.
+//! Each trace also reports the first guard limit that cut its walk, so a loss of names is never silent.
 
 mod builtins;
 mod context;
@@ -15,6 +16,15 @@ use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::TypeEnv;
 
 use context::{TraceContext, TraceSession};
+pub use guard::{CutReason, GuardCut};
+
+/// The names one trace reached, sorted and unique, plus the first guard limit that cut the walk.
+/// `cut` is `Some` only when a depth, argument-size or session-budget limit refused an expansion.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TracedNames {
+    pub names: Vec<String>,
+    pub cut: Option<GuardCut>,
+}
 
 const REFERENCE_STYLE_PROPS_ENTRY_STEMS: &[&str] = &[
     "react/types/public/style-props",
@@ -84,7 +94,7 @@ fn collect_entry_names(
     entry_path: &Path,
     export_name: &str,
 ) -> Result<Vec<String>, StyleTraceError> {
-    let names = collect_style_prop_names(declaration_root, entry_path, export_name, None)?;
+    let names = collect_style_prop_names(declaration_root, entry_path, export_name, None)?.names;
     if names.is_empty() {
         return Err(StyleTraceError::new(format!(
             "malformed public type graph: no style properties resolved from {export_name}"
@@ -127,7 +137,7 @@ pub fn collect_style_prop_names(
     entry_path: &Path,
     export_name: &str,
     trust: Option<SurfaceTrust<'_>>,
-) -> Result<Vec<String>, StyleTraceError> {
+) -> Result<TracedNames, StyleTraceError> {
     let mut session = TraceSession::new(sync_root);
     if let Some(trust) = trust {
         session.unresolved_style_props = Some(trust.style_props.clone());
@@ -143,7 +153,10 @@ pub fn collect_style_prop_names(
     };
 
     let names = resolve::resolve_reference_props(&mut ctx, entry_path, export_name)?;
-    Ok(names.into_iter().collect())
+    Ok(TracedNames {
+        names: names.into_iter().collect(),
+        cut: session.first_cut,
+    })
 }
 
 /// Declared prop names of one exported props type with the surface pruned:
@@ -155,7 +168,7 @@ pub fn collect_declared_prop_names(
     sync_root: &Path,
     entry_path: &Path,
     export_name: &str,
-) -> Result<Vec<String>, StyleTraceError> {
+) -> Result<TracedNames, StyleTraceError> {
     let mut session = TraceSession::new(sync_root);
     session.prune_surface = true;
     let mut visited = BTreeSet::new();
@@ -168,5 +181,8 @@ pub fn collect_declared_prop_names(
     };
 
     let names = resolve::resolve_reference_props(&mut ctx, entry_path, export_name)?;
-    Ok(names.into_iter().collect())
+    Ok(TracedNames {
+        names: names.into_iter().collect(),
+        cut: session.first_cut,
+    })
 }

@@ -1,6 +1,7 @@
 //! Resolves TypeScript prop types into the style-prop and owned-prop names that wrappers and components carry.
 //! It takes a `TSType` annotation (a reference, a literal or an intersection) from a props parameter or a wrapper type argument.
 //! It emits `WrapperProps` for higher-order type arguments, and owned prop names that the shadow check later filters.
+//! Every prop-type trace that a guard limit cut is recorded on the module's type-cut sink, so the report can warn about the loss.
 
 use super::super::context::ParserContext;
 use crate::analysis::model::WrapperProps;
@@ -60,15 +61,18 @@ fn resolve_type_reference(
         style_props: &ctx.surface.style_props,
         primitives: &ctx.surface.primitives,
     });
-    Ok(collect_style_prop_names(
+    let traced = collect_style_prop_names(
         ctx.workspace_root,
         ctx.path,
         slice_span(ctx.source, reference.type_name.span()),
         trust,
-    )?
-    .into_iter()
-    .filter(|name| ctx.surface.style_props.contains(name))
-    .collect())
+    )?;
+    ctx.note_type_cut(traced.cut);
+    Ok(traced
+        .names
+        .into_iter()
+        .filter(|name| ctx.surface.style_props.contains(name))
+        .collect())
 }
 
 fn resolve_type_literal(
@@ -133,13 +137,13 @@ fn resolve_owned_type_reference(
     ctx: &ParserContext,
     reference: &oxc_ast::ast::TSTypeReference<'_>,
 ) -> Result<BTreeSet<String>, StyleTraceError> {
-    Ok(collect_declared_prop_names(
+    let traced = collect_declared_prop_names(
         ctx.workspace_root,
         ctx.path,
         slice_span(ctx.source, reference.type_name.span()),
-    )?
-    .into_iter()
-    .collect())
+    )?;
+    ctx.note_type_cut(traced.cut);
+    Ok(traced.names.into_iter().collect())
 }
 
 fn resolve_owned_type_literal(

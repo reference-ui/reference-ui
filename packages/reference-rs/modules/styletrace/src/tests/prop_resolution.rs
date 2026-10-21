@@ -37,7 +37,8 @@ fn resolves_omit_and_intersection_prop_names_from_local_modules() {
         "StyleProps",
         None,
     )
-    .expect("expected style props to resolve");
+    .expect("expected style props to resolve")
+    .names;
 
     assert!(names.contains(&"color".to_string()));
     assert!(names.contains(&"fontSize".to_string()));
@@ -63,7 +64,8 @@ fn resolves_mapped_and_indexed_type_helpers() {
         "StyleProps",
         None,
     )
-    .expect("expected style props to resolve");
+    .expect("expected style props to resolve")
+    .names;
 
     assert!(names.contains(&"accentColor".to_string()));
     assert!(names.contains(&"fontSize".to_string()));
@@ -91,7 +93,8 @@ fn resolves_union_members_that_mix_references_and_literals() {
         "StyleProps",
         None,
     )
-    .expect("expected style props to resolve");
+    .expect("expected style props to resolve")
+    .names;
 
     assert_eq!(
         names,
@@ -119,7 +122,8 @@ fn unresolvable_module_specifiers_contribute_no_names() {
         "StyleProps",
         None,
     )
-    .expect("expected phantom imports to resolve tolerantly");
+    .expect("expected phantom imports to resolve tolerantly")
+    .names;
 
     assert_eq!(names, vec!["color".to_string()]);
 }
@@ -148,7 +152,8 @@ fn engine_surface_type_imports_resolve_without_files() {
         "CardProps",
         Some(trust),
     )
-    .expect("expected surface-type import to resolve");
+    .expect("expected surface-type import to resolve")
+    .names;
     assert_eq!(
         names,
         vec!["color".to_string(), "mt".to_string(), "title".to_string()]
@@ -160,7 +165,8 @@ fn engine_surface_type_imports_resolve_without_files() {
         "GhostCardProps",
         Some(trust),
     )
-    .expect("expected unknown imports to resolve tolerantly");
+    .expect("expected unknown imports to resolve tolerantly")
+    .names;
     assert!(ghost.is_empty());
 }
 
@@ -187,7 +193,8 @@ fn omit_over_unresolvable_primitive_props_uses_trusted_surface() {
         "IconProps",
         Some(trust),
     )
-    .expect("expected trusted fallback to resolve");
+    .expect("expected trusted fallback to resolve")
+    .names;
     assert_eq!(
         names,
         vec!["color".to_string(), "title".to_string()],
@@ -212,7 +219,8 @@ fn omit_over_unresolvable_primitive_props_without_trust_resolves_owned_only() {
         "IconProps",
         None,
     )
-    .expect("expected strict resolution to tolerate the missing import");
+    .expect("expected strict resolution to tolerate the missing import")
+    .names;
     assert_eq!(
         names,
         vec!["title".to_string()],

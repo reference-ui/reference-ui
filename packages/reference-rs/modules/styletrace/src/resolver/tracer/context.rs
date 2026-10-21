@@ -3,7 +3,8 @@
 //! The `TraceSession` holds long-lived caches like loaded modules.
 //! The `TraceContext` provides scoped state for deep recursive type walks,
 //! avoiding argument soup and keeping track of visited nodes; the session's
-//! `ExpansionGuard` bounds declaration expansions so recursive generics stop.
+//! `ExpansionGuard` bounds declaration expansions so recursive generics stop,
+//! and the session keeps the first limit cut so the walk can report the loss.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -17,7 +18,7 @@ use crate::resolver::model::{
     ParsedModule, TypeAliasDecl, TypeDeclaration, TypeEnv, TypeExpr,
 };
 use crate::resolver::parser::parse_module;
-use super::guard::ExpansionGuard;
+use super::guard::{CutReason, ExpansionGuard, GuardCut};
 use crate::resolver::path::{
     is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
     resolve_specifier,
@@ -37,6 +38,8 @@ pub struct TraceSession {
     pub prune_surface: bool,
     /// Declaration expansions in progress; refuses repeats and runaway recursion.
     pub guard: ExpansionGuard,
+    /// The first expansion a guard limit refused in this session; `None` when no limit cut the walk.
+    pub first_cut: Option<GuardCut>,
 }
 
 impl TraceSession {
@@ -48,6 +51,19 @@ impl TraceSession {
             unresolved_primitive_names: None,
             prune_surface: false,
             guard: ExpansionGuard::default(),
+            first_cut: None,
+        }
+    }
+
+    /// Keep the first limit cut of the session. Later cuts are dropped: one warning per walk is
+    /// enough to find the chain, and the first cut already names a declaration and its limit.
+    pub fn note_cut(&mut self, reason: CutReason, name: &str, module: &Path) {
+        if self.first_cut.is_none() {
+            self.first_cut = Some(GuardCut {
+                reason,
+                name: name.to_string(),
+                module: module.to_path_buf(),
+            });
         }
     }
 }

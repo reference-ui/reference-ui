@@ -14,6 +14,7 @@ pub mod pipeline;
 pub mod types;
 pub mod wrappers;
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -135,12 +136,14 @@ pub fn fold_trace_module(input: ModuleFold<'_, '_>) -> Result<TraceModule, Style
         source,
         surface,
         imports: &imports,
+        type_cuts: RefCell::new(Vec::new()),
     };
 
     for statement in &program.body {
         collect_statement(statement, &ctx, &mut state)?;
     }
     export_resolve::finish(&mut state, &imports);
+    let type_cuts = ctx.type_cuts.into_inner();
 
     Ok(TraceModule {
         components: state.components,
@@ -150,6 +153,7 @@ pub fn fold_trace_module(input: ModuleFold<'_, '_>) -> Result<TraceModule, Style
         export_all_sources: state.export_all_sources,
         namespace_exports: state.namespace_exports,
         class_components: state.class_components,
+        type_cuts,
         imports,
         member_aliases: state.member_aliases,
         identifier_aliases: state.identifier_aliases,
