@@ -5,7 +5,10 @@
 // carries it, so a system without owned data prints the declarations it
 // always did. The packager leg calls these pure builders and owns every write;
 // the banner rides the shared leaf constant. The entry's getRhythm is emitted from rhythm.ts by its source
-// text, so the generated runtime prints what the compiler prints.
+// text, so the generated runtime prints what the compiler prints. The authoring
+// calls take core's real token, font, keyframes and globalCss types; the builder
+// inlines copies because the generated package depends on nothing, and
+// sources.test.ts pins those copies to core's.
 
 import { BASE_SYSTEM_HEADER } from '../../packager/constants.ts'
 import { getRhythm } from './rhythm.ts'
@@ -82,6 +85,43 @@ export function systemEntrySource(): string {
   ].join('\n')
 }
 
+// Core's authoring types for the four calls, copied from collect/surface. The
+// generated package depends on nothing, so the entry carries its own copies.
+// ReferenceTokenLeaf keeps core's index signature, so an unknown leaf key is still a valid leaf.
+const AUTHORING_TYPES = [
+  'export interface ReferenceTokenLeaf {',
+  '  value?: unknown',
+  '  light?: unknown',
+  '  dark?: unknown',
+  '  description?: string',
+  '  [key: string]: unknown',
+  '}',
+  'export interface ReferenceTokenConfig {',
+  '  [key: string]: ReferenceTokenLeaf | ReferenceTokenConfig',
+  '}',
+  'export type TokenConfig = ReferenceTokenConfig',
+  'export type KeyframesConfig = Record<string, Record<string, Record<string, string | number>>>',
+  'export interface FontFaceRule {',
+  '  src: string',
+  '  fontWeight?: string',
+  '  fontStyle?: string',
+  '  fontDisplay?: string',
+  '  sizeAdjust?: string',
+  '  descentOverride?: string',
+  '}',
+  "export type FontWeightName = 'thin' | 'light' | 'normal' | 'semibold' | 'bold' | 'black'",
+  'export interface FontOptions {',
+  '  value: string',
+  '  fontFace: FontFaceRule | FontFaceRule[]',
+  '  weights: Partial<Record<FontWeightName, string>>',
+  '  css?: Record<string, string>',
+  '}',
+  'export interface GlobalCssRule {',
+  '  [property: string]: unknown',
+  '}',
+  'export type GlobalCssConfig = Record<string, GlobalCssRule>',
+]
+
 export function systemTypesSource(system: DescribedSystem = {}): string {
   return [
     BASE_SYSTEM_HEADER,
@@ -108,11 +148,12 @@ export function systemTypesSource(system: DescribedSystem = {}): string {
     '  include?: string[]',
     '  exclude?: string[]',
     '}',
+    ...AUTHORING_TYPES,
     'export declare function defineConfig(config: ReferenceUIConfig): ReferenceUIConfig',
-    'export declare function tokens(config: Record<string, unknown>): void',
-    'export declare function keyframes(config: Record<string, unknown>): void',
-    'export declare function font(name: string, options: Record<string, unknown>): void',
-    'export declare function globalCss(config: Record<string, unknown>): void',
+    'export declare function tokens(config: TokenConfig): void',
+    'export declare function keyframes(config: KeyframesConfig): void',
+    'export declare function font(name: string, options: FontOptions): void',
+    'export declare function globalCss(config: GlobalCssConfig): void',
     'export declare function getRhythm(n: number): string',
     'export declare function getRhythm(num: number, denom: number): string',
     'export declare const baseSystem: BaseSystem',

@@ -1,23 +1,29 @@
-// Stable type surface for the generated @reference-ui/system entry.
-// It takes nothing and declares the authoring calls worlds import under the
-// pre-run typecheck. Shapes stay wide on purpose — SYNC-12/TYPE-05 narrow them
-// against the emitted entry; worlds promise names, not signatures.
+// Stable type surface for the generated @reference-ui/system entry, read by the
+// pre-run typecheck. It takes nothing and declares the authoring calls worlds import,
+// and it runs before the first sync writes system.d.mts. The four authoring calls were
+// wide only to match the emitted entry, which was wide too. They now take core's real
+// token, font, keyframes and globalCss types from @reference-ui/core, which exists
+// before any sync. defineConfig and baseSystem keep wide shapes: only the four calls
+// are narrowed here, and worlds promise names, not signatures.
+
+import type { FontOptions, GlobalCssConfig, KeyframesConfig, TokenConfig } from '@reference-ui/core';
+export type {
+  FontFaceRule,
+  FontWeightName,
+  GlobalCssRule,
+  ReferenceTokenConfig,
+  ReferenceTokenLeaf,
+} from '@reference-ui/core';
+export type { FontOptions, GlobalCssConfig, KeyframesConfig, TokenConfig };
 
 export type ReferenceUIConfig = Record<string, unknown>;
 export type BaseSystem = Record<string, unknown>;
 export declare function defineConfig(config: ReferenceUIConfig): ReferenceUIConfig;
 
-export type TokenConfig = Record<string, unknown>;
-export declare function tokens(config: TokenConfig): TokenConfig;
-
-export type KeyframesConfig = Record<string, unknown>;
-export declare function keyframes(config: KeyframesConfig): KeyframesConfig;
-
-export type FontDefinition = Record<string, unknown>;
-export declare function font(definition: FontDefinition): FontDefinition;
-
-export type GlobalCssConfig = Record<string, unknown>;
-export declare function globalCss(config: GlobalCssConfig): GlobalCssConfig;
+export declare function tokens(config: TokenConfig): void;
+export declare function keyframes(config: KeyframesConfig): void;
+export declare function font(name: string, options: FontOptions): void;
+export declare function globalCss(config: GlobalCssConfig): void;
 
 export declare function getRhythm(step: number): string;
 export declare const baseSystem: BaseSystem;
