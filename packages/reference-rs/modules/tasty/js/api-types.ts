@@ -1,6 +1,7 @@
 /**
  * Public TypeScript API surface of the tasty runtime.
  * Declares the TastyApi, symbol, member, type-ref, JSDoc, and browser-runtime interfaces over the RawTasty* generated payloads it re-exports.
+ * A display projection comes back as a TastyDisplayResult, which carries whether that call's step budget cut the walk short.
  */
 import type {
   TastyFnParam as RawTastyFnParam,
@@ -148,6 +149,16 @@ export interface TastySymbolRef {
   load(): Promise<TastySymbol>
 }
 
+/**
+ * One public display projection: its members, and whether the step budget of that call ran out. `truncated` is true
+ * when the walk was cut short, so `members` is partial. The flag reads the call's own budget, so calls that overlap
+ * on one api never share it.
+ */
+export interface TastyDisplayResult {
+  members: TastyMember[]
+  truncated: boolean
+}
+
 export interface TastySymbol {
   getId(): string
   getName(): string
@@ -171,6 +182,7 @@ export interface TastyGraphApi {
   loadExtendsChain(symbol: TastySymbol): Promise<TastySymbol[]>
   flattenInterfaceMembers(symbol: TastySymbol): Promise<TastyMember[]>
   getDisplayMembers(symbol: TastySymbol): Promise<TastyMember[]>
+  getDisplayResult(symbol: TastySymbol): Promise<TastyDisplayResult>
   projectObjectLikeMembers(symbol: TastySymbol): Promise<TastyMember[] | undefined>
   collectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]>
 }

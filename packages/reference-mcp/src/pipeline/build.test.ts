@@ -1,11 +1,13 @@
 // Vitest tests for the MCP artifact build.
-// They take fixture projects and assert the built model plus cache and prefetch behavior.
+// They take fixture projects and assert the built model plus cache and prefetch behavior, including the truncated
+// mark and the projection warning a component whose tasty projection ran out of steps carries into the model.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { McpReferenceData } from './reference'
 import { REFERENCE_UI_PRIMITIVE_NAMES } from './primitives'
 
 const analyzeDetailed = vi.fn()
 const createReferenceApi = vi.fn(() => ({}))
-const loadMcpReferenceData = vi.fn(async () => null)
+const loadMcpReferenceData = vi.fn(async (): Promise<McpReferenceData | null> => null)
 const loadMcpTokens = vi.fn(async () => [])
 const writeMcpArtifact = vi.fn(async () => '/tmp/model.json')
 const getConfig = vi.fn()
@@ -179,5 +181,41 @@ describe('buildMcpArtifact', () => {
     )
 
     expect(writeMcpArtifact).not.toHaveBeenCalled()
+  })
+
+  it('marks a component whose projection was cut, and warns with its name and symbol', async () => {
+    loadMcpReferenceData.mockResolvedValueOnce({
+      description: null,
+      members: [],
+      warnings: [],
+      truncated: true,
+    })
+    const { generateMcpArtifact } = await import('./build')
+
+    const artifact = await generateMcpArtifact({ cwd: '/workspace/app' })
+
+    expect(artifact.components.find(component => component.name === 'Button')).toMatchObject({
+      truncated: true,
+    })
+    expect(artifact.diagnostics).toEqual([
+      expect.objectContaining({
+        severity: 'warning',
+        code: 'TST-W-PROJECTION-BUDGET',
+        message: expect.stringMatching(
+          /^Button \(\.\/src\/components\/Button\.tsx\): Member projection of "ButtonProps" stopped/
+        ),
+      }),
+    ])
+  })
+
+  it('adds neither the mark nor a warning for a component whose projection completed', async () => {
+    const { generateMcpArtifact } = await import('./build')
+
+    const artifact = await generateMcpArtifact({ cwd: '/workspace/app' })
+
+    expect(artifact.components.find(component => component.name === 'Button')).not.toHaveProperty(
+      'truncated'
+    )
+    expect(artifact.diagnostics).toEqual([])
   })
 })

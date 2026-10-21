@@ -324,6 +324,7 @@ export function compactComponent(component: McpComponent): McpComponentCompact {
     props,
     propSummary: summarizeProps(component.props, props.length),
     styleProps: getStylePropsSummary(component),
+    ...(component.truncated ? { truncated: true } : {}),
   }
 }
 

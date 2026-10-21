@@ -1,5 +1,6 @@
 // Vitest tests for tasty reference-document loading.
-// They take fixture manifests and assert per-component data plus warning formatting.
+// They take fixture manifests and assert per-component data, warning formatting, and the per-call truncated mark
+// that a display projection cut by its step budget leaves on the component's reference data.
 import { describe, expect, it, vi } from 'vitest'
 
 const createReferenceDocument = vi.fn(() => ({ id: 'doc' }))
@@ -61,5 +62,41 @@ describe('loadReferenceDocument', () => {
       'ButtonProps'
     )
     expect(api.loadSymbolByName).not.toHaveBeenCalled()
+  })
+})
+
+describe('loadMcpReferenceData', () => {
+  function apiWithProjection(result: { members: unknown[]; truncated: boolean }) {
+    return {
+      loadSymbolByScopedName: vi.fn(async () => ({
+        getKind: () => 'interface',
+        getDescription: () => undefined,
+        getId: () => 'button-props',
+      })),
+      loadSymbolByName: vi.fn(),
+      graph: {
+        getDisplayResult: vi.fn(async () => result),
+      },
+      getWarnings: vi.fn(() => []),
+    }
+  }
+
+  it('marks the reference truncated when its own display projection ran out of steps', async () => {
+    const api = apiWithProjection({ members: [], truncated: true })
+
+    const { loadMcpReferenceData } = await import('./reference')
+    const data = await loadMcpReferenceData(api as never, 'ButtonProps', './components/Button.tsx')
+
+    expect(api.graph.getDisplayResult).toHaveBeenCalledTimes(1)
+    expect(data).toMatchObject({ truncated: true })
+  })
+
+  it('leaves the mark off a reference whose projection completed', async () => {
+    const api = apiWithProjection({ members: [], truncated: false })
+
+    const { loadMcpReferenceData } = await import('./reference')
+    const data = await loadMcpReferenceData(api as never, 'ButtonProps', './components/Button.tsx')
+
+    expect(data).not.toHaveProperty('truncated')
   })
 })

@@ -1,19 +1,20 @@
-// Union label cases: they compile the vendored union-label fixtures with the
-// public tasty build and assert the API table's union type lines (`Union`,
-// widenings) plus literal value-set chips. The model decides the labels,
-// so the cases pin them
-// without rendering React.
+// Union label cases: they compile vendored union-label fixtures and assert the API table's unions.
+// The public tasty build runs the fixtures; the model decides the labels, so the cases pin them
+// without rendering React. The last block drives the browser reference runtime over a
+// diamond compiled in a temporary project: a root whose projection ran out of steps
+// carries the budget warning on its document, and a complete one carries none.
 
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import type { TastyApi } from '@reference-ui/rust/tasty'
+import type { TastyApi, TastyBrowserRuntime } from '@reference-ui/rust/tasty'
 import { buildTasty } from '@reference-ui/rust/tasty/build'
 
 import { createReferenceDocument } from './document.ts'
+import { createReferenceRuntime } from '../browser/Runtime.ts'
 
 const fixtureDir = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -92,5 +93,54 @@ describe('union display type label', () => {
     if (modeMember?.summary.memberTypeSummary?.kind === 'valueSet') {
       expect(modeMember.summary.memberTypeSummary.options.map((o) => o.label)).toEqual(['a', 'b'])
     }
+  })
+})
+
+const DIAMOND_DEPTH = 16
+
+function diamondSource(depth: number): string {
+  let source = 'export interface I0a { a0: 1 }\nexport interface I0b { b0: 1 }\n'
+  for (let level = 1; level <= depth; level++) {
+    source += `export interface I${level}a extends I${level - 1}a, I${level - 1}b { a${level}: 1 }\n`
+    source += `export interface I${level}b extends I${level - 1}a, I${level - 1}b { b${level}: 1 }\n`
+  }
+  return source
+}
+
+describe('reference runtime projection warnings', () => {
+  let diamondDir: string
+  let diamondApi: TastyApi
+
+  beforeAll(async () => {
+    diamondDir = mkdtempSync(join(tmpdir(), 'core-projection-budget-'))
+    mkdirSync(join(diamondDir, 'src'))
+    writeFileSync(join(diamondDir, 'src', 'a.ts'), diamondSource(DIAMOND_DEPTH))
+    const built = await buildTasty({
+      rootDir: diamondDir,
+      include: ['src/**/*.ts'],
+      outputDir: join(diamondDir, 'artifacts'),
+    })
+    diamondApi = built.api
+  }, 60000)
+
+  afterAll(() => {
+    rmSync(diamondDir, { recursive: true, force: true })
+  })
+
+  function runtimeOver(api: TastyApi) {
+    return createReferenceRuntime({ loadApi: async () => api } as unknown as TastyBrowserRuntime)
+  }
+
+  it('attaches the budget warning to the document when the root projection ran out of steps', async () => {
+    const data = await runtimeOver(diamondApi).load(`I${DIAMOND_DEPTH}a`)
+
+    expect(data.warnings).toEqual([expect.objectContaining({ code: 'TST-W-PROJECTION-BUDGET' })])
+    expect(data.warnings[0]?.message).toContain(`"I${DIAMOND_DEPTH}a"`)
+  })
+
+  it('attaches no warning when every projection of the document completed', async () => {
+    const data = await runtimeOver(diamondApi).load('I1a')
+
+    expect(data.warnings).toEqual([])
   })
 })

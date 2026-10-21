@@ -3,9 +3,11 @@
  * Walks type references during object projection: the walk context with its depth guard and step budget,
  * type-parameter bookkeeping, and loading the symbol a reference names. One public call builds one context, and every
  * projection it starts carries that context's path, so a symbol revisited on the path ends the walk and the budget
- * ends any walk that keeps growing without repeating a symbol.
+ * ends any walk that keeps growing without repeating a symbol. A walk the budget cut short is reported per call as
+ * `truncated`, and consumers attach the TST-W-PROJECTION-BUDGET warning built by projectionBudgetWarning.
  */
 import type {
+  RawTastyDiagnostic,
   RawTastyTypeReference,
   TastySymbol,
   TastyTypeParameterMemberProjector,
@@ -56,6 +58,22 @@ export function takeProjectionStep(context: ProjectionContext): boolean {
 
 export function budgetExhaustedNotice(symbolName: string): string {
   return `Member projection of "${symbolName}" stopped after ${MAX_PROJECTION_STEPS} steps; inherited members past that point may be omitted.`
+}
+
+/** The code a display projection that the step budget cut short carries. Minted in this module; REGISTRY.md holds its row. */
+const PROJECTION_BUDGET_CODE = 'TST-W-PROJECTION-BUDGET'
+
+/**
+ * The warning a consumer attaches to a result it presents when that result's projection was cut short. It states the
+ * same notice the runtime keeps, and when the consumer names a subject (a component, say) it leads with that subject.
+ */
+export function projectionBudgetWarning(symbolName: string, subject?: string): RawTastyDiagnostic {
+  const notice = budgetExhaustedNotice(symbolName)
+  return {
+    severity: 'warning',
+    code: PROJECTION_BUDGET_CODE,
+    message: subject === undefined ? notice : `${subject}: ${notice}`,
+  }
 }
 
 /** The context a projection of `symbolId` runs under: the path gains the symbol and the depth rises by one. */

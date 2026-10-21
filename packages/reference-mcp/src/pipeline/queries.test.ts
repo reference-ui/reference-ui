@@ -148,6 +148,14 @@ describe('mcp queries', () => {
     expect(compact.styleProps.supported).toBe(true)
   })
 
+  it('keeps the truncated mark in the compact view only when the projection was cut', () => {
+    const component = findComponent(artifact, { name: 'Button' })
+    expect(component).not.toBeNull()
+
+    expect(compactComponent(component!)).not.toHaveProperty('truncated')
+    expect(compactComponent({ ...component!, truncated: true }).truncated).toBe(true)
+  })
+
   it('returns full component props with filters', () => {
     const full = getComponentProps(artifact, { name: 'Button' })
     const withoutStyle = getComponentProps(artifact, {

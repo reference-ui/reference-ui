@@ -12,6 +12,7 @@ export {
   getTastyMemberId,
   normalizeTastyInlineValue,
   parseTastyParamTag,
+  projectionBudgetWarning,
 } from './index.js'
 
 export type {
@@ -41,6 +42,7 @@ export type {
   RawTastyTypeReference,
   TastyApi,
   TastyBrowserRuntime,
+  TastyDisplayResult,
   TastyGraphApi,
   TastyMember,
   TastyRuntimeModule,

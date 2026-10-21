@@ -1,10 +1,13 @@
 // Builds, loads, and prefetches the per-project MCP artifact.
 // It takes a project root and emits the joined component model, running Atlas analysis out
 // of process and caching by root. loadOrBuild prefers the on-disk artifact; prefetch warms
-// the Atlas cache during project selection.
+// the Atlas cache during project selection. A component whose tasty projection the step budget
+// cut is marked `truncated`, and the artifact's diagnostics gain one TST-W-PROJECTION-BUDGET
+// warning for it, in component order.
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { analyzeDetailed } from '@reference-ui/rust/atlas'
+import { projectionBudgetWarning } from '@reference-ui/rust/tasty'
 import { getConfig } from '@reference-ui/core/config/store'
 import type { ReferenceUIConfig } from '@reference-ui/core/config/types'
 import { log } from '../server/logger'
@@ -13,7 +16,7 @@ import { getAtlasMcpConfig } from './config'
 import { createReferenceApi, loadMcpReferenceData } from './reference'
 import { readMcpArtifact, writeMcpArtifact } from './artifact'
 import { getMcpModelPath, getMcpTypesManifestPath } from './paths'
-import type { McpBuildArtifact } from './types'
+import type { McpBuildArtifact, McpComponent } from './types'
 import { loadMcpTokens } from './tokens'
 import { createObservedReferenceUiPrimitives } from './primitives'
 
@@ -170,7 +173,7 @@ export async function generateMcpArtifactFromAtlas(input: {
     generatedAt: new Date().toISOString(),
     workspaceRoot: cwd,
     manifestPath,
-    diagnostics: atlas.diagnostics,
+    diagnostics: [...atlas.diagnostics, ...truncatedProjectionDiagnostics(components)],
     useReferenceLibrary,
     useReferenceIcons,
     components: allComponents.sort((left, right) => {
@@ -182,6 +185,23 @@ export async function generateMcpArtifactFromAtlas(input: {
   }
 
   return artifact
+}
+
+/**
+ * One warning per component whose projection the budget cut, in the order the components were built. The symbol is the
+ * one the reference loader projected: the component's interface when it has one, else the component itself.
+ */
+function truncatedProjectionDiagnostics(
+  components: McpComponent[]
+): McpBuildArtifact['diagnostics'] {
+  return components
+    .filter(component => component.truncated)
+    .map(component =>
+      projectionBudgetWarning(
+        component.interface?.name ?? component.name,
+        `${component.name} (${component.source})`
+      )
+    )
 }
 
 async function loadMcpTokensSafely(

@@ -49,6 +49,8 @@ export interface McpComponent {
   anatomy?: McpComponentAnatomy | null
   interface: McpComponentInterface | null
   props: McpComponentProp[]
+  /** Set only when the step budget cut the component's tasty member projection short; its props may be partial. */
+  truncated?: boolean
 }
 
 export interface McpToken {
@@ -76,6 +78,7 @@ export interface McpBuildArtifact {
   generatedAt: string
   workspaceRoot: string
   manifestPath: string
+  /** Atlas diagnostics, plus one TST-W-PROJECTION-BUDGET warning per component whose projection the step budget cut. */
   diagnostics: AtlasDiagnostic[]
   components: McpComponent[]
   tokens?: McpToken[]
@@ -166,4 +169,5 @@ export interface McpComponentCompact {
   props: McpComponentProp[]
   propSummary: McpPropSummary
   styleProps: McpComponentStylePropsSummary
+  truncated?: boolean
 }

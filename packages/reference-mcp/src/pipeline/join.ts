@@ -1,7 +1,8 @@
 // Joins Atlas-observed components with reference-doc data.
 // It takes raw Atlas components plus the loaded tasty document and emits McpComponents with
-// resolved props, style-prop filtering, and formatted warnings. toMcpReferenceData converts
-// a reference document to the shared reference-data shape first.
+// resolved props, style-prop filtering, and formatted warnings. A reference whose projection the
+// step budget cut carries its `truncated` mark onto the component; a complete one adds no key.
+// toMcpReferenceData converts a reference document to the shared reference-data shape first.
 import type { Component } from '@reference-ui/rust/atlas'
 import {
   formatReferenceType,
@@ -80,6 +81,7 @@ export function joinMcpComponentWithReference(
       }),
       ...documentedOnlyProps,
     ],
+    ...(reference?.truncated ? { truncated: true } : {}),
   }
 }
 

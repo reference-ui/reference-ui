@@ -2,7 +2,8 @@
  * Tests for the bounds every public display call shares: the step budget and the hook re-entry path. The budget
  * fixture is an interface diamond whose inheritance paths outnumber the budget, scanned from a temporary project, so
  * the walk is real. A call that runs out returns its declared members and raises one notice naming the symbol; each
- * public call gets a budget of its own. The hook fixture is an alias whose type parameter the hook answers with the
+ * public call gets a budget of its own, and its getDisplayResult reports `truncated` from that budget alone, so calls
+ * that overlap on one api report independently. The hook fixture is an alias whose type parameter the hook answers with the
  * same alias, the way reference-core answers `P` with `SystemProperties`; the walk runs in a child process through
  * runIsolated, so a cycle that never ends shows as a signal rather than a crashed worker.
  */
@@ -17,6 +18,7 @@ import { expectBounded, runIsolated } from '../../../../testing/isolated.js'
 import type { TastyApi } from '../api-types.js'
 import { scanAndEmitModules } from '../runtime.js'
 import { createTastyApi } from './api-runtime.js'
+import { projectionBudgetWarning } from './object-projection-references.js'
 
 const DIAMOND_DEPTH = 16
 const HOOK_DRIVER = fileURLToPath(new URL('./projection-hook-driver.mjs', import.meta.url))
@@ -83,6 +85,38 @@ describe('projection step budget', () => {
 
     expect(members.sort()).toEqual(['a0', 'a1', 'b0'])
     expect(api.getRuntimeNotices()).toHaveLength(1)
+  })
+
+  it('reports truncated on the call that runs out, and false on a call that completes', async () => {
+    const root = await api.loadSymbolByName(`I${DIAMOND_DEPTH}a`)
+    const leaf = await api.loadSymbolByName('I1a')
+    const cut = await api.graph.getDisplayResult(root)
+    const whole = await api.graph.getDisplayResult(leaf)
+
+    expect(cut.truncated).toBe(true)
+    expect(cut.members.map(member => member.getName())).toContain(`a${DIAMOND_DEPTH}`)
+    expect(whole.truncated).toBe(false)
+    expect(whole.members.map(member => member.getName()).sort()).toEqual(['a0', 'a1', 'b0'])
+  })
+
+  it('reports each of two overlapping calls on the same api on its own budget', async () => {
+    const root = await api.loadSymbolByName(`I${DIAMOND_DEPTH}a`)
+    const leaf = await api.loadSymbolByName('I1a')
+    const [cut, whole] = await Promise.all([
+      api.graph.getDisplayResult(root),
+      api.graph.getDisplayResult(leaf),
+    ])
+
+    expect([cut.truncated, whole.truncated]).toEqual([true, false])
+  })
+
+  it('builds the warning consumers attach under the registered code, naming the subject and symbol', () => {
+    expect(projectionBudgetWarning(`I${DIAMOND_DEPTH}a`, 'Button')).toEqual({
+      severity: 'warning',
+      code: 'TST-W-PROJECTION-BUDGET',
+      message: `Button: Member projection of "I${DIAMOND_DEPTH}a" stopped after 10000 steps; inherited members past that point may be omitted.`,
+    })
+    expect(projectionBudgetWarning(`I${DIAMOND_DEPTH}a`).message).toMatch(/^Member projection of/)
   })
 })
 

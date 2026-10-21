@@ -32,6 +32,7 @@ export type {
   TastyApi,
   TastyBrowserRuntime,
   TastyCallableParameter,
+  TastyDisplayResult,
   TastyFnParam,
   TastyGraphApi,
   TastyJsDocTag,
@@ -67,3 +68,4 @@ export { getTastyCallableParameters } from './callables.js'
 export { getTastyResolvedType } from './resolution.js'
 export { createTastyApi, createTastyApiFromManifest } from './internal/api-runtime.js'
 export { createTastyBrowserRuntime } from './internal/browser-runtime.js'
+export { projectionBudgetWarning } from './internal/object-projection-references.js'

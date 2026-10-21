@@ -1,7 +1,7 @@
 /**
  * Node implementation of the TastyApi over emitted artifacts.
  * Loads and validates the manifest, resolves symbols by id or name through the SymbolResolver, and serves members, references, display helpers, and diagnostics.
- * Entry points are createTastyApi and createTastyApiFromManifest. Each public projection call builds one ProjectionContext here, so its whole walk shares one path and one step budget.
+ * Entry points are createTastyApi and createTastyApiFromManifest. Each public projection call builds one ProjectionContext here, so its whole walk shares one path and one step budget, and getDisplayResult reports whether that budget ran out.
  */
 import type {
   CreateTastyApiOptions,
@@ -13,6 +13,7 @@ import type {
   RawTastySymbolRef,
   RawTastyTypeRef,
   TastyApi,
+  TastyDisplayResult,
   TastyMember,
   TastyGraphApi,
   TastySymbol,
@@ -97,6 +98,7 @@ export class TastyApiRuntime implements TastyApi {
       loadExtendsChain: symbol => this.graphLoadExtendsChain(symbol),
       flattenInterfaceMembers: symbol => this.graphFlattenInterfaceMembers(symbol),
       getDisplayMembers: symbol => this.graphGetDisplayMembers(symbol),
+      getDisplayResult: symbol => this.graphGetDisplayResult(symbol),
       projectObjectLikeMembers: symbol => this.graphProjectObjectLikeMembers(symbol),
       collectUserOwnedReferences: symbol => this.graphCollectUserOwnedReferences(symbol),
     }
@@ -168,17 +170,20 @@ export class TastyApiRuntime implements TastyApi {
   }
 
   private async graphGetDisplayMembers(symbol: TastySymbol): Promise<TastyMember[]> {
+    return (await this.graphGetDisplayResult(symbol)).members
+  }
+
+  /** Reads `truncated` from this call's own budget after the walk settles, so overlapping calls never share it. */
+  private async graphGetDisplayResult(symbol: TastySymbol): Promise<TastyDisplayResult> {
     const raw = symbol.getRaw()
     const context = this.createRootContext(symbol)
+    let members: TastyMember[] = []
     if (isInterfaceSymbol(raw)) {
-      return dedupeTastyMembers(
-        await flattenInterfaceMembers(this, symbol, new Map(), context)
-      )
+      members = dedupeTastyMembers(await flattenInterfaceMembers(this, symbol, new Map(), context))
+    } else if (isTypeAliasSymbol(raw)) {
+      members = (await projectObjectLikeMembers(this, symbol, context)) ?? []
     }
-    if (isTypeAliasSymbol(raw)) {
-      return (await projectObjectLikeMembers(this, symbol, context)) ?? []
-    }
-    return []
+    return { members, truncated: context.budget.reported }
   }
 
   private graphProjectObjectLikeMembers(
