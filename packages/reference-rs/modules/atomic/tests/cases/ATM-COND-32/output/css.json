@@ -1,0 +1,5 @@
+{
+  "mdDown:display:flex": "@reference-ui/lib__mdDown:d_flex",
+  "mdOnly:display:block": "@reference-ui/lib__mdOnly:d_block",
+  "smToLg:display:grid": "@reference-ui/lib__smToLg:d_grid"
+}

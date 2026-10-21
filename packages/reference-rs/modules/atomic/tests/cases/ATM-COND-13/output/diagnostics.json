@@ -1,18 +1,18 @@
 [
   {
     "severity": "warning",
-    "code": "ATM-W-UNKNOWN-CONDITION",
-    "message": "`color: red.500` has no compiled style plan; this lookup will emit no class. Unknown condition \"watDown\"",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"watDown\"",
     "file": "input/src/App.tsx",
     "line": 8,
-    "column": 23,
+    "column": 5,
     "span": {
-      "start": 200,
-      "end": 209
+      "start": 182,
+      "end": 189
     },
     "help": [
-      "did you mean `xDown`?",
-      "use a condition from the theme"
+      "did you mean `navDown`?",
+      "remove 'watDown' or check its spelling"
     ]
   },
   {
@@ -59,6 +59,14 @@
     "help": [
       "did you mean `xDown`?",
       "use a condition from the theme"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-MISSING-STYLE-PLAN",
+    "message": "`color: red.500` has no compiled style plan; this lookup will emit no class",
+    "help": [
+      "make the 'color: red.500' lookup static so the plan can serve it"
     ]
   }
 ]

@@ -276,3 +276,17 @@ fn test_media_ranges_share_container_bounds() {
     assert_eq!(breakpoint_media_query("base", system), None);
     assert_eq!(breakpoint_media_query("nope", system), None);
 }
+
+#[test]
+fn range_keys_are_built_from_breakpoint_names() {
+    let scale = BaseSystem::lib_fixture().breakpoints();
+    for key in ["mdDown", "mdOnly", "smToLg", "smTolg", "lgToSm", "baseOnly"] {
+        assert!(is_breakpoint_range_key(key, scale), "{key} has range shape");
+    }
+    for key in [
+        "srOnly", "fooOnly", "fooDown", "mdToFoo", "fooToMd", "marginTop", "paddingTop",
+        "MdOnly", "mdToLgDown",
+    ] {
+        assert!(!is_breakpoint_range_key(key, scale), "{key} is not a range");
+    }
+}

@@ -109,6 +109,10 @@ css({ width: '100%', mdOnly: { width: '50%' } })
 
 The upper bound stops 0.02px short, so adjacent ranges never overlap.
 
+Build range keys from your breakpoint names: without a `tablet` breakpoint,
+`tabletOnly` is not a range, and sync reports it as an unknown style property
+(`ATM-W-UNKNOWN-PROPERTY`).
+
 ## Custom widths
 
 The `r` prop takes widths that are not on the scale. A numeric key is a

@@ -1,0 +1,88 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"fooOnly\"",
+    "file": "input/src/App.tsx",
+    "line": 3,
+    "column": 30,
+    "span": {
+      "start": 100,
+      "end": 107
+    },
+    "help": [
+      "did you mean `srOnly`?",
+      "remove 'fooOnly' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"fooDown\"",
+    "file": "input/src/App.tsx",
+    "line": 3,
+    "column": 44,
+    "span": {
+      "start": 114,
+      "end": 121
+    },
+    "help": [
+      "did you mean `navDown`?",
+      "remove 'fooDown' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"mdToFoo\"",
+    "file": "input/src/App.tsx",
+    "line": 3,
+    "column": 58,
+    "span": {
+      "start": 128,
+      "end": 135
+    },
+    "help": [
+      "remove 'mdToFoo' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"barOnly\"",
+    "file": "input/src/App.tsx",
+    "line": 3,
+    "column": 91,
+    "span": {
+      "start": 161,
+      "end": 164
+    },
+    "help": [
+      "did you mean `srOnly`?",
+      "remove 'barOnly' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
+    "message": "`display: inline` has no compiled style plan; this lookup will emit no class. Unknown condition \"lgToSm\"",
+    "file": "input/src/App.tsx",
+    "line": 6,
+    "column": 51,
+    "span": {
+      "start": 307,
+      "end": 315
+    },
+    "help": [
+      "use a condition from the theme"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-MISSING-STYLE-PLAN",
+    "message": "`display: none` has no compiled style plan; this lookup will emit no class",
+    "help": [
+      "make the 'display: none' lookup static so the plan can serve it"
+    ]
+  }
+]

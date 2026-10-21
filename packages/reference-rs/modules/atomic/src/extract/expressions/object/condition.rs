@@ -1,7 +1,7 @@
 //! Condition keys and condition-block values in style objects.
-//! A condition key is a pseudo prop, a breakpoint name or range, or a parent
-//! reference; its value must be an object, optionally behind a ternary whose
-//! folded test picks the live arm. Scalar condition values refuse exactly
+//! A condition key is a pseudo prop, a breakpoint name or a range over the
+//! scale's names, or a parent reference; its value must be an object,
+//! optionally behind a ternary whose folded test picks the live arm. Scalar condition values refuse exactly
 //! like inline conditions everywhere else, so walked and recorded objects
 //! diagnose alike.
 
@@ -11,6 +11,7 @@ use smallvec::SmallVec;
 
 use super::{walk_style_object, ObjectWalk};
 use crate::diagnostics::DiagnosticCode;
+use crate::resolve::conditions::is_breakpoint_range_key;
 use crate::resolve::conditions::pseudoselectors::has_parent_reference;
 use base_system::BreakpointScale;
 use canon::is_condition_prop;
@@ -18,28 +19,8 @@ use canon::is_condition_prop;
 pub(crate) fn is_condition_key(key: &str, breakpoints: &BreakpointScale) -> bool {
     is_condition_prop(key)
         || breakpoints.names().iter().any(|n| n == key)
-        || is_breakpoint_range(key, breakpoints)
+        || is_breakpoint_range_key(key, breakpoints)
         || has_parent_reference(key)
-}
-
-fn is_breakpoint_range(key: &str, breakpoints: &BreakpointScale) -> bool {
-    if key.ends_with("Down") || key.ends_with("Only") {
-        return true;
-    }
-    if let Some((from, to)) = key.split_once("To") {
-        if to.eq_ignore_ascii_case("p") || to.starts_with('p') || to.starts_with('P') {
-            return false;
-        }
-        return breakpoints
-            .names()
-            .iter()
-            .any(|n| n.eq_ignore_ascii_case(from))
-            || breakpoints
-                .names()
-                .iter()
-                .any(|n| n.eq_ignore_ascii_case(to));
-    }
-    false
 }
 
 pub(crate) fn handle_condition_value(
