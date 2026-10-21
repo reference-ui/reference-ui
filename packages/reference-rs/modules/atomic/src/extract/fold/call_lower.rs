@@ -127,7 +127,7 @@ pub fn lower_call_spread(
             walk.warn_help(
                 span,
                 DiagnosticCode::UnknownProperty,
-                format!("Unknown style property \"{key}\""),
+                suggest::unknown_property_message(key),
                 help,
             );
         }

@@ -25,6 +25,7 @@ use super::plans::{is_hole_value, same_position};
 use super::rejects::{collect as collect_reject, Reject};
 use super::sinks::Sinks;
 use crate::atom::Backing;
+use crate::extract::suggest::unknown_property_key;
 use crate::runtime::RuntimeStylePlan;
 use canon::is_known_style_prop;
 
@@ -108,15 +109,6 @@ struct Proof<'a> {
     /// Keys extract warned `UnknownProperty`; lookups nested under one are
     /// already explained by that located line.
     unknown_keys: FxHashSet<&'a str>,
-}
-
-/// The key named by extract's unknown-property sentence
-/// (`Unknown style property "{key}"`, the object, const-spread and folded
-/// spread gates). Global-CSS lines spell a different sentence and never match.
-fn unknown_property_key(message: &str) -> Option<&str> {
-    message
-        .strip_prefix("Unknown style property \"")?
-        .strip_suffix('"')
 }
 
 impl<'a> Proof<'a> {

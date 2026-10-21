@@ -238,7 +238,7 @@ pub(crate) fn handle_object_property(
         ctx.warn_help(
             prop.key.span(),
             DiagnosticCode::UnknownProperty,
-            format!("Unknown style property \"{key}\""),
+            suggest::unknown_property_message(&key),
             help,
         );
     }

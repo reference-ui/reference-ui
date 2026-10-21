@@ -1,9 +1,9 @@
 //! Condition keys and condition-block values in style objects.
 //! A condition key is a pseudo prop, a breakpoint name or a range over the
 //! scale's names, or a parent reference; its value must be an object,
-//! optionally behind a ternary whose folded test picks the live arm. Scalar condition values refuse exactly
-//! like inline conditions everywhere else, so walked and recorded objects
-//! diagnose alike.
+//! optionally behind a ternary whose folded test picks the live arm. Scalar
+//! condition values refuse exactly like inline conditions everywhere else, so
+//! walked and recorded objects diagnose alike.
 
 use oxc_ast::ast::{ConditionalExpression, Expression};
 use oxc_span::GetSpan;
@@ -102,6 +102,31 @@ mod tests {
             ..Default::default()
         };
         compile(&req).expect("compile succeeds")
+    }
+
+    /// Every `BreakpointKey` typegen prints for the lib fixture (`2xl`
+    /// included) is a condition key here, so typed keys never fall to the
+    /// unknown-property gate.
+    #[test]
+    fn typegen_breakpoint_keys_are_condition_keys() {
+        let system = crate::BaseSystem::lib_fixture();
+        let dts = typegen::emit_dts(system);
+        let union = dts
+            .lines()
+            .find_map(|line| line.strip_prefix("export type BreakpointKey = "))
+            .expect("typegen prints BreakpointKey");
+        let keys: Vec<&str> = union
+            .trim_end_matches(';')
+            .split('|')
+            .map(|lit| lit.trim().trim_matches(['"', '\''].as_slice()))
+            .collect();
+        assert!(keys.contains(&"2xlOnly") && keys.contains(&"xlTo2xl"), "{keys:?}");
+        for key in keys {
+            assert!(
+                super::is_condition_key(key, system.breakpoints()),
+                "{key} is a typed breakpoint key"
+            );
+        }
     }
 
     /// A scalar condition block names the condition key in its fix.

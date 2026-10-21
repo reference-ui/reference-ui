@@ -48,6 +48,12 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   // shape). The author wrote an invalid selector; both engines keep it.
   'ATM-COND-27': ['Identifier is expected'],
 
+  // Canon pin (permanent while canon lists it): `navDown` is the one canon
+  // prop shaped like a range key, and canon still carries the obsolete
+  // `nav-down` property the lexer rejects. ATM-COND-32 pins that the key
+  // reaches the style-prop path and compiles instead of vanishing.
+  'ATM-COND-32': ['nav-down: auto'],
+
   // Non-ASCII probe input (diagnostics case, not a content-emit pin):
   // the author wrote an unquoted `content` string to place the emoji ahead
   // of the refused identifier; the verbatim string policy keeps it as-is

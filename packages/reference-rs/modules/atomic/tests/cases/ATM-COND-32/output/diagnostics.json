@@ -4,11 +4,11 @@
     "code": "ATM-W-UNKNOWN-PROPERTY",
     "message": "Unknown style property \"fooOnly\"",
     "file": "input/src/App.tsx",
-    "line": 3,
+    "line": 4,
     "column": 30,
     "span": {
-      "start": 100,
-      "end": 107
+      "start": 180,
+      "end": 187
     },
     "help": [
       "did you mean `srOnly`?",
@@ -20,11 +20,11 @@
     "code": "ATM-W-UNKNOWN-PROPERTY",
     "message": "Unknown style property \"fooDown\"",
     "file": "input/src/App.tsx",
-    "line": 3,
+    "line": 4,
     "column": 44,
     "span": {
-      "start": 114,
-      "end": 121
+      "start": 194,
+      "end": 201
     },
     "help": [
       "did you mean `navDown`?",
@@ -36,11 +36,11 @@
     "code": "ATM-W-UNKNOWN-PROPERTY",
     "message": "Unknown style property \"mdToFoo\"",
     "file": "input/src/App.tsx",
-    "line": 3,
+    "line": 4,
     "column": 58,
     "span": {
-      "start": 128,
-      "end": 135
+      "start": 208,
+      "end": 215
     },
     "help": [
       "remove 'mdToFoo' or check its spelling"
@@ -51,11 +51,11 @@
     "code": "ATM-W-UNKNOWN-PROPERTY",
     "message": "Unknown style property \"barOnly\"",
     "file": "input/src/App.tsx",
-    "line": 3,
+    "line": 4,
     "column": 91,
     "span": {
-      "start": 161,
-      "end": 164
+      "start": 241,
+      "end": 244
     },
     "help": [
       "did you mean `srOnly`?",
@@ -64,14 +64,62 @@
   },
   {
     "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"bazDown\"",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 91,
+    "span": {
+      "start": 241,
+      "end": 244
+    },
+    "help": [
+      "did you mean `navDown`?",
+      "remove 'bazDown' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"fooBar\"",
+    "file": "input/src/App.tsx",
+    "line": 5,
+    "column": 29,
+    "span": {
+      "start": 276,
+      "end": 282
+    },
+    "help": [
+      "did you mean `float`?",
+      "remove 'fooBar' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"quxOnly\"",
+    "file": "input/src/App.tsx",
+    "line": 5,
+    "column": 58,
+    "span": {
+      "start": 305,
+      "end": 313
+    },
+    "help": [
+      "did you mean `srOnly`?",
+      "remove 'quxOnly' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
     "code": "ATM-W-UNKNOWN-CONDITION",
     "message": "`display: inline` has no compiled style plan; this lookup will emit no class. Unknown condition \"lgToSm\"",
     "file": "input/src/App.tsx",
-    "line": 6,
+    "line": 9,
     "column": 51,
     "span": {
-      "start": 307,
-      "end": 315
+      "start": 500,
+      "end": 508
     },
     "help": [
       "use a condition from the theme"

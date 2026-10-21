@@ -280,12 +280,15 @@ fn test_media_ranges_share_container_bounds() {
 #[test]
 fn range_keys_are_built_from_breakpoint_names() {
     let scale = BaseSystem::lib_fixture().breakpoints();
-    for key in ["mdDown", "mdOnly", "smToLg", "smTolg", "lgToSm", "baseOnly"] {
+    for key in [
+        "mdDown", "mdOnly", "smToLg", "smTolg", "lgToSm", "baseOnly", "2xlDown", "2xlOnly",
+        "xlTo2xl", "smTo2XL",
+    ] {
         assert!(is_breakpoint_range_key(key, scale), "{key} has range shape");
     }
     for key in [
         "srOnly", "fooOnly", "fooDown", "mdToFoo", "fooToMd", "marginTop", "paddingTop",
-        "MdOnly", "mdToLgDown",
+        "MdOnly", "mdToLgDown", "2XLOnly", "2xlToFoo",
     ] {
         assert!(!is_breakpoint_range_key(key, scale), "{key} is not a range");
     }

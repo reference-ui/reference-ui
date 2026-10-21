@@ -1,22 +1,23 @@
 /**
  * Range keys are built from breakpoint names (ATM-COND-32).
- * `fooOnly`, `fooDown`, the one-sided `mdToFoo` and the spread `barOnly`
- * are not ranges, so each warns unknown property on the default channel.
- * Real ranges lower to bounded container queries; the backwards `lgToSm`
- * keeps its unknown-condition warning. No bad key adds a missing-plan line.
+ * Keys that only look like ranges warn unknown property once each, on the
+ * literal, const-spread and folded-spread paths, and never add a missing-plan
+ * line. `navDown` is a real style prop again; real ranges lower to bounded
+ * container queries; the backwards `lgToSm` keeps its unknown-condition warning.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
-const BAD_KEYS = ['fooOnly', 'fooDown', 'mdToFoo', 'barOnly', 'lgToSm']
+const UNKNOWN = ['fooOnly', 'fooDown', 'mdToFoo', 'barOnly', 'bazDown', 'quxOnly', 'fooBar']
+const BAD_KEYS = [...UNKNOWN, 'lgToSm']
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-COND-32',
   verify(result) {
     const defaults = result.diagnostics ?? []
     const unknownProps = defaults.filter(d => d.code === 'ATM-W-UNKNOWN-PROPERTY')
-    expect(unknownProps).toHaveLength(4)
-    for (const key of ['fooOnly', 'fooDown', 'mdToFoo', 'barOnly']) {
+    expect(unknownProps).toHaveLength(UNKNOWN.length)
+    for (const key of UNKNOWN) {
       expect(
         unknownProps.filter(d => d.message.includes(`"${key}"`)),
         `unknown property ${key}`
@@ -27,8 +28,10 @@ const spec: AtomicCaseSpec = {
     expect(unknownConds[0]!.message).toContain('lgToSm')
     // One line per bad key: lookups under an unknown-prop key stay silent.
     expect(defaults.filter(d => d.code === 'ATM-W-MISSING-STYLE-PLAN')).toHaveLength(0)
+    expect(defaults).toHaveLength(UNKNOWN.length + 1)
 
     const sheet = result.stylesheet
+    expect(sheet).toMatch(/nav-down:\s*auto/)
     expect(sheet).toContain('@container (min-width: 768px) and (max-width: 1023.98px)')
     expect(sheet).toContain('@container (max-width: 767.98px)')
     expect(sheet).toContain('@container (min-width: 640px) and (max-width: 1023.98px)')

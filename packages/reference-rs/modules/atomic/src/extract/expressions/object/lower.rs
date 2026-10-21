@@ -106,7 +106,7 @@ fn warn_unknown_spread_keys(ctx: &mut ObjectWalk<'_>, obj: &ConstObject, span: S
             ctx.warn_help(
                 span,
                 DiagnosticCode::UnknownProperty,
-                format!("Unknown style property \"{key}\""),
+                suggest::unknown_property_message(key),
                 help,
             );
         }

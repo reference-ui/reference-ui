@@ -6,6 +6,8 @@
 //! reach at every site. The shared suggestion gate decides legitimacy and
 //! distance decides nearness, exactly like the resolve-side helpers, but
 //! this module shares no code with them: no system ever reaches this far.
+//! It also owns the unknown-property sentence and its parser, so proof can
+//! read the key back from the note without a second spelling.
 
 use base_system::BreakpointScale;
 
@@ -17,6 +19,19 @@ pub(crate) fn suggestion_lines(suggestion: Option<&str>, fix: String) -> Vec<Str
         Some(candidate) => vec![diagnostics::message::did_you_mean(candidate), fix],
         None => vec![fix],
     }
+}
+
+/// Extract's unknown-property sentence for one style-object key.
+pub(crate) fn unknown_property_message(key: &str) -> String {
+    format!("Unknown style property \"{key}\"")
+}
+
+/// The key an [`unknown_property_message`] names, or None for any other
+/// sentence (global-CSS lines spell a different one).
+pub(crate) fn unknown_property_key(message: &str) -> Option<&str> {
+    message
+        .strip_prefix("Unknown style property \"")?
+        .strip_suffix('"')
 }
 
 /// The closest known style prop to a bad name, over canon names, aliases,
@@ -50,6 +65,17 @@ mod tests {
 
     fn scale() -> BreakpointScale {
         BreakpointScale::from_names(["sm", "md", "lg"])
+    }
+
+    #[test]
+    fn unknown_property_sentence_round_trips() {
+        for key in ["fooOnly", "watDown", "mdToFoo", "a\"b"] {
+            assert_eq!(unknown_property_key(&unknown_property_message(key)), Some(key));
+        }
+        assert_eq!(
+            unknown_property_key("Unknown style property in global CSS: \"x\""),
+            None
+        );
     }
 
     #[test]
