@@ -112,7 +112,7 @@ fn can_prop_07_color_prop_resolution() {
 
     assert!(is_color_prop("background"));
     assert!(is_color_prop("border"));
-    assert!(is_color_prop("textShadowColor"));
+    assert!(is_color_prop("webkitTextFillColor"));
 
     assert!(is_color_prop("bg"));
 

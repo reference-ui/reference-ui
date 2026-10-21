@@ -96,7 +96,7 @@ fn walk_literal(
             true
         }
         Expression::BooleanLiteral(lit) => {
-            // truncate={false}
+            // border={false}
             push_bool_want(ctx, lit, when);
             true
         }

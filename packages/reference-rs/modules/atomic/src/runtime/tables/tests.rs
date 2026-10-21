@@ -29,7 +29,7 @@ fn aliases_cover_the_dialect() {
 #[test]
 fn prefixes_hold_non_verbatim_only() {
     let tables = NamerTables::for_system(BaseSystem::lib_fixture());
-    assert_eq!(tables.prefixes.len(), 1017);
+    assert_eq!(tables.prefixes.len(), 994);
     assert_eq!(
         tables.prefixes["msScrollLimitXMax"],
         "-ms-scroll-limit-xmax"
@@ -60,10 +60,21 @@ fn every_canon_prefix_resolves_through_table_or_verbatim() {
 #[test]
 fn color_props_match_canon_sorted() {
     let tables = NamerTables::for_system(BaseSystem::lib_fixture());
-    assert_eq!(tables.color_props.len(), 71);
+    assert_eq!(tables.color_props.len(), 67);
     let mut sorted = tables.color_props.clone();
     sorted.sort();
     assert_eq!(tables.color_props, sorted);
+}
+
+#[test]
+fn every_unrealizable_extension_has_a_runtime_lowering() {
+    let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+    for name in canon::UNREALIZABLE_EXTENSIONS {
+        assert!(
+            tables.lowerings.contains_key(*name),
+            "{name} has no runtime lowering"
+        );
+    }
 }
 
 #[test]
@@ -91,7 +102,7 @@ fn keyword_sets_come_from_gate_consts_sorted() {
         keywords["zeroBorder"],
         vec!["0", "0%", "0em", "0px", "0rem"]
     );
-    assert_eq!(keywords["unrealizable"].len(), 27);
+    assert_eq!(keywords["unrealizable"].len(), 1);
     for set in keywords.values() {
         let mut sorted = set.clone();
         sorted.sort();

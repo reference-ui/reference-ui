@@ -41,16 +41,10 @@ fn can_join_08_unique_class_prefixes() {
     assert_ne!(class_prefix_for_prop("display"), class_prefix_for_prop("d"));
     assert_eq!(class_prefix_for_prop("display"), "d");
     assert_eq!(class_prefix_for_prop("d"), "svg-d");
-    assert_ne!(class_prefix_for_prop("zIndex"), class_prefix_for_prop("translateZ"));
     assert_eq!(class_prefix_for_prop("zIndex"), "z");
-    assert_eq!(class_prefix_for_prop("translateZ"), "translate-z");
-    assert_ne!(class_prefix_for_prop("boxSize"), class_prefix_for_prop("size"));
-    assert_eq!(class_prefix_for_prop("boxSize"), "box-size");
     assert_eq!(class_prefix_for_prop("size"), "size");
     assert_eq!(find_property("x").unwrap().class_prefix, "svg-x");
-    assert_eq!(find_property("translateX").unwrap().class_prefix, "x");
     assert_eq!(find_property("y").unwrap().class_prefix, "svg-y");
-    assert_eq!(find_property("translateY").unwrap().class_prefix, "y");
 }`;
 }
 
@@ -65,8 +59,10 @@ fn unrealizable_extensions_table_contract() {
             name
         );
     }
-    // Exemptions the resolve fall-through relies on: longhand rows expand,
-    // platform-shadowed rows serve platform css, platform props passthrough.
+    // Atomic requires a lowering for every entry (guard tests in
+    // resolve/tests/refusals.rs and runtime/tables/tests.rs); there is no runtime
+    // refusal. Longhand rows expand, platform-shadowed rows serve platform css,
+    // platform props passthrough, so none of these is a member.
     assert!(!is_unrealizable_extension("borderStartRadius"));
     assert!(!is_unrealizable_extension("borderEndRadius"));
     assert!(!is_unrealizable_extension("webkitTextFillColor"));

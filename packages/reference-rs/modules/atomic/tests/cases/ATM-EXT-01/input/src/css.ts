@@ -17,4 +17,5 @@ export const siblings = css({
   translate: '10px',
   textGradient: 'linear-gradient(red, blue)',
   borderStartRadius: '4px',
+  webkitTextFillColor: 'red',
 })

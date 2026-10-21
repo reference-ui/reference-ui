@@ -386,7 +386,6 @@ export type StyleProps = FontProps & {
   animationRangeCenter?: StylePropValue<string | number>;
   animationRangeEnd?: StylePropValue<string | number>;
   animationRangeStart?: StylePropValue<string | number>;
-  animationState?: StylePropValue<string | number>;
   animationTimeline?: StylePropValue<string | number>;
   animationTimingFunction?: StylePropValue<string | number>;
   animationTrigger?: StylePropValue<string | number>;
@@ -399,17 +398,13 @@ export type StyleProps = FontProps & {
   backgroundBlendMode?: StylePropValue<string | number>;
   backgroundClip?: StylePropValue<string | number>;
   backgroundColor?: StylePropValue<ColorToken | TonedColorToken | (string & {})>;
-  backgroundConic?: StylePropValue<string | number>;
-  backgroundGradient?: StylePropValue<string | number>;
   backgroundImage?: StylePropValue<string | number>;
-  backgroundLinear?: StylePropValue<string | number>;
   backgroundOrigin?: StylePropValue<string | number>;
   backgroundPosition?: StylePropValue<string | number>;
   backgroundPositionBlock?: StylePropValue<string | number>;
   backgroundPositionInline?: StylePropValue<string | number>;
   backgroundPositionX?: StylePropValue<string | number>;
   backgroundPositionY?: StylePropValue<string | number>;
-  backgroundRadial?: StylePropValue<string | number>;
   backgroundRepeat?: StylePropValue<string | number>;
   backgroundRepeatBlock?: StylePropValue<string | number>;
   backgroundRepeatInline?: StylePropValue<string | number>;
@@ -523,7 +518,6 @@ export type StyleProps = FontProps & {
   boxShadowOffset?: StylePropValue<string | number>;
   boxShadowPosition?: StylePropValue<string | number>;
   boxShadowSpread?: StylePropValue<string | number>;
-  boxSize?: StylePropValue<string | number>;
   boxSizing?: StylePropValue<string | number>;
   boxSnap?: StylePropValue<string | number>;
   breakAfter?: StylePropValue<string | number>;
@@ -623,7 +617,6 @@ export type StyleProps = FontProps & {
   cx?: StylePropValue<string | number>;
   cy?: StylePropValue<string | number>;
   d?: StylePropValue<string | number>;
-  debug?: StylePropValue<string | number>;
   direction?: StylePropValue<string | number>;
   display?: StylePropValue<string | number>;
   dominantBaseline?: StylePropValue<string | number>;
@@ -670,7 +663,6 @@ export type StyleProps = FontProps & {
   fontPalette?: StylePropValue<string | number>;
   fontSize?: StylePropValue<string | number>;
   fontSizeAdjust?: StylePropValue<string | number>;
-  fontSmoothing?: StylePropValue<string | number>;
   fontStretch?: StylePropValue<string | number>;
   fontStyle?: StylePropValue<string | number>;
   fontSynthesis?: StylePropValue<string | number>;
@@ -695,12 +687,6 @@ export type StyleProps = FontProps & {
   frameSizing?: StylePropValue<string | number>;
   gap?: StylePropValue<string | number>;
   glyphOrientationVertical?: StylePropValue<string | number>;
-  gradientFrom?: StylePropValue<ColorToken | TonedColorToken | (string & {})>;
-  gradientFromPosition?: StylePropValue<string | number>;
-  gradientTo?: StylePropValue<ColorToken | TonedColorToken | (string & {})>;
-  gradientToPosition?: StylePropValue<string | number>;
-  gradientVia?: StylePropValue<ColorToken | TonedColorToken | (string & {})>;
-  gradientViaPosition?: StylePropValue<string | number>;
   grid?: StylePropValue<string | number>;
   gridArea?: StylePropValue<string | number>;
   gridAutoColumns?: StylePropValue<string | number>;
@@ -722,8 +708,6 @@ export type StyleProps = FontProps & {
   h?: StylePropValue<string | number>;
   hangingPunctuation?: StylePropValue<string | number>;
   height?: StylePropValue<string | number>;
-  hideBelow?: StylePropValue<string | number>;
-  hideFrom?: StylePropValue<string | number>;
   hyphenateCharacter?: StylePropValue<string | number>;
   hyphenateLimitChars?: StylePropValue<string | number>;
   hyphenateLimitLast?: StylePropValue<string | number>;
@@ -1162,7 +1146,6 @@ export type StyleProps = FontProps & {
   scrollPaddingTop?: StylePropValue<string | number>;
   scrollSnapAlign?: StylePropValue<string | number>;
   scrollSnapStop?: StylePropValue<string | number>;
-  scrollSnapStrictness?: StylePropValue<string | number>;
   scrollSnapType?: StylePropValue<string | number>;
   scrollTargetGroup?: StylePropValue<string | number>;
   scrollTimeline?: StylePropValue<string | number>;
@@ -1179,14 +1162,11 @@ export type StyleProps = FontProps & {
   shapeRendering?: StylePropValue<string | number>;
   size?: StylePropValue<string | number>;
   sliderOrientation?: StylePropValue<string | number>;
-  spaceX?: StylePropValue<string | number>;
-  spaceY?: StylePropValue<string | number>;
   spatialNavigationAction?: StylePropValue<string | number>;
   spatialNavigationContain?: StylePropValue<string | number>;
   spatialNavigationFunction?: StylePropValue<string | number>;
   speak?: StylePropValue<string | number>;
   speakAs?: StylePropValue<string | number>;
-  srOnly?: StylePropValue<string | number>;
   stopColor?: StylePropValue<ColorToken | TonedColorToken | (string & {})>;
   stopOpacity?: StylePropValue<string | number>;
   stringSet?: StylePropValue<string | number>;
@@ -1247,11 +1227,9 @@ export type StyleProps = FontProps & {
   textOverflow?: StylePropValue<string | number>;
   textRendering?: StylePropValue<string | number>;
   textShadow?: StylePropValue<string | number>;
-  textShadowColor?: StylePropValue<ColorToken | TonedColorToken | (string & {})>;
   textSizeAdjust?: StylePropValue<string | number>;
   textSpacing?: StylePropValue<string | number>;
   textSpacingTrim?: StylePropValue<string | number>;
-  textStyle?: StylePropValue<string | number>;
   textTransform?: StylePropValue<string | number>;
   textUnderlineOffset?: StylePropValue<string | number>;
   textUnderlinePosition?: StylePropValue<string | number>;
@@ -1281,11 +1259,7 @@ export type StyleProps = FontProps & {
   transitionProperty?: StylePropValue<string | number>;
   transitionTimingFunction?: StylePropValue<string | number>;
   translate?: StylePropValue<string | number>;
-  translateX?: StylePropValue<string | number>;
-  translateY?: StylePropValue<string | number>;
-  translateZ?: StylePropValue<string | number>;
   triggerScope?: StylePropValue<string | number>;
-  truncate?: StylePropValue<string | number>;
   unicodeBidi?: StylePropValue<string | number>;
   userSelect?: StylePropValue<string | number>;
   vectorEffect?: StylePropValue<string | number>;

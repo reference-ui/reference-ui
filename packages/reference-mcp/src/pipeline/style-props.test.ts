@@ -36,6 +36,15 @@ describe('isStylePropName', () => {
 })
 
 describe('mcp style prop reference', () => {
+  it('lists only names isStylePropName accepts', () => {
+    const reference = getStylePropsReference({ includeProps: true })
+    for (const category of reference.categories) {
+      const props = 'props' in category ? (category.props ?? []) : []
+      expect(props.length, `${category.name} lists props`).toBeGreaterThan(0)
+      expect(props.filter(prop => !isStylePropName(prop)), category.name).toEqual([])
+    }
+  })
+
 
   it('returns a concise reference by default', () => {
     const reference = getStylePropsReference()

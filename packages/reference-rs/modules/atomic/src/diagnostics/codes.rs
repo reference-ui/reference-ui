@@ -126,12 +126,9 @@ pub enum DiagnosticCode {
     /// channel. The refused leaf pushes no want; the plan still serves
     /// the stripped value as a diagnosed non-important fallback.
     ResponsiveLeafImportant,
-    /// `resolve`: a dialect extension whose served `css` form is fictional
-    /// per live webref, refused at the expansion fall-through (ATM-EXT-01).
-    /// The diagnostic names the prop, rides default, and the want yields
-    /// no atoms; lowering arms above (textGradient, longhands, platform
-    /// rows) keep working, and each future expansion un-refuses its prop
-    /// with its own red test plus case.
+    /// Retired: canon ships no dialect extension without a lowering
+    /// (ATM-EXT-01), so this code is never emitted. Kept for wire
+    /// stability — pinned codes are never renamed or removed.
     UnrealizableExtension,
     /// `sources`: a compile request carrying both `files` and a
     /// `retentionToken` (the scan/compile contract is exactly-one-of).

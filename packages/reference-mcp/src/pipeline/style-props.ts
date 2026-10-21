@@ -65,7 +65,6 @@ const SIZE_PROPS = [
   'minHeight',
   'maxH',
   'maxHeight',
-  'boxSize',
   'inlineSize',
   'blockSize',
 ]
@@ -127,11 +126,6 @@ const BORDER_PROPS = [
   'borderWidth',
   'borderStyle',
   'borderRadius',
-  'rounded',
-  'roundedTop',
-  'roundedRight',
-  'roundedBottom',
-  'roundedLeft',
   'borderTop',
   'borderRight',
   'borderBottom',
@@ -141,7 +135,6 @@ const BORDER_PROPS = [
 const EFFECT_PROPS = [
   'opacity',
   'boxShadow',
-  'shadow',
   'filter',
   'backdropFilter',
   'mixBlendMode',
@@ -150,7 +143,7 @@ const EFFECT_PROPS = [
   'transition',
 ]
 
-const REFERENCE_PROPS = ['container', 'r', 'css', 'colorMode']
+const REFERENCE_PROPS = ['container', 'r', 'css']
 
 export const STYLE_PROP_CATEGORIES: StylePropCategory[] = [
   {

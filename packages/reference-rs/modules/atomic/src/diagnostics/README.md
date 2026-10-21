@@ -116,7 +116,7 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 | `ATM-I-EXPECTED-LOOKUP` | module-local | Exact-lookup telemetry (never crosses the transport) |
 | `ATM-I-DYNAMIC-SLOT` | module-local | Dynamic-slot telemetry (never crosses the transport) |
 | `ATM-W-RESPONSIVE-LEAF-IMPORTANT` | default | `css({ width: { base: '50px!' } })` |
-| `ATM-W-UNREALIZABLE-EXTENSION` | default | `css({ translateX: '10px' })` |
+| `ATM-W-UNREALIZABLE-EXTENSION` | — | Retired: never emitted, kept for wire stability |
 | `ATM-E-CONFLICTING-SCAN-INPUTS` | default | Request with both `files` and `retentionToken` |
 | `ATM-E-UNKNOWN-RETENTION-TOKEN` | default | Request with a never-minted token |
 | `ATM-E-DRAINED-RETENTION-TOKEN` | default | Request reusing a drained token |

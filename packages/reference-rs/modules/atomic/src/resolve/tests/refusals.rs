@@ -1,7 +1,8 @@
-//! Refusal proofs for the resolve pipeline: unknown style props, bool values that are not valid
-//! CSS, unrealizable extensions that refuse by name, and unknown names that carry help and a fact
-//! suggestion. Each test asserts the diagnostic code, message and fact shape rather than atom output.
-//! Compiled only under `cfg(test)` as a child of `resolve::tests`.
+//! Refusal proofs and the extension guard for the resolve pipeline. They cover unknown style
+//! props, bool values that are not valid CSS, the guard that every unrealizable extension is
+//! claimed by a lowering, and unknown names that carry help and a fact suggestion. Each test
+//! asserts the diagnostic code, message and fact shape rather than atom output. Compiled only
+//! under `cfg(test)` as a child of `resolve::tests`.
 
 use super::*;
 use crate::diagnostics::{
@@ -68,33 +69,27 @@ fn bool_refusals_report_distinct_spellings_with_keys() {
 }
 
 #[test]
-fn unrealizable_extension_refuses_with_named_diagnostic_and_no_atoms() {
-    for prop in ["translateX", "boxSize", "spaceX"] {
-        let want = Want::new(prop, AtomValue::String("10px".into()));
-        let mut diagnostics = Vec::new();
-        let system = BaseSystem::default();
-        let mut session = ResolveSession {
-            system: &system,
-            diagnostics: &mut diagnostics,
-            location: DiagnosticLocation::default(),
-            sink: None,
-            want: None,
-        };
-        let atoms = resolve_want_with(&want, &mut session);
-        drop(session);
-        assert!(atoms.is_empty(), "{prop} yields no atoms");
-        assert_eq!(diagnostics.len(), 1, "{prop} warns once");
-        assert_eq!(diagnostics[0].code, DiagnosticCode::UnrealizableExtension);
-        assert!(
-            diagnostics[0].message.contains(prop),
-            "refusal names the prop: {}",
-            diagnostics[0].message
+fn every_unrealizable_extension_is_claimed_by_a_lowering() {
+    let system = BaseSystem::default();
+    for name in canon::UNREALIZABLE_EXTENSIONS {
+        let want = Want::new(
+            *name,
+            AtomValue::String("linear-gradient(red, blue)".into()),
         );
+        let atoms = resolve_with(&want, &system);
+        assert!(!atoms.is_empty(), "{name} must be claimed by a lowering");
+        for atom in &atoms {
+            assert_ne!(
+                atom.prop.as_ref(),
+                *name,
+                "{name} must lower to real CSS, not serve its own name"
+            );
+        }
     }
 }
 
 #[test]
-fn unrealizable_fall_through_keeps_lowering_arms_working() {
+fn extension_lowering_arms_keep_working() {
     let system = BaseSystem::default();
     let gradient = Want::new(
         "textGradient",

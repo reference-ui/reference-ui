@@ -126,10 +126,10 @@ fn traced_hosts_predict_literal_attrs() {
     );
     let facts = analyze_source(&format!("{IMPORT} const el = <Div mt={{'2r'}} />;"));
     assert_eq!(exact_keys(&facts).len(), 1);
-    let facts = analyze_source(&format!("{IMPORT} const el = <Div truncate />;"));
+    let facts = analyze_source(&format!("{IMPORT} const el = <Div border />;"));
     assert_eq!(
         exact_keys(&facts),
-        vec![r#"["test",[],"truncate",true,false]"#.to_string()]
+        vec![r#"["test",[],"border",true,false]"#.to_string()]
     );
 }
 

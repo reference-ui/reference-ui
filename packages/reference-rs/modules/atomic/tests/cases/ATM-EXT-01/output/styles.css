@@ -17,5 +17,6 @@
   .\@reference-ui\/lib__c_transparent { color: transparent; }
   .\@reference-ui\/lib__translate_10px { translate: 10px; }
   .\@reference-ui\/lib__-webkit-background-clip_text { -webkit-background-clip: text; }
+  .\@reference-ui\/lib__-webkit-text-fill-color_red { -webkit-text-fill-color: red; }
 }
 }

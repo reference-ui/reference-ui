@@ -1,9 +1,9 @@
 # CORE-REF-09 — reference type-parameter projector
 
 Pins the counts for the `P` to `SystemProperties` projector: the bare name resolves through the
-core decl closure with 1391 display members including `accentColor` and `container`, every scoped lookup misses
+core decl closure with 1365 display members including `accentColor` and `container`, every scoped lookup misses
 (all scanned files are library `user`, so the misses are the documented mechanism, not a fault), the real
-projector maps `P` to exactly that 1391-member set, and every non-`P` name declines to `undefined`. The count
+projector maps `P` to exactly that 1365-member set, and every non-`P` name declines to `undefined`. The count
 is the typegen widen's key universe (LOG-2 `## Typegen-architect` §2), verified identical to the emitted decl
 keys — a removal cannot add members, so any drift is widen-side, not projector-side.
 
@@ -11,6 +11,6 @@ keys — a removal cannot add members, so any drift is widen-side, not projector
 
 ## Oracle mapping
 
-The tasty API via a probe: `P` resolves to the same 1391 members as the bare lookup, non-`P`
+The tasty API via a probe: `P` resolves to the same 1365 members as the bare lookup, non-`P`
 resolves to `undefined`, scoped lookups miss. The spec calls the shipped projector from
 `getReferenceUiTastyApiOptions`, not a copy — the numbers pin the production path.

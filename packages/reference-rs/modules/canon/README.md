@@ -31,7 +31,7 @@ atomic, never from a handwritten list in extract or resolve:
    `Span`, `Path`, `Circle`, `Obj`, `Var`), short utility class prefixes (`mt`,
    `p`, `bd-b-w`), aliases (`mt`, `bg`), macros (`r`, `size`,
    `variant`, `colorMode`, `weight`), conditions (`_hover`, `_dark`), and
-   explicit dialect extensions (`spaceX`, `hideFrom`).
+   explicit dialect extensions (`textGradient`, `borderStartRadius`).
 
 JavaScript is the ingest source because the specs live on npm. Rust is the
 consumer: static, sorted tables, binary search, zero allocation. Lookups are

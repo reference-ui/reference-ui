@@ -50,7 +50,7 @@ pub fn push_bool_want(
     lit: &BooleanLiteral,
     when: &SmallVec<[Box<str>; 2]>,
 ) {
-    // truncate={false}
+    // border={false}
     ctx.push_want(
         AtomValue::Bool(lit.value),
         when.clone(),

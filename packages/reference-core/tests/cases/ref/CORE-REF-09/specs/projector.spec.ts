@@ -23,13 +23,13 @@ function memberNames(members: NamedMember[]): string[] {
 
 const PROJECTOR_LIBRARIES = ['@reference-ui/styled', '@reference-ui/react', '@reference-ui/system', '@reference-ui/types']
 
-// The measured numbers, as widened: bare SystemProperties resolves through the core decl closure with 1391
+// The measured numbers, as widened: bare SystemProperties resolves through the core decl closure with 1365
 // display members — the widened StyleProps key universe (keys mirror
 // build_style_prop_names; verified identical to the emitted decl keys, not trusted).
 async function checkBareFallback(api: TastyApi): Promise<string[]> {
   const symbol = await api.loadSymbolByName('SystemProperties')
   const names = memberNames(await symbol.getDisplayMembers())
-  assert.equal(names.length, 1391, `SystemProperties carries 1391 members, got ${names.length}`)
+  assert.equal(names.length, 1365, `SystemProperties carries 1365 members, got ${names.length}`)
   for (const name of ['accentColor', 'container']) {
     assert.ok(names.includes(name), `SystemProperties members include ${name}`)
   }
@@ -45,7 +45,7 @@ async function checkScopedMiss(api: TastyApi): Promise<void> {
   }
 }
 
-// The real projector resolves P to the same 1391 members and declines every other name.
+// The real projector resolves P to the same 1365 members and declines every other name.
 async function checkProjector(api: TastyApi, bareNames: string[]): Promise<void> {
   const project = getReferenceUiTastyApiOptions().projectTypeParameterMembers
   assert.ok(project, 'the reference API options carry a type-parameter projector')

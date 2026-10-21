@@ -67,7 +67,7 @@ intentional rule change carries the bump; the freshness guard
 Permanent home. Each rule names the Rust site the runtime namer mirrors.
 Table-shaped rules travel as lowerings or keyword sets; the rest are
 procedures with one golden each. Counts (lib): aliases 315 ·
-prefixes 1017 · color props 71 · unrealizable 27 ·
+prefixes 994 · color props 67 · unrealizable 1 ·
 lowerings 29 props · breakpoints verbatim with `base` first, widths
 alongside (name → post-`into_px` width, `base` absent) for the range
 gate alone — the class never contains them.
@@ -97,7 +97,7 @@ gate alone — the class never contains them.
 | 21 | table-miss prefixes (font `css` extras, custom props) | prefix = the canonical **verbatim** — the oracle never kebabs on a miss (`MyProp` stays `MyProp`, `mozFoo` stays `mozFoo`, `--brandX` stays `--brandX`); extras are the only unknown-prop path into the namer (every other path is style-prop-gated); unitless; bare numbers canonicalize; token unique-name lookup is sheet-side only | `canon::class_prefix_for_prop` fallback, `canon::is_unitless_prop` |
 
 Prefix fallback order: table hit → canonical verbatim.
-The table holds exactly `prefix ≠ canonical` (1017 entries, including
+The table holds exactly `prefix ≠ canonical` (994 entries, including
 every kebab-pure multiword prop such as `font-weight`); misses —
 reachable only through font `css` extras and `--*` custom props —
 spell the key byte-identical (pinned by

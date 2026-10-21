@@ -44,14 +44,14 @@ const CENSUS_JSON = path.join(
 
 /** M-cells: classes / raw / gzip-6 / brotli-11. Variants pin classes + raw only. */
 const M_CELLS: { total: 300 | 500; whens: ModelWhen[]; cells: number[] }[] = [
-  { total: 300, whens: ['rest'], cells: [22468, 1561214, 165455, 89987] },
-  { total: 500, whens: ['rest'], cells: [33806, 2395791, 249341, 130121] },
-  { total: 500, whens: ['rest', '_hover', 'md'], cells: [101418, 8404381] },
-  { total: 500, whens: ['rest', '_hover', '_focusVisible', 'md'], cells: [135224, 12693287] },
+  { total: 300, whens: ['rest'], cells: [21898, 1520940, 161226, 88008] },
+  { total: 500, whens: ['rest'], cells: [32916, 2330425, 241695, 127582] },
+  { total: 500, whens: ['rest', '_hover', 'md'], cells: [98748, 8176243] },
+  { total: 500, whens: ['rest', '_hover', '_focusVisible', 'md'], cells: [131664, 12349943] },
   {
     total: 500,
     whens: ['rest', '_hover', '_focusVisible', '_focus', '_active', '_disabled', 'md'],
-    cells: [236642, 23531645],
+    cells: [230412, 22896083],
   },
 ]
 
@@ -286,7 +286,7 @@ describe('enterprise harvest census', () => {
     console.log(
       `harvest css-tree: fixture ${styleRuleCount(result.stylesheet)} rules ` +
         `median ${fixture.medianMs.toFixed(1)}ms cold ${fixture.firstMs.toFixed(1)}ms; ` +
-        `M500 33806 rules median ${model.medianMs.toFixed(1)}ms cold ${model.firstMs.toFixed(1)}ms`
+        `M500 32916 rules median ${model.medianMs.toFixed(1)}ms cold ${model.firstMs.toFixed(1)}ms`
     )
   }, 120_000)
 })

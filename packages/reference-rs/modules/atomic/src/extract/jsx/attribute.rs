@@ -31,7 +31,7 @@ pub(super) fn handle_jsx_attribute(
         return;
     }
     let Some(val) = &attr.value else {
-        // <Div truncate />
+        // <Div border />
         if is_known_style_prop(&name) {
             // Bare attrs mint located, like string attrs (ATM-DIAG-05).
             let mut expr_ctx = ctx.expression_walk(

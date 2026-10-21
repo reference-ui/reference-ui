@@ -1,17 +1,14 @@
-# ATM-EXT-01 — Dialect-extension realization
+# ATM-EXT-01 — Every dialect extension realizes; the retired fictional props are unknown style properties
 
-Dialect extensions with no CSS lowering refuse at the resolve
-fall-through instead of minting dead rules. Each probed prop
-(`translateX`, `boxSize`, `spaceX`, `truncate`, `hideFrom`,
-`gradientFrom`, `textStyle`, `scrollSnapStrictness`, plus a
-`&:hover` arm and a JSX leg) warns `ATM-W-UNREALIZABLE-EXTENSION`
-on default naming the prop, yields no atoms, and serves no plan —
-the sheet carries zero fictional declarations. Sibling platform
-props still extract, and the lowering arms above the refusal (the
-`textGradient` trio, radius-pair longhands) keep working. `srOnly`
-stays in the generated set but is unprobable here: extraction
-claims every `*Only` key as a breakpoint range before the
-known-prop check, so it never reaches resolve (pre-existing,
-separate gap). Future per-prop expansions land as `EXT-02+`, each
-un-refusing its prop with its own red test.
+Canon ships only dialect extensions that produce real CSS. The retired
+fictional props (`translateX`, `boxSize`, `spaceX`, `truncate`,
+`hideFrom`, `gradientFrom`, `textStyle`, `scrollSnapStrictness`, plus a
+`&:hover` arm and a JSX leg) are no longer style props: each warns
+`ATM-W-UNKNOWN-PROPERTY` on default naming the prop, pushes no want,
+and serves no plan, so the sheet carries zero fictional declarations.
+Sibling platform props still extract, and every remaining extension
+paints: the `textGradient` lowering trio, the radius-pair longhands and
+the `webkitTextFillColor` declaration. A future extension row must ship
+with its lowering, enforced by the guard tests in
+`src/resolve/tests/refusals.rs` and `src/runtime/tables/tests.rs`.
 Contract: SPEC.

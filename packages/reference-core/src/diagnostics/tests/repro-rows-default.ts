@@ -244,13 +244,6 @@ export const DEFAULT_ROWS: ReproRow[] = [
     },
   },
   {
-    code: 'ATM-W-UNREALIZABLE-EXTENSION',
-    severity: 'warning',
-    channel: 'diagnostics',
-    configExtra: '',
-    files: { 'theme/ext.ts': styleFile("export const cls = css({ translateX: '10px' })") },
-  },
-  {
     // An installed Reference package's tag, styled, with its published system in neither
     // extends nor layers. The package is on disk as a registry install leaves it: the engine
     // follows the import to its directory and reads the system it published there, so a

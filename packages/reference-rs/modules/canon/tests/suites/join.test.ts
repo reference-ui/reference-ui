@@ -76,6 +76,7 @@ describe('Canon Join Validation (Fail-Closed Gates)', async () => {
       .map(ext => ext.name)
       .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
     expect(baseDialect.unrealizableExtensions).toEqual(expected)
+    expect(baseDialect.unrealizableExtensions).toEqual(['textGradient'])
   })
 
   it('CAN-JOIN-03: native CSS shorthands decompose to identical longhands as @webref/css', () => {

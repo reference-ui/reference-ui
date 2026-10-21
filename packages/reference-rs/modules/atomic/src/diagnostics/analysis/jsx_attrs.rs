@@ -20,7 +20,7 @@ use super::values::unwrap_value;
 use crate::diagnostics::DynamicShape;
 use crate::extract::constants::ConstObject;
 
-/// One attribute value shape: bare (`<Div truncate />`), string
+/// One attribute value shape: bare (`<Div border />`), string
 /// (`<Div mt="2r" />`), or expression (`<Div mt={x} />`).
 pub enum AttrInput<'a> {
     Bare,

@@ -144,7 +144,7 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `ATM-I-EXPECTED-LOOKUP` | Module-local: an exact runtime lookup expectation | `modules/atomic/src/diagnostics/policy/analysis.rs` |
 | `ATM-I-DYNAMIC-SLOT` | Module-local: a dynamic slot observation | `modules/atomic/src/diagnostics/policy/analysis.rs` |
 | `ATM-W-RESPONSIVE-LEAF-IMPORTANT` | A `!` marker on a responsive-object leaf, refused at the extraction boundary | `modules/atomic/src/extract/expressions/responsive.rs` |
-| `ATM-W-UNREALIZABLE-EXTENSION` | A dialect extension whose served `css` form is fictional per live webref | `modules/atomic/src/resolve/mod.rs` |
+| `ATM-W-UNREALIZABLE-EXTENSION` | Retired: never emitted, kept for wire stability | — (retired, see `codes.rs`) |
 | `ATM-E-CONFLICTING-SCAN-INPUTS` | A compile request carrying both `files` and a `retentionToken` | `modules/atomic/src/sources.rs` |
 | `ATM-E-UNKNOWN-RETENTION-TOKEN` | A `retentionToken` that names no live retention | `modules/atomic/src/sources.rs` |
 | `ATM-E-DRAINED-RETENTION-TOKEN` | A `retentionToken` drained by an earlier compile | `modules/atomic/src/sources.rs` |

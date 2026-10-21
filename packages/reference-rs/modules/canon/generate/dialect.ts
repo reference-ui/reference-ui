@@ -154,7 +154,9 @@ function buildUnitlessProperties(): string[] {
  * Extension props no browser can honor by serving their `css` form: `EXTENSIONS`
  * rows whose `css` is absent from live `@webref/css`, with no longhands and no
  * platform row shadowing the name. `EXTENSIONS` only — vendor rows are real
- * declarations webref happens not to list. Sorted for binary search.
+ * declarations webref happens not to list. Atomic requires a lowering for every
+ * entry (guard tests in `resolve/tests/refusals.rs` and `runtime/tables/tests.rs`);
+ * there is no runtime refusal. Sorted for binary search.
  */
 function buildUnrealizableExtensions(platformCss: PlatformCss): string[] {
   const webrefKebab = new Set(

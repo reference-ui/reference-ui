@@ -10,7 +10,7 @@ it promises. All specs are node-side (`sync: false` everywhere):
 warning and error fixtures compile by design, so each spec drives its
 own compile and assertions never touch the browser.
 
-Drivers per namespace: the 41 `ATM-*` row codes compile the case world
+Drivers per namespace: the 40 `ATM-*` row codes compile the case world
 and assert on the row's channel; the 5 `ATM-E-*` request codes mutate a
 base project per the registry-documented request and compile native; the
 6 `TST-*` build a `src/` workspace (the scan refusal asserts a coded
@@ -28,7 +28,9 @@ the live path by the spec around the compile, removed in a `finally`
 with a defensive pre-clean, so the tree never keeps a red file behind.
 
 Approved absences: `ATM-W-TOKEN-CATEGORY-MISMATCH` is retired, never
-emitted, kept for wire stability. `ATM-I-*` is module-local telemetry on
+emitted, kept for wire stability. `ATM-W-UNREALIZABLE-EXTENSION` is
+retired the same way (canon ships no extension without a lowering), and
+CORE-DIAG-22 retired with it. `ATM-I-*` is module-local telemetry on
 the legacy/native channel only, pinned by RS cases (ATM-DIAG-07,
 ATM-ATOM-06, harvest-census). `RS-W-EXAMPLE-*` / `RS-E-EXAMPLE-*` are
 template tests and docs only, never emitted by shipped code. `CAN` /
