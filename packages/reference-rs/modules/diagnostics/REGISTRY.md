@@ -31,7 +31,7 @@ consumers never break on codes minted after they shipped.
 | `ATM`     | atomic      | Live: 54-code table in `modules/atomic/src/diagnostics/codes.rs`, aligned onto the template (wire-identical, tag-matched); `-I-` telemetry stays module-local |
 | `ATL`     | atlas       | Live: 5-code table in `modules/atlas/src/diagnostics/codes.rs`; props warnings plus the scan refusal |
 | `TST`     | tasty       | Live: 9-code table in `modules/tasty/src/diagnostics/codes.rs`; scanner, merge, star, manifest, unresolved-import, unsupported-syntax, and augmentation warnings plus the scan refusal |
-| `STT`     | styletrace  | Live: 5-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips, the class-component and unresolved-HOC-argument warnings, plus the scan and surface refusals |
+| `STT`     | styletrace  | Live: 6-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips, the class-component, unresolved-HOC-argument and type-expansion-limit warnings, plus the scan and surface refusals |
 | `TGN`     | typegen     | Live: 9-code table in `modules/typegen/src/diagnostics/codes.rs`; printer skips plus the spec refusal |
 | `CAN`     | canon       | Reserved, unminted                                     |
 | `BSS`     | base-system | Live: 2-code, minted in Core's `packages/reference-core/src/diagnostics/codes.ts` (the collect step's token shadow, the config loader's slow evaluation); no Rust table |
