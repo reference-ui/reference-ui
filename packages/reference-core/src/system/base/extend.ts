@@ -150,7 +150,8 @@ function leafAt(tree: Record<string, unknown>, path: string): Record<string, unk
 // The compiler reads token slots as strings only, so a number here would pass extendSystem and then fail sync.
 function scalarText(path: string, value: unknown): string {
   if (typeof value === 'string') return value
-  throw new ExtendSystemError(`extendSystem: token ${path} must be a string; write the number in quotes.`)
+  const hint = typeof value === 'number' ? '; write the number in quotes' : ''
+  throw new ExtendSystemError(`extendSystem: token ${path} must be a string${hint}.`)
 }
 
 function slotOf(path: string, leaf: Record<string, unknown>, key: 'value' | 'light' | 'dark'): string | undefined {
@@ -285,8 +286,8 @@ function streamsWithBlock(streams: readonly SystemStreams[], name: string, block
  * tokens. A chained call merges its overrides with mergeTokenTree and re-emits from the original base, so
  * the result never stacks blocks. Braces and rhythm units lower to CSS as the compiler lowers them, so `2r`
  * prints `calc(2 * var(--spacing-root))`. It throws ExtendSystemError for an unknown token, a self-reference
- * (including a rhythm value on spacing.root), a leaf with no value, a malformed brace, or a reference that the
- * base does not declare.
+ * (including a rhythm value on spacing.root), a leaf with no value, a slot that is not a string, a malformed
+ * brace, or a reference that the base does not declare.
  */
 export function extendSystem(base: BaseSystem, overrides: ExtendSystemOverrides): BaseSystem {
   assertBaseSystem(base)

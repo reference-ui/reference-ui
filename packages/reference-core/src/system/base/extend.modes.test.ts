@@ -89,7 +89,14 @@ describe('extendSystem: mode slots', () => {
     const leaf = { value: 4 } as never
     const call = () => extendSystem(BASE, { tokens: { colors: { brand: { soft: leaf } } } })
     expect(call).toThrow(ExtendSystemError)
-    expect(call).toThrow('token colors.brand.soft must be a string')
+    expect(call).toThrow('token colors.brand.soft must be a string; write the number in quotes.')
+  })
+
+  it('rejects a boolean slot without the number hint', () => {
+    const leaf = { dark: true } as never
+    const call = () => extendSystem(BASE, { tokens: { colors: { brand: { soft: leaf } } } })
+    expect(call).toThrow(ExtendSystemError)
+    expect(call).toThrow(/token colors\.brand\.soft must be a string\.$/)
   })
 
   it('prints a dark-only leaf as light with no dark entry', () => {
