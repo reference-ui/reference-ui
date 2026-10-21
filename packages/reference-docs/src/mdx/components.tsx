@@ -1,5 +1,5 @@
 // MDX element mapping: docs visual system for rendered pages.
-// It takes nothing and emits the provider component map (headings, lists, code, links) that
+// It takes nothing and emits the provider component map (headings, lists, links) that
 // turns MDX output into docs chrome. Links to another docs page go through the router with their
 // #section hash kept; external and same-page links stay plain anchors. This is rendering policy,
 // not generic shared UI.
@@ -9,7 +9,6 @@ import { Link } from '@tanstack/react-router'
 import {
   A,
   Blockquote,
-  Code,
   Div,
   Hr,
   Li,
@@ -176,34 +175,6 @@ function MdxTd(props: MdxProps<'td'>) {
   return <td className={tdClass} {...props} />
 }
 
-function MdxCode({ className, children, ...rest }: MdxProps<'code'>) {
-  const isBlock =
-    (typeof className === 'string' && className.includes('language-')) ||
-    'data-language' in rest
-  if (isBlock) {
-    return (
-      <code className={className} {...rest}>
-        {children}
-      </code>
-    )
-  }
-  return (
-    <Code
-      fontSize="0.875em"
-      fontFamily="mono"
-      bg="docsInlineCodeBg"
-      color="docsText"
-      paddingX="1r"
-      paddingY="0.5r"
-      borderRadius="sm"
-      className={className}
-      {...rest}
-    >
-      {children}
-    </Code>
-  )
-}
-
 export const mdxComponents = {
   h1: MdxH1,
   h2: MdxH2,
@@ -220,7 +191,6 @@ export const mdxComponents = {
   table: MdxTable,
   th: MdxTh,
   td: MdxTd,
-  code: MdxCode,
   pre: CodeBlock,
   CodeTabs,
   Install,
