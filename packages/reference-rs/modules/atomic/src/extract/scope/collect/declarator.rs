@@ -179,8 +179,7 @@ fn member_dep(collector: &ScopeCollector<'_>, name: &str, root: &str) -> Option<
 /// records optimistically (aliases included); the import binding is verified
 /// after the visit, so forward imports and shadowing both answer correctly
 /// and non-factory calls clear. The definition contents are unchecked
-/// (product codegen is out of axis). `viewTransition` clears in the
-/// post-pass: v2 refuses it as a value too, and the use site warns.
+/// (product codegen is out of axis).
 fn factory_init(
     collector: &mut ScopeCollector<'_>,
     init: &oxc_ast::ast::Expression<'_>,

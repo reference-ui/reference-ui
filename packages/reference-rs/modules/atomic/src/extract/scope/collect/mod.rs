@@ -95,7 +95,7 @@ fn collect_inner(
 }
 
 /// A factory-call init awaiting import verification: the callee must resolve
-/// to a `keyframes`/`positionTry` import from a Reference package.
+/// to a `keyframes` import from a Reference package.
 pub(crate) struct FactoryWait {
     pub(crate) scope: ScopeId,
     pub(crate) name: String,

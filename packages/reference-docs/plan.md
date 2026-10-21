@@ -41,7 +41,8 @@ pages each change follows.
 - 8 style props are typed but refused at sync with no CSS: `truncate`, `srOnly`,
   `boxSize`, `hideBelow`, `hideFrom`, `textStyle`, `gradientFrom/To/Via`
   (`canon/src/css/unrealizable.rs`, ATM-EXT-01). Fix, untype, or document.
-- `positionTry` is half-wired: compiler hook exists, no export, SPEC says out.
+- `positionTry` ruled 2026-10-21: no `positionTry()`/`viewTransition()` factories (positioning
+  belongs to lib's Overlay); the compiler hook is gone. The CSS properties stay style props.
 - `global-css.mdx:75-76` says breakpoint keys print `@media`; SPEC says `@container`.
   The walker prints `@media`, so the SPEC row looks stale.
 - Next.js support: untested.
@@ -100,6 +101,6 @@ message parsing (needs an ExtractDetail variant).
 - `tests/cases/global/SPEC.md:64` says globals are `@container` only; the walker prints `@media`. Stale row.
 - `srOnly` as a real feature (visually-hidden bundle)? Removed for now; would be ATM-EXT-02 with its own lowering.
 - Webpack: restore a kept webpack5 matrix suite, or drop the webpack docs section.
-- Browser support floor; Next.js support; `positionTry` intent.
+- Browser support floor; Next.js support.
 - Does "a recipe nothing calls emits no CSS" belong in recipes or troubleshooting?
 - `pnpm agentdocs q` checks 0 `.mdx` files: the gate doesn't lint pages at all.

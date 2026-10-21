@@ -17,11 +17,9 @@
   .\@reference-ui\/lib__m_6r { margin: calc(6 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_7r { margin: calc(7 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_8r { margin: calc(8 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
   .\@reference-ui\/lib__anim-n_aliased { animation-name: aliased; }
   .\@reference-ui\/lib__anim-n_early { animation-name: early; }
   .\@reference-ui\/lib__anim-n_local { animation-name: local; }
   .\@reference-ui\/lib__anim-n_spin { animation-name: spin; }
-  .\@reference-ui\/lib__position-try-fallbacks_none { position-try-fallbacks: none; }
 }
 }

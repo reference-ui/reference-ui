@@ -97,8 +97,8 @@ fn is_cleared(cleared: &[(ScopeId, String)], scope: ScopeId, name: &str) -> bool
     cleared.iter().any(|(s, n)| *s == scope && n == name)
 }
 
-/// True when a factory callee resolves to a `keyframes`/`positionTry` import
-/// from a Reference package. Aliases answer by imported name; locals,
+/// True when a factory callee resolves to a `keyframes` import from a
+/// Reference package. Aliases answer by imported name; locals,
 /// unbound names, and foreign packages refuse.
 fn factory_import_bound(table: &ScopeTable, wait: &FactoryWait) -> bool {
     let Some((_, binding)) = table.resolve_from(&wait.callee, wait.scope) else {
@@ -107,6 +107,5 @@ fn factory_import_bound(table: &ScopeTable, wait: &FactoryWait) -> bool {
     let BindingKind::Import(imp) = &binding.kind else {
         return false;
     };
-    (imp.imported.as_ref() == "keyframes" || imp.imported.as_ref() == "positionTry")
-        && imp.specifier.as_ref().starts_with("@reference-ui/")
+    imp.imported.as_ref() == "keyframes" && imp.specifier.as_ref().starts_with("@reference-ui/")
 }
