@@ -70,15 +70,35 @@ Orchestrator rulings where the spec was silent:
 
 ## Bugs fixed from the sweep (2026-10-21, on public-release)
 
-- `debug` config key removed (df385ab47). extendSystem token modes match the compiler (85751610c).
-  splitVariantProps keeps rest typed (0d7d9e8b9). Xhigh review: no blockers; minors + boolean/responsive
-  variant typing + shipped config MCP keys in progress.
-- In planning: 26 refused-but-typed extension props removed at the canon source; `*Only`/`*Down` keys
-  silently treated as breakpoint ranges.
+Each: Opus-medium investigator (repro) -> implementer -> Opus-xhigh review -> fixes -> land.
+- `debug` config key removed: type-only since the engine swap (df385ab47).
+- extendSystem token modes match the compiler; numeric slots rejected (85751610c, 0653335b8, 7192605bc).
+- Shipped ReferenceUIConfig gains the MCP keys (0653335b8).
+- Recipe types: splitVariantProps keeps rest typed; boolean, numeric and per-breakpoint variant
+  values type-check; responsive keys limited to breakpoints recipes print; generic wrappers work
+  (0d7d9e8b9, 30f71e432, 5829fe364).
+- Range keys built from breakpoint names only: css({ srOnly }) / css({ fooDown }) no longer vanish;
+  one warning per bad key (2682c3195, 137b8ebe6, 9fe010a3e).
+- 26 typed-but-refused extension props removed at the canon source; refusal retired, test-time
+  guards added; MCP prop lists pruned (+16 stale names); changeset for the type break
+  (070394cb3, 4e0ff8b87, 6eb4fef34).
+- Test hygiene: CORE-SYNC-11/TOKEN-02 line numbers (8e08db964), CORE-SYNC-14 restores its fixture
+  (a531af56a), census fails clearly on a stale dist (d1bca8eb1).
+
+Rulings: refused props are removed, not implemented (core SPECs already rule out truncate,
+hideFrom/Below, textStyle; boxSize = size). Range keys: `<bp>Down`/`<bp>Only` exact,
+`<from>To<to>` case-insensitive. Unknown JSX attributes stay silent at sync (type error is the
+signal). ATM-W-UNREALIZABLE-EXTENSION retired but kept in the code table.
+
+Follow-up slices (not started): folded JSX spreads warn on readOnly/onPointerDown
+(fold/call_lower.rs ignores JsxAttributes); typegen emits custom-scale keys extract rejects
+(filter breakpoints.rs through range_shape); structural unknown-property fact instead of
+message parsing (needs an ExtractDetail variant).
 
 ## Owner decisions surfaced by the sweep
 
 - `tests/cases/global/SPEC.md:64` says globals are `@container` only; the walker prints `@media`. Stale row.
+- `srOnly` as a real feature (visually-hidden bundle)? Removed for now; would be ATM-EXT-02 with its own lowering.
 - Webpack: restore a kept webpack5 matrix suite, or drop the webpack docs section.
 - Browser support floor; Next.js support; `positionTry` intent.
 - Does "a recipe nothing calls emits no CSS" belong in recipes or troubleshooting?
