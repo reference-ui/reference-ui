@@ -3,7 +3,7 @@
  * `fooOnly`, `fooDown`, the one-sided `mdToFoo` and the spread `barOnly`
  * are not ranges, so each warns unknown property on the default channel.
  * Real ranges lower to bounded container queries; the backwards `lgToSm`
- * keeps its unknown-condition warning.
+ * keeps its unknown-condition warning. No bad key adds a missing-plan line.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'
@@ -25,6 +25,8 @@ const spec: AtomicCaseSpec = {
     const unknownConds = defaults.filter(d => d.code === 'ATM-W-UNKNOWN-CONDITION')
     expect(unknownConds).toHaveLength(1)
     expect(unknownConds[0]!.message).toContain('lgToSm')
+    // One line per bad key: lookups under an unknown-prop key stay silent.
+    expect(defaults.filter(d => d.code === 'ATM-W-MISSING-STYLE-PLAN')).toHaveLength(0)
 
     const sheet = result.stylesheet
     expect(sheet).toContain('@container (min-width: 768px) and (max-width: 1023.98px)')

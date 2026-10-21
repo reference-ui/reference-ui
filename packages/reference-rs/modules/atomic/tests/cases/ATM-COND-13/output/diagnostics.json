@@ -60,13 +60,5 @@
       "did you mean `xDown`?",
       "use a condition from the theme"
     ]
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-MISSING-STYLE-PLAN",
-    "message": "`color: red.500` has no compiled style plan; this lookup will emit no class",
-    "help": [
-      "make the 'color: red.500' lookup static so the plan can serve it"
-    ]
   }
 ]

@@ -6,14 +6,17 @@
 //! legacy line with a proof warning, covered keys and covered sinks drop
 //! their legacy lines, and causeless misses append one warning. Matching is
 //! by re-derived legacy sentence (code, location, message), so untouched
-//! lines keep their bytes, order, and count.
+//! lines keep their bytes, order, and count. Expectations nested under a key
+//! extract already warned as an unknown style property stay silent: that
+//! located warning is the one line for the authored mistake.
 
 use std::collections::BTreeSet;
 
 use rustc_hash::FxHashSet;
 
 use super::super::{
-    Diagnostic, DiagnosticFact, DiagnosticLocation, OwnedLookupKey, Policy, ResolveOutcome,
+    Diagnostic, DiagnosticCode, DiagnosticFact, DiagnosticLocation, OwnedLookupKey, Policy,
+    ResolveOutcome,
 };
 use super::lines::{find_line, remove_line};
 use super::memo::SerialMemo;
@@ -102,6 +105,18 @@ struct Proof<'a> {
     exacts: Vec<(&'a OwnedLookupKey, String)>,
     exact_set: FxHashSet<String>,
     rejects: Vec<Reject<'a>>,
+    /// Keys extract warned `UnknownProperty`; lookups nested under one are
+    /// already explained by that located line.
+    unknown_keys: FxHashSet<&'a str>,
+}
+
+/// The key named by extract's unknown-property sentence
+/// (`Unknown style property "{key}"`, the object, const-spread and folded
+/// spread gates). Global-CSS lines spell a different sentence and never match.
+fn unknown_property_key(message: &str) -> Option<&str> {
+    message
+        .strip_prefix("Unknown style property \"")?
+        .strip_suffix('"')
 }
 
 impl<'a> Proof<'a> {
@@ -115,6 +130,7 @@ impl<'a> Proof<'a> {
             exacts: Vec::new(),
             exact_set: FxHashSet::default(),
             rejects: Vec::new(),
+            unknown_keys: FxHashSet::default(),
         };
         let mut memo = SerialMemo::new();
         for fact in facts {
@@ -144,7 +160,21 @@ impl<'a> Proof<'a> {
                 outcome,
                 backing,
             }),
+            DiagnosticFact::ExtractNote { code, message, .. } => {
+                self.collect_unknown_key(*code, message)
+            }
             _ => {}
+        }
+    }
+
+    /// Remember the key an unknown-property note names, so lookups nested
+    /// under it defer to that located line.
+    fn collect_unknown_key(&mut self, code: DiagnosticCode, message: &'a str) {
+        if code != DiagnosticCode::UnknownProperty {
+            return;
+        }
+        if let Some(name) = unknown_property_key(message) {
+            self.unknown_keys.insert(name);
         }
     }
 
@@ -242,7 +272,10 @@ impl<'a> Proof<'a> {
     /// never warn either: extract owns that jurisdiction and already warns
     /// located at the gate (O2), so a second unlocated warning would only
     /// duplicate it. Conditions ride along: they are not style props, and
-    /// their scalar misuse already warns located (O20).
+    /// their scalar misuse already warns located (O20). Keys nested under an
+    /// unknown-prop key never warn for the same reason: the runtime namer
+    /// treats an object value as a condition by shape, but extract already
+    /// warned that key located, so a second line would only duplicate it.
     fn render_causeless(&self, diagnostics: &mut Vec<Diagnostic>) {
         let mut warned: FxHashSet<String> = FxHashSet::default();
         // Sessions touch dozens of distinct props across tens of thousands
@@ -272,12 +305,25 @@ impl<'a> Proof<'a> {
         }
     }
 
-    /// True when a rejection already warns this key: same key, or same
-    /// position (a spelling divergence must not double-warn).
+    /// True when one of the key's conditions is a key extract warned as an
+    /// unknown style property.
+    fn under_unknown_key(&self, key: &OwnedLookupKey) -> bool {
+        !self.unknown_keys.is_empty()
+            && key
+                .when
+                .iter()
+                .any(|segment| self.unknown_keys.contains(&**segment))
+    }
+
+    /// True when a line already warns this key: a rejection with the same
+    /// key or position (a spelling divergence must not double-warn), or an
+    /// unknown-prop note on one of its conditions.
     fn is_explained(&self, key: &OwnedLookupKey, key_string: &str) -> bool {
-        self.rejects
-            .iter()
-            .any(|reject| reject.key_string == key_string || same_position(&reject.key, key))
+        self.under_unknown_key(key)
+            || self
+                .rejects
+                .iter()
+                .any(|reject| reject.key_string == key_string || same_position(&reject.key, key))
     }
 }
 

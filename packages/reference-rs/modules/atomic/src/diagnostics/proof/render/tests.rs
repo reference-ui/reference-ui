@@ -256,6 +256,32 @@ fn unknown_props_defer_to_extracts_jurisdiction() {
 }
 
 #[test]
+fn lookups_under_an_unknown_prop_key_defer_to_extract() {
+    let note = crate::diagnostics::adapters::extract::extract_note_with_help(
+        located(),
+        DiagnosticCode::UnknownProperty,
+        "Unknown style property \"watDown\"".to_string(),
+        None,
+    );
+    let nested = OwnedLookupKey {
+        when: vec!["watDown".into()],
+        ..key("color", serde_json::json!("red.500"))
+    };
+    let other = OwnedLookupKey {
+        when: vec!["_hover".into()],
+        ..key("color", serde_json::json!("red.500"))
+    };
+    let mut diagnostics = Vec::new();
+    render_session(
+        &[note, exact(nested), exact(other.clone())],
+        &[],
+        RenderScope::new("lib"),
+        &mut diagnostics,
+    );
+    assert_eq!(diagnostics, vec![Policy::render_causeless(&other)]);
+}
+
+#[test]
 fn hole_valued_expectations_never_warn() {
     let mut diagnostics = Vec::new();
     render_session(

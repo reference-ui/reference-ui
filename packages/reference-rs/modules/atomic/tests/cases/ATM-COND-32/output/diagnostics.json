@@ -76,13 +76,5 @@
     "help": [
       "use a condition from the theme"
     ]
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-MISSING-STYLE-PLAN",
-    "message": "`display: none` has no compiled style plan; this lookup will emit no class",
-    "help": [
-      "make the 'display: none' lookup static so the plan can serve it"
-    ]
   }
 ]
