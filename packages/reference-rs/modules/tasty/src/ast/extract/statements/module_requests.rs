@@ -1,10 +1,11 @@
-//! Dangling module requests in one file: the path-shaped specifiers of `import`, `export * from`,
-//! and `export { x } from` statements that name no file on disk. Extraction keeps the names those
+//! Dangling module requests in one file: path-shaped specifiers that name no file on disk. They come
+//! from `import`, `export * from`, and `export { x } from` statements. Extraction keeps the names those
 //! statements provide external, so this pass turns each distinct (file, specifier) pair into one
 //! `TST-W-UNRESOLVED-IMPORT` warning instead of letting the drop stay silent. Bare package
 //! specifiers are never reported, because an uninstalled package may be a type nobody needs here.
 //! The specifier text is read the same way each binding site reads it, so the verdict matches the
-//! resolution the rest of extraction performed.
+//! resolution the rest of extraction performed, except that a `?query` or `#hash` suffix is judged by
+//! the file its path names, since extraction keeps such an import opaque.
 
 use std::collections::BTreeSet;
 

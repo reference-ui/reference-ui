@@ -5,10 +5,11 @@
 //! specifier text, so [`ImportResolver`] memoizes every external outcome —
 //! negative results included — and every `package.json` read by absolute
 //! path. One resolver is created per scan and shared across discovery and
-//! extraction, so a repeated import never re-walks the disk. A `?query` or
-//! `#hash` suffix is dropped before any lookup, in both branches. Relative
-//! imports stay uncached: they depend on the importing file and its lookup
-//! policy.
+//! extraction, so a repeated import never re-walks the disk. A specifier with
+//! a `?query` or `#hash` suffix is opaque and resolves to nothing, because a
+//! bundler loads it as a directive on the file; only the on-disk check reads
+//! its path. Relative imports stay uncached: they depend on the importing file
+//! and its lookup policy.
 
 mod node_modules;
 mod package_entry;
@@ -23,7 +24,9 @@ use serde_json::Value;
 
 use self::package_entry::{find_installed_declaration_provider, resolve_package_import_from_root};
 use super::model::ResolvedModule;
-use super::paths::{is_external_file_id, split_package_specifier, strip_query_and_hash};
+use super::paths::{
+    has_query_or_hash, is_external_file_id, split_package_specifier, strip_query_and_hash,
+};
 
 pub(crate) use relative::FileLookup;
 
@@ -75,7 +78,22 @@ impl ImportResolver {
             .map(|resolved| resolved.file_id)
     }
 
+    /// Module resolution of a relative specifier. A specifier with a query or hash suffix is opaque
+    /// and names no module, so its bindings and its discovery stay external.
     pub(super) fn resolve_relative_import(
+        &self,
+        current_file_id: &str,
+        source_module: &str,
+        file_id_set: &BTreeSet<String>,
+        file_lookup: FileLookup,
+    ) -> Option<String> {
+        if has_query_or_hash(source_module) {
+            return None;
+        }
+        self.probe_relative(current_file_id, source_module, file_id_set, file_lookup)
+    }
+
+    fn probe_relative(
         &self,
         current_file_id: &str,
         source_module: &str,
@@ -92,21 +110,24 @@ impl ImportResolver {
 
     /// Whether a relative or absolute specifier names a file on disk, ignoring the scan set. A
     /// target that exists but was not scanned (an asset, or a file outside the include globs) is
-    /// not dangling; only a target missing from disk is.
+    /// not dangling; only a target missing from disk is. The check reads the path before any query
+    /// or hash, so `./notes.md?raw` names `notes.md`.
     pub(crate) fn names_file_on_disk(&self, current_file_id: &str, source_module: &str) -> bool {
-        self.resolve_relative_import(
+        self.probe_relative(
             current_file_id,
-            source_module,
+            strip_query_and_hash(source_module),
             &BTreeSet::new(),
             FileLookup::Allowed,
         )
         .is_some()
     }
 
-    /// Memoized external resolution; negative outcomes are cached too. The memo key is the path
-    /// part of the specifier, so `pkg/x?raw` and `pkg/x` share one entry.
+    /// Memoized external resolution; negative outcomes are cached too. A specifier with a query or
+    /// hash suffix is opaque and never reaches the memo.
     pub(super) fn resolve_external(&self, source_module: &str) -> Option<ResolvedModule> {
-        let source_module = strip_query_and_hash(source_module);
+        if has_query_or_hash(source_module) {
+            return None;
+        }
         if let Some(cached) = self.external.borrow().get(source_module).cloned() {
             return cached;
         }

@@ -124,6 +124,33 @@ fn query_and_hash_suffixes_name_the_file_on_disk() {
 }
 
 #[test]
+fn query_or_hash_suffix_keeps_a_relative_import_opaque() {
+    let root = TempDir::new("scanner-packages-suffix-opaque");
+    root.write(
+        "src/helper.ts",
+        "export default interface HelperDefault {}\n",
+    );
+    let resolver = ImportResolver::new(root.path());
+    let scanned = BTreeSet::from(["src/helper.ts".to_string()]);
+
+    assert_eq!(
+        resolver
+            .resolve_relative_import("src/index.ts", "./helper", &scanned, FileLookup::Denied)
+            .as_deref(),
+        Some("src/helper.ts")
+    );
+    for specifier in ["./helper.ts?raw", "./helper.ts#types"] {
+        assert!(
+            resolver
+                .resolve_relative_import("src/index.ts", specifier, &scanned, FileLookup::Allowed)
+                .is_none(),
+            "{specifier} names no module, so it stays opaque"
+        );
+    }
+    assert!(resolver.names_file_on_disk("src/index.ts", "./helper.ts?raw"));
+}
+
+#[test]
 fn js_specifier_maps_to_typescript_sources() {
     let root = TempDir::new("scanner-packages-js-sources");
     let resolver = ImportResolver::new(root.path());

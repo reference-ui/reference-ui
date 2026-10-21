@@ -51,7 +51,7 @@ fn external_import_uses_types_exports_for_root_and_subpath() {
 }
 
 #[test]
-fn external_import_drops_query_and_hash_before_lookup() {
+fn external_import_with_query_or_hash_is_opaque() {
     let root = TempDir::new("scanner-packages-suffix-external");
     root.write(
         "node_modules/fancy-lib/package.json",
@@ -62,12 +62,13 @@ fn external_import_drops_query_and_hash_before_lookup() {
         "export interface Tokens {}\n",
     );
 
-    let plain = resolve_external_import(root.path(), "fancy-lib/tokens")
-        .expect("plain subpath should resolve");
+    assert!(resolve_external_import(root.path(), "fancy-lib/tokens").is_some());
     for specifier in ["fancy-lib/tokens?raw", "fancy-lib/tokens#types"] {
-        let suffixed = resolve_external_import(root.path(), specifier)
-            .unwrap_or_else(|| panic!("{specifier} should resolve like its path"));
-        assert_eq!(suffixed.file_id, plain.file_id, "specifier: {specifier}");
+        let resolved = resolve_external_import(root.path(), specifier);
+        assert!(
+            resolved.is_none(),
+            "{specifier} names no module, so it stays opaque"
+        );
     }
 }
 

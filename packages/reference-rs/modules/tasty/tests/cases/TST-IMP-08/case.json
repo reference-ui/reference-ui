@@ -1,1 +1,1 @@
-{"id": "TST-IMP-08", "name": "A relative ?raw or #hash import resolves its file: no TST-W-UNRESOLVED-IMPORT"}
+{"id": "TST-IMP-08", "name": "A ?raw or #hash import finds its file and stays opaque: no TST-W-UNRESOLVED-IMPORT"}

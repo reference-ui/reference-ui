@@ -1,6 +1,6 @@
 //! Path normalization surface.
 //! Converts filesystem paths to Unix-style file ids, stable symbol ids, module specifiers, and package names,
-//! and reduces an import specifier to the path its file lookups run on. Never touches the filesystem.
+//! and reads the path part of an import specifier. Never touches the filesystem.
 
 mod module_specifier;
 mod package;
@@ -13,14 +13,22 @@ pub(crate) fn path_to_unix(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
-/// The path part of an import specifier: everything before its first `?` or `#`. A query such as
-/// `?raw` or `?url` and a `#hash` are bundler directives on the file the path names, not part of
-/// its name, so every file lookup runs on this prefix. The result borrows from the specifier.
+/// Characters that open the query or hash suffix of an import specifier.
+const SUFFIX_DELIMITERS: [char; 2] = ['?', '#'];
+
+/// The path part of an import specifier: everything before its first `?` or `#`. The on-disk check
+/// reads a suffixed import through this prefix, because the file it names is the one a bundler loads.
 pub(crate) fn strip_query_and_hash(specifier: &str) -> &str {
-    match specifier.find(['?', '#']) {
+    match specifier.find(SUFFIX_DELIMITERS) {
         Some(index) => &specifier[..index],
         None => specifier,
     }
+}
+
+/// Whether an import specifier carries a query or hash suffix. Such a specifier is opaque: a bundler
+/// loads it as a directive on the file (raw text, a URL, a worker constructor), so it names no module.
+pub(crate) fn has_query_or_hash(specifier: &str) -> bool {
+    specifier.contains(SUFFIX_DELIMITERS)
 }
 
 pub(crate) fn symbol_id(file_id: &str, name: &str) -> String {
@@ -89,7 +97,16 @@ pub(crate) fn is_external_file_id(file_id: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::strip_query_and_hash;
+    use super::{has_query_or_hash, strip_query_and_hash};
+
+    #[test]
+    fn has_query_or_hash_flags_only_suffixed_specifiers() {
+        assert!(has_query_or_hash("./notes.md?raw"));
+        assert!(has_query_or_hash("./notes.md#usage"));
+        assert!(has_query_or_hash("pkg/file.md?url"));
+        assert!(!has_query_or_hash("./plain.ts"));
+        assert!(!has_query_or_hash("pkg/file.md"));
+    }
 
     #[test]
     fn strip_query_and_hash_keeps_only_the_path_before_the_first_delimiter() {
