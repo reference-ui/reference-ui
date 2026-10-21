@@ -117,8 +117,8 @@ import type { ComponentProps } from 'react'
 type ButtonProps = RecipeVariantProps<typeof button> & ComponentProps<'button'>
 
 function Button(props: ButtonProps) {
-  const [variants, rest] = button.splitVariantProps(props)
-  return <button {...rest} className={button(variants)} />
+  const [variants, { className, ...rest }] = button.splitVariantProps(props)
+  return <button {...rest} className={`${button(variants)} ${className ?? ''}`} />
 }
 ```
 
@@ -132,6 +132,9 @@ import type { RecipeVariantProps } from '@reference-ui/react'
 type ButtonVariants = RecipeVariantProps<typeof button>
 // { tone?: 'primary' | 'quiet'; size?: 'sm' | 'lg' }
 ```
+
+Each value also takes the [breakpoint](#responsive-variants) object form,
+and a variant with `true` or `false` keys takes a boolean.
 
 ## Cascade layer
 

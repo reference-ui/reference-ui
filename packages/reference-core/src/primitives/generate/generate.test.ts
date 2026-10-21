@@ -130,7 +130,7 @@ describe('generateReactTypesSource bound bake', () => {
   it('carries the styled wiring plus the named graph with no later rewrite', () => {
     const source = typesSource()
     for (const line of [
-      `import type { StyleConditionKey, StyleProps as NarrowStyleProps, SystemStyleObject } from '@reference-ui/styled'`,
+      `import type { BreakpointKey, StyleConditionKey, StyleProps as NarrowStyleProps, SystemStyleObject } from '@reference-ui/styled'`,
       `export type StyleProps = Omit<NarrowStyleProps, 'font' | 'weight'> & {`,
       `export type * from '@reference-ui/styled'`,
       'export type CssStyles = ',
@@ -169,7 +169,7 @@ describe('generateReactTypesSource bound bake', () => {
       badge: { variants: { tone: { loud: {} } } },
     })
     expect(source).toContain(
-      `import type { StyleConditionKey, StyleProps as NarrowStyleProps, SystemStyleObject, BadgeVariantProps, ButtonVariantProps } from '@reference-ui/styled'`
+      `import type { BreakpointKey, StyleConditionKey, StyleProps as NarrowStyleProps, SystemStyleObject, BadgeVariantProps, ButtonVariantProps } from '@reference-ui/styled'`
     )
     expect(source).toContain(
       'export type PrimitiveVariantProp = BadgeVariantProps | ButtonVariantProps'
@@ -263,6 +263,7 @@ function writeStyledStub(dir: string): void {
     join(styledDir, 'index.d.ts'),
     [
       `export type StyleConditionKey = '_hover' | '@sm'`,
+      `export type BreakpointKey = 'base' | 'md'`,
       `export type StyleProps = {`,
       `  color?: unknown`,
       `  backgroundColor?: unknown`,

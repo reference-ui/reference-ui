@@ -1,6 +1,7 @@
 // Type-level tests for the recipe declarations in the generated react types.
 // They bake a system with one recipe, then run strict tsc over a wrapper probe that splits its props with splitVariantProps.
-// The probe passes only when rest keeps the caller's non-variant props and drops the axis keys, and when a props type with no axis key is still accepted.
+// The probe passes only when rest keeps the caller's other props (union members included) and drops the axis keys, when props with no axis
+// key or a recipe with no variants are accepted, when boolean and responsive variant values type-check, and when a wrong value is rejected.
 
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
@@ -39,10 +40,34 @@ const WRAPPER_PROBE = [
   '  // @ts-expect-error nope is not a tone option',
   '  return card.splitVariantProps(props)',
   '}',
+  "// @ts-expect-error nope is not a tone option, plain or responsive",
+  "card({ tone: { base: 'quiet', md: 'nope' } })",
+  "type LinkOrButton = { tone?: 'loud'; as: 'a'; href: string } | { tone?: 'loud'; as: 'button'; onClick: () => void }",
+  'export function union(props: LinkOrButton) {',
+  '  const [, rest] = card.splitVariantProps(props)',
+  "  if (rest.as === 'a') return rest.href",
+  '  return rest.onClick',
+  '}',
+  "const plain = recipe({ className: 'plain', base: { color: 'red' } })",
+  'export function noVariants(props: { children?: ReactNode; id?: string }) {',
+  '  const [, rest] = plain.splitVariantProps(props)',
+  '  const children: ReactNode = rest.children',
+  '  return [children, rest.id]',
+  '}',
+  "const toggle = recipe({ className: 'toggle', variants: { on: { true: {}, false: {} }, disabled: { true: {} } } })",
+  'export const booleans = [toggle({ on: true }), toggle({ on: false }), toggle({ on: \'true\' })]',
+  'export function nativeBoolean(props: { disabled?: boolean; on?: boolean; title?: string }) {',
+  '  const [variants, rest] = toggle.splitVariantProps(props)',
+  '  return [toggle(variants), rest.title]',
+  '}',
+  "export const responsive = card({ tone: { base: 'quiet', md: 'loud' } })",
+  "const [literal, literalRest] = card.splitVariantProps({ tone: 'loud', id: 'x' })",
+  "export const literalCheck: ['loud', string] = [literal.tone, literalRest.id]",
+  "export const responsiveBoolean = toggle({ on: { base: false, md: true } })",
 ]
 
 describe('generateReactTypesSource recipe splitVariantProps under strict tsc', () => {
-  it('types rest as the caller props minus the variant keys', () => {
+  it('types variants and rest for wrappers, unions, booleans and breakpoints', () => {
     const dir = probeDir('__recipe-split')
     writeFileSync(
       join(dir, 'index.d.mts'),
@@ -67,6 +92,7 @@ function probeDir(name: string): string {
     join(styledDir, 'index.d.ts'),
     [
       "export type StyleConditionKey = '_hover'",
+      "export type BreakpointKey = 'base' | 'md'",
       'export type StyleProps = { color?: unknown }',
       'export type SystemStyleObject = StyleProps & { [K in StyleConditionKey]?: SystemStyleObject }',
       '',

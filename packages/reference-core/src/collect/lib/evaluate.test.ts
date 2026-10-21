@@ -328,7 +328,7 @@ describe('evaluateFragments recipes', () => {
     const types = generateReactTypesSource({ stylePropNames: [], recipes: spec.recipes })
     expect(types).toContain('export type PrimitiveVariantProp = ToneVariantProps')
     expect(types).toContain(
-      'StyleConditionKey, StyleProps as NarrowStyleProps, SystemStyleObject, ToneVariantProps'
+      'BreakpointKey, StyleConditionKey, StyleProps as NarrowStyleProps, SystemStyleObject, ToneVariantProps'
     )
   })
 
