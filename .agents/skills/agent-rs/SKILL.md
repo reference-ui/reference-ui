@@ -52,7 +52,7 @@ Do **not** hunt for one harness. Each module has different testing needs:
 | **styletrace** | wrapper graph / StyleProps names | Fixture in, names out. `VirtualWorkspace` for node_modules cases. | `pnpm agentrs v styletrace` |
 | **native / runtime** | loader, exports exist | Smoke only. | `pnpm agentrs v runtime` |
 | **Rust Domain Units** | Cargo unit tests | Pure Rust tests for algorithms and data structures. | `pnpm agentrs c [module]` |
-| **Full Dev Loop** | Native Build -> Cargo -> Vitest -> Quality | Complete verification in under 5 seconds. | `pnpm agentrs t` |
+| **Full Dev Loop** | Native Build -> JS Build -> Cargo -> Vitest -> Quality | Complete verification in under 5 seconds. | `pnpm agentrs t` |
 
 **Case folders.** Every case is a case folder named by its raw ID, holding `case.json` (`{"id", "name"}`), `README.md`, `spec.ts`, `input/` and `output/`. The runner fails a folder that breaks this, and Memex finds each case through its README. The shared convention is in `AGENTS.md` section 7.
 
@@ -146,7 +146,7 @@ Repeating the same 6+ arguments across `walk_*` helpers after a complexity split
 Several runs can work on `packages/reference-rs` at the same time, from agent sessions or terminals. To prevent CPU starvation, port collisions, and corrupted `.node` binary builds, `agent-rs` coordinates via the shared **CPU Gate** (`/tmp/reference-ui-cpu-gate`):
 
 - **`rs` queue class**: Allows up to 2 parallel test executions (`cargo test` / `vitest`). Extra runs wait in queue with live terminal telemetry (`[cpu-gate] Waiting for cpu gate (rs)...`).
-- **`rs:build` queue class**: Exclusive lock for compiling the native N-API addon (`ensure-native`). Only one build runs at a time, which prevents binary clobbering.
+- **`rs:build` queue class**: Exclusive lock for compiling the native N-API addon (`ensure-native`) and rebuilding the JS dist (`build:js`). Only one build runs at a time, which prevents binary clobbering. It does not wait for `rs` runs already in progress, so a rebuild can land under a running Vitest; new `rs` runs wait for it.
 - **Matrix coordination**: Pauses `rs` tests when an `exclusive` matrix or Dagger pipeline runs, and vice-versa.
 - **Darwin QoS Jailbreak**: Automatically jailbreaks Darwin background QoS (`PRI 31`) to unthrottled User Interactive Application priority (`PRI 46`) via `taskpolicy -a`.
 
@@ -160,7 +160,7 @@ The runner is mapped to `pnpm agentrs` (with shortcuts `pnpm agent:rs` and `pnpm
 # 1. Environment health, toolchain, and CPU gate locks:
 pnpm agentrs s                                               # alias: status
 
-# 2. Per-Module Vitest Seam Testing (builds the native addon first when missing or stale):
+# 2. Per-Module Vitest Seam Testing (refreshes the native addon when stale, rebuilds the JS dist, then runs Vitest):
 pnpm agentrs v                                               # runs all module test suites (isolated projects)
 pnpm agentrs v atomic                                        # runs ONLY atomic tests (never runs tasty setup)
 pnpm agentrs v tasty                                         # runs ONLY tasty tests
@@ -193,7 +193,7 @@ pnpm agentrs b                                               # alias: build, ens
 # 6. Format Code:
 pnpm agentrs f                                               # alias: fmt (cargo fmt + prettier)
 
-# 7. Full Dev Loop (Native Build -> Cargo Test -> Vitest -> Quality Check):
+# 7. Full Dev Loop (Native Build -> JS Build -> Cargo Test -> Vitest -> Quality Check):
 pnpm agentrs t                                               # alias: test, all
 pnpm agentrs                                                 # bare command runs full dev loop
 ```

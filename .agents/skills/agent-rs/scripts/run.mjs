@@ -7,6 +7,7 @@
  * - Darwin QoS elevation (taskpolicy -a PRI 46)
  * - Shared CPU gate concurrency queue (/tmp/reference-ui-cpu-gate)
  * - Pure Rust tests (cargo test) & JS seam tests (Vitest)
+ * - Native addon and JS dist (build:js) refreshed before Vitest, so seam tests never load a stale build
  * - Criterion micro-benches (cargo bench) for the flame-filed hot functions
  * - Code quality, file length limits (<365 / <500), cyclomatic complexity, and banned Clippy allows
  */
@@ -590,6 +591,49 @@ async function runEnsureNative(rsDir) {
   })
 }
 
+// Like runChild, but output is collected instead of streamed, so a passing step prints only its status line.
+function runChildQuiet(command, args, cwd) {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, {
+      cwd,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, FORCE_COLOR: '1' },
+    })
+    let output = ''
+    child.stdout.setEncoding('utf8')
+    child.stderr.setEncoding('utf8')
+    child.stdout.on('data', (text) => { output += text })
+    child.stderr.on('data', (text) => { output += text })
+
+    const onSig = (sig) => {
+      try { child.kill(sig) } catch {}
+    }
+    process.on('SIGINT', onSig)
+    process.on('SIGTERM', onSig)
+
+    child.on('close', (code, signal) => {
+      process.off('SIGINT', onSig)
+      process.off('SIGTERM', onSig)
+      resolve({ code: exitCodeOf(code, signal), output })
+    })
+  })
+}
+
+// Seam tests import the JS bundles under dist/, so they are rebuilt from source before Vitest runs.
+// Same rs:build class as the native build: builds serialize, and new rs runs wait for the build to finish.
+async function runBuildJs(rsDir) {
+  return withCpuGate('rs:build', 'agentrs build:js', async () => {
+    const { code, output } = await runChildQuiet('pnpm', ['run', 'build:js'], rsDir)
+    if (code === 0) {
+      console.log('\x1b[32m✔ [agent-rs] JS dist ready.\x1b[0m\n')
+    } else {
+      process.stdout.write(output)
+      console.log(`\x1b[31m✖ [agent-rs] JS dist build failed (code ${code})\x1b[0m\n`)
+    }
+    return code
+  })
+}
+
 async function runStatus(repoRoot, rsDir) {
   console.log('\n\x1b[1;35m=== [agent-rs] Environment & Toolchain Status ===\x1b[0m\n')
 
@@ -643,10 +687,10 @@ function printHelp() {
   pnpm agentrs [command] [options]
 
 \x1b[1mCOMMANDS:\x1b[0m
-  \x1b[32mtest, all\x1b[0m                  Full 4-step dev loop: ensure-native → cargo test → vitest → quality
+  \x1b[32mtest, all\x1b[0m                  Full 5-step dev loop: ensure-native → build:js → cargo test → vitest → quality
   \x1b[32mcargo, rust, ct\x1b[0m            Run Rust workspace unit/integration tests (cargo test)
   \x1b[32mbench, criterion\x1b[0m           Run criterion micro-benches (cargo bench), cpu-gate aware
-  \x1b[32mvitest, vt\x1b[0m                 Run seam Vitest tests against N-API and TS wrappers
+  \x1b[32mvitest, vt\x1b[0m                 Refresh native addon and JS dist, then run seam Vitest tests
   \x1b[32mquality, check, lint\x1b[0m       Code quality, file length (<365 / <500), and cyclomatic complexity
   \x1b[32mbuild, ensure-native\x1b[0m       Build or ensure native .node binary with exclusive queue lock
   \x1b[32mflame\x1b[0m                     Record a samply CPU profile of the real sync path (evidence to .agents/rs-evidence/flamegraph/)
@@ -750,9 +794,11 @@ async function main() {
   }
 
   if (command === 'vitest' || command === 'vt' || command === 'v') {
-    // Seam tests load the N-API addon, so a missing or stale build is refreshed before they run.
+    // Seam tests load the N-API addon and the JS dist, so both are refreshed before they run.
     const buildCode = await runEnsureNative(rsDir)
     if (buildCode !== 0) process.exit(buildCode)
+    const jsCode = await runBuildJs(rsDir)
+    if (jsCode !== 0) process.exit(jsCode)
     const code = await runVitestTests(args.slice(1), rsDir)
     process.exit(code)
   }
@@ -829,15 +875,19 @@ async function main() {
     const buildCode = await runEnsureNative(rsDir)
     if (buildCode !== 0) process.exit(buildCode)
 
-    // 2. Cargo test
+    // 2. Rebuild the JS dist that the seam tests import
+    const jsCode = await runBuildJs(rsDir)
+    if (jsCode !== 0) process.exit(jsCode)
+
+    // 3. Cargo test
     const cargoCode = await runCargoTests(args.slice(1), rsDir)
     if (cargoCode !== 0) process.exit(cargoCode)
 
-    // 3. Vitest
+    // 4. Vitest
     const vitestCode = await runVitestTests(args.slice(1), rsDir)
     if (vitestCode !== 0) process.exit(vitestCode)
 
-    // 4. Code quality check on git changed files (or whole tree if no changes)
+    // 5. Code quality check on git changed files (or whole tree if no changes)
     console.log('\x1b[1;35m--- Running Code Quality Gate ---\x1b[0m')
     const qualityCode = await runQualityCommand(['--changed'], repoRoot, rsDir)
 
