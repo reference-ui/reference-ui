@@ -7,8 +7,8 @@
  */
 
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Semantic-kind classification for tasty members and types.
+ * Maps members and type references to a coarse TastySemanticKind for renderers, inferring literal kinds from values and collapsing single-kind unions.
  */
 import type { TastyMember, TastyTypeRef } from './api-types.js';
 export type TastySemanticKind = 'unknown' | 'function' | 'constructor' | 'index' | 'boolean' | 'number' | 'string' | 'array' | 'tuple' | 'object' | 'intersection' | 'indexed_access' | 'type_query' | 'conditional' | 'mapped' | 'template_literal' | 'union' | 'intrinsic' | 'reference' | 'raw';

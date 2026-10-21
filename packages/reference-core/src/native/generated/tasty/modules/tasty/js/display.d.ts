@@ -7,8 +7,8 @@
  */
 
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Display formatting for tasty callable and inline types.
+ * Formats function and constructor signatures as text and collects the inline variant strings of unions, literals, booleans, and raw summaries.
  */
 import type { TastyTypeRef } from './api-types.js';
 export declare function formatTastyCallableSignature(type: TastyTypeRef): string;

@@ -31,8 +31,9 @@ mirror that exists.
 
 The vendor script copies the reachable `@reference-ui/rust` tasty declaration
 closure out of the built RS dist and into the committed
-generated tasty tree. Only specifier strings move: every extensionless
-relative import becomes its explicit NodeNext form, so the vendored tree
+generated tasty tree. Only specifier strings move: every relative import, whether
+the dist wrote it extensionless or already with `.js`, becomes its explicit
+NodeNext form, so the vendored tree
 typechecks under core's module resolution while the RS source tree stays
 untouched. Every copied file gains a provenance header pinning the RS version
 and the regen command; nothing is hand-mimicked, so the copy cannot drift from

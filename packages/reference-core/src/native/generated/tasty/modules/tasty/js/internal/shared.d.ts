@@ -7,28 +7,15 @@
  */
 
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Single import path for the helpers the internal runtime modules share.
+ * Re-exports the helpers that the internal runtime modules share: type guards, runtime errors,
+ * artifact loading, module extraction and user-owned reference collection. Each lives in its own
+ * module, and this file keeps a single import path for the existing importers.
  */
-import type { RawTastyInterfaceSymbol, RawTastyManifest, RawTastySymbol, RawTastySymbolRef, RawTastyTypeAliasSymbol, RawTastyTypeRef, RawTastyTypeReference, TastyRuntimeModule, TastySymbolSearchResult } from '../api-types.js';
-export type TastySymbolModel = RawTastySymbol;
-export type ArtifactImporter = (artifactPath: string) => Promise<unknown>;
-export type ModuleNamespace = Record<string, unknown>;
-export declare function wrapRuntimeError(prefix: string, error: unknown): Error;
-export declare function createAmbiguousSymbolNameError(name: string, matches: TastySymbolSearchResult[]): Error;
-export declare function formatSymbolCandidate(result: TastySymbolSearchResult): string;
-export declare function isInterfaceSymbol(symbol: TastySymbolModel): symbol is RawTastyInterfaceSymbol;
-export declare function isTypeAliasSymbol(symbol: TastySymbolModel): symbol is RawTastyTypeAliasSymbol;
-export declare function isTypeReference(typeRef: RawTastyTypeRef): typeRef is RawTastyTypeReference;
-export declare function isRawStructuredTypeRef(typeRef: RawTastyTypeRef): typeRef is Extract<RawTastyTypeRef, {
-    kind: 'raw';
-}>;
+export type { TastySymbolModel } from './type-guards.js';
+export { isInterfaceSymbol, isRawStructuredTypeRef, isTypeAliasSymbol, isTypeReference, } from './type-guards.js';
+export { createAmbiguousSymbolNameError, formatSymbolCandidate, wrapRuntimeError, } from './runtime-errors.js';
+export { defaultArtifactImporter, resolveArtifactPath, resolveArtifactSpecifier, type ArtifactImporter, } from './artifact-loading.js';
+export { extractChunkSymbol, extractManifest, extractTastyRuntimeModule, normalizeModuleNamespace, type ModuleNamespace, } from './artifact-modules.js';
+export { collectUserOwnedReferencesFromSymbol } from './user-references.js';
 export declare function uniqueById<T>(values: T[], getId: (value: T) => string): T[];
-export declare function defaultArtifactImporter(artifactPath: string): Promise<unknown>;
-export declare function normalizeModuleNamespace(value: unknown): ModuleNamespace;
-export declare function extractManifest(value: unknown): RawTastyManifest;
-export declare function extractChunkSymbol(moduleValue: ModuleNamespace, symbolId: string): TastySymbolModel;
-export declare function extractTastyRuntimeModule(value: unknown): TastyRuntimeModule;
-export declare function resolveArtifactPath(basePath: string, relativePath: string): Promise<string>;
-export declare function resolveArtifactSpecifier(pathOrSpecifier: string): Promise<string>;
-export declare function collectUserOwnedReferencesFromSymbol(symbol: TastySymbolModel): RawTastySymbolRef[];

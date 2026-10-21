@@ -7,8 +7,8 @@
  */
 
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Browser-safe re-export surface of the tasty API.
+ * Re-exports the manifest-based API factory, browser runtime, and pure member, callable, JSDoc, and semantic helpers without the Node build or filesystem paths.
  */
 export { createTastyApiFromManifest, createTastyBrowserRuntime, dedupeTastyMembers, getTastyCallableParameters, getTastyJsDocParamDescriptions, getTastyMemberDefaultValue, getTastyMemberId, normalizeTastyInlineValue, parseTastyParamTag, } from './index.js';
 export type { CreateTastyApiFromManifestOptions, CreateTastyBrowserRuntimeOptions, RawTastyChunkModule, RawTastyFnParam, RawTastyInterfaceSymbol, RawTastyJsDoc, RawTastyJsDocTag, RawTastyManifest, RawTastyMappedModifierKind, RawTastyMember, RawTastyMemberKind, RawTastyModule, RawTastyStructuredTypeRef, RawTastySymbol, RawTastySymbolIndexEntry, RawTastySymbolKind, RawTastySymbolRef, RawTastyTemplateLiteralPart, RawTastyTupleElement, RawTastyTypeAliasSymbol, RawTastyTypeOperatorKind, RawTastyTypeParameter, RawTastyTypeRef, RawTastyTypeReference, TastyApi, TastyBrowserRuntime, TastyGraphApi, TastyMember, TastyRuntimeModule, TastySymbol, TastySymbolRef, TastySymbolSearchResult, TastyTypeRef, } from './index.js';

@@ -7,8 +7,9 @@
  */
 
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Node implementation of the TastyApi over emitted artifacts.
+ * Loads and validates the manifest, resolves symbols by id or name through the SymbolResolver, and serves members, references, display helpers, and diagnostics.
+ * Entry points are createTastyApi and createTastyApiFromManifest.
  */
 import type { CreateTastyApiOptions, CreateTastyApiFromManifestOptions, RawTastyDiagnostic, RawTastyManifest, RawTastyMember, RawTastySymbolIndexEntry, RawTastySymbolRef, RawTastyTypeRef, TastyApi, TastyMember, TastyGraphApi, TastySymbol, TastySymbolRef, TastySymbolSearchResult, TastyTypeParameterMemberProjector, TastyTypeRef } from '../api-types.js';
 import { type ArtifactImporter } from './shared.js';
@@ -34,7 +35,7 @@ export declare class TastyApiRuntime implements TastyApi {
     private graphLoadImmediateDependencies;
     /** Walk `extends` for symbols that resolve into the manifest (skips utilities like `Omit`). */
     private graphLoadExtendsChain;
-    private loadManifestSymbolRef;
+    loadManifestSymbolRef(ref: TastySymbolRef): Promise<TastySymbol | undefined>;
     private graphFlattenInterfaceMembers;
     private graphGetDisplayMembers;
     private graphProjectObjectLikeMembers;

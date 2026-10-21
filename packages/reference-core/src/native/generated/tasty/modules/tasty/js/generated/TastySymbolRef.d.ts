@@ -11,5 +11,6 @@ export type TastySymbolRef = {
     id: string;
     name: string;
     library: string;
+    typeParameter?: boolean;
     typeArguments?: Array<TastyTypeRef>;
 };

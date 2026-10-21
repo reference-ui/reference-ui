@@ -7,8 +7,8 @@
  */
 
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Follows the resolved chain of a TastyTypeRef to its settled type.
+ * Takes a possibly wrapped reference and returns the deepest type with no further resolution, or undefined when the chain ends empty.
  */
 import type { TastyTypeRef } from './api-types.js';
 export declare function getTastyResolvedType(typeRef: TastyTypeRef | undefined): TastyTypeRef | undefined;

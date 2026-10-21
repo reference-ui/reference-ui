@@ -7,8 +7,8 @@
  */
 
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Public TypeScript API surface of the tasty runtime.
+ * Declares the TastyApi, symbol, member, type-ref, JSDoc, and browser-runtime interfaces over the RawTasty* generated payloads it re-exports.
  */
 import type { TastyManifest as RawTastyManifest, TastyMember as RawTastyMember, TastyMemberKind as RawTastyMemberKind, TastyStructuredTypeRef as RawTastyStructuredTypeRef, TastySymbol as RawTastySymbol, TastyTypeParameter as RawTastyTypeParameter, TastyTypeRef as RawTastyTypeRef, TastyTypeReference as RawTastyTypeReference } from './generated/index.js';
 export type { TastyChunkModule as RawTastyChunkModule, TastyFnParam as RawTastyFnParam, TastyInterfaceSymbol as RawTastyInterfaceSymbol, TastyJsDoc as RawTastyJsDoc, TastyJsDocTag as RawTastyJsDocTag, TastyManifest as RawTastyManifest, TastyMappedModifierKind as RawTastyMappedModifierKind, TastyMember as RawTastyMember, TastyMemberKind as RawTastyMemberKind, TastyModule as RawTastyModule, TastyStructuredTypeRef as RawTastyStructuredTypeRef, TastySymbol as RawTastySymbol, TastySymbolIndexEntry as RawTastySymbolIndexEntry, TastySymbolKind as RawTastySymbolKind, TastySymbolRef as RawTastySymbolRef, TastyTemplateLiteralPart as RawTastyTemplateLiteralPart, TastyTupleElement as RawTastyTupleElement, TastyTypeAliasSymbol as RawTastyTypeAliasSymbol, TastyTypeOperatorKind as RawTastyTypeOperatorKind, TastyTypeParameter as RawTastyTypeParameter, TastyTypeRef as RawTastyTypeRef, TastyTypeReference as RawTastyTypeReference, } from './generated/index.js';

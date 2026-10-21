@@ -7,8 +7,8 @@
  */
 
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * JSDoc helpers for tasty members and inline values.
+ * Parses @param tag text into name/description pairs, strips quotes from inline literal values, and collects per-parameter descriptions from a member.
  */
 import type { TastyMember } from './api-types.js';
 export declare function parseTastyParamTag(value: string | undefined): [string, string] | null;

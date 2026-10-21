@@ -7,8 +7,8 @@
  */
 
 /**
- * Typescript source file for Reference UI module.
- * Contains JS API logic and types.
+ * Public entry point of the tasty JavaScript runtime.
+ * Re-exports the API factories, browser runtime, member, callable, JSDoc, semantic, display, and resolution helpers with their option and wrapper types.
  */
 export type { CreateTastyApiOptions, CreateTastyApiFromManifestOptions, CreateTastyBrowserRuntimeOptions, RawTastyChunkModule, RawTastyFnParam, RawTastyInterfaceSymbol, RawTastyJsDoc, RawTastyDiagnostic, RawTastyJsDocTag, RawTastyManifest, RawTastyMappedModifierKind, RawTastyMember, RawTastyMemberKind, RawTastyModule, RawTastyStructuredTypeRef, RawTastySymbol, RawTastySymbolIndexEntry, RawTastySymbolKind, RawTastySymbolRef, RawTastyTemplateLiteralPart, RawTastyTupleElement, RawTastyTypeAliasSymbol, RawTastyTypeOperatorKind, RawTastyTypeParameter, RawTastyTypeRef, RawTastyTypeReference, TastyApi, TastyBrowserRuntime, TastyCallableParameter, TastyFnParam, TastyGraphApi, TastyJsDocTag, TastyMember, TastyRuntimeModule, TastySymbol, TastySymbolKind, TastySymbolRef, TastySymbolSearchResult, TastyTypeParameterMemberProjector, TastyTypeKind, TastyTypeRef, } from './api-types.js';
 export { dedupeTastyMembers, getTastyMemberDefaultValue, getTastyMemberId, } from './members.js';
