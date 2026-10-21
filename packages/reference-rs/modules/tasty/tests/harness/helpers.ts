@@ -64,9 +64,15 @@ export interface TastyCaseResult {
 
 export type TastyCaseSpec = StationSpec<TastyCaseResult>
 
+/**
+ * The `P` projector for test walks, shaped like reference-core's. A walk passes `displayMembersOf`, so the read shares
+ * that walk's path and budget; a direct call without it reads the public entry.
+ */
 export async function projectTestTypeParameterMembers(
   api: TastyApi,
-  name: string
+  name: string,
+  displayMembersOf: (symbol: TastySymbol) => Promise<TastyMember[]> = symbol =>
+    symbol.getDisplayMembers()
 ): Promise<TastyMember[] | undefined> {
   if (name !== 'P') return undefined
 
@@ -77,7 +83,7 @@ export async function projectTestTypeParameterMembers(
         'SystemProperties'
       )
       if (projectedSymbol) {
-        return projectedSymbol.getDisplayMembers()
+        return displayMembersOf(projectedSymbol)
       }
     } catch {
       // Keep trying narrower library scopes before falling back to a bare lookup.
@@ -86,7 +92,7 @@ export async function projectTestTypeParameterMembers(
 
   try {
     const projectedSymbol = await api.loadSymbolByName('SystemProperties')
-    return projectedSymbol.getDisplayMembers()
+    return displayMembersOf(projectedSymbol)
   } catch {
     return undefined
   }
@@ -122,8 +128,8 @@ async function executeTastyCompilation(ctx: StationContext): Promise<TastyCaseRe
   const api = createTastyApi({
     manifestPath: path.join(runtimeDir, 'manifest.js'),
     preferredExternalLibraries: TEST_PREFERRED_EXTERNAL_LIBRARIES,
-    projectTypeParameterMembers: ({ api: a, reference }) =>
-      projectTestTypeParameterMembers(a, reference.name),
+    projectTypeParameterMembers: ({ api: a, reference, displayMembersOf }) =>
+      projectTestTypeParameterMembers(a, reference.name, displayMembersOf),
   })
   await api.ready()
 
@@ -211,7 +217,8 @@ export function createCaseApi(
       overrides.preferredExternalLibraries ?? TEST_PREFERRED_EXTERNAL_LIBRARIES,
     projectTypeParameterMembers:
       overrides.projectTypeParameterMembers ??
-      (({ api, reference }) => projectTestTypeParameterMembers(api, reference.name)),
+      (({ api, reference, displayMembersOf }) =>
+        projectTestTypeParameterMembers(api, reference.name, displayMembersOf)),
     ...overrides,
   })
 }
