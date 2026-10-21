@@ -1,0 +1,121 @@
+---
+title: Style HTML you don't control
+section: Guides
+group: Styling
+order: 50
+slug: style-html-you-dont-control
+description: Style Markdown, CMS and other injected HTML with global rules and your tokens.
+---
+
+# Style HTML you don't control
+
+Rendered Markdown, CMS content and `dangerouslySetInnerHTML` output arrive as
+plain elements you can't put props or classes on. Style them with
+`globalCss()` rules scoped under one wrapper element.
+
+<Step n={1}>Wrap the content</Step>
+
+Give the element that holds the content a class or a data attribute:
+
+```tsx
+import { Article } from '@reference-ui/react'
+
+export function Post({ html }: { html: string }) {
+  return (
+    <Article
+      className="prose"
+      maxWidth="70ch"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  )
+}
+```
+
+The children need no classes. With a data attribute such as `data-prose`,
+key the rules on `'[data-prose]'` instead of `'.prose'`.
+
+<Step n={2}>Scope rules under the wrapper</Step>
+
+Write one rule for the wrapper and nest the elements inside it with `&`:
+
+```ts
+// src/theme/prose.ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  '.prose': {
+    color: 'design.text.base',
+    fontSize: '4r',
+    lineHeight: 1.6,
+    '& > *': { marginBlock: 0 },
+    '& > * + *': { marginTop: '4r' },
+    '& h2': { fontSize: '6r', fontWeight: 600, marginTop: '10r' },
+    '& h3': { fontSize: '5r', fontWeight: 600, marginTop: '8r' },
+    '& ul, & ol': { paddingLeft: '5r' },
+    '& a': {
+      color: 'design.accent.foreground',
+      _hover: { color: 'design.accent.hover' },
+    },
+    '& blockquote': {
+      color: 'design.text.light',
+      borderLeft: '4px solid {colors.design.accent.border}',
+      paddingLeft: '4r',
+    },
+  },
+})
+```
+
+`'& h2'` prints `.prose h2`, so the rules reach only content inside the
+wrapper. Values work as in `css()`: token names, `{…}` references inside a
+longer value, and rhythm units such as `4r`. The colours here are lib's
+[semantic tokens](/color#semantic-tokens) and follow light and dark mode.
+
+<Step n={3}>Set the density</Step>
+
+Every `r` value is a multiple of `--spacing-root`. Set it on the wrapper to
+scale the whole article's type and spacing together:
+
+```ts
+globalCss({
+  '.prose': { '--spacing-root': '0.28rem' },
+})
+```
+
+## Respond to the container
+
+An `@container` key inside a rule follows the width of the nearest container,
+as style props do:
+
+```ts
+globalCss({
+  '.prose': {
+    '& h2': {
+      fontSize: '5r',
+      '@container (min-width: 768px)': { fontSize: '6r' },
+    },
+  },
+})
+```
+
+Breakpoint keys such as `md` also work in `globalCss()`, but there they print
+`@media` queries on the viewport. See
+[Global CSS](/global-css#breakpoints).
+
+## Where the rules sit
+
+These rules go in the `global` layer, below recipes and utilities. A style
+prop on the wrapper, such as `maxWidth="70ch"` above,
+wins over the global rules with no `!important`. See
+[Cascade layers](/cascade-layers).
+
+Lib's element styles target the `ref-` classes its primitives render, so
+injected HTML takes only your rules and the [reset](/global-css#the-reset).
+Inline `code` is the exception: lib styles every `code` element.
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/global-css" title="Global CSS">Selectors, nesting, conditions and at-rules.</LinkCard>
+  <LinkCard href="/tokens" title="Tokens">Define and reference design tokens.</LinkCard>
+  <LinkCard href="/spacing" title="Spacing">The rhythm unit and `--spacing-root`.</LinkCard>
+</LinkCards>
