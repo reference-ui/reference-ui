@@ -34,9 +34,10 @@ export default defineConfig(() => {
               theme: { light: 'github-light', dark: 'github-dark' },
               keepBackground: false,
               defaultLang: 'plaintext',
-              // Inline code stays unhighlighted. Shiki would otherwise run on every inline
-              // span and compile each one to a dozen JSX nodes, which pushes a page past
-              // Babel's 500 KB deopt line in dev. The system's inline pill styles plain <code>.
+              // Inline code stays unhighlighted. Shiki would otherwise wrap every inline code
+              // span in three extra elements (a figure span, a line span and a token span),
+              // which pushes a page past Babel's 500 KB deopt line in dev. The system's inline
+              // pill styles plain <code>.
               bypassInlineCode: true,
             },
           ],
