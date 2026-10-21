@@ -2,16 +2,20 @@
 /**
  * Docs quality gate. It takes optional paths, walks the docs sources, and
  * runs two Biome passes (a failing error config and a loud warn config), a
- * strict TypeScript pass, a banned-suppression scan, and a file-length tier.
- * It prints one greppable finding per line and exits 0 (clean), 1 (findings),
- * or 2 (tooling missing). It is structural only; no formatting opinions.
+ * strict TypeScript pass, a banned-suppression scan, a file-length tier, and
+ * the MDX tier (compile, frontmatter, dashes, internal links). The tiers run
+ * side by side. It prints one greppable finding per line and exits 0 (clean),
+ * 1 (findings), or 2 (tooling missing). It is structural only; no formatting
+ * opinions.
  */
 import { execFile } from 'node:child_process'
-import { readdir, readFile, stat } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { mdxTier } from './mdx.mjs'
+import { walk } from './walk.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DOCS_DIR = path.dirname(path.dirname(HERE))
@@ -19,7 +23,6 @@ const CONFIG = path.join(HERE, 'biome.json')
 const WARN_CONFIG = path.join(HERE, 'biome.warn.json')
 const CODE_EXTS = new Set(['.ts', '.mts', '.cts', '.tsx', '.js', '.mjs', '.cjs', '.jsx'])
 const TYPE_EXTS = new Set(['.ts', '.mts', '.cts', '.tsx'])
-const SKIP_DIRS = new Set(['node_modules', 'dist', '.content-collections', '.reference-ui', '.git'])
 const ROOT_FILES = ['vite.config.ts', 'ui.config.ts']
 const FILE_FAIL = 500
 const FILE_WARN = 365
@@ -56,31 +59,16 @@ function parseArgs(argv) {
   }
 }
 
-async function walk(entry, out) {
-  let info
-  try {
-    info = await stat(entry)
-  } catch {
-    return
-  }
-  if (!info.isDirectory()) {
-    if (CODE_EXTS.has(path.extname(entry).toLowerCase())) out.add(path.resolve(entry))
-    return
-  }
-  if (SKIP_DIRS.has(path.basename(entry))) return
-  for (const kid of await readdir(entry)) await walk(path.join(entry, kid), out)
-}
-
 async function collect(paths) {
   if (paths.length) {
     const out = new Set()
-    for (const p of paths) await walk(p, out)
+    for (const p of paths) await walk(p, CODE_EXTS, out)
     return [...out].sort()
   }
   const out = new Set()
-  for (const file of ROOT_FILES) await walk(path.join(DOCS_DIR, file), out)
-  await walk(path.join(DOCS_DIR, 'src'), out)
-  await walk(path.join(DOCS_DIR, 'tools/quality'), out)
+  for (const file of ROOT_FILES) await walk(path.join(DOCS_DIR, file), CODE_EXTS, out)
+  await walk(path.join(DOCS_DIR, 'src'), CODE_EXTS, out)
+  await walk(path.join(DOCS_DIR, 'tools/quality'), CODE_EXTS, out)
   return [...out].sort()
 }
 
@@ -244,19 +232,24 @@ async function main() {
   }
   const files = await collect(paths)
   const texts = await readTexts(files)
-  let missing = null
-  const biome = await biomeTier(files)
-  missing = biome.missing
-  const tsc = await tscTier(files, paths.length === 0)
+  const [biome, tsc, mdx] = await Promise.all([
+    biomeTier(files),
+    tscTier(files, paths.length === 0),
+    mdxTier({ docsDir: DOCS_DIR, paths }),
+  ])
+  let missing = biome.missing
   missing = tsc.missing ?? missing
+  missing = mdx.missing ?? missing
   const length = fileLengthTier(files, texts)
   const suppressions = suppressionTier(files, texts)
-  const errors = [...suppressions, ...length.errors, ...biome.errors, ...tsc.errors]
+  const errors = [...suppressions, ...length.errors, ...biome.errors, ...tsc.errors, ...mdx.errors]
   const warnings = [...length.warnings, ...biome.warnings]
   const sorts = (a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : a.line - b.line)
   printGroup('suppressions', errors.filter(v => v.ruleId === 'docs/suppression').sort(sorts))
   printGroup('errors', errors.filter(v => v.ruleId !== 'docs/suppression').sort(sorts))
   printGroup('warnings (non-failing)', warnings.sort(sorts))
+  if (mdx.detail) console.log(`[docs-quality] mdx compiler did not load: ${mdx.detail}`)
+  console.log(`[docs-quality] mdx: ${mdx.pages} pages, ${mdx.errors.length} findings in ${mdx.ms}ms`)
   console.log(`[docs-quality] ${errors.length} errors, ${warnings.length} warnings, ${files.length} files in ${Date.now() - started}ms`)
   if (missing) {
     console.log(`[docs-quality] tooling missing: ${missing} is not installed; install dependencies and rerun.`)

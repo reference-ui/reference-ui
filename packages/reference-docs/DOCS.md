@@ -48,10 +48,13 @@ Flat and quiet, in the spirit of shadcn/ui:
 
 - Docs live in `src/content/docs/**/*.mdx`. Only `.mdx` is collected; other
   extensions are ignored.
-- Frontmatter contract: `title`, `section`, `order`, `slug`, and optional
-  `group` (a sub-section heading in the sidebar) and `description` (the page
-  header's lead). Pages and groups interleave in `order`; a group sits
-  where its lowest-order page would. Orders step by 10 so new pages slot in.
+- Frontmatter contract: `title`, `section`, `order` (a number), `slug`, and
+  `description` (the page header's lead), plus optional `group` (a sub-section
+  heading in the sidebar). The docs gate requires the first five. The
+  collection schema in `src/collections/docs.ts` still makes `description`
+  optional, so the gate is the stricter of the two. Pages and groups interleave
+  in `order`; a group sits where its lowest-order page would. Orders step by 10
+  so new pages slot in.
 - `src/collections/` owns schema, transforms, and slug-to-module lookup.
 - Vite owns MDX module loading; content-collections owns metadata only.
 

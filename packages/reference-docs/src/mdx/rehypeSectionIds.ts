@@ -1,7 +1,7 @@
 // Rehype pass assigning ids to MDX section headings.
 // It takes the hast tree and emits it with slugs both the heading components and the
 // outline agree on. It must match slug.ts or anchors break.
-import { slugify } from './slug'
+import { slugify } from './slug.ts'
 
 /**
  * Rehype pass that keeps `###` ids unique on a page. A sub-heading whose slug

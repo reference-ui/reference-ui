@@ -7,42 +7,14 @@ import { fileURLToPath } from 'node:url'
 import contentCollections from '@content-collections/vite'
 import react from '@vitejs/plugin-react'
 import mdx from '@mdx-js/rollup'
-import rehypePrettyCode from 'rehype-pretty-code'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
-import { rehypeSectionIds } from './src/mdx/rehypeSectionIds'
+// The MDX plugin list lives in src/mdx/pipeline.ts, where the docs quality gate reads it too.
+import { mdxOptions } from './src/mdx/pipeline'
 
 export default defineConfig(() => {
   const plugins: PluginOption[] = [
     {
       enforce: 'pre' as const,
-      ...mdx({
-        providerImportSource: '@mdx-js/react',
-        // Pages are `.mdx` only. Plain `.md` stays text, so the repo-root
-        // INSTALL.md can be imported with `?raw` for the install prompt.
-        mdExtensions: [],
-        // remark-frontmatter teaches the parser the `---` block so it never
-        // leaks into the document. We deliberately stop there: exporting it as
-        // `frontmatter` is content-collections' job, and a non-component export
-        // makes every MDX module Fast Refresh incompatible.
-        remarkPlugins: [remarkGfm, remarkFrontmatter],
-        rehypePlugins: [
-          rehypeSectionIds,
-          [
-            rehypePrettyCode,
-            {
-              theme: { light: 'github-light', dark: 'github-dark' },
-              keepBackground: false,
-              defaultLang: 'plaintext',
-              // Inline code stays unhighlighted. Shiki would otherwise wrap every inline code
-              // span in three extra elements (a figure span, a line span and a token span),
-              // which pushes a page past Babel's 500 KB deopt line in dev. The system's inline
-              // pill styles plain <code>.
-              bypassInlineCode: true,
-            },
-          ],
-        ],
-      }),
+      ...mdx(mdxOptions),
     },
     contentCollections({ configPath: 'src/collections/content-collections.ts' }),
     react({ include: /\.(mdx|js|jsx|ts|tsx)$/ }),
