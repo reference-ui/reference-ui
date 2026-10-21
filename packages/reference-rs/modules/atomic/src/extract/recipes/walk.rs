@@ -89,15 +89,18 @@ fn handle_recipe_property(walk: &mut RecipeWalk<'_, '_>, prop: &ObjectProperty<'
         return;
     };
     match key.as_str() {
-        "base" => {
-            if let Some(wants) = walk.style_at(&prop.value) {
-                walk.draft.base.extend(wants);
-            }
-        }
+        "base" => handle_recipe_base(walk, &prop.value),
         "variants" => handle_recipe_variants(walk, &prop.value),
         "defaultVariants" => handle_recipe_defaults(&prop.value, walk.draft),
         "compoundVariants" => handle_recipe_compounds(walk, &prop.value),
         _ => {}
+    }
+}
+
+/// Wants for the base block: the whole object, or the slot's entry when slotted.
+fn handle_recipe_base(walk: &mut RecipeWalk<'_, '_>, val: &Expression<'_>) {
+    if let Some(wants) = walk.style_at(val) {
+        walk.draft.base.extend(wants);
     }
 }
 
