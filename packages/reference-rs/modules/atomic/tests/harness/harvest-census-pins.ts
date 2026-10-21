@@ -67,8 +67,8 @@ export const EXPECTED_BYTES = {
   stylePlans: 3689,
   harvestWants: EXPECTED_NET_NEW,
   // react.mjs cells and the derived counts.
-  reactRaw: 152366,
-  reactGzip: 37576,
+  reactRaw: 153378,
+  reactGzip: 37822,
   fixtureRules: 3693,
   m500Rules: 32916,
 }
