@@ -1,6 +1,8 @@
 // MDX element mapping: docs visual system for rendered pages.
 // It takes nothing and emits the provider component map (headings, lists, code, links) that
-// turns MDX output into docs chrome. This is rendering policy, not generic shared UI.
+// turns MDX output into docs chrome. Links to another docs page go through the router with their
+// #section hash kept; external and same-page links stay plain anchors. This is rendering policy,
+// not generic shared UI.
 import type { AnchorHTMLAttributes } from 'react'
 import type { MDXComponents } from 'mdx/types'
 import { Link } from '@tanstack/react-router'
@@ -23,6 +25,7 @@ import { MdxH1, MdxH2, MdxH3, MdxH4, Step, type MdxProps } from './headings'
 import { Install } from './Install'
 import { InstallPrompt } from './InstallPrompt'
 import { LinkCard, LinkCards } from './LinkCards'
+import { splitLinkHash } from './linkHash'
 
 const linkClass = css({
   color: 'docsHighlight',
@@ -51,10 +54,11 @@ function MdxLink({ href = '', children, ...rest }: AnchorHTMLAttributes<HTMLAnch
       </a>
     )
   }
-  const slug = href.replace(/^\//, '')
+  const { path, hash } = splitLinkHash(href)
+  const slug = path.replace(/^\//, '')
   if (slug === '') {
     return (
-      <Link to="/" className={linkClass} {...rest}>
+      <Link to="/" hash={hash} className={linkClass} {...rest}>
         {children}
       </Link>
     )
@@ -67,7 +71,7 @@ function MdxLink({ href = '', children, ...rest }: AnchorHTMLAttributes<HTMLAnch
     )
   }
   return (
-    <Link to="/$slug" params={{ slug }} className={linkClass} {...rest}>
+    <Link to="/$slug" params={{ slug }} hash={hash} className={linkClass} {...rest}>
       {children}
     </Link>
   )

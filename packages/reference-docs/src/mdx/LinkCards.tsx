@@ -1,10 +1,11 @@
 // Card grid for page-level navigation links.
 // They take hrefs plus titles and emit the LinkCards group and LinkCard entries MDX pages
-// use for next-step links.
+// use for next-step links. A card href may carry a #section hash, which the router keeps.
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Div, css } from '@reference-ui/react'
 import { ArrowForwardIcon } from '@reference-ui/lib'
+import { splitLinkHash } from './linkHash'
 
 /**
  * A grid of ghost link cards for "next steps" blocks at the end of a page.
@@ -63,15 +64,16 @@ export function LinkCards({ children }: { children: ReactNode }) {
 }
 
 interface LinkCardProps {
-  /** A docs page path, such as `/global-css`. */
+  /** A docs page path, such as `/global-css`, optionally with a `#section` hash. */
   href: string
   title: string
   children: ReactNode
 }
 
 export function LinkCard({ href, title: label, children }: LinkCardProps) {
+  const { path, hash } = splitLinkHash(href)
   return (
-    <Link to="/$slug" params={{ slug: href.replace(/^\//, '') }} className={card}>
+    <Link to="/$slug" params={{ slug: path.replace(/^\//, '') }} hash={hash} className={card}>
       <span className={title}>
         {label}
         <span data-card-arrow className={arrow}>
