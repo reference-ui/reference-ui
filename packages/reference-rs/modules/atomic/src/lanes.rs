@@ -5,16 +5,22 @@
 //! [`MAX_AUTO_LANES`] lanes. The [`PoolGuard`] a spawning phase holds is `!Send + !Sync`,
 //! so worker closures cannot capture it and pool-inside-pool fails to compile; same-thread
 //! re-entry panics on the in-flight flag instead of oversubscribing. Lane threads come from [`spawn_lane`],
-//! which gives each one [`LANE_STACK`], so a deep program has room inside its lane.
+//! which gives each one [`LANE_STACK`], so a deep program has room inside its lane. A lane start the OS
+//! refuses (strict overcommit or a tight ulimit) retries at half that stack, down to [`LANE_STACK_FLOOR`].
 
 use std::any::Any;
 use std::cell::Cell;
+use std::io;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex, PoisonError};
 use std::thread::{Builder, Scope, ScopedJoinHandle};
 
 /// Stack for each spawned lane: deep input recursion stays inside its lane instead of overflowing the 2 MiB default.
 pub(crate) const LANE_STACK: usize = 64 << 20;
+
+/// Smallest stack a refused lane start retries at. Halving stops here, so a start refused at this size panics.
+const LANE_STACK_FLOOR: usize = 8 << 20;
 
 /// Styling files below this count never leave the caller (front phase).
 pub(crate) const FRONT_SERIAL_BELOW: usize = 64;
@@ -139,16 +145,86 @@ std::thread_local! {
     static IN_FLIGHT: Cell<bool> = const { Cell::new(false) };
 }
 
-/// Spawn one lane inside `scope` on a thread with [`LANE_STACK`]. Like [`Scope::spawn`], a thread the OS
-/// refuses panics; the native containment turns that panic into a JS error.
+/// Spawn one lane inside `scope` on a thread with [`LANE_STACK`]. A refused start retries at half the stack,
+/// down to [`LANE_STACK_FLOOR`]; a start refused at the floor panics, naming the last stack tried, and the
+/// native containment turns that panic into a JS error.
 pub(crate) fn spawn_lane<'scope, 'env, T: Send + 'scope>(
     scope: &'scope Scope<'scope, 'env>,
     body: impl FnOnce() -> T + Send + 'scope,
 ) -> ScopedJoinHandle<'scope, T> {
-    Builder::new()
-        .stack_size(LANE_STACK)
-        .spawn_scoped(scope, body)
+    spawn_with_fallback(scope, LANE_STACK, Builder::new, body)
         .unwrap_or_else(|err| panic!("cores: lane thread did not start: {err}"))
+}
+
+/// Spawns `body` inside `scope` with `stack` bytes, retrying each refusal at half the size until the floor.
+/// The body is parked in a shared slot, because a refused start drops its closure unrun.
+fn spawn_with_fallback<'scope, 'env, T: Send + 'scope>(
+    scope: &'scope Scope<'scope, 'env>,
+    stack: usize,
+    builder: impl Fn() -> Builder,
+    body: impl FnOnce() -> T + Send + 'scope,
+) -> io::Result<ScopedJoinHandle<'scope, T>> {
+    let parked = Arc::new(Mutex::new(Some(body)));
+    let mut size = stack;
+    loop {
+        let source = match start_parked(scope, &builder, size, &parked) {
+            Ok(handle) => return Ok(handle),
+            Err(source) => source,
+        };
+        size = next_size(size).ok_or_else(|| named(source, size))?;
+    }
+}
+
+/// Half of `size` while that stays at or above [`LANE_STACK_FLOOR`]; `None` once the floor was tried.
+fn next_size(size: usize) -> Option<usize> {
+    (size / 2 >= LANE_STACK_FLOOR).then_some(size / 2)
+}
+
+/// One start at `size`. Its closure takes the parked body on the new thread, so a refused start leaves
+/// the body in the slot for the next size.
+fn start_parked<'scope, 'env, T: Send + 'scope, F: FnOnce() -> T + Send + 'scope>(
+    scope: &'scope Scope<'scope, 'env>,
+    builder: &impl Fn() -> Builder,
+    size: usize,
+    parked: &Arc<Mutex<Option<F>>>,
+) -> io::Result<ScopedJoinHandle<'scope, T>> {
+    let slot = Arc::clone(parked);
+    start_thread(scope, builder, size, move || take_and_run(&slot))
+}
+
+/// Takes the parked body and runs it on the thread whose start succeeded. Only that thread ever takes it,
+/// so the slot is still full when the closure runs.
+fn take_and_run<F: FnOnce() -> T, T>(slot: &Mutex<Option<F>>) -> T {
+    let parked = slot.lock().unwrap_or_else(PoisonError::into_inner).take();
+    match parked {
+        Some(body) => body(),
+        None => unreachable!("a parked body is taken once, by the thread that started"),
+    }
+}
+
+/// One OS spawn at `stack` bytes. Under test a switch can refuse it before the OS is asked.
+fn start_thread<'scope, 'env, T: Send + 'scope>(
+    scope: &'scope Scope<'scope, 'env>,
+    builder: &impl Fn() -> Builder,
+    stack: usize,
+    body: impl FnOnce() -> T + Send + 'scope,
+) -> io::Result<ScopedJoinHandle<'scope, T>> {
+    #[cfg(test)]
+    if tests::test_refusal(stack) {
+        return Err(io::Error::new(
+            io::ErrorKind::OutOfMemory,
+            "injected refusal",
+        ));
+    }
+    builder().stack_size(stack).spawn_scoped(scope, body)
+}
+
+/// Keeps the refusal's kind and says which stack was the last one tried.
+fn named(source: io::Error, stack: usize) -> io::Error {
+    io::Error::new(
+        source.kind(),
+        format!("{source} (last stack tried: {} MiB)", stack >> 20),
+    )
 }
 
 /// The text of a panic payload: `panic!` yields a `&str` or a `String`, anything else a placeholder.
