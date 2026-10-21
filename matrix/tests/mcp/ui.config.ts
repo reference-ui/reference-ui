@@ -21,5 +21,4 @@ export default defineConfig({
     include: ['src/**/*.{ts,tsx}'],
     exclude: ['**/node_modules/**', '.reference-ui/**', 'tests/**'],
   },
-  debug: false,
 })

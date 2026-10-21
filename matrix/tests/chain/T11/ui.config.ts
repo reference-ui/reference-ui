@@ -18,5 +18,4 @@ export default defineConfig({
   name: 'chain-t11',
   include: ['src/**/*.{ts,tsx}'],
   extends: [chain1, chain2],
-  debug: false,
 })

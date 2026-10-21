@@ -22,5 +22,4 @@ export default defineConfig({
   include: ['src/**/*.{ts,tsx}'],
   extends: [branchC],
   layers: [branchB],
-  debug: false,
 })

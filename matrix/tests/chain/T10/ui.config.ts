@@ -20,5 +20,4 @@ export default defineConfig({
   include: ['src/**/*.{ts,tsx}'],
   extends: [metaExtend],
   layers: [layerW],
-  debug: false,
 })

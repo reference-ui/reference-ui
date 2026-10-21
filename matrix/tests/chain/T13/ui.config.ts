@@ -20,5 +20,4 @@ export default defineConfig({
   include: ['src/**/*.{ts,tsx}'],
   extends: [chain1, chain2],
   layers: [layerW],
-  debug: false,
 })

@@ -23,5 +23,4 @@ export default defineConfig({
   include: ['src/**/*.{ts,tsx}'],
   extends: [baseSystem],
   layers: [baseSystem],
-  debug: false,
 })

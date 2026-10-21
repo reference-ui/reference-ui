@@ -9,7 +9,6 @@ export default defineConfig({
   extends: [baseSystem],
   include: ['src/**/*.{ts,tsx,mdx}'],
   normalizeCss: true,
-  debug: false,
   mcp: {
     include: ['@reference-ui/lib'],
   },

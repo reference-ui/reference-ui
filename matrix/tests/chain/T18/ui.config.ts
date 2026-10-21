@@ -33,5 +33,4 @@ export default defineConfig({
   include: ['src/**/*.{ts,tsx}'],
   extends: [libSystem, primitiveNamedSystem],
   layers: [iconsSystem],
-  debug: false,
 })

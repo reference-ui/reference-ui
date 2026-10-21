@@ -133,7 +133,6 @@ export interface ReferenceUIConfig {
   jsxElements?: string[]
   staticCss?: Record<string, string[]>
   normalizeCss?: boolean
-  debug?: boolean
   logs?: LogChannel[]
 }
 export declare function defineConfig(config: ReferenceUIConfig): ReferenceUIConfig

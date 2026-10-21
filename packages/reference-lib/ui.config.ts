@@ -66,7 +66,6 @@ export default defineConfig({
   // src/** are unaffected (they were already backed), and the non-style
   // channels (size/style/className/native props) keep working as before.
   layers: [iconsBaseSystem],
-  debug: false,
   // Hosts come from import provenance and StyleTrace alone; nothing is
   // registered by name.
 })

@@ -17,5 +17,4 @@ export default defineConfig({
   name: 'primitive-named-library',
   include: ['src/**/*.{ts,tsx}'],
   extends: [],
-  debug: false,
 })

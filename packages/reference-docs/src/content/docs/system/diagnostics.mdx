@@ -77,8 +77,9 @@ export default defineConfig({
 ```
 
 They join the warning count and print under `--verbose` with the
-`[compiler]` tag. `debug: true` turns on debug logging for sync itself and
-does not add these diagnostics. See [Config](/config#diagnostics).
+`[compiler]` tag. See [Config](/config#diagnostics). To trace the file events
+watch mode receives, run `ref sync --watch --debug`; it does not add these
+diagnostics.
 
 ## JSON output
 

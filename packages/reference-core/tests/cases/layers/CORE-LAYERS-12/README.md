@@ -1,8 +1,8 @@
 # CORE-LAYERS-12 — a consumer config using layers, strict, staticCss and logs typechecks against the generated ReferenceUIConfig
 
 The generated `@reference-ui/system` entry carries the `ReferenceUIConfig` that a consumer's
-`defineConfig` call is checked against. It declared only `name`, `include`, `extends`, `jsxElements`,
-`normalizeCss` and `debug`, so a consumer writing `layers`, `strict`, `staticCss` or `logs` got TS2353.
+`defineConfig` call is checked against. It declared only `name`, `include`, `extends`, `jsxElements`
+and `normalizeCss`, so a consumer writing `layers`, `strict`, `staticCss` or `logs` got TS2353.
 The generated type now carries all four, typed as in the config types.
 
 The runner syncs the world for real. The spec then typechecks two consumers with `tsc --noEmit`, each in

@@ -12,5 +12,4 @@ export default defineConfig({
   include: ['src/**/*.{ts,tsx}'],
   extends: [],
   layers: [iconsSystem],
-  debug: false,
 })

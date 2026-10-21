@@ -19,5 +19,4 @@ export default defineConfig({
   name: 'chain-t7',
   include: ['src/**/*.{ts,tsx}'],
   extends: [metaExtend, metaExtendSibling],
-  debug: false,
 })

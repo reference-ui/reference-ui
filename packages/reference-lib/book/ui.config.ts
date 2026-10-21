@@ -17,5 +17,4 @@ export default defineConfig({
   include: ['../src/**/*.{ts,tsx}', '!../src/index.ts', '**/*.{ts,tsx}', '!ui.config.ts'],
   extends: [],
   layers: [iconsBaseSystem],
-  debug: false,
 })

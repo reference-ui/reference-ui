@@ -37,5 +37,4 @@ export default defineConfig({
   include: ['src/**/*.{ts,tsx}'],
   extends: [libSystem],
   layers: [aliasedHostSystem],
-  debug: false,
 })

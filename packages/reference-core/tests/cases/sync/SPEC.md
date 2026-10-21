@@ -8,7 +8,7 @@ folder; every other group's worlds sync through it.
 ## Dialect
 
 The author writes `ui.config.ts` (`name`, `include`, `extends?`,
-`jsxElements?`, `normalizeCss?`, `debug?`) plus fragment sources
+`jsxElements?`, `normalizeCss?`) plus fragment sources
 (`tokens()`, `font()`, `keyframes()`, `globalCss()`).
 Unknown config keys pass through unvalidated (retired reference-core parity). There is no
 author `outdir` field; output is always `.reference-ui/`.

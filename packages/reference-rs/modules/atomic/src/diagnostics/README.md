@@ -21,7 +21,7 @@ Two audiences, two result fields, one switch:
   does not clear that bar — dynamic refusals, partial assembly, spreads,
   harvest telemetry, dead branches, coverage observations, analysis
   limits. Unknown channel names are ignored so channels evolve
-  additively; `debug: true` never enables this channel.
+  additively; `logs: ['compiler']` is the only switch for this channel.
 
 Silence is a valid result: no exact absent key, no userspace warning.
 An exact key emitted because of another file, site, or harvest still
@@ -137,4 +137,4 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
   provenance on the file's shared bindings, never its own package list.
 - Rename a code once a golden pins it; extend the table instead.
 - Emit a diagnostic without a code; the constructors require one.
-- Alias `debug: true` to the compiler channel.
+- Enable the compiler channel from anything but `logs: ['compiler']`.

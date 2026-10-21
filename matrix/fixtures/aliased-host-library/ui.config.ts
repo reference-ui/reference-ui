@@ -16,5 +16,4 @@ export default defineConfig({
   name: 'aliased-host-library',
   include: ['src/**/*.{ts,tsx}'],
   extends: [],
-  debug: false,
 })

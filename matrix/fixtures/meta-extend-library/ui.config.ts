@@ -12,5 +12,4 @@ export default defineConfig({
   name: 'meta-extend-library',
   include: ['src/**/*.{ts,tsx}'],
   extends: [extendLibrary],
-  debug: false,
 })

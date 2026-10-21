@@ -9,5 +9,4 @@ export default defineConfig({
   name: 'layer-library-2',
   include: ['src/**/*.{ts,tsx}'],
   extends: [],
-  debug: false,
 })

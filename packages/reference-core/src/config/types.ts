@@ -80,18 +80,11 @@ export interface ReferenceUIConfig {
   normalizeCss?: boolean
 
   /**
-   * Enable debug logging.
-   * @default false
-   */
-  debug?: boolean
-
-  /**
    * Opt-in diagnostic channels for the compiler backchannel.
    * Omit or pass `[]` for userspace diagnostics only; `['compiler']`
    * returns compiler telemetry in `compilerDiagnostics`, counted in the
    * one-line warning summary and listed behind the compiler tag under
-   * --verbose. Unrelated to `debug`, which stays the
-   * JS infrastructure logger and never implies this channel.
+   * --verbose. This is the only switch for the compiler channel.
    */
   logs?: LogChannel[]
 

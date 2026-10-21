@@ -14,5 +14,4 @@ export default defineConfig({
   name: 'chain-t1',
   include: ['src/**/*.{ts,tsx}'],
   extends: [baseSystem],
-  debug: false,
 })
