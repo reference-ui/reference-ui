@@ -80,6 +80,19 @@ fn visible_stars_answer_before_opaque_ones() {
 }
 
 #[test]
+fn star_cycle_cut_still_reaches_a_later_star_origin() {
+    let graph = graph(&[
+        ("src/a.ts", "export * from './b'\n"),
+        ("src/b.ts", "export * from './a'\nexport * from './c'\n"),
+        ("src/c.ts", "export { css } from '@reference-ui/react'\n"),
+    ]);
+    assert_eq!(
+        graph.trace_origin("src/app.tsx", "./a", "css"),
+        Origin::Reference
+    );
+}
+
+#[test]
 fn reexported_namespaces_take_their_module_origin() {
     let graph = graph(&[(
         "src/index.ts",

@@ -107,6 +107,20 @@ fn re_export_cycle_terminates_empty() {
 }
 
 #[test]
+fn star_cycle_cut_still_reaches_a_later_star() {
+    // a and b star-export each other; the cut on b's star back to a must not stop b's walk to c.
+    let graph = graph(&[
+        ("src/a.ts", "export * from './b'\n"),
+        ("src/b.ts", "export * from './a'\nexport * from './c'\n"),
+        ("src/c.ts", "export { css } from '@reference-ui/react'\n"),
+    ]);
+    assert_eq!(
+        graph.trace_reference_export("src/app.tsx", "./a", "css"),
+        Some("css".to_string())
+    );
+}
+
+#[test]
 fn missing_export_and_missing_file_answer_none() {
     let graph = graph(&[("src/ui.ts", "export const other = 1\n")]);
     assert_eq!(

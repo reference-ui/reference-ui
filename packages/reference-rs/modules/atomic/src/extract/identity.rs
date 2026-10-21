@@ -5,8 +5,9 @@
 //! '@reference-ui/react'`) carries site identity to its importers with zero
 //! config, replacing Panda's `importMap`. The walk follows named
 //! re-exports, local re-exports of imports, and star re-exports across
-//! project files with a cycle guard; a consumer declaration anywhere on the
-//! path ends the walk. Specifier probing here is relative-only and minimal —
+//! project files, entering each `(file, name)` once per query so an export
+//! cycle costs one visit; a consumer declaration anywhere on the path ends
+//! the walk. Specifier probing here is relative-only and minimal —
 //! the Ph4 resolver (ATM-SITE-54) subsumes it when it lands. The origin walk
 //! (`origin`) reuses these maps to name where any import ends: Reference, a
 //! project declaration, or an installed package.
@@ -15,7 +16,7 @@ use std::cell::RefCell;
 use std::sync::Arc;
 
 use oxc_ast::ast::Program;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use super::bindings::is_reference_package;
 use super::identity_map::{collect_map, parse_export_map, ExportMap, NamedTarget};
@@ -44,6 +45,17 @@ struct Hop<'a> {
 struct RelativeRef<'a> {
     path: &'a str,
     dir_only: bool,
+}
+
+/// The `(file, name)` nodes one identity query has entered: still walking, or fully walked.
+type Visited = FxHashSet<(String, String)>;
+
+/// Claim `query`'s node for this walk. A node already entered answers no at
+/// once: it is still on the walk (a cycle cut) or fully walked. A fully walked
+/// node reaches a hit only through a node still on the walk, and that node is
+/// refused on re-entry too, so skipping the revisit changes no answer.
+fn enter(visited: &mut Visited, query: &Query) -> bool {
+    visited.insert((query.file.to_string(), query.name.to_string()))
 }
 
 /// Project file index plus memoized export maps: everything the identity walk reads.
@@ -127,7 +139,7 @@ impl<'s> IdentityGraph<'s> {
             file: &target,
             name: imported,
         };
-        self.trace(&query, &mut Vec::new())
+        self.trace(&query, &mut Visited::default())
     }
 
     /// The defining file and local name one import resolves to, if traceable.
@@ -150,23 +162,15 @@ impl<'s> IdentityGraph<'s> {
             file: &target,
             name: imported,
         };
-        self.trace_terminal(&query, &mut Vec::new())
+        self.trace_terminal(&query, &mut Visited::default())
     }
 
-    /// Follow named exports, then star re-exports, with `stack` as the cycle guard.
-    fn trace_terminal(
-        &self,
-        query: &Query,
-        stack: &mut Vec<(String, String)>,
-    ) -> Option<(String, String)> {
-        let key = (query.file.to_string(), query.name.to_string());
-        if stack.contains(&key) {
+    /// Follow named exports, then star re-exports; a node already entered answers none.
+    fn trace_terminal(&self, query: &Query, visited: &mut Visited) -> Option<(String, String)> {
+        if !enter(visited, query) {
             return None;
         }
-        stack.push(key);
-        let found = self.trace_terminal_inner(query, stack);
-        stack.pop();
-        found
+        self.trace_terminal_inner(query, visited)
     }
 
     /// One terminal step: hops follow, declarations name their local, unknown
@@ -175,16 +179,16 @@ impl<'s> IdentityGraph<'s> {
     fn trace_terminal_inner(
         &self,
         query: &Query,
-        stack: &mut Vec<(String, String)>,
+        visited: &mut Visited,
     ) -> Option<(String, String)> {
         let map = self.export_map(query.file)?;
         if let Some(hop) = named_hop(&map, query.name) {
-            return self.follow_terminal_hop(query.file, &hop, stack);
+            return self.follow_terminal_hop(query.file, &hop, visited);
         }
         match map.named_target(query.name) {
             Some(NamedTarget::Local(local)) => Some((query.file.to_string(), local.to_string())),
             Some(NamedTarget::Opaque) => Some((query.file.to_string(), query.name.to_string())),
-            _ => self.follow_terminal_stars(query, &map, stack),
+            _ => self.follow_terminal_stars(query, &map, visited),
         }
     }
 
@@ -194,7 +198,7 @@ impl<'s> IdentityGraph<'s> {
         &self,
         from: &str,
         hop: &Hop,
-        stack: &mut Vec<(String, String)>,
+        visited: &mut Visited,
     ) -> Option<(String, String)> {
         if is_reference_package(hop.specifier) {
             return None;
@@ -205,7 +209,7 @@ impl<'s> IdentityGraph<'s> {
                 file: &target,
                 name: hop.imported,
             },
-            stack,
+            visited,
         )
     }
 
@@ -215,7 +219,7 @@ impl<'s> IdentityGraph<'s> {
         &self,
         query: &Query,
         map: &ExportMap,
-        stack: &mut Vec<(String, String)>,
+        visited: &mut Visited,
     ) -> Option<(String, String)> {
         if query.name == "default" {
             return None;
@@ -228,44 +232,35 @@ impl<'s> IdentityGraph<'s> {
                 specifier: star,
                 imported: query.name,
             };
-            if let Some(found) = self.follow_terminal_hop(query.file, &hop, stack) {
+            if let Some(found) = self.follow_terminal_hop(query.file, &hop, visited) {
                 return Some(found);
             }
         }
         None
     }
 
-    /// Follow named exports, then star re-exports, with `stack` as the cycle guard.
-    fn trace(&self, query: &Query, stack: &mut Vec<(String, String)>) -> Option<String> {
-        let key = (query.file.to_string(), query.name.to_string());
-        if stack.contains(&key) {
+    /// Follow named exports, then star re-exports; a node already entered answers none.
+    fn trace(&self, query: &Query, visited: &mut Visited) -> Option<String> {
+        if !enter(visited, query) {
             return None;
         }
-        stack.push(key);
-        let found = self.trace_inner(query, stack);
-        stack.pop();
-        found
+        self.trace_inner(query, visited)
     }
 
     /// One trace step: a hop follows, an opaque export stops, an unknown name tries the stars.
-    fn trace_inner(&self, query: &Query, stack: &mut Vec<(String, String)>) -> Option<String> {
+    fn trace_inner(&self, query: &Query, visited: &mut Visited) -> Option<String> {
         let map = self.export_map(query.file)?;
         if let Some(hop) = named_hop(&map, query.name) {
-            return self.follow_hop(query.file, &hop, stack);
+            return self.follow_hop(query.file, &hop, visited);
         }
         if map.named_target(query.name).is_some() {
             return None;
         }
-        self.follow_stars(query, &map, stack)
+        self.follow_stars(query, &map, visited)
     }
 
     /// Resolve one hop: a Reference source terminates, a project file recurses.
-    fn follow_hop(
-        &self,
-        from: &str,
-        hop: &Hop,
-        stack: &mut Vec<(String, String)>,
-    ) -> Option<String> {
+    fn follow_hop(&self, from: &str, hop: &Hop, visited: &mut Visited) -> Option<String> {
         if is_reference_package(hop.specifier) {
             return Some(hop.imported.to_string());
         }
@@ -275,7 +270,7 @@ impl<'s> IdentityGraph<'s> {
                 file: &target,
                 name: hop.imported,
             },
-            stack,
+            visited,
         )
     }
 
@@ -285,7 +280,7 @@ impl<'s> IdentityGraph<'s> {
         &self,
         query: &Query,
         map: &ExportMap,
-        stack: &mut Vec<(String, String)>,
+        visited: &mut Visited,
     ) -> Option<String> {
         if query.name == "default" {
             return None;
@@ -298,7 +293,7 @@ impl<'s> IdentityGraph<'s> {
                 specifier: star,
                 imported: query.name,
             };
-            if let Some(found) = self.follow_hop(query.file, &hop, stack) {
+            if let Some(found) = self.follow_hop(query.file, &hop, visited) {
                 return Some(found);
             }
         }

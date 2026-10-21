@@ -92,6 +92,19 @@ fn binding_terminal_cycle_answers_none() {
 }
 
 #[test]
+fn binding_terminal_cycle_cut_still_reaches_a_later_star() {
+    let graph = graph(&[
+        ("src/a.ts", "export * from './b'\n"),
+        ("src/b.ts", "export * from './a'\nexport * from './c'\n"),
+        ("src/c.ts", "export const button = recipe({})\n"),
+    ]);
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "./a", "button"),
+        Some(("src/c.ts".to_string(), "button".to_string()))
+    );
+}
+
+#[test]
 fn binding_terminal_unknown_answers_none() {
     let graph = graph(&[("src/r.ts", "export const button = recipe({})\n")]);
     assert_eq!(

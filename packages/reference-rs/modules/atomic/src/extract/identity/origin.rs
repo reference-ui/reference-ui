@@ -2,17 +2,18 @@
 //! re-exports.
 //!
 //! [`IdentityGraph::trace_origin`] follows the same hops as the Reference
-//! walk (named re-exports, re-exported imports, star barrels, with a cycle
-//! guard) through relative, `tsconfig`-aliased and bare-specifier hops that
-//! land in compile sources, and names the terminal: a Reference export, a
-//! project declaration (`Local`), or the package directory a bare specifier
-//! resolved to, with its verdict (`Package`). A package that borrows this
-//! compile's own runtime answers `Local`. It reuses the memoized export maps
-//! and parses nothing new; a walk that cannot see the terminal answers `Local`.
+//! walk (named re-exports, re-exported imports, star barrels, each name
+//! entered once per query) through relative, `tsconfig`-aliased and
+//! bare-specifier hops that land in compile sources, and names the terminal:
+//! a Reference export, a project declaration (`Local`), or the package
+//! directory a bare specifier resolved to, with its verdict (`Package`). A
+//! package that borrows this compile's own runtime answers `Local`. It reuses
+//! the memoized export maps and parses nothing new; a walk that cannot see the
+//! terminal answers `Local`.
 
 use super::alias::BareHit;
 use super::paths::{named_hop, strip_relative};
-use super::{Hop, IdentityGraph, Query};
+use super::{enter, Hop, IdentityGraph, Query, Visited};
 use crate::extract::bindings::is_reference_package;
 use crate::extract::identity_map::{ExportMap, NamedTarget};
 use crate::extract::package_system::{DirVerdict, PackageTag};
@@ -94,7 +95,7 @@ impl IdentityGraph<'_> {
             specifier,
             imported,
         };
-        self.hop_origin(from_file, &hop, &mut Vec::new())
+        self.hop_origin(from_file, &hop, &mut Visited::default())
             .unwrap_or(Origin::Local)
     }
 
@@ -132,50 +133,41 @@ impl IdentityGraph<'_> {
     }
 
     /// One hop across a module boundary; `None` when nothing is visible.
-    fn hop_origin(
-        &self,
-        from: &str,
-        hop: &Hop,
-        stack: &mut Vec<(String, String)>,
-    ) -> Option<Origin> {
+    fn hop_origin(&self, from: &str, hop: &Hop, visited: &mut Visited) -> Option<Origin> {
         match self.locate(from, hop.specifier) {
             Located::Source(target) => self.origin_in(
                 &Query {
                     file: &target,
                     name: hop.imported,
                 },
-                stack,
+                visited,
             ),
             Located::Ends(origin) => Some(origin),
             Located::Missing => None,
         }
     }
 
-    /// Follow one exported name inside a project file, with `stack` as the cycle guard.
-    fn origin_in(&self, query: &Query, stack: &mut Vec<(String, String)>) -> Option<Origin> {
-        let key = (query.file.to_string(), query.name.to_string());
-        if stack.contains(&key) {
+    /// Follow one exported name inside a project file; a node already entered answers none.
+    fn origin_in(&self, query: &Query, visited: &mut Visited) -> Option<Origin> {
+        if !enter(visited, query) {
             return None;
         }
-        stack.push(key);
-        let found = self.origin_step(query, stack);
-        stack.pop();
-        found
+        self.origin_step(query, visited)
     }
 
     /// One step: a hop follows, a declaration is local, a re-exported
     /// namespace takes its module's origin, an unknown name tries the stars.
-    fn origin_step(&self, query: &Query, stack: &mut Vec<(String, String)>) -> Option<Origin> {
+    fn origin_step(&self, query: &Query, visited: &mut Visited) -> Option<Origin> {
         let Some(map) = self.export_map(query.file) else {
             return Some(Origin::Local);
         };
         if let Some(hop) = named_hop(&map, query.name) {
-            return self.hop_origin(query.file, &hop, stack);
+            return self.hop_origin(query.file, &hop, visited);
         }
         match map.named_target(query.name) {
             Some(NamedTarget::Local(local)) => Some(self.local_origin(query.file, &map, local)),
             Some(_) => Some(Origin::Local),
-            None => self.star_origin(query, &map, stack),
+            None => self.star_origin(query, &map, visited),
         }
     }
 
@@ -191,15 +183,10 @@ impl IdentityGraph<'_> {
     /// Star re-exports: visible project stars first, in order; then the
     /// first opaque star (Reference or package) is the best guess, since
     /// its export list is unseen.
-    fn star_origin(
-        &self,
-        query: &Query,
-        map: &ExportMap,
-        stack: &mut Vec<(String, String)>,
-    ) -> Option<Origin> {
+    fn star_origin(&self, query: &Query, map: &ExportMap, visited: &mut Visited) -> Option<Origin> {
         let mut guess = None;
         for star in map.stars() {
-            match self.star_answer(query, star, stack) {
+            match self.star_answer(query, star, visited) {
                 StarAnswer::Found(origin) => return Some(origin),
                 StarAnswer::Guess(origin) => guess = guess.or(Some(origin)),
                 StarAnswer::Nothing => {}
@@ -209,12 +196,7 @@ impl IdentityGraph<'_> {
     }
 
     /// One star's answer for the queried name; a star never carries `default`.
-    fn star_answer(
-        &self,
-        query: &Query,
-        star: &str,
-        stack: &mut Vec<(String, String)>,
-    ) -> StarAnswer {
+    fn star_answer(&self, query: &Query, star: &str, visited: &mut Visited) -> StarAnswer {
         if query.name == "default" {
             return StarAnswer::Nothing;
         }
@@ -224,7 +206,7 @@ impl IdentityGraph<'_> {
                     file: &target,
                     name: query.name,
                 };
-                self.origin_in(&inner, stack)
+                self.origin_in(&inner, visited)
                     .map_or(StarAnswer::Nothing, StarAnswer::Found)
             }
             Located::Ends(origin) => StarAnswer::Guess(origin),
