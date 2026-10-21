@@ -129,8 +129,12 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
   - `pnpm agentdocs q` lints no .mdx.
   - A third-party tasty hook calling public getDisplayMembers() starts a fresh walk (document or guard).
   - Docs: "a recipe nothing calls emits no CSS" goes in troubleshooting (ruling).
-- [ ] Docs from map.md: P1 (Imports and packages, Base systems, What sync can read (short, authoring only), Vite),
-      P2 (webpack, FAQ, Style HTML you don't control, Element styles), P3 (Sizes); sidebar groups (`group` field + DocSidebar).
+- [x] Docs from map.md (2026-10-22): nested sidebar section > group > page, 288px (6d786c095, e62a72731); all 9 P1–P3
+      pages landed (b59c4b673 … 079dc46f4, 7e14bd98a). Rulings: groups sort with pages by `order`; no sub-section icons
+      (indent + rule reads cleaner); docs-only commits gate on agentdocs q + real docs sync + clean render.
+      Open: map.md "Tones" -> "Tones and opacity" retitle; Vite/webpack "Verify the setup" not re-run; Sizes shows literal
+      `8.5r` (unverified that sync reads lib's `controlHeight`); system exports gaps -> small fixes 13/18; frontmatter
+      colon drops a page silently -> small fix 19.
 - [x] Owner decisions (2026-10-22, owner "yes" to recommendations; orchestrator filled the rest):
   1. Imports: ui.config.ts -> @reference-ui/core; theme files -> @reference-ui/system (give it the real
      TokenConfig/FontOptions/... types); components -> @reference-ui/react. Imports and packages page documents it.
