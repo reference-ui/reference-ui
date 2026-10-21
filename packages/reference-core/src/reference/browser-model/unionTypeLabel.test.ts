@@ -1,8 +1,8 @@
 // Union label cases: they compile vendored union-label fixtures and assert the API table's unions.
 // The public tasty build runs the fixtures; the model decides the labels, so the cases pin them
-// without rendering React. The last block drives the browser reference runtime over a
-// diamond compiled in a temporary project: a root whose projection ran out of steps
-// carries the budget warning on its document, and a complete one carries none.
+// without rendering React. The last block drives the browser reference runtime over a diamond and
+// an alias chain compiled in a temporary project: a root whose walk ran out of steps or passed the
+// depth cap carries a TST-W-PROJECTION-BUDGET warning naming the limit, and a complete one carries none.
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -107,6 +107,17 @@ function diamondSource(depth: number): string {
   return source
 }
 
+// A non-cyclic alias chain longer than the depth cap: its walk drops the members past the cap.
+const CHAIN_LENGTH = 40
+
+function chainSource(length: number): string {
+  let source = ''
+  for (let level = 0; level < length; level++) {
+    source += `export type Chain${level} = Chain${level + 1} & { c${level}: 1 }\n`
+  }
+  return `${source}export type Chain${length} = { c${length}: 1 }\n`
+}
+
 describe('reference runtime projection warnings', () => {
   let diamondDir: string
   let diamondApi: TastyApi
@@ -115,6 +126,7 @@ describe('reference runtime projection warnings', () => {
     diamondDir = mkdtempSync(join(tmpdir(), 'core-projection-budget-'))
     mkdirSync(join(diamondDir, 'src'))
     writeFileSync(join(diamondDir, 'src', 'a.ts'), diamondSource(DIAMOND_DEPTH))
+    writeFileSync(join(diamondDir, 'src', 'chain.ts'), chainSource(CHAIN_LENGTH))
     const built = await buildTasty({
       rootDir: diamondDir,
       include: ['src/**/*.ts'],
@@ -136,6 +148,16 @@ describe('reference runtime projection warnings', () => {
 
     expect(data.warnings).toEqual([expect.objectContaining({ code: 'TST-W-PROJECTION-BUDGET' })])
     expect(data.warnings[0]?.message).toContain(`"I${DIAMOND_DEPTH}a"`)
+  })
+
+  it('attaches the depth warning to the document when a walk dropped members past the depth cap', async () => {
+    const data = await runtimeOver(diamondApi).load('Chain0')
+    const messages = data.warnings.map(warning => warning.message)
+
+    expect(data.warnings.every(warning => warning.code === 'TST-W-PROJECTION-BUDGET')).toBe(true)
+    expect(messages).toEqual(
+      expect.arrayContaining([expect.stringContaining('"Chain0" stopped at nesting depth 32')])
+    )
   })
 
   it('attaches no warning when every projection of the document completed', async () => {

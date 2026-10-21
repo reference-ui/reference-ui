@@ -2,6 +2,7 @@
  * Projects object-like members from type aliases and interface heritage.
  * Expands aliases under their type arguments, merges intersections, applies Omit and Pick over known keys, and stops at recursive boundaries.
  * Every expansion runs on the caller's ProjectionContext and takes a step from its budget: the path ends cycles, and the budget ends any walk that grows.
+ * The depth guard drops members past its cap and records the depth notice, except for a repeat already on the path, which loses nothing.
  * Unprojectable shapes return undefined so callers fall back to the declared definition.
  */
 import type {
@@ -21,6 +22,8 @@ import {
 } from './object-projection-instantiation.js'
 import { collectProjectedKeys } from './object-projection-keys.js'
 import {
+  concreteTypeRef,
+  cutAtDepth,
   enterSymbol,
   isTypeParameterReference,
   loadReferencedSymbol,
@@ -49,7 +52,7 @@ export async function projectSymbolMembers(
   symbol: TastySymbol,
   context: ProjectionContext
 ): Promise<TastyMember[] | undefined> {
-  if (context.depth > MAX_PROJECTION_DEPTH) return undefined
+  if (context.depth > MAX_PROJECTION_DEPTH) return cutAtDepth(context, symbol.getId())
   if (context.visitedSymbolIds.has(symbol.getId())) return []
   if (!takeProjectionStep(context)) return undefined
 
@@ -112,7 +115,8 @@ async function projectTypeMembers(
   typeRef: TastyTypeRef | undefined,
   context: ProjectionContext
 ): Promise<TastyMember[] | undefined> {
-  if (!typeRef || context.depth > MAX_PROJECTION_DEPTH) return undefined
+  if (!typeRef) return undefined
+  if (context.depth > MAX_PROJECTION_DEPTH) return cutAtDepth(context, typeRef)
   if (!takeProjectionStep(context)) return undefined
 
   const raw = concreteTypeRef(typeRef).getRaw()
@@ -120,10 +124,6 @@ async function projectTypeMembers(
     return projectReferenceMembers(api, raw, context)
   }
   return projectStructuredMembers(api, raw, context)
-}
-
-function concreteTypeRef(typeRef: TastyTypeRef): TastyTypeRef {
-  return getTastyResolvedType(typeRef) ?? typeRef
 }
 
 async function projectStructuredMembers(

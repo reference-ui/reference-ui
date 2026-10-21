@@ -1,9 +1,9 @@
 // Builds, loads, and prefetches the per-project MCP artifact.
 // It takes a project root and emits the joined component model, running Atlas analysis out
 // of process and caching by root. loadOrBuild prefers the on-disk artifact; prefetch warms
-// the Atlas cache during project selection. A component whose tasty projection the step budget
-// cut is marked `truncated`, and the artifact's diagnostics gain one TST-W-PROJECTION-BUDGET
-// warning for it, in component order.
+// the Atlas cache during project selection. A component whose tasty projection a walk limit cut
+// is marked `truncated`, and the artifact's diagnostics gain one TST-W-PROJECTION-BUDGET warning
+// per notice of that projection, in component order.
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { analyzeDetailed } from '@reference-ui/rust/atlas'
@@ -126,7 +126,7 @@ export async function generateMcpArtifactFromAtlas(input: {
     : true
 
   const api = createReferenceApi(manifestPath)
-  const components = await Promise.all(
+  const projected = await Promise.all(
     atlas.components.map(async component => {
       let reference = null
 
@@ -159,9 +159,13 @@ export async function generateMcpArtifactFromAtlas(input: {
         }
       }
 
-      return joinMcpComponentWithReference(component, reference)
+      return {
+        component: joinMcpComponentWithReference(component, reference),
+        projectionNotices: reference?.projectionNotices ?? [],
+      }
     })
   )
+  const components = projected.map(entry => entry.component)
 
   let allComponents = [...components, ...primitiveComponents]
   if (!useReferenceLibrary) {
@@ -173,7 +177,7 @@ export async function generateMcpArtifactFromAtlas(input: {
     generatedAt: new Date().toISOString(),
     workspaceRoot: cwd,
     manifestPath,
-    diagnostics: [...atlas.diagnostics, ...truncatedProjectionDiagnostics(components)],
+    diagnostics: [...atlas.diagnostics, ...projectionDiagnostics(projected)],
     useReferenceLibrary,
     useReferenceIcons,
     components: allComponents.sort((left, right) => {
@@ -188,20 +192,17 @@ export async function generateMcpArtifactFromAtlas(input: {
 }
 
 /**
- * One warning per component whose projection the budget cut, in the order the components were built. The symbol is the
- * one the reference loader projected: the component's interface when it has one, else the component itself.
+ * One TST-W-PROJECTION-BUDGET warning per notice of each component's projection, in the order the components were built.
+ * Each notice names the symbol and the walk limit that cut it; the warning leads with the component it belongs to.
  */
-function truncatedProjectionDiagnostics(
-  components: McpComponent[]
+function projectionDiagnostics(
+  projected: { component: McpComponent; projectionNotices: string[] }[]
 ): McpBuildArtifact['diagnostics'] {
-  return components
-    .filter(component => component.truncated)
-    .map(component =>
-      projectionBudgetWarning(
-        component.interface?.name ?? component.name,
-        `${component.name} (${component.source})`
-      )
+  return projected.flatMap(({ component, projectionNotices }) =>
+    projectionNotices.map(notice =>
+      projectionBudgetWarning(notice, `${component.name} (${component.source})`)
     )
+  )
 }
 
 async function loadMcpTokensSafely(

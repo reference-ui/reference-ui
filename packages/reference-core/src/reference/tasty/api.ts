@@ -89,17 +89,18 @@ export function createReferenceUiTastyApi(options: CreateTastyApiOptions): Tasty
 // and tools/vendor-rust-tasty-dts.mjs cannot walk the current dist (it resolves extensionless specifiers only). Until
 // the shelf is refreshed, these views type the two additions; the runtime behind them is the tasty runtime itself.
 
-/** A display projection with the per-call `truncated` flag the tasty runtime reports for its own budget. */
+/** A display projection with the per-call `truncated` flag and the notices of the walk limits that cut it. */
 export interface ReferenceDisplayResult {
   members: TastyMember[]
   truncated: boolean
+  notices: string[]
 }
 
 interface ReferenceGraphWithDisplayResult {
   getDisplayResult(symbol: TastySymbol): Promise<ReferenceDisplayResult>
 }
 
-/** The display projection of `symbol` under its own budget; `truncated` says whether that budget cut the walk short. */
+/** The display projection of `symbol` with its own walk limits; `truncated` says whether a limit dropped members from it. */
 export function readReferenceDisplayResult(
   api: TastyApi,
   symbol: TastySymbol
@@ -108,12 +109,12 @@ export function readReferenceDisplayResult(
 }
 
 interface TastyBrowserWithBudgetWarning {
-  projectionBudgetWarning(symbolName: string): RawTastyDiagnostic
+  projectionBudgetWarning(notice: string): RawTastyDiagnostic
 }
 
-/** The TST-W-PROJECTION-BUDGET warning for a projection cut short; the tasty runtime mints the code and the message. */
-export function projectionBudgetWarning(symbolName: string): RawTastyDiagnostic {
+/** The TST-W-PROJECTION-BUDGET warning for one walk-limit notice; the tasty runtime mints the code and the wording. */
+export function projectionBudgetWarning(notice: string): RawTastyDiagnostic {
   return (tastyBrowser as typeof tastyBrowser & TastyBrowserWithBudgetWarning).projectionBudgetWarning(
-    symbolName
+    notice
   )
 }

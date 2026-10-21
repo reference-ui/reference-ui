@@ -183,12 +183,16 @@ describe('buildMcpArtifact', () => {
     expect(writeMcpArtifact).not.toHaveBeenCalled()
   })
 
-  it('marks a component whose projection was cut, and warns with its name and symbol', async () => {
+  it('marks a component whose projection was cut, and warns once per notice with its name', async () => {
+    const budgetNotice =
+      'Member projection of "ButtonProps" stopped after 10000 steps; inherited members past that point may be omitted.'
+    const depthNotice =
+      'Member projection of "ButtonProps" stopped at nesting depth 32; members of types nested past that point may be omitted.'
     loadMcpReferenceData.mockResolvedValueOnce({
       description: null,
       members: [],
       warnings: [],
-      truncated: true,
+      projectionNotices: [budgetNotice, depthNotice],
     })
     const { generateMcpArtifact } = await import('./build')
 
@@ -201,9 +205,12 @@ describe('buildMcpArtifact', () => {
       expect.objectContaining({
         severity: 'warning',
         code: 'TST-W-PROJECTION-BUDGET',
-        message: expect.stringMatching(
-          /^Button \(\.\/src\/components\/Button\.tsx\): Member projection of "ButtonProps" stopped/
-        ),
+        message: `Button (./src/components/Button.tsx): ${budgetNotice}`,
+      }),
+      expect.objectContaining({
+        severity: 'warning',
+        code: 'TST-W-PROJECTION-BUDGET',
+        message: `Button (./src/components/Button.tsx): ${depthNotice}`,
       }),
     ])
   })

@@ -50,10 +50,11 @@ parsed `jsdoc` — a best-effort pass-through, not a TSDoc model.
 ## Diagnostics
 
 Typed `TST-*` facts, not message strings: warnings ride the manifest `warnings`
-array, the one error (scan refusal) throws coded. A display projection the step
-budget cut short is reported per call (`getDisplayResult().truncated`), and the
-consumer that presents it attaches `TST-W-PROJECTION-BUDGET`, built by
-`projectionBudgetWarning` and listed in the shared registry. A missing scan root, an invalid glob, or an unreadable file refuses the whole request with a coded throw. Meanings and raise sites live
+array, the one error (scan refusal) throws coded. A display projection whose walk hit the step
+budget or the nesting-depth guard, and so dropped members, is reported per call
+(`getDisplayResult()`: `truncated`, and `notices` naming the limit). The consumer
+that presents it attaches one `TST-W-PROJECTION-BUDGET` warning per notice, built
+by `projectionBudgetWarning` and listed in the shared registry. A missing scan root, an invalid glob, or an unreadable file refuses the whole request with a coded throw. Meanings and raise sites live
 in the shared registry; codes a golden pins are
 wire contract.
 

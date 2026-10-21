@@ -3,11 +3,13 @@
  * Collects the member keys named by a Pick or Omit key argument, following aliases and unions
  * to literal keys. Returns undefined when any part cannot be resolved to a literal key.
  * Each alias it follows takes a step from the caller's budget: a union of unions can branch within the depth limit.
+ * A reference the depth cap drops is recorded as a walk limit; a repeat already on the path is not, as it loses nothing.
  */
 import type { RawTastyTypeRef, RawTastyTypeReference, TastyTypeRef } from '../api-types.js'
 import { getTastyResolvedType } from '../resolution.js'
 import { instantiateTypeAliasDefinition } from './object-projection-instantiation.js'
 import {
+  cutAtDepth,
   MAX_PROJECTION_DEPTH,
   type ProjectionContext,
   takeProjectionStep,
@@ -43,9 +45,11 @@ async function collectProjectedKeysFromRaw(
   }
 }
 
-/** A reference is followed inside the depth limit, off the path, and while the call's budget still has steps. */
+/** A reference is followed off the path, inside the depth limit, and while the call's budget still has steps. */
 function mayFollowReference(context: ProjectionContext, reference: RawTastyTypeReference): boolean {
-  if (context.depth > MAX_PROJECTION_DEPTH || context.visitedSymbolIds.has(reference.id)) {
+  if (context.visitedSymbolIds.has(reference.id)) return false
+  if (context.depth > MAX_PROJECTION_DEPTH) {
+    cutAtDepth(context, reference.id)
     return false
   }
   return takeProjectionStep(context)

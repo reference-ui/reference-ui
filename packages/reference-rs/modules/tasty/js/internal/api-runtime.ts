@@ -1,7 +1,7 @@
 /**
  * Node implementation of the TastyApi over emitted artifacts.
  * Loads and validates the manifest, resolves symbols by id or name through the SymbolResolver, and serves members, references, display helpers, and diagnostics.
- * Entry points are createTastyApi and createTastyApiFromManifest. Each public projection call builds one ProjectionContext here, so its whole walk shares one path and one step budget, and getDisplayResult reports whether that budget ran out.
+ * Entry points are createTastyApi and createTastyApiFromManifest. Each public projection call builds one ProjectionContext here, so its whole walk shares one path and one step budget, and getDisplayResult reports the walk limits that dropped members from that call.
  */
 import type {
   CreateTastyApiOptions,
@@ -36,11 +36,7 @@ import {
 } from './shared.js'
 import { projectObjectLikeMembers } from './object-projection.js'
 import { flattenInterfaceMembers } from './interface-flatten.js'
-import {
-  budgetExhaustedNotice,
-  createProjectionBudget,
-  type ProjectionContext,
-} from './object-projection-references.js'
+import { createProjectionBudget, type ProjectionContext } from './object-projection-references.js'
 import { TastyMemberImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers.js'
 import { ChunkLoader } from './chunk-loader.js'
 import { SymbolResolver } from './symbol-resolver.js'
@@ -173,7 +169,7 @@ export class TastyApiRuntime implements TastyApi {
     return (await this.graphGetDisplayResult(symbol)).members
   }
 
-  /** Reads `truncated` from this call's own budget after the walk settles, so overlapping calls never share it. */
+  /** Reads `truncated` and `notices` from this call's own record after the walk settles, so overlapping calls never share them. */
   private async graphGetDisplayResult(symbol: TastySymbol): Promise<TastyDisplayResult> {
     const raw = symbol.getRaw()
     const context = this.createRootContext(symbol)
@@ -183,7 +179,8 @@ export class TastyApiRuntime implements TastyApi {
     } else if (isTypeAliasSymbol(raw)) {
       members = (await projectObjectLikeMembers(this, symbol, context)) ?? []
     }
-    return { members, truncated: context.budget.reported }
+    const notices = [...context.budget.notices]
+    return { members, truncated: notices.length > 0, notices }
   }
 
   private graphProjectObjectLikeMembers(
@@ -193,17 +190,16 @@ export class TastyApiRuntime implements TastyApi {
   }
 
   /**
-   * The context one public call starts with: an empty path, no type parameter in scope, and a step budget for this
-   * walk. When the budget runs out, the walk ends with a partial result and one notice in runtimeWarnings.
+   * The context one public call starts with: an empty path, no type parameter in scope, and the walk limits for this
+   * call. A limit that drops members ends the walk with a partial result, records its notice on this call, and publishes
+   * it to runtimeWarnings.
    */
   private createRootContext(symbol: TastySymbol): ProjectionContext {
     return {
       visitedSymbolIds: new Set<string>(),
       depth: 0,
       projectTypeParameterMembers: this.projectTypeParameterMembers,
-      budget: createProjectionBudget(() => {
-        this.runtimeWarnings.add(budgetExhaustedNotice(symbol.getName()))
-      }),
+      budget: createProjectionBudget(symbol.getName(), notice => this.runtimeWarnings.add(notice)),
     }
   }
 

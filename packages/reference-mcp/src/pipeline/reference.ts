@@ -1,8 +1,8 @@
 // Tasty manifest loading for resolved component types.
 // It takes a manifest path and emits the loaded reference document plus per-component
 // data, formatting manifest diagnostics through the shared warning one-liner. Each component's
-// own display projection is read per call, so its `truncated` mark says whether the step budget
-// cut that walk, whatever other components were projecting on the same shared api at the time.
+// own display projection is read per call, so its walk-limit notices say which limit, if any, dropped
+// members from that walk, whatever other components were projecting on the same shared api at the time.
 import type { TastyApi, TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
 import { getTastyResolvedType } from '@reference-ui/rust/tasty'
 import {
@@ -25,8 +25,8 @@ export interface McpReferenceData {
   description?: string | null
   members: McpReferenceMemberData[]
   warnings: string[]
-  /** Set only when the step budget cut the component's member projection short, so its members are partial. */
-  truncated?: boolean
+  /** Set only when a walk limit dropped members from the component's own projection: one notice per limit, naming it. */
+  projectionNotices?: string[]
 }
 
 function shouldHideAliasProjection(symbol: TastySymbol): boolean {
@@ -185,8 +185,8 @@ export async function loadMcpReferenceData(
   const projection = await api.graph.getDisplayResult(symbol)
   const hideProjection = shouldHideAliasProjection(symbol)
   const members = hideProjection ? [] : projection.members
-  // A hidden alias contributes no members, so a cut walk over it leaves the component's data complete.
-  const truncated = !hideProjection && projection.truncated
+  // A hidden alias shows no members, so a walk over it that dropped some describes nothing the component presents.
+  const projectionNotices = hideProjection ? [] : projection.notices
 
   let description = symbol.getDescription() ?? null
   if (!description && componentName && componentName !== name) {
@@ -202,6 +202,6 @@ export async function loadMcpReferenceData(
     description,
     members: members.map(toMcpReferenceMemberData),
     warnings: api.getWarnings().map(formatReferenceWarning),
-    ...(truncated ? { truncated: true } : {}),
+    ...(projectionNotices.length > 0 ? { projectionNotices: [...projectionNotices] } : {}),
   }
 }

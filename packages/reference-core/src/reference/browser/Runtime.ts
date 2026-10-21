@@ -1,6 +1,6 @@
 // Browser data runtime: a tasty runtime and a symbol name in, loaded `ReferenceDocument` state out.
-// Every display projection the load runs is read per call, and each one the step budget cut short
-// adds a TST-W-PROJECTION-BUDGET warning to the document's warnings. The
+// Every display projection the load runs is read per call, and each walk-limit notice one of them raised
+// becomes a TST-W-PROJECTION-BUDGET warning on the document. The
 // default runtime lazily imports the `__REFERENCE_UI_TYPES_RUNTIME__`
 // placeholder, which the reference-types leg rewrites to `./tasty/runtime.js`
 // so app bundlers see the real edge for the lazy chunk graph.
@@ -54,13 +54,13 @@ async function loadReferenceRuntimeData(
 ): Promise<ReferenceRuntimeData> {
   const api = await getReferenceApi(runtime)
   const symbol = await api.loadSymbolByName(name)
-  const cutProjections = new Set<string>()
+  const cutNotices = new Set<string>()
   const projection = await readReferenceDisplayResult(api, symbol)
   const hideProjection = shouldHideAliasProjection(symbol)
   const members = hideProjection ? [] : projection.members
-  if (projection.truncated) cutProjections.add(symbol.getName())
+  for (const notice of projection.notices) cutNotices.add(notice)
   const extendsChain = symbol.getKind() === 'interface' ? await api.graph.loadExtendsChain(symbol) : []
-  const memberOrigins = await loadReferenceMemberOrigins(api, symbol, extendsChain, cutProjections)
+  const memberOrigins = await loadReferenceMemberOrigins(api, symbol, extendsChain, cutNotices)
   const relatedSymbols = await loadReferenceRelatedSymbols(api, symbol)
 
   return {
@@ -72,13 +72,13 @@ async function loadReferenceRuntimeData(
     // Member origins only label the members shown, so a cut walk reaches the document only when members are shown.
     warnings: hideProjection
       ? api.getWarnings()
-      : [...api.getWarnings(), ...projectionWarnings(cutProjections)],
+      : [...api.getWarnings(), ...projectionWarnings(cutNotices)],
   }
 }
 
-/** One budget warning per symbol whose projection the step budget cut short, in the order the walks cut them. */
-function projectionWarnings(cutProjections: Set<string>): RawTastyDiagnostic[] {
-  return [...cutProjections].map(symbolName => projectionBudgetWarning(symbolName))
+/** One TST-W-PROJECTION-BUDGET warning per walk-limit notice, in the order the walks raised them. */
+function projectionWarnings(cutNotices: Set<string>): RawTastyDiagnostic[] {
+  return [...cutNotices].map(notice => projectionBudgetWarning(notice))
 }
 
 function shouldHideAliasProjection(symbol: TastySymbol): boolean {
@@ -115,30 +115,30 @@ async function loadReferenceRelatedSymbols(api: TastyApi, rootSymbol: TastySymbo
   return relatedSymbols
 }
 
-/** The map one origin walk fills, and the names of the source projections whose budget ran out. */
+/** The map one origin walk fills, and the walk-limit notices of the source projections it read. */
 interface OriginWalk {
   origins: Map<string, TastySymbol>
-  cutProjections: Set<string>
+  cutNotices: Set<string>
 }
 
-/** A source's display members; a projection the budget cut short is recorded under the source's name. */
+/** A source's display members; the walk-limit notices of its projection join the document's notices. */
 async function readDisplayMembers(
   api: TastyApi,
   symbol: TastySymbol,
-  cutProjections: Set<string>,
+  cutNotices: Set<string>,
 ): Promise<TastyMember[]> {
   const projection = await readReferenceDisplayResult(api, symbol)
-  if (projection.truncated) cutProjections.add(symbol.getName())
+  for (const notice of projection.notices) cutNotices.add(notice)
   return projection.members
 }
 
 async function getInheritedMemberSourceMembers(
   api: TastyApi,
   symbol: TastySymbol,
-  cutProjections: Set<string>,
+  cutNotices: Set<string>,
 ): Promise<TastyMember[]> {
   if (symbol.getKind() === 'typeAlias') {
-    return readDisplayMembers(api, symbol, cutProjections)
+    return readDisplayMembers(api, symbol, cutNotices)
   }
 
   return symbol.getMembers()
@@ -148,10 +148,10 @@ async function loadReferenceMemberOrigins(
   api: TastyApi,
   rootSymbol: TastySymbol,
   extendsChain: TastySymbol[],
-  cutProjections: Set<string>,
+  cutNotices: Set<string>,
 ): Promise<Map<string, TastySymbol>> {
   if (rootSymbol.getKind() === 'typeAlias') {
-    return loadReferenceTypeAliasMemberOrigins(api, rootSymbol, cutProjections)
+    return loadReferenceTypeAliasMemberOrigins(api, rootSymbol, cutNotices)
   }
 
   const origins = new Map<string, TastySymbol>()
@@ -159,7 +159,7 @@ async function loadReferenceMemberOrigins(
   for (const currentSymbol of [...extendsChain, rootSymbol]) {
     const currentMembers = currentSymbol.getId() === rootSymbol.getId()
       ? currentSymbol.getMembers()
-      : await getInheritedMemberSourceMembers(api, currentSymbol, cutProjections)
+      : await getInheritedMemberSourceMembers(api, currentSymbol, cutNotices)
 
     for (const member of currentMembers) {
       origins.set(member.getId(), currentSymbol)
@@ -172,9 +172,9 @@ async function loadReferenceMemberOrigins(
 async function loadReferenceTypeAliasMemberOrigins(
   api: TastyApi,
   rootSymbol: TastySymbol,
-  cutProjections: Set<string>,
+  cutNotices: Set<string>,
 ): Promise<Map<string, TastySymbol>> {
-  const walk: OriginWalk = { origins: new Map<string, TastySymbol>(), cutProjections }
+  const walk: OriginWalk = { origins: new Map<string, TastySymbol>(), cutNotices }
   await collectReferenceTypeAliasMemberOrigins(
     api,
     rootSymbol,
@@ -221,7 +221,7 @@ async function setReferenceProjectedMemberOrigins(
   originSymbol: TastySymbol,
   walk: OriginWalk,
 ): Promise<void> {
-  for (const member of await readDisplayMembers(api, sourceSymbol, walk.cutProjections)) {
+  for (const member of await readDisplayMembers(api, sourceSymbol, walk.cutNotices)) {
     walk.origins.set(member.getId(), originSymbol)
   }
 }

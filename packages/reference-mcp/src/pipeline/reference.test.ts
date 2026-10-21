@@ -66,10 +66,18 @@ describe('loadReferenceDocument', () => {
 })
 
 describe('loadMcpReferenceData', () => {
-  function apiWithProjection(result: { members: unknown[]; truncated: boolean }) {
+  const DEPTH_NOTICE =
+    'Member projection of "ButtonProps" stopped at nesting depth 32; members of types nested past that point may be omitted.'
+
+  function apiWithProjection(result: {
+    members: unknown[]
+    truncated: boolean
+    notices: string[]
+  }, kind = 'interface') {
     return {
       loadSymbolByScopedName: vi.fn(async () => ({
-        getKind: () => 'interface',
+        getKind: () => kind,
+        getUnderlyingType: () => ({ isReference: () => false }),
         getDescription: () => undefined,
         getId: () => 'button-props',
       })),
@@ -81,22 +89,40 @@ describe('loadMcpReferenceData', () => {
     }
   }
 
-  it('marks the reference truncated when its own display projection ran out of steps', async () => {
-    const api = apiWithProjection({ members: [], truncated: true })
+  it('carries the walk-limit notices of a projection that dropped members', async () => {
+    const api = apiWithProjection({ members: [], truncated: true, notices: [DEPTH_NOTICE] })
 
     const { loadMcpReferenceData } = await import('./reference')
     const data = await loadMcpReferenceData(api as never, 'ButtonProps', './components/Button.tsx')
 
     expect(api.graph.getDisplayResult).toHaveBeenCalledTimes(1)
-    expect(data).toMatchObject({ truncated: true })
+    expect(data).toMatchObject({ projectionNotices: [DEPTH_NOTICE] })
   })
 
-  it('leaves the mark off a reference whose projection completed', async () => {
-    const api = apiWithProjection({ members: [], truncated: false })
+  it('leaves the notices off a reference whose projection completed', async () => {
+    const api = apiWithProjection({ members: [], truncated: false, notices: [] })
 
     const { loadMcpReferenceData } = await import('./reference')
     const data = await loadMcpReferenceData(api as never, 'ButtonProps', './components/Button.tsx')
 
-    expect(data).not.toHaveProperty('truncated')
+    expect(data).not.toHaveProperty('projectionNotices')
+  })
+
+  it('drops the notices of a hidden alias, whose members the reference does not show', async () => {
+    const api = apiWithProjection(
+      { members: [], truncated: true, notices: [DEPTH_NOTICE] },
+      'typeAlias'
+    )
+    api.loadSymbolByScopedName.mockResolvedValueOnce({
+      getKind: () => 'typeAlias',
+      getUnderlyingType: () => ({ isReference: () => true }),
+      getDescription: () => undefined,
+      getId: () => 'button-props',
+    } as never)
+
+    const { loadMcpReferenceData } = await import('./reference')
+    const data = await loadMcpReferenceData(api as never, 'ButtonProps', './components/Button.tsx')
+
+    expect(data).not.toHaveProperty('projectionNotices')
   })
 })
