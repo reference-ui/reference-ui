@@ -175,9 +175,16 @@ export interface TastyGraphApi {
   collectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]>
 }
 
+/**
+ * Supplies members for a type parameter the walk cannot resolve. `displayMembersOf` reads a symbol's display members as
+ * part of the walk that asked: the walk's path and step budget carry into it, so a symbol that leads back to the reference
+ * ends at the cycle. The walk always passes it; a direct caller may omit it, and the public `getDisplayMembers()` then
+ * stands in. Calling the public `getDisplayMembers()` from inside a walk starts a new walk with its own budget.
+ */
 export type TastyTypeParameterMemberProjector = (input: {
   api: TastyApi
   reference: RawTastyTypeReference
+  displayMembersOf?: (symbol: TastySymbol) => Promise<TastyMember[]>
 }) => Promise<TastyMember[] | undefined> | TastyMember[] | undefined
 
 export interface TastyApi {

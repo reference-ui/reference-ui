@@ -1,13 +1,14 @@
-// Reference tasty options: they take caller-supplied tasty options and emit
-// the reference-flavored API (preferred external libraries plus the `P` →
-// `SystemProperties` member projection). Both the Node bridge and the
-// browser runtime build their tasty API through these getters.
+// Reference tasty options: caller options, plus the reference libraries and the `P` projection.
+// The `P` projection reads `SystemProperties`. Both the Node bridge and the browser runtime build their
+// tasty API through these getters.
 
 import {
   createTastyApi,
   type CreateTastyApiOptions,
   type CreateTastyBrowserRuntimeOptions,
   type TastyApi,
+  type TastyMember,
+  type TastySymbol,
   type TastyTypeParameterMemberProjector,
 } from '@reference-ui/rust/tasty'
 
@@ -24,17 +25,25 @@ const REFERENCE_UI_SYSTEM_PROPERTIES_LIBRARIES = [
   '@reference-ui/types',
 ]
 
+// The walk hands `displayMembersOf` in, so this read carries the path and budget of the walk that reached `P`: a cycle
+// that passes back through `P` ends at the symbol it revisits. A direct call without it reads the public entry.
+// The vendored declarations under src/native/generated predate that field, so it is typed here until they are refreshed.
+type TypeParameterProjectorInput = Parameters<TastyTypeParameterMemberProjector>[0] & {
+  displayMembersOf?: (symbol: TastySymbol) => Promise<TastyMember[]>
+}
+
 const projectReferenceUiTypeParameterMembers: TastyTypeParameterMemberProjector = async ({
   api,
   reference,
-}) => {
+  displayMembersOf = symbol => symbol.getDisplayMembers(),
+}: TypeParameterProjectorInput) => {
   if (reference.name !== 'P') return undefined
 
   for (const library of REFERENCE_UI_SYSTEM_PROPERTIES_LIBRARIES) {
     try {
       const projectedSymbol = await api.findSymbolByScopedName(library, 'SystemProperties')
       if (projectedSymbol) {
-        return projectedSymbol.getDisplayMembers()
+        return displayMembersOf(projectedSymbol)
       }
     } catch {
       // Keep trying narrower library scopes before falling back to a bare lookup.
@@ -43,7 +52,7 @@ const projectReferenceUiTypeParameterMembers: TastyTypeParameterMemberProjector 
 
   try {
     const projectedSymbol = await api.loadSymbolByName('SystemProperties')
-    return projectedSymbol.getDisplayMembers()
+    return displayMembersOf(projectedSymbol)
   } catch {
     return undefined
   }

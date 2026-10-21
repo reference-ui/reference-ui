@@ -75,6 +75,22 @@ export async function projectSymbolMembers(
 }
 
 /**
+ * Display members of `symbol` for a walk in progress, as a type-parameter hook reads them: the path and budget carry in,
+ * the walk's type parameters do not, as for a public call.
+ */
+export async function displayMembersWithin(
+  api: TastyApiRuntime,
+  symbol: TastySymbol,
+  context: ProjectionContext
+): Promise<TastyMember[]> {
+  const projected = await projectSymbolMembers(api, symbol, {
+    ...context,
+    typeParameterNames: undefined,
+  })
+  return projected ?? []
+}
+
+/**
  * Members of an alias definition with its arguments bound. The alias joins the path, one level deeper, as it would
  * for a reference to it. Nothing in the definition is a parameter any more, so no type parameter is in scope.
  */
@@ -198,7 +214,11 @@ async function projectUnresolvedReferenceMembers(
   if (utilityProjection) return utilityProjection
 
   if (isTypeParameterReference(reference, context)) {
-    const projected = await context.projectTypeParameterMembers?.({ api, reference })
+    const projected = await context.projectTypeParameterMembers?.({
+      api,
+      reference,
+      displayMembersOf: symbol => displayMembersWithin(api, symbol, context),
+    })
     if (projected) return projected
     return []
   }

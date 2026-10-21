@@ -1,20 +1,31 @@
 /**
- * Tests for the projection step budget that every public display call shares.
- * The fixture is an interface diamond whose inheritance paths outnumber the budget, scanned from a temporary project, so
+ * Tests for the bounds every public display call shares: the step budget and the hook re-entry path. The budget
+ * fixture is an interface diamond whose inheritance paths outnumber the budget, scanned from a temporary project, so
  * the walk is real. A call that runs out returns its declared members and raises one notice naming the symbol; each
- * public call gets a budget of its own, so a later call on a small symbol raises nothing new.
+ * public call gets a budget of its own. The hook fixture is an alias whose type parameter the hook answers with the
+ * same alias, the way reference-core answers `P` with `SystemProperties`; the walk runs in a child process through
+ * runIsolated, so a cycle that never ends shows as a signal rather than a crashed worker.
  */
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { expectBounded, runIsolated } from '../../../../testing/isolated.js'
 import type { TastyApi } from '../api-types.js'
 import { scanAndEmitModules } from '../runtime.js'
 import { createTastyApi } from './api-runtime.js'
 
 const DIAMOND_DEPTH = 16
+const HOOK_DRIVER = fileURLToPath(new URL('./projection-hook-driver.mjs', import.meta.url))
+
+interface HookReport {
+  members: string[]
+  hookCalls: number
+  notices: string[]
+}
 
 function diamondSource(depth: number): string {
   let source = 'export interface I0a { a0: 1 }\nexport interface I0b { b0: 1 }\n'
@@ -72,5 +83,42 @@ describe('projection step budget', () => {
 
     expect(members.sort()).toEqual(['a0', 'a1', 'b0'])
     expect(api.getRuntimeNotices()).toHaveLength(1)
+  })
+})
+
+describe('projection through the type-parameter hook', () => {
+  let hookRoot = ''
+  let hookManifest = ''
+
+  beforeAll(() => {
+    hookRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tasty-hook-'))
+    fs.mkdirSync(path.join(hookRoot, 'src'))
+    fs.writeFileSync(path.join(hookRoot, 'src', 'a.ts'), 'export type Sys<P> = P & { s: 1 }\n')
+
+    const emitted = scanAndEmitModules(hookRoot, ['src/**/*.ts'])
+    const outputDir = path.join(hookRoot, 'artifacts')
+    writeEmittedArtifacts(outputDir, {
+      ...(emitted.modules ?? {}),
+      ...(emitted.type_declarations ?? {}),
+    })
+    hookManifest = path.join(outputDir, 'manifest.js')
+  })
+
+  afterAll(() => {
+    fs.rmSync(hookRoot, { recursive: true, force: true })
+  })
+
+  it('ends a hook cycle at the symbol it revisits, inside the time bound', () => {
+    const run = runIsolated<HookReport>({
+      module: HOOK_DRIVER,
+      fn: 'displayThroughHook',
+      args: [hookManifest],
+      timeoutMs: 20_000,
+    })
+    const report = expectBounded(run, { ms: 2000 })
+
+    expect(report.members).toEqual(['s'])
+    expect(report.hookCalls).toBe(1)
+    expect(report.notices).toEqual([])
   })
 })
