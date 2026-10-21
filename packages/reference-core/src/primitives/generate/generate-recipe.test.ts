@@ -2,7 +2,7 @@
 // They bake a system with one recipe, then run strict tsc over a wrapper probe that splits its props with splitVariantProps.
 // The probe passes only when rest keeps the caller's other props (union members included) and drops the axis keys, when props with no axis
 // key, generic wrappers or a recipe with no variants are accepted, when boolean, numeric and responsive values type-check (recipe breakpoints
-// only), when a bare RecipeRuntimeFn splits into Partial halves, and when a wrong value is rejected.
+// only), when a bare RecipeRuntimeFn splits into Partial halves, when a wrong value is rejected, and that a recipe with `slots` returns one class string and one raw object per slot, typed by slot name.
 
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
@@ -84,6 +84,47 @@ const WRAPPER_PROBE = [
   "export const responsiveBoolean = toggle({ on: { base: false, md: true } })",
 ]
 
+const SLOT_PROBE = [
+  "import { recipe, type RecipeRuntimeFn, type RecipeVariantProps } from './index.mjs'",
+  'const card = recipe({',
+  "  className: 'card',",
+  "  slots: ['root', 'title', 'body'],",
+  "  base: { root: { color: 'red' }, title: {} },",
+  '  variants: {',
+  '    size: { sm: { root: {} }, lg: { root: {}, title: {} } },',
+  '    on: { true: { body: {} }, false: {} },',
+  '  },',
+  "  defaultVariants: { size: 'sm' },",
+  "  compoundVariants: [{ size: 'lg', on: true, css: { title: {} } }],",
+  '})',
+  "const classes = card({ size: 'lg' })",
+  'export const parts: [string, string, string] = [classes.root, classes.title, classes.body]',
+  '// @ts-expect-error header is not a slot of card',
+  'classes.header',
+  '// @ts-expect-error a slotted call returns one class per slot, not a string',
+  'export const flat: string = card()',
+  "export const responsive: string = card({ size: { base: 'sm', md: 'lg' } }).root",
+  'export const toggled: string = card({ on: true }).body',
+  '// @ts-expect-error nope is not a size option',
+  "card({ size: 'nope' })",
+  "const raw = card.raw({ size: 'lg' })",
+  'export const rawTitle: Record<string, unknown> = raw.title',
+  '// @ts-expect-error header is not a slot of raw()',
+  'raw.header',
+  "export const variants: RecipeVariantProps<typeof card> = { size: 'lg', on: false }",
+  "export function wrapper(props: { size?: 'sm' | 'lg'; id?: string }) {",
+  '  const [selection, rest] = card.splitVariantProps(props)',
+  '  const id: string | undefined = rest.id',
+  '  return [card(selection).title, id]',
+  '}',
+  "const plain = recipe({ className: 'plain', base: { color: 'red' } })",
+  'export const plainClass: string = plain()',
+  "const wide = recipe({ className: 'wide', slots: ['a', 'b'] as string[] })",
+  'export const wideClass: string = wide().anything',
+  '// @ts-expect-error a slotted recipe is no bare RecipeRuntimeFn: its call returns an object',
+  'export const bare: RecipeRuntimeFn = card',
+]
+
 describe('generateReactTypesSource recipe splitVariantProps under strict tsc', () => {
   it('types variants and rest for wrappers, unions, booleans, numbers and breakpoints', () => {
     const dir = probeDir('__recipe-split')
@@ -92,6 +133,16 @@ describe('generateReactTypesSource recipe splitVariantProps under strict tsc', (
       generateReactTypesSource({ stylePropNames: ['color'], recipes: {}, role: 'none', recipeBreakpoints: ['md', 'lg'] })
     )
     writeFileSync(join(dir, 'probe.ts'), `${WRAPPER_PROBE.join('\n')}\n`)
+    expect(checkProbe(dir)).toBe('')
+  }, 150000)
+
+  it('types one class string, and one raw object, per slot', () => {
+    const dir = probeDir('__recipe-slots')
+    writeFileSync(
+      join(dir, 'index.d.mts'),
+      generateReactTypesSource({ stylePropNames: ['color'], recipes: {}, role: 'none', recipeBreakpoints: ['md', 'lg'] })
+    )
+    writeFileSync(join(dir, 'probe.ts'), `${SLOT_PROBE.join('\n')}\n`)
     expect(checkProbe(dir)).toBe('')
   }, 150000)
 })

@@ -3,7 +3,8 @@
 // primitives path, and the spec recipes, and emits the bound entry source
 // plus the complete react.d.mts. The types bake narrows the primitive types per system:
 // the compiled StylePropName union, SystemStyleObject css, and the typegen
-// recipe-union variant (never when recipes are absent). The synced role
+// recipe-union variant (never when recipes are absent). Recipe declarations
+// return one class string per slot when a config lists `slots`. The synced role
 // decides the SyncedSystem register: a publisher declares it, a consumer
 // fills it, and the default role keeps the pre-register output byte-identical.
 
@@ -238,12 +239,18 @@ function recipeTypeLines(breakpointUnion: string): string[] {
     'export type RecipeConfigSelection<TConfig> = TConfig extends { variants: infer V } ? RecipeVariantSelection<V> : {}',
     '/** Omit applied to each member of a union, so narrowing still works on the result. */',
     'export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never',
+    '/** Slot names of one recipe config; never when it lists no `slots`. */',
+    'export type RecipeSlotName<TConfig> = TConfig extends { slots: readonly (infer S extends string)[] } ? S : never',
+    '/** What one recipe call returns: a class string, or one class string per slot. */',
+    'export type RecipeClasses<TConfig> = [RecipeSlotName<TConfig>] extends [never] ? string : Record<RecipeSlotName<TConfig>, string>',
+    '/** What raw() returns: one style object, or one per slot. */',
+    'export type RecipeRawStyles<TConfig> = [RecipeSlotName<TConfig>] extends [never] ? RecipeStyleObject : Record<RecipeSlotName<TConfig>, RecipeStyleObject>',
     '/** Resolved recipe function: classes for a selection plus variant metadata. */',
     '/** Call positions route through RecipeVariantProps<RecipeRuntimeFn<TConfig>>: */',
     '/** RecipeVariantProps<TConfig> would miss the fn-config infer and fall wide. */',
     'export interface RecipeRuntimeFn<TConfig extends RecipeConfig = RecipeConfig> {',
-    '  (props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): string',
-    '  raw(props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): RecipeStyleObject',
+    '  (props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): RecipeClasses<TConfig>',
+    '  raw(props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): RecipeRawStyles<TConfig>',
     '  variantKeys: string[]',
     '  variantMap: Record<string, string[]>',
     // P is bound by the selection with no intersection on the param: an intersection lets
@@ -285,13 +292,14 @@ function namedGraphLines(breakpointUnion: string): string[] {
     '  css: RecipeStyleObject',
     '  [axis: string]: unknown',
     '}',
-    '/** Authored recipe: the className extraction keys on plus base, variants, compounds. */',
+    '/** Authored recipe: the className extraction keys on plus base, variants, compounds; `slots` keys each style position by part. */',
     'export interface RecipeConfig {',
     '  className: string',
+    '  slots?: readonly string[]',
     '  base?: RecipeStyleObject',
     '  variants?: Record<string, Record<string, RecipeStyleObject>>',
     '  defaultVariants?: Record<string, string>',
-    '  compoundVariants?: RecipeCompoundConfig[]',
+    '  compoundVariants?: readonly RecipeCompoundConfig[]',
     '}',
     ...recipeTypeLines(breakpointUnion),
     'export declare function recipe<const TConfig extends RecipeConfig>(config: TConfig): RecipeRuntimeFn<TConfig>',

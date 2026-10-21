@@ -357,13 +357,14 @@ export interface RecipeCompoundConfig {
   css: RecipeStyleObject
   [axis: string]: unknown
 }
-/** Authored recipe: the className extraction keys on plus base, variants, compounds. */
+/** Authored recipe: the className extraction keys on plus base, variants, compounds; `slots` keys each style position by part. */
 export interface RecipeConfig {
   className: string
+  slots?: readonly string[]
   base?: RecipeStyleObject
   variants?: Record<string, Record<string, RecipeStyleObject>>
   defaultVariants?: Record<string, string>
-  compoundVariants?: RecipeCompoundConfig[]
+  compoundVariants?: readonly RecipeCompoundConfig[]
 }
 /** Breakpoint keys a recipe value object takes: `base` plus the breakpoints recipe classes exist for. */
 export type RecipeBreakpointKey = "base"
@@ -391,12 +392,18 @@ export type RecipeVariantKey<TConfig> = TConfig extends { variants: infer V } ? 
 export type RecipeConfigSelection<TConfig> = TConfig extends { variants: infer V } ? RecipeVariantSelection<V> : {}
 /** Omit applied to each member of a union, so narrowing still works on the result. */
 export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
+/** Slot names of one recipe config; never when it lists no `slots`. */
+export type RecipeSlotName<TConfig> = TConfig extends { slots: readonly (infer S extends string)[] } ? S : never
+/** What one recipe call returns: a class string, or one class string per slot. */
+export type RecipeClasses<TConfig> = [RecipeSlotName<TConfig>] extends [never] ? string : Record<RecipeSlotName<TConfig>, string>
+/** What raw() returns: one style object, or one per slot. */
+export type RecipeRawStyles<TConfig> = [RecipeSlotName<TConfig>] extends [never] ? RecipeStyleObject : Record<RecipeSlotName<TConfig>, RecipeStyleObject>
 /** Resolved recipe function: classes for a selection plus variant metadata. */
 /** Call positions route through RecipeVariantProps<RecipeRuntimeFn<TConfig>>: */
 /** RecipeVariantProps<TConfig> would miss the fn-config infer and fall wide. */
 export interface RecipeRuntimeFn<TConfig extends RecipeConfig = RecipeConfig> {
-  (props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): string
-  raw(props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): RecipeStyleObject
+  (props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): RecipeClasses<TConfig>
+  raw(props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): RecipeRawStyles<TConfig>
   variantKeys: string[]
   variantMap: Record<string, string[]>
   /** Split props into `[variants, rest]`: the recipe selection, and every other prop. */
