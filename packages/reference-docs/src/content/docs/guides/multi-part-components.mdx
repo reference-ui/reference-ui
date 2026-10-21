@@ -15,82 +15,60 @@ import { CardPartsDemo } from './multi-part-components-demo'
 Some components are more than one element. A card has a root, a title and a
 body, and one `size` prop should style every part.
 
-Each part is its own element, so give each one a class with `recipe()`,
-`css()` or style props. A `data-slot` attribute names a part so a rule on
-another element can reach it. The compound components in `@reference-ui/lib`, such as `Tabs`,
-`Tree` and `Listbox`, are styled this way.
+A recipe with `slots` styles every part from one call: it returns one class
+per part. A `data-slot` attribute names a part, so a rule on another element
+can reach it.
 
 ## Your own component
 
-<Step n={1}>Style each part</Step>
+<Step n={1}>Define the slots</Step>
 
-Give each part its own `recipe()`. Parts that share a variant list the same
-variant name:
+List the parts in `slots`, then key `base` and each variant value by part:
 
 ```tsx
 // src/components/Card.tsx
-import { css, recipe } from '@reference-ui/react'
+import { recipe } from '@reference-ui/react'
 
-const cardRoot = recipe({
-  className: 'cardRoot',
-  base: { display: 'flex', flexDirection: 'column', borderRadius: 'md' },
+const card = recipe({
+  className: 'card',
+  slots: ['root', 'title', 'body'],
+  base: {
+    root: { display: 'flex', flexDirection: 'column', borderRadius: 'md' },
+    title: { margin: '0', fontWeight: '600' },
+    body: { margin: '0', opacity: 0.8 },
+  },
   variants: {
     size: {
-      sm: { padding: '3r', gap: '1r' },
-      lg: { padding: '6r', gap: '2r' },
+      sm: { root: { padding: '3r', gap: '1r' }, title: { fontSize: '4r' } },
+      lg: { root: { padding: '6r', gap: '2r' }, title: { fontSize: '5r' } },
     },
   },
   defaultVariants: { size: 'sm' },
 })
-
-const cardTitle = recipe({
-  className: 'cardTitle',
-  base: { margin: '0', fontWeight: '600' },
-  variants: {
-    size: {
-      sm: { fontSize: '4r' },
-      lg: { fontSize: '5r' },
-    },
-  },
-  defaultVariants: { size: 'sm' },
-})
-
-const cardBody = css({ margin: '0', opacity: 0.8 })
 ```
 
-A part with no variants can take a plain `css()` class, like `cardBody`.
+A part that a variant does not name, like `body` here, keeps its base styles.
 
-<Step n={2}>Share the variant</Step>
+<Step n={2}>Give each part its class</Step>
 
-The root takes the prop and passes it to the other parts through React
-context. Each part calls its own recipe with that value and sets `data-slot`:
+Call the recipe once and pass each part its class. A `data-slot` on each part
+names it for the next step:
 
 ```tsx
 // src/components/Card.tsx
-import { createContext, useContext } from 'react'
-import { Div, H3, P, type DivProps, type H3Props, type PProps } from '@reference-ui/react'
+import { Div, H3, P, type DivProps } from '@reference-ui/react'
 
-type CardSize = 'sm' | 'lg'
-const CardSizeContext = createContext<CardSize>('sm')
+type CardProps = DivProps & { size?: 'sm' | 'lg'; heading: string }
 
-function CardRoot({ size = 'sm', ...props }: DivProps & { size?: CardSize }) {
+export function Card({ size = 'sm', heading, children, ...props }: CardProps) {
+  const classes = card({ size })
   return (
-    <CardSizeContext.Provider value={size}>
-      <Div data-slot="root" {...props} className={cardRoot({ size })} />
-    </CardSizeContext.Provider>
+    <Div data-slot="root" {...props} className={classes.root}>
+      <H3 data-slot="title" className={classes.title}>{heading}</H3>
+      <P data-slot="body" className={classes.body}>{children}</P>
+    </Div>
   )
 }
-
-function CardTitle(props: H3Props) {
-  const size = useContext(CardSizeContext)
-  return <H3 data-slot="title" {...props} className={cardTitle({ size })} />
-}
-
-function CardBody(props: PProps) {
-  return <P data-slot="body" {...props} className={cardBody} />
-}
-
-export const Card = { Root: CardRoot, Title: CardTitle, Body: CardBody }
 ```
 
 <Step n={3}>Style a part from the root</Step>
@@ -100,16 +78,15 @@ styles reaches a part by its `data-slot`. Here the title underlines while the
 card is hovered:
 
 ```tsx
-const cardRoot = recipe({
-  className: 'cardRoot',
-  base: {
+base: {
+  root: {
     display: 'flex',
     flexDirection: 'column',
     borderRadius: 'md',
     '&:hover > [data-slot="title"]': { textDecoration: 'underline' },
   },
-  // variants as before
-})
+  // title and body as before
+},
 ```
 
 `Tree.Item` uses the same selector to draw its focus ring on its row:
@@ -118,15 +95,8 @@ const cardRoot = recipe({
 ### Usage
 
 ```tsx
-<Card.Root>
-  <Card.Title>Starter</Card.Title>
-  <Card.Body>One project.</Card.Body>
-</Card.Root>
-
-<Card.Root size="lg">
-  <Card.Title>Team</Card.Title>
-  <Card.Body>Every project in one place.</Card.Body>
-</Card.Root>
+<Card heading="Starter">One project.</Card>
+<Card size="lg" heading="Team">Every project in one place.</Card>
 ```
 
 <Preview>
@@ -135,9 +105,9 @@ const cardRoot = recipe({
 
 ## A library component's parts
 
-A `data-slot` attribute is a stable selector. `globalCss()` can target it to
-restyle a part of a library component everywhere. A `Tree.Item` branch wraps
-its content in a `[data-slot="row"]` element:
+A `data-slot` attribute is a stable selector, so `globalCss()` can restyle a
+part of a library component everywhere. A `Tree.Item` branch wraps its content
+in a `[data-slot="row"]` element:
 
 ```ts
 // src/theme/global.ts
@@ -156,8 +126,8 @@ recipes and `css()` classes, so it does not override your own parts' styles.
 
 ## A headless library's parts
 
-Headless libraries such as Radix split each component into parts, and every
-part accepts `className`. Give each part a `css()` class:
+Each part of a headless component, such as Radix's, accepts `className`.
+Give each part a `css()` class:
 
 ```tsx
 import { Accordion } from 'radix-ui'
@@ -192,25 +162,15 @@ export function Faq() {
 }
 ```
 
-Headless parts expose their state as data attributes, and the named
-conditions match the common ones:
-
-| Condition | Matches |
-| --- | --- |
-| `_open` | `[data-state="open"]`, `[data-open]`, `[open]` |
-| `_closed` | `[data-state="closed"]`, `[data-closed]` |
-| `_checked` | `:checked`, `[data-checked]`, `[aria-checked=true]`, `[data-state="checked"]` |
-| `_expanded` | `[aria-expanded=true]`, `[data-expanded]`, `[data-state="expanded"]` |
-| `_selected` | `[aria-selected=true]`, `[data-selected]`, `[data-state="selected"]` |
-| `_disabled` | `:disabled`, `[disabled]`, `[data-disabled]`, `[aria-disabled=true]` |
-
-For any other attribute, use an `&` selector, such as
-`'&[data-orientation="vertical"]'`.
+Headless parts expose their state as data attributes, and named conditions
+such as `_open`, `_closed` and `_disabled` match them. See
+[Conditions](/conditions#disclosure-and-selection) for the full list.
 
 ## Further reading
 
 <LinkCards>
+  <LinkCard href="/recipes#slots" title="Slots">Every option of a recipe with slots.</LinkCard>
   <LinkCard href="/build-a-component" title="Build a component">One element, one recipe.</LinkCard>
   <LinkCard href="/global-css" title="Global CSS">Selectors, nesting and layers.</LinkCard>
-  <LinkCard href="/style-props#conditions" title="Conditions">Every named condition.</LinkCard>
+  <LinkCard href="/conditions" title="Conditions">Every named condition.</LinkCard>
 </LinkCards>

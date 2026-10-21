@@ -1,91 +1,60 @@
-// Worked compound card for the multi-part components guide.
+// Worked card for the multi-part components guide.
 // It takes nothing and emits the guide's CardPartsDemo. Colocated with the page that embeds it.
-import { createContext, useContext } from 'react'
-import {
-  Div,
-  type DivProps,
-  H3,
-  type H3Props,
-  P,
-  type PProps,
-  css,
-  recipe,
-} from '@reference-ui/react'
+import { Div, type DivProps, H3, P, recipe } from '@reference-ui/react'
 
 /**
- * The Card from the Multi-part components guide, rendered as written there.
- * One recipe per part shares the `size` variant through context, and the
- * root reaches its title through `data-slot`, so the preview proves the
- * sample syncs, type-checks and paints both sizes.
+ * The Card from the Multi-part components guide, rendered as written there; the
+ * recipe is named `partsCard` because the build-a-component demo owns `card` in
+ * this system. One recipe with slots styles the root, title and body from one
+ * call, and the root reaches its title through `data-slot`, so the preview
+ * proves the sample syncs, type-checks and paints both sizes.
  */
-type CardSize = 'sm' | 'lg'
-
-const cardRoot = recipe({
-  className: 'cardRoot',
+const card = recipe({
+  className: 'partsCard',
+  slots: ['root', 'title', 'body'],
   base: {
-    display: 'flex',
-    flexDirection: 'column',
-    borderRadius: 'md',
-    bg: 'slate.500/strong',
-    '&:hover > [data-slot="title"]': { textDecoration: 'underline' },
+    root: {
+      display: 'flex',
+      flexDirection: 'column',
+      borderRadius: 'md',
+      bg: 'slate.500/strong',
+      '&:hover > [data-slot="title"]': { textDecoration: 'underline' },
+    },
+    title: { margin: '0', fontWeight: '600' },
+    body: { margin: '0', opacity: 0.8 },
   },
   variants: {
     size: {
-      sm: { padding: '3r', gap: '1r' },
-      lg: { padding: '6r', gap: '2r' },
+      sm: { root: { padding: '3r', gap: '1r' }, title: { fontSize: '4r' } },
+      lg: { root: { padding: '6r', gap: '2r' }, title: { fontSize: '5r' } },
     },
   },
   defaultVariants: { size: 'sm' },
 })
 
-const cardTitle = recipe({
-  className: 'cardTitle',
-  base: { margin: '0', fontWeight: '600' },
-  variants: {
-    size: {
-      sm: { fontSize: '4r' },
-      lg: { fontSize: '5r' },
-    },
-  },
-  defaultVariants: { size: 'sm' },
-})
+type CardProps = DivProps & { size?: 'sm' | 'lg'; heading: string }
 
-const cardBody = css({ margin: '0', opacity: 0.8 })
-
-const CardSizeContext = createContext<CardSize>('sm')
-
-type CardRootProps = DivProps & { size?: CardSize }
-
-function CardRoot({ size = 'sm', ...props }: CardRootProps) {
+function Card({ size = 'sm', heading, children, ...props }: CardProps) {
+  const classes = card({ size })
   return (
-    <CardSizeContext.Provider value={size}>
-      <Div data-slot="root" {...props} className={cardRoot({ size })} />
-    </CardSizeContext.Provider>
+    <Div data-slot="root" {...props} className={classes.root}>
+      <H3 data-slot="title" className={classes.title}>
+        {heading}
+      </H3>
+      <P data-slot="body" className={classes.body}>
+        {children}
+      </P>
+    </Div>
   )
 }
-
-function CardTitle(props: H3Props) {
-  const size = useContext(CardSizeContext)
-  return <H3 data-slot="title" {...props} className={cardTitle({ size })} />
-}
-
-function CardBody(props: PProps) {
-  return <P data-slot="body" {...props} className={cardBody} />
-}
-
-const Card = { Root: CardRoot, Title: CardTitle, Body: CardBody }
 
 export function CardPartsDemo() {
   return (
     <>
-      <Card.Root>
-        <Card.Title>Starter</Card.Title>
-        <Card.Body>One project.</Card.Body>
-      </Card.Root>
-      <Card.Root size="lg">
-        <Card.Title>Team</Card.Title>
-        <Card.Body>Every project in one place.</Card.Body>
-      </Card.Root>
+      <Card heading="Starter">One project.</Card>
+      <Card size="lg" heading="Team">
+        Every project in one place.
+      </Card>
     </>
   )
 }
