@@ -49,7 +49,7 @@ pages each change follows.
 
 ## Not gaps (doesn't exist here, by design or absent)
 
-Patterns, `styled`/`as`, slot recipes/`sva`, `cx`, text/layer/animation styles, custom
+Patterns, `styled`/`as`, `sva` (slots are a `recipe()` key), `cx`, text/layer/animation styles, custom
 conditions/utilities/breakpoints, named themes, plugins, JS `token()`, studio, JSON spec,
 deprecations, analyze, lint plugin, PostCSS, Storybook, llms.txt, v2 upgrade, non-React
 frameworks.

@@ -45,6 +45,7 @@ recipe the compiler cannot read fails sync.
 | Option | Type | Description |
 | --- | --- | --- |
 | `className` | `string` | Required. Names the recipe. Two recipes with the same name in one system fail sync. |
+| `slots` | `string[]` | The parts of a multi-part component. Keys `base`, each variant value and each compound's `css` by part, and the call returns one class per part. See [Slots](#slots). |
 | `base` | style object | Styles every choice gets. |
 | `variants` | `Record<string, Record<string, StyleObject>>` | One style object per value of each variant. Use `true` and `false` keys for a boolean variant. |
 | `defaultVariants` | `Record<string, string>` | The value used when a call leaves a variant out. |
@@ -99,11 +100,57 @@ function SaveButton({ size }: { size: 'sm' | 'lg' }) {
 Responsive values work the same way. If any call passes a variable, sync
 emits every breakpoint of that recipe.
 
+## Slots
+
+A component with several parts can take one recipe. List the parts in
+`slots`, then key `base` and each variant value by part:
+
+```tsx
+const card = recipe({
+  className: 'card',
+  slots: ['root', 'title', 'body'],
+  base: {
+    root: { display: 'flex', flexDirection: 'column', gap: '2r' },
+    title: { fontWeight: '600' },
+    body: { opacity: 0.8 },
+  },
+  variants: {
+    size: {
+      sm: { root: { padding: '3r' }, title: { fontSize: '4r' } },
+      lg: { root: { padding: '6r' }, title: { fontSize: '5r' } },
+    },
+  },
+  defaultVariants: { size: 'sm' },
+})
+
+const classes = card({ size: 'lg' })
+
+<div className={classes.root}>
+  <h3 className={classes.title}>Team</h3>
+  <p className={classes.body}>Every project in one place.</p>
+</div>
+```
+
+The call returns one class string per slot. Every slot gets a key, even
+`body`, which no variant styles. Responsive values and values picked at
+runtime work as they do without slots.
+
+A compound variant keys its `css` by slot too:
+
+```tsx
+compoundVariants: [{ size: 'lg', css: { title: { letterSpacing: '0.02em' } } }]
+```
+
+Each slot compiles as its own recipe, named `card__root`, `card__title` and
+`card__body`. Sync fails on a key that `slots` does not list, and on another
+recipe whose `className` is one of those names.
+
 ## Helpers
 
 The returned function also has:
 
-- `raw(props)`, which returns the merged style object instead of class names;
+- `raw(props)`, which returns the merged style object instead of class names,
+  or one object per slot for a recipe with [slots](#slots);
 - `variantKeys` and `variantMap`, which list the variants and their values;
 - `splitVariantProps(props)`, which splits variant props from the rest.
 
@@ -133,6 +180,10 @@ import type { RecipeVariantProps } from '@reference-ui/react'
 type ButtonVariants = RecipeVariantProps<typeof button>
 // { tone?: 'primary' | 'quiet'; size?: 'sm' | 'lg' }
 ```
+
+For a recipe with `slots`, the call is typed by slot name:
+`card({ size: 'lg' }).title` is a `string`, and a slot the recipe does not list
+is a type error.
 
 Each value also takes the [breakpoint](#responsive-variants) object form,
 and a variant with `true` or `false` keys takes a boolean.

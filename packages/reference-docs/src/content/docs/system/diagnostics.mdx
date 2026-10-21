@@ -171,8 +171,12 @@ the code in any tooling you build.
   key inline.
 - `ATM-E-RECIPE-CLASSNAME`: a recipe with no `className`, or one that is not
   a string literal. Give it a string `className`.
-- `ATM-E-DUPLICATE-RECIPE`: two recipes in one system share a `className`.
-  Rename one.
+- `ATM-E-DUPLICATE-RECIPE`: two recipes in one system share a `className`, or a
+  `className` matches a slot of another recipe, like `card__root` beside a
+  `card` recipe with a `root` slot. Rename one.
+- `ATM-E-RECIPE-SLOT`: a recipe's `slots` is not an inline list of distinct
+  names, or `base`, a variant value or a compound's `css` names a slot that
+  `slots` does not list. Fix the key or add the slot.
 - `TGN-W-INVALID-RECIPE-NAME`: a `className` that cannot form a TypeScript
   type name. The recipe is left out of the generated types. Rename it.
 - `TGN-W-DUPLICATE-RECIPE-STEM`: two recipe names form the same type name.
