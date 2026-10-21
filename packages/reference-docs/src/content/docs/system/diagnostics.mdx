@@ -204,9 +204,21 @@ the code in any tooling you build.
 ### Components and files
 
 - `ATM-E-PARSE`: a file in `include` has a syntax error. Fix the syntax.
-- `ATM-W-TRACE-SKIPPED`: sync skipped a file while looking for components
-  that pass style props on. The message says why. The rest of the files are
-  still read.
+- `STT-W-SKIPPED-FILE`: sync skipped a file while looking for components that
+  pass style props on. The message says why. The rest of the files are still
+  read. Fix the file so it parses and can be read.
+- `STT-W-CLASS-COMPONENT`: a class component whose props take style props, like
+  `class Card extends React.Component<CardProps>`. Sync skips it, so the style
+  props passed to it get no CSS. Rewrite it as a function component.
+- `STT-W-TYPE-EXPANSION-LIMIT`: sync stopped following a props type at a depth,
+  argument size, or session budget limit. A long chain of type aliases, or a
+  generic that refers to itself with growing arguments, hits one. The props
+  that type would add get no CSS. Flatten the alias chain or shorten the
+  recursive type. The message names the type and the limit.
+- `STT-W-UNRESOLVED-HOC-ARGUMENT`: a higher-order component forwards style props
+  into an argument that names no component, like the result of a call. Sync
+  skips the component it creates, so its style props get no CSS. Pass a
+  component by name in that argument.
 - `ATM-W-EXTERNAL-UNBACKED`: style props on a component from a package whose
   system is in neither `extends` nor `layers`. The props get no CSS. Add the
   `baseSystem` the warning names. See [Primitives](/primitives#your-own-components).
