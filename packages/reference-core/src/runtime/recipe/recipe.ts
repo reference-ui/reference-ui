@@ -188,14 +188,14 @@ export function recipe(config: RecipeConfig): RecipeRuntimeFn {
   runtimeFn.variantMap = Object.fromEntries(
     Object.entries(lowered.variants ?? {}).map(([axis, options]) => [axis, Object.keys(options)])
   )
-  runtimeFn.splitVariantProps = (props: RecipeProps): [RecipeProps, RecipeProps] => {
+  runtimeFn.splitVariantProps = <P extends object>(props: P): [RecipeProps, Partial<P>] => {
     const selection: RecipeProps = {}
-    const rest: RecipeProps = {}
+    const rest: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(props)) {
       if (axes.includes(key)) selection[key] = value
       else rest[key] = value
     }
-    return [selection, rest]
+    return [selection, rest as Partial<P>]
   }
   return runtimeFn
 }

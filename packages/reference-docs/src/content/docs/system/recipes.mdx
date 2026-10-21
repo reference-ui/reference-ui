@@ -106,6 +106,22 @@ The returned function also has:
 - `variantKeys` and `variantMap`, which list the variants and their values;
 - `splitVariantProps(props)`, which splits variant props from the rest.
 
+Use `splitVariantProps` in a wrapper component. It returns
+`[variants, rest]`: `rest` holds every other prop with its type intact, so
+`onClick` and `children` pass through and never reach the recipe:
+
+```tsx
+import type { RecipeVariantProps } from '@reference-ui/react'
+import type { ComponentProps } from 'react'
+
+type ButtonProps = RecipeVariantProps<typeof button> & ComponentProps<'button'>
+
+function Button(props: ButtonProps) {
+  const [variants, rest] = button.splitVariantProps(props)
+  return <button {...rest} className={button(variants)} />
+}
+```
+
 ## Types
 
 `RecipeVariantProps` gives the props type of a recipe:

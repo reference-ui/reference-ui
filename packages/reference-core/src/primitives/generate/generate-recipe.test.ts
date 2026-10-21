@@ -1,0 +1,92 @@
+// Type-level tests for the recipe declarations in the generated react types.
+// They bake a system with one recipe, then run strict tsc over a wrapper probe that splits its props with splitVariantProps.
+// The probe passes only when rest keeps the caller's non-variant props and drops the axis keys, and when a props type with no axis key is still accepted.
+
+import { execFileSync } from 'node:child_process'
+import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { afterEach, describe, expect, it } from 'vitest'
+import { generateReactTypesSource } from './generate.ts'
+
+const PACKAGE_ROOT = fileURLToPath(new URL('../../..', import.meta.url))
+
+const tempDirs: string[] = []
+
+afterEach(() => {
+  for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true })
+})
+
+const WRAPPER_PROBE = [
+  "import type { ReactNode } from 'react'",
+  "import { recipe } from './index.mjs'",
+  "const card = recipe({ className: 'card', variants: { tone: { quiet: {}, loud: {} } } })",
+  "type CardProps = { tone?: 'quiet' | 'loud'; className?: string; children?: ReactNode; id?: string }",
+  'export function wrapper(props: CardProps) {',
+  '  const [variants, rest] = card.splitVariantProps(props)',
+  "  const tone: 'quiet' | 'loud' | undefined = variants.tone",
+  '  const className: string | undefined = rest.className',
+  '  const children: ReactNode = rest.children',
+  '  // @ts-expect-error tone is split out of rest',
+  '  rest.tone',
+  '  return [tone, className, children, card(variants)]',
+  '}',
+  'export function noAxis(props: { className?: string }) {',
+  '  const [, rest] = card.splitVariantProps(props)',
+  '  return rest.className',
+  '}',
+  "export function badValue(props: { tone?: 'nope' }) {",
+  '  // @ts-expect-error nope is not a tone option',
+  '  return card.splitVariantProps(props)',
+  '}',
+]
+
+describe('generateReactTypesSource recipe splitVariantProps under strict tsc', () => {
+  it('types rest as the caller props minus the variant keys', () => {
+    const dir = probeDir('__recipe-split')
+    writeFileSync(
+      join(dir, 'index.d.mts'),
+      generateReactTypesSource({ stylePropNames: ['color'], recipes: {}, role: 'none' })
+    )
+    writeFileSync(join(dir, 'probe.ts'), `${WRAPPER_PROBE.join('\n')}\n`)
+    expect(checkProbe(dir)).toBe('')
+  }, 150000)
+})
+
+/** A scratch project with a styled stub and react's real types linked in. */
+function probeDir(name: string): string {
+  const dir = join(PACKAGE_ROOT, 'tests', '.artifacts', `${name}-${process.pid}-${Date.now()}`)
+  const styledDir = join(dir, 'node_modules', '@reference-ui', 'styled')
+  mkdirSync(styledDir, { recursive: true })
+  tempDirs.push(dir)
+  writeFileSync(
+    join(styledDir, 'package.json'),
+    JSON.stringify({ name: '@reference-ui/styled', version: '0.0.0', types: './index.d.ts' })
+  )
+  writeFileSync(
+    join(styledDir, 'index.d.ts'),
+    [
+      "export type StyleConditionKey = '_hover'",
+      'export type StyleProps = { color?: unknown }',
+      'export type SystemStyleObject = StyleProps & { [K in StyleConditionKey]?: SystemStyleObject }',
+      '',
+    ].join('\n')
+  )
+  mkdirSync(join(dir, 'node_modules', '@types'), { recursive: true })
+  symlinkSync(join(PACKAGE_ROOT, 'node_modules', '@types', 'react'), join(dir, 'node_modules', '@types', 'react'), 'dir')
+  return dir
+}
+
+/** Strict tsc over probe.ts with declarations checked; returns the diagnostics, empty when clean. */
+function checkProbe(dir: string): string {
+  const tsc = join(PACKAGE_ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
+  const args = [tsc, '--ignoreConfig', '--noEmit', '--strict', '--target', 'ES2022', '--lib', 'ES2022,DOM']
+  args.push('--module', 'NodeNext', '--moduleResolution', 'NodeNext', '--types', 'react', 'probe.ts')
+  try {
+    execFileSync(process.execPath, args, { cwd: dir, stdio: 'pipe', timeout: 120000 })
+    return ''
+  } catch (error) {
+    const failure = error as { stdout?: unknown; stderr?: unknown }
+    return `${String(failure.stdout ?? '')}${String(failure.stderr ?? '')}`
+  }
+}

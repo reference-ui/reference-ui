@@ -1,6 +1,7 @@
-// Authoring and runtime types of the Core recipe runtime: the selections an author passes, the recipe config
-// they write, and the resolver a recipe() call returns. They are types only, shared by the resolver and the class
-// derivation, and recipe.ts re-exports them under their public names.
+// Authoring and runtime types of the Core recipe runtime.
+// They cover the selections an author passes, the recipe config they write, and the resolver a recipe() call
+// returns. They are types only, shared by the resolver and the class derivation, and recipe.ts re-exports them
+// under their public names. splitVariantProps keeps the caller's props generic so a wrapper's rest stays typed.
 
 import type { SystemStyleObject } from '../css/css.ts'
 
@@ -40,5 +41,6 @@ export interface RecipeRuntimeFn {
   raw(props?: RecipeProps): SystemStyleObject
   variantKeys: string[]
   variantMap: Record<string, string[]>
-  splitVariantProps(props: RecipeProps): [RecipeProps, RecipeProps]
+  /** Variant keys are not known here, so rest keeps the caller's props as Partial; the bake narrows it per recipe. */
+  splitVariantProps<P extends object>(props: P): [RecipeProps, Partial<P>]
 }
