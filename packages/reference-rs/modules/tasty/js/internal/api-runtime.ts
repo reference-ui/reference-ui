@@ -1,7 +1,7 @@
 /**
  * Node implementation of the TastyApi over emitted artifacts.
  * Loads and validates the manifest, resolves symbols by id or name through the SymbolResolver, and serves members, references, display helpers, and diagnostics.
- * Entry points are createTastyApi and createTastyApiFromManifest.
+ * Entry points are createTastyApi and createTastyApiFromManifest. Each public projection call builds one ProjectionContext here, so its whole walk shares one path and one step budget.
  */
 import type {
   CreateTastyApiOptions,
@@ -35,6 +35,11 @@ import {
 } from './shared.js'
 import { projectObjectLikeMembers } from './object-projection.js'
 import { flattenInterfaceMembers } from './interface-flatten.js'
+import {
+  budgetExhaustedNotice,
+  createProjectionBudget,
+  type ProjectionContext,
+} from './object-projection-references.js'
 import { TastyMemberImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers.js'
 import { ChunkLoader } from './chunk-loader.js'
 import { SymbolResolver } from './symbol-resolver.js'
@@ -159,16 +164,19 @@ export class TastyApiRuntime implements TastyApi {
   private async graphFlattenInterfaceMembers(
     symbol: TastySymbol
   ): Promise<TastyMember[]> {
-    return flattenInterfaceMembers(this, symbol, new Map(), new Set([symbol.getId()]))
+    return flattenInterfaceMembers(this, symbol, new Map(), this.createRootContext(symbol))
   }
 
   private async graphGetDisplayMembers(symbol: TastySymbol): Promise<TastyMember[]> {
     const raw = symbol.getRaw()
+    const context = this.createRootContext(symbol)
     if (isInterfaceSymbol(raw)) {
-      return dedupeTastyMembers(await this.graph.flattenInterfaceMembers(symbol))
+      return dedupeTastyMembers(
+        await flattenInterfaceMembers(this, symbol, new Map(), context)
+      )
     }
     if (isTypeAliasSymbol(raw)) {
-      return (await this.graph.projectObjectLikeMembers(symbol)) ?? []
+      return (await projectObjectLikeMembers(this, symbol, context)) ?? []
     }
     return []
   }
@@ -176,7 +184,27 @@ export class TastyApiRuntime implements TastyApi {
   private graphProjectObjectLikeMembers(
     symbol: TastySymbol
   ): ReturnType<typeof projectObjectLikeMembers> {
-    return projectObjectLikeMembers(this, symbol, this.projectTypeParameterMembers)
+    return projectObjectLikeMembers(this, symbol, this.createRootContext(symbol))
+  }
+
+  /**
+   * The context one public call starts with: an empty path, no type parameter in scope, and a step budget for this
+   * walk. When the budget runs out, the walk ends with a partial result and one notice in runtimeWarnings.
+   */
+  private createRootContext(symbol: TastySymbol): ProjectionContext {
+    return {
+      visitedSymbolIds: new Set<string>(),
+      depth: 0,
+      projectTypeParameterMembers: this.projectTypeParameterMembers,
+      budget: createProjectionBudget(() => {
+        this.runtimeWarnings.add(budgetExhaustedNotice(symbol.getName()))
+      }),
+    }
+  }
+
+  /** An interface's flattened members under a projection's own context, so that walk shares its path and budget. */
+  flattenInterfaceUnder(symbol: TastySymbol, context: ProjectionContext): Promise<TastyMember[]> {
+    return flattenInterfaceMembers(this, symbol, new Map(), context)
   }
 
   private async graphCollectUserOwnedReferences(

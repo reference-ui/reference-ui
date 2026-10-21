@@ -2,6 +2,7 @@
  * Key collection for Pick and Omit during object projection.
  * Collects the member keys named by a Pick or Omit key argument, following aliases and unions
  * to literal keys. Returns undefined when any part cannot be resolved to a literal key.
+ * Each alias it follows takes a step from the caller's budget: a union of unions can branch within the depth limit.
  */
 import type { RawTastyTypeRef, RawTastyTypeReference, TastyTypeRef } from '../api-types.js'
 import { getTastyResolvedType } from '../resolution.js'
@@ -9,6 +10,7 @@ import { instantiateTypeAliasDefinition } from './object-projection-instantiatio
 import {
   MAX_PROJECTION_DEPTH,
   type ProjectionContext,
+  takeProjectionStep,
 } from './object-projection-references.js'
 import { isTypeAliasSymbol, isTypeReference } from './shared.js'
 import type { TastyApiRuntime } from './api-runtime.js'
@@ -41,17 +43,20 @@ async function collectProjectedKeysFromRaw(
   }
 }
 
+/** A reference is followed inside the depth limit, off the path, and while the call's budget still has steps. */
+function mayFollowReference(context: ProjectionContext, reference: RawTastyTypeReference): boolean {
+  if (context.depth > MAX_PROJECTION_DEPTH || context.visitedSymbolIds.has(reference.id)) {
+    return false
+  }
+  return takeProjectionStep(context)
+}
+
 async function collectProjectedKeysFromReference(
   api: TastyApiRuntime,
   reference: RawTastyTypeReference,
   context: ProjectionContext
 ): Promise<Set<string> | undefined> {
-  if (
-    context.depth > MAX_PROJECTION_DEPTH ||
-    context.visitedSymbolIds.has(reference.id)
-  ) {
-    return undefined
-  }
+  if (!mayFollowReference(context, reference)) return undefined
 
   const manifestEntry = api.getManifestEntry(reference.id)
   if (!manifestEntry) return undefined
@@ -70,6 +75,7 @@ async function collectProjectedKeysFromReference(
     visitedSymbolIds: new Set(context.visitedSymbolIds).add(reference.id),
     depth: context.depth + 1,
     projectTypeParameterMembers: context.projectTypeParameterMembers,
+    budget: context.budget,
   })
 }
 

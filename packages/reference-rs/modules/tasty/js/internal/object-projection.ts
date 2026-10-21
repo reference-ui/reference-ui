@@ -1,6 +1,7 @@
 /**
  * Projects object-like members from type aliases and interface heritage.
  * Expands aliases under their type arguments, merges intersections, applies Omit and Pick over known keys, and stops at recursive boundaries.
+ * Every expansion runs on the caller's ProjectionContext and takes a step from its budget: the path ends cycles, and the budget ends any walk that grows.
  * Unprojectable shapes return undefined so callers fall back to the declared definition.
  */
 import type {
@@ -9,7 +10,6 @@ import type {
   RawTastyTypeReference,
   TastyMember,
   TastySymbol,
-  TastyTypeParameterMemberProjector,
   TastyTypeRef,
 } from '../api-types.js'
 import { dedupeTastyMembers } from '../members.js'
@@ -21,10 +21,12 @@ import {
 } from './object-projection-instantiation.js'
 import { collectProjectedKeys } from './object-projection-keys.js'
 import {
+  enterSymbol,
   isTypeParameterReference,
   loadReferencedSymbol,
   MAX_PROJECTION_DEPTH,
   type ProjectionContext,
+  takeProjectionStep,
   withTypeParameterNames,
 } from './object-projection-references.js'
 import { isInterfaceSymbol, isTypeAliasSymbol, isTypeReference } from './shared.js'
@@ -32,36 +34,30 @@ import type { TastyApiRuntime } from './api-runtime.js'
 
 export { isTypeParameterReference } from './object-projection-references.js'
 
+/** A symbol's object-like members under the context its public entry built, so the whole call shares one path and budget. */
 export async function projectObjectLikeMembers(
   api: TastyApiRuntime,
   symbol: TastySymbol,
-  projectTypeParameterMembers?: TastyTypeParameterMemberProjector
+  context: ProjectionContext
 ): Promise<TastyMember[] | undefined> {
-  return projectSymbolMembers(api, symbol, {
-    visitedSymbolIds: new Set<string>(),
-    depth: 0,
-    projectTypeParameterMembers,
-  })
+  return projectSymbolMembers(api, symbol, context)
 }
 
-async function projectSymbolMembers(
+/** A symbol's members under `context`. The symbol joins the path; one already on the path projects to nothing. */
+export async function projectSymbolMembers(
   api: TastyApiRuntime,
   symbol: TastySymbol,
   context: ProjectionContext
 ): Promise<TastyMember[] | undefined> {
   if (context.depth > MAX_PROJECTION_DEPTH) return undefined
   if (context.visitedSymbolIds.has(symbol.getId())) return []
+  if (!takeProjectionStep(context)) return undefined
 
-  const nextContext: ProjectionContext = {
-    visitedSymbolIds: new Set(context.visitedSymbolIds).add(symbol.getId()),
-    depth: context.depth + 1,
-    projectTypeParameterMembers: context.projectTypeParameterMembers,
-    typeParameterNames: context.typeParameterNames,
-  }
+  const nextContext = enterSymbol(context, symbol.getId())
 
   const raw = symbol.getRaw()
   if (isInterfaceSymbol(raw)) {
-    return dedupeTastyMembers(await api.graph.flattenInterfaceMembers(symbol))
+    return dedupeTastyMembers(await api.flattenInterfaceUnder(symbol, nextContext))
   }
 
   if (isTypeAliasSymbol(raw)) {
@@ -79,16 +75,18 @@ async function projectSymbolMembers(
 }
 
 /**
- * Members of a type that is already instantiated, such as an alias's definition with its arguments bound. Nothing
- * in it is a parameter any more, so it projects under an empty context.
+ * Members of an alias definition with its arguments bound. The alias joins the path, one level deeper, as it would
+ * for a reference to it. Nothing in the definition is a parameter any more, so no type parameter is in scope.
  */
-export async function projectInstantiatedTypeMembers(
+export async function projectInstantiatedAliasMembers(
   api: TastyApiRuntime,
-  typeRef: RawTastyTypeRef
+  aliasId: string,
+  definition: RawTastyTypeRef,
+  context: ProjectionContext
 ): Promise<TastyMember[]> {
-  const projected = await projectTypeMembers(api, api.createTypeRef(typeRef), {
-    visitedSymbolIds: new Set<string>(),
-    depth: 0,
+  const projected = await projectTypeMembers(api, api.createTypeRef(definition), {
+    ...enterSymbol(context, aliasId),
+    typeParameterNames: undefined,
   })
   return projected ?? []
 }
@@ -99,6 +97,7 @@ async function projectTypeMembers(
   context: ProjectionContext
 ): Promise<TastyMember[] | undefined> {
   if (!typeRef || context.depth > MAX_PROJECTION_DEPTH) return undefined
+  if (!takeProjectionStep(context)) return undefined
 
   const raw = concreteTypeRef(typeRef).getRaw()
   if (isTypeReference(raw)) {
@@ -183,12 +182,7 @@ async function projectLoadedReferenceMembers(
   if (isTypeAliasSymbol(raw)) {
     const instantiated = instantiateTypeAliasDefinition(raw, reference.typeArguments)
     if (instantiated) {
-      return projectRawTypeMembers(api, instantiated, {
-        visitedSymbolIds: new Set(context.visitedSymbolIds).add(symbol.getId()),
-        depth: context.depth + 1,
-        projectTypeParameterMembers: context.projectTypeParameterMembers,
-        typeParameterNames: context.typeParameterNames,
-      })
+      return projectRawTypeMembers(api, instantiated, enterSymbol(context, symbol.getId()))
     }
   }
 
@@ -274,15 +268,12 @@ async function projectParametersIndexedAccessMembers(
 export async function projectMembersFromInterfaceExtends(
   api: TastyApiRuntime,
   symbol: TastySymbol,
-  substitutions: TypeSubstitutions = new Map()
+  substitutions: TypeSubstitutions,
+  context: ProjectionContext
 ): Promise<TastyMember[]> {
   const raw = symbol.getRaw()
   if (!isInterfaceSymbol(raw)) return []
 
-  const context: ProjectionContext = {
-    visitedSymbolIds: new Set<string>([symbol.getId()]),
-    depth: 0,
-  }
   const out: TastyMember[] = []
   for (const ext of raw.extends) {
     if (!ext.typeArguments?.length) continue

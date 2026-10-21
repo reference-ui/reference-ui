@@ -1,7 +1,9 @@
 /**
  * Reference walking for object projection.
- * Walks type references during object projection: the walk context and its depth guard,
- * type-parameter bookkeeping, and loading the symbol a reference names.
+ * Walks type references during object projection: the walk context with its depth guard and step budget,
+ * type-parameter bookkeeping, and loading the symbol a reference names. One public call builds one context, and every
+ * projection it starts carries that context's path, so a symbol revisited on the path ends the walk and the budget
+ * ends any walk that keeps growing without repeating a symbol.
  */
 import type {
   RawTastyTypeReference,
@@ -11,12 +13,70 @@ import type {
 import type { TastyApiRuntime } from './api-runtime.js'
 
 export const MAX_PROJECTION_DEPTH = 32
+export const MAX_PROJECTION_STEPS = 10_000
+
+/**
+ * Steps one public call may still take. It is shared by reference: every context a call derives draws on the same
+ * count, and `onExhausted` runs once, the first time a step is refused.
+ */
+export interface ProjectionBudget {
+  remaining: number
+  reported: boolean
+  onExhausted: () => void
+}
 
 export interface ProjectionContext {
   visitedSymbolIds: Set<string>
   depth: number
   projectTypeParameterMembers?: TastyTypeParameterMemberProjector
   typeParameterNames?: Set<string>
+  budget: ProjectionBudget
+}
+
+export function createProjectionBudget(onExhausted: () => void): ProjectionBudget {
+  return { remaining: MAX_PROJECTION_STEPS, reported: false, onExhausted }
+}
+
+/**
+ * Takes one step from the call's budget. Returns false once the budget is spent; the caller then stops expanding
+ * and returns what it has, so the walk ends with a partial result and one notice.
+ */
+export function takeProjectionStep(context: ProjectionContext): boolean {
+  const { budget } = context
+  if (budget.remaining > 0) {
+    budget.remaining -= 1
+    return true
+  }
+  if (!budget.reported) {
+    budget.reported = true
+    budget.onExhausted()
+  }
+  return false
+}
+
+export function budgetExhaustedNotice(symbolName: string): string {
+  return `Member projection of "${symbolName}" stopped after ${MAX_PROJECTION_STEPS} steps; inherited members past that point may be omitted.`
+}
+
+/** The context a projection of `symbolId` runs under: the path gains the symbol and the depth rises by one. */
+export function enterSymbol(context: ProjectionContext, symbolId: string): ProjectionContext {
+  return {
+    ...context,
+    visitedSymbolIds: new Set(context.visitedSymbolIds).add(symbolId),
+    depth: context.depth + 1,
+  }
+}
+
+/**
+ * The context an interface's members are read under: the path gains the interface, and no type parameter of an
+ * enclosing alias is in scope, since an interface's own members never refer to them.
+ */
+export function enterInterface(context: ProjectionContext, symbolId: string): ProjectionContext {
+  return {
+    ...context,
+    visitedSymbolIds: new Set(context.visitedSymbolIds).add(symbolId),
+    typeParameterNames: undefined,
+  }
 }
 
 export function withTypeParameterNames(
