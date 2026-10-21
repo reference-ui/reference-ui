@@ -2,8 +2,9 @@
 
 Canon ships only dialect extensions that produce real CSS. The retired
 fictional props (`translateX`, `boxSize`, `spaceX`, `truncate`,
-`hideFrom`, `gradientFrom`, `textStyle`, `scrollSnapStrictness`, plus a
-`&:hover` arm and a JSX leg) are no longer style props: each warns
+`hideFrom`, `gradientFrom`, `textStyle`, `scrollSnapStrictness`,
+`srOnly`, plus a `&:hover` arm and a JSX leg) are no longer style
+props: each warns
 `ATM-W-UNKNOWN-PROPERTY` on default naming the prop, pushes no want,
 and serves no plan, so the sheet carries zero fictional declarations.
 Sibling platform props still extract, and every remaining extension

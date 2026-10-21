@@ -143,13 +143,28 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-PROPERTY",
-    "message": "Unknown style property \"spaceY\"",
+    "message": "Unknown style property \"srOnly\"",
     "file": "input/src/css.ts",
     "line": 12,
+    "column": 3,
+    "span": {
+      "start": 256,
+      "end": 262
+    },
+    "help": [
+      "remove 'srOnly' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"spaceY\"",
+    "file": "input/src/css.ts",
+    "line": 13,
     "column": 16,
     "span": {
-      "start": 269,
-      "end": 275
+      "start": 284,
+      "end": 290
     },
     "help": [
       "did you mean `page`?",

@@ -66,13 +66,29 @@ fn color_props_match_canon_sorted() {
     assert_eq!(tables.color_props, sorted);
 }
 
+/// True for a step that always runs and replaces the prop with real ones.
+/// `Keep` and `Rewrite` still serve the fictional name and `Drop` emits
+/// nothing, so none of them realizes an extension.
+fn is_unguarded_realizing_step(step: &LowerStep) -> bool {
+    matches!(
+        step,
+        LowerStep::Longhands { on: None, .. }
+            | LowerStep::Emit { on: None, .. }
+            | LowerStep::Macro { on: None, .. }
+    )
+}
+
 #[test]
 fn every_unrealizable_extension_has_a_runtime_lowering() {
     let tables = NamerTables::for_system(BaseSystem::lib_fixture());
     for name in canon::UNREALIZABLE_EXTENSIONS {
+        let steps = tables
+            .lowerings
+            .get(*name)
+            .unwrap_or_else(|| panic!("{name} has no runtime lowering"));
         assert!(
-            tables.lowerings.contains_key(*name),
-            "{name} has no runtime lowering"
+            steps.iter().any(is_unguarded_realizing_step),
+            "{name} needs an unguarded lowering step so every value is claimed"
         );
     }
 }

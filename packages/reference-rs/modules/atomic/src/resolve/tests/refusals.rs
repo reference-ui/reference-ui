@@ -78,13 +78,23 @@ fn every_unrealizable_extension_is_claimed_by_a_lowering() {
         );
         let atoms = resolve_with(&want, &system);
         assert!(!atoms.is_empty(), "{name} must be claimed by a lowering");
-        for atom in &atoms {
-            assert_ne!(
-                atom.prop.as_ref(),
-                *name,
-                "{name} must lower to real CSS, not serve its own name"
-            );
+        assert_never_serves_own_name(name, &atoms);
+        // Other value kinds may refuse, but none may fall through to the
+        // fictional declaration.
+        for value in [AtomValue::Number("4".into()), AtomValue::Bool(true)] {
+            let atoms = resolve_with(&Want::new(*name, value), &system);
+            assert_never_serves_own_name(name, &atoms);
         }
+    }
+}
+
+fn assert_never_serves_own_name(name: &str, atoms: &[Atom]) {
+    for atom in atoms {
+        assert_ne!(
+            atom.prop.as_ref(),
+            name,
+            "{name} must lower to real CSS, not serve its own name"
+        );
     }
 }
 

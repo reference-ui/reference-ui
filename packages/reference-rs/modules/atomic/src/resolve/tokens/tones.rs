@@ -37,7 +37,6 @@ const LINE_PROPS: &[&str] = &[
     "boxShadow",
     "boxShadowColor",
     "textShadow",
-    "textShadowColor",
     "webkitTextFillColor",
     "webkitTextStroke",
     "webkitTextStrokeColor",

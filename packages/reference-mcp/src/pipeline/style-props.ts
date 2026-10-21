@@ -154,7 +154,7 @@ export const STYLE_PROP_CATEGORIES: StylePropCategory[] = [
   },
   {
     name: 'sizing',
-    description: 'Width, height, min/max size, and box size props.',
+    description: 'Width, height, min/max size, and logical size props.',
     tokenCategories: ['sizes', 'spacing'],
     props: SIZE_PROPS,
   },

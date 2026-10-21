@@ -19,6 +19,7 @@ const RETIRED: Array<{ prop: string; deadDecl: string }> = [
   { prop: 'gradientFrom', deadDecl: 'gradient-from:' },
   { prop: 'textStyle', deadDecl: 'text-style:' },
   { prop: 'scrollSnapStrictness', deadDecl: 'scroll-snap-strictness:' },
+  { prop: 'srOnly', deadDecl: 'sr-only:' },
   { prop: 'spaceY', deadDecl: 'space-y:' },
   { prop: 'translateY', deadDecl: 'translate-y:' },
 ]

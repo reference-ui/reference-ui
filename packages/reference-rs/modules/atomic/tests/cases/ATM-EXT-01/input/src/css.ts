@@ -9,6 +9,7 @@ export const refused = css({
   gradientFrom: 'red',
   textStyle: 'body',
   scrollSnapStrictness: 'proximity',
+  srOnly: 'x',
   '&:hover': { spaceY: '4px' },
 })
 

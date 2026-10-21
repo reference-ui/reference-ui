@@ -45,7 +45,6 @@ describe('mcp style prop reference', () => {
     }
   })
 
-
   it('returns a concise reference by default', () => {
     const reference = getStylePropsReference()
 

@@ -1,5 +1,5 @@
-//! Pins the resolver's legacy sentences and help lines: declaration, name, value, token, and
-//! extension shapes keep their exact wording. Fixtures build resolve reports from typed details, so
+//! Pins the resolver's legacy sentences and help lines. Declaration, name, value, and token
+//! shapes keep their exact wording. Fixtures build resolve reports from typed details, so
 //! a disposition change must never alter the sentence.
 
 use super::super::Policy;
@@ -192,7 +192,7 @@ fn suggestion_codes_head_the_fix_with_did_you_mean() {
 }
 
 #[test]
-fn value_token_and_extension_shapes_echo_their_parts() {
+fn value_and_token_shapes_echo_their_parts() {
     let cases = [
         (
             ResolveDetail::Declaration(DeclarationDetail::Value(ValueDetail::NonCanonicalNumber {

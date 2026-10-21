@@ -11,7 +11,6 @@
       "end": 187
     },
     "help": [
-      "did you mean `srOnly`?",
       "remove 'fooOnly' or check its spelling"
     ]
   },
@@ -58,7 +57,6 @@
       "end": 244
     },
     "help": [
-      "did you mean `srOnly`?",
       "remove 'barOnly' or check its spelling"
     ]
   },
@@ -106,7 +104,6 @@
       "end": 313
     },
     "help": [
-      "did you mean `srOnly`?",
       "remove 'quxOnly' or check its spelling"
     ]
   },
