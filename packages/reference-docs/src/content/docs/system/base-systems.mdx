@@ -1,0 +1,196 @@
+---
+title: Base systems
+section: System
+group: Theme
+order: 210
+slug: base-systems
+description: What a base system carries, what extends and layers take from it, and extendSystem().
+---
+
+# Base systems
+
+A base system is everything one system publishes: its tokens, fonts,
+keyframes, compiled styles and component names. `ref sync` writes it as the
+`baseSystem` export of `.reference-ui/system/baseSystem.mjs`. Another
+project lists it in `extends` or `layers`, or passes it to `extendSystem()`
+to change its token values.
+
+To publish one, see [Share a design system](/share-a-design-system). To
+brand a shared system, see [Customization](/customization).
+
+## baseSystem
+
+Import a package's base system from its `baseSystem` subpath:
+
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem } from 'my-design-system/baseSystem'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [baseSystem],
+})
+```
+
+Your own base system is also exported from `@reference-ui/system`.
+
+## What travels
+
+| | `extends` | `layers` |
+| --- | --- | --- |
+| Tokens, fonts and keyframes, usable by name in your styles and types | yes | no |
+| Their CSS: token variables, `@font-face` and `@keyframes` rules | yes | yes |
+| Global CSS, recipe classes and style prop classes the system compiled | yes | yes |
+| `recipe()` definitions | no | no |
+| Its `jsxElements` names, joined with yours | yes | no |
+| The props each component keeps for itself | yes | yes |
+| Your token values inside its components | yes | no |
+
+A recipe stays as the system's sync built it: your sync receives its
+classes, not its config. A `_private` token stays private: it paints inside
+the system's components and stays out of your token names.
+
+Under `layers`, a style that names one of the system's tokens warns at the
+call, such as `ATM-W-UNKNOWN-COLOR`.
+
+## Order
+
+Each system gets its own [cascade layer](/cascade-layers). Sync orders them:
+`extends` systems in config order, then `layers` systems, then yours.
+
+Under `extends`, token definitions merge by leaf path:
+
+- A later entry wins over an earlier one.
+- Your own tokens win over every entry, and sync warns
+  `BSS-W-TOKEN-SHADOW` when yours replaces a different value.
+- A system that extends another brings both. A system reached twice is
+  merged once.
+
+## Config errors
+
+`ref sync` checks `extends` and `layers` when it loads the config, and
+stops with `Config field 'extends' is invalid.` or
+`Config field 'layers' is invalid.` and one reason:
+
+| Cause | Fix |
+| --- | --- |
+| The field is not an array, or an entry is not an object or has no `name` | Pass a package's `baseSystem` export. |
+| An entry has no synced data | Run `ref sync` in that package first. |
+| A `layers` entry has no compiled styles | Run `ref sync` in that package, or list it under `extends`. |
+| An entry is your own `name`, or reaches it through its own `extends` or `layers` | Remove the entry, or the path back to your system. |
+| An entry repeats in one field | List each system once. |
+| A system is in both fields | Remove it from `layers`. |
+| A name holds a double quote, a backslash or a line break | Rename the system. |
+
+An installed package whose base system was never synced fails to load, and
+the message tells you to sync it.
+
+## extendSystem()
+
+`extendSystem()` returns a copy of a base system with some token values
+changed. Use the copy in place of the base, in `extends` or `layers`.
+
+```ts
+// ui.config.ts
+import { defineConfig, extendSystem } from '@reference-ui/core'
+import { baseSystem } from 'my-design-system/baseSystem'
+
+const branded = extendSystem(baseSystem, {
+  tokens: {
+    colors: {
+      brand: { light: '#0f766e', dark: '#5eead4' },
+    },
+  },
+})
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [branded],
+})
+```
+
+```ts
+function extendSystem(
+  base: BaseSystem,
+  overrides: { tokens: TokenConfig }
+): BaseSystem
+```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `base` | `BaseSystem` | A published base system, or the result of an earlier `extendSystem()` call. |
+| `overrides.tokens` | `TokenConfig` | A token tree shaped like the `tokens()` input. Every leaf must be a token the base declares. |
+
+The copy keeps the base's name, components and compiled styles, and changes
+only token values. The new values paint inside the base's components, in
+light and dark.
+
+List the copy instead of the base. The base and its copy together, in one
+field or across both, are rejected.
+
+### Token values
+
+Each leaf takes `value`, `light` or `dark`, as a string. Write numbers in
+quotes.
+
+| You write | Light | Dark |
+| --- | --- | --- |
+| `{ value: 'a' }` | `a` | `a` |
+| `{ light: 'a' }` or `{ dark: 'a' }` | `a` | `a` |
+| `{ light: 'a', dark: 'b' }` | `a` | `b` |
+| `{ value: 'a', dark: 'b' }` | `a` | `b` |
+| `{ value: 'a', light: 'b' }` | `b` | `a` |
+
+A leaf with one slot replaces the base's dark value too.
+
+A value can reference another token the base declares, as
+`{colors.brand}`, and use [rhythm units](/spacing): `2r` prints
+`calc(2 * var(--spacing-root))`. `spacing.root` takes a plain length, since
+it defines `r`.
+
+### Chained calls
+
+Pass an extended system back in to add more overrides:
+
+```ts
+const branded = extendSystem(baseSystem, {
+  tokens: { colors: { brand: { value: '#0f766e' } } },
+})
+
+const final = extendSystem(branded, {
+  tokens: { colors: { accent: { value: '#f59e0b' } } },
+})
+```
+
+The calls merge by leaf path, and a later call wins on the same path. The
+result is built once from the original base, with the merged overrides.
+
+### Errors
+
+`extendSystem()` throws an `ExtendSystemError` while the config loads, so
+`ref sync` stops and prints its message:
+
+| Message | Cause |
+| --- | --- |
+| `the first argument must be a published base system` | `base` is not a base system. |
+| ``overrides need a `tokens` object`` | `overrides.tokens` is missing or not an object. |
+| `unknown token <path> in <base>` | The base does not declare that token. |
+| `token <path> needs a value, a light value or a dark value` | The leaf sets no slot. |
+| `token <path> must be a string` | A slot is a number or another non-string. |
+| `token <path> references itself` | A value references its own token. |
+| `token <path> refers to unknown token` | A `{path}` reference names a token the base does not declare. |
+| `token <path> has a brace that is not a {token.path} reference` | A value has a stray or empty brace. |
+| `token <path> defines the rhythm root in rhythm units` | `spacing.root` uses `r`. |
+
+Each message begins with `extendSystem:`.
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/share-a-design-system" title="Share a design system">Publish a base system and choose `extends` or `layers`.</LinkCard>
+  <LinkCard href="/customization" title="Customization">Brand the library with `extendSystem()`.</LinkCard>
+  <LinkCard href="/config" title="Config">The `extends` and `layers` fields.</LinkCard>
+</LinkCards>
