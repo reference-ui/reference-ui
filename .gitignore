@@ -54,6 +54,8 @@ packages/.sandbox
 .reference-ui
 # Committed declaration roots the styletrace diag cases trace against: fixtures, not sync output.
 !packages/reference-core/tests/cases/diag/*/world/decl/.reference-ui/
+# The styletrace sync-root stand-in: hand-written declarations the tests trace against, not sync output.
+!packages/reference-rs/modules/styletrace/fixtures/sync-root/.reference-ui/
 .ref
 .pipeline
 .content-collections
