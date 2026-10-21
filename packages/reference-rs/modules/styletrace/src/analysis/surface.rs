@@ -67,8 +67,8 @@ impl StyleSurface {
     }
 
     /// Build the surface from a declaration root (disk path). A missing entrypoint,
-    /// malformed graph, or unreadable declaration refuses the request with
-    /// `STT-E-UNRESOLVED-SURFACE`.
+    /// malformed graph, unreadable declaration, or guard limit that hides a surface name
+    /// refuses the request with `STT-E-UNRESOLVED-SURFACE`.
     pub fn from_declaration_root(root: &Path) -> Result<Self, StyleTraceError> {
         let style_props = collect_reference_style_prop_names(root)
             .map_err(|error| StyleTraceError::new(unresolved_surface(error.message())))?

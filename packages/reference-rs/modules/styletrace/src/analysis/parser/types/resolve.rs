@@ -1,7 +1,7 @@
-//! Resolves TypeScript prop types into the style-prop and owned-prop names that wrappers and components carry.
+//! Resolves TypeScript prop types into the style-prop and owned-prop names of wrappers and components.
 //! It takes a `TSType` annotation (a reference, a literal or an intersection) from a props parameter or a wrapper type argument.
 //! It emits `WrapperProps` for higher-order type arguments, and owned prop names that the shadow check later filters.
-//! Every prop-type trace that a guard limit cut is recorded on the module's type-cut sink, so the report can warn about the loss.
+//! Each prop-type trace's lossy guard-limit cuts go on the module's type-cut sink for the report.
 
 use super::super::context::ParserContext;
 use crate::analysis::model::WrapperProps;
@@ -67,7 +67,7 @@ fn resolve_type_reference(
         slice_span(ctx.source, reference.type_name.span()),
         trust,
     )?;
-    ctx.note_type_cut(traced.cut);
+    ctx.note_type_cuts(traced.cuts);
     Ok(traced
         .names
         .into_iter()
@@ -142,7 +142,7 @@ fn resolve_owned_type_reference(
         ctx.path,
         slice_span(ctx.source, reference.type_name.span()),
     )?;
-    ctx.note_type_cut(traced.cut);
+    ctx.note_type_cuts(traced.cuts);
     Ok(traced.names.into_iter().collect())
 }
 

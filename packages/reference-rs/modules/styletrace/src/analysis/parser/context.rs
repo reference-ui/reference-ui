@@ -22,15 +22,14 @@ pub struct ParserContext<'a> {
 }
 
 impl ParserContext<'_> {
-    /// Record one trace's limit cut, if it hit one. The style and declared traces of one props type can
-    /// cut the same declaration, and two components can share a chain; identical cuts collapse to one warning.
-    pub fn note_type_cut(&self, cut: Option<GuardCut>) {
-        let Some(cut) = cut else {
-            return;
-        };
-        let mut cuts = self.type_cuts.borrow_mut();
-        if !cuts.contains(&cut) {
-            cuts.push(cut);
+    /// Record one trace's lossy limit cuts. The style and declared traces of one props type can cut the
+    /// same declaration, and two components can share a chain; identical cuts collapse to one warning.
+    pub fn note_type_cuts(&self, cuts: Vec<GuardCut>) {
+        let mut recorded = self.type_cuts.borrow_mut();
+        for cut in cuts {
+            if !recorded.contains(&cut) {
+                recorded.push(cut);
+            }
         }
     }
 }

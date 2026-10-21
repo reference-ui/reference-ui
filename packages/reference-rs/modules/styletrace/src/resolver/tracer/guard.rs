@@ -3,8 +3,9 @@
 //! caller (bound parameters substituted by what they denote), and leaves it when the expansion returns.
 //! An expansion already on the stack is a repeat and is refused silently, since repeating it adds no names
 //! (`Loop<T> = T | Loop<T>`, mutually recursive aliases). A stack past `MAX_DEPTH`, an argument past
-//! `MAX_ARG_NODES` or a session past `MAX_EXPANSIONS` is a cut: the names that expansion would add are lost,
-//! so the session keeps the first cut for the report. A refused expansion contributes no names either way.
+//! `MAX_ARG_NODES` or a session past `MAX_EXPANSIONS` is a cut: the expansion is refused and contributes no
+//! names, so the session records the cut with the names it could reach (`reach.rs`). A cut is lossy, and
+//! reported, only when a reached name is missing from the trace's result; a cut that loses nothing stays silent.
 
 use std::path::{Path, PathBuf};
 
@@ -37,8 +38,8 @@ pub enum CutReason {
     Budget,
 }
 
-/// The first expansion a limit refused in one trace: the declaration it would have expanded and
-/// the module that declares it. Only the first is kept; later cuts of the same walk say the same thing.
+/// One limit that refused an expansion: the limit it hit, the declaration it would have expanded and
+/// the module that declares it. A trace keeps each distinct cut once; identical refusals fold together.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GuardCut {
     pub reason: CutReason,

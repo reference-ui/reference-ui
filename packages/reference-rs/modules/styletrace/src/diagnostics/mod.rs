@@ -11,6 +11,8 @@ mod codes;
 pub use codes::StyletraceDiagnosticCode;
 pub use diagnostics::{Diagnostic, DiagnosticError};
 
+use std::path::Path;
+
 use crate::resolver::{CutReason, GuardCut};
 
 /// Styletrace diagnostics are template diagnostics: severity plus validated code plus message.
@@ -108,6 +110,18 @@ pub(crate) fn type_expansion_limit(file: &str, cut: &GuardCut) -> Option<Styletr
             cut.module.display(),
             limit_word(cut.reason),
         ),
+    )
+}
+
+/// Reason text for a surface whose entry lost names to a guard limit: the declaration the limit refused,
+/// the module that declares it and the limit it hit. The caller prefixes the code, as for every surface refusal.
+pub(crate) fn surface_cut(entry: &Path, export_name: &str, cut: &GuardCut) -> String {
+    format!(
+        "{export_name} in {} is incomplete: expanding `{}` in {} stopped at the {} limit, so the props it would add are missing",
+        entry.display(),
+        cut.name,
+        cut.module.display(),
+        limit_word(cut.reason),
     )
 }
 

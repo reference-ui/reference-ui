@@ -2,28 +2,32 @@
 //! Resolves TypeScript types across files to trace style properties from declaration roots.
 //! It uses a recursive resolution strategy handling imports, builtins, and generics.
 //! The resolved property names are emitted as a flat set of strings or explicit failure diagnostics.
-//! Each trace also reports the first guard limit that cut its walk, so a loss of names is never silent.
+//! Each trace also reports every guard limit whose cut hid a name from its result, so a loss of names is never silent.
 
 mod builtins;
 mod context;
 mod guard;
+mod reach;
 mod resolve;
 
 use std::collections::BTreeSet;
+use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
 
+use crate::diagnostics::surface_cut;
 use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::TypeEnv;
 
 use context::{TraceContext, TraceSession};
 pub use guard::{CutReason, GuardCut};
 
-/// The names one trace reached, sorted and unique, plus the first guard limit that cut the walk.
-/// `cut` is `Some` only when a depth, argument-size or session-budget limit refused an expansion.
+/// The names one trace reached, sorted and unique, plus the guard limits whose cut hid one of them.
+/// `cuts` lists only the lossy cuts: a limit that refused an expansion whose reachable names the trace
+/// already holds loses nothing, so it is not reported.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TracedNames {
     pub names: Vec<String>,
-    pub cut: Option<GuardCut>,
+    pub cuts: Vec<GuardCut>,
 }
 
 const REFERENCE_STYLE_PROPS_ENTRY_STEMS: &[&str] = &[
@@ -59,9 +63,38 @@ pub fn collect_reference_style_prop_names(
     declaration_root: &Path,
 ) -> Result<Vec<String>, StyleTraceError> {
     if declaration_root.is_file() {
-        return collect_entry_names(declaration_root, declaration_root, "StyleProps");
+        return match collect_entry_names(declaration_root, declaration_root, "StyleProps") {
+            EntryNames::Resolved(names) => Ok(names),
+            EntryNames::Unresolved(error) | EntryNames::Incomplete(error) => Err(error),
+        };
     }
     collect_first_resolving_entry(declaration_root)
+}
+
+/// One candidate entry's outcome. An unresolved entry lets the next candidate try; an incomplete one
+/// (a guard limit hid a name the surface needs) refuses the surface outright, so no other entry stands in.
+enum EntryNames {
+    Resolved(Vec<String>),
+    Unresolved(StyleTraceError),
+    Incomplete(StyleTraceError),
+}
+
+impl EntryNames {
+    /// Whether this candidate ends the search: resolved and incomplete candidates both do, while an
+    /// unresolved one is kept as the error to report if no later candidate resolves.
+    fn settle(
+        self,
+        first_error: &mut Option<StyleTraceError>,
+    ) -> ControlFlow<Result<Vec<String>, StyleTraceError>> {
+        match self {
+            Self::Resolved(names) => ControlFlow::Break(Ok(names)),
+            Self::Incomplete(error) => ControlFlow::Break(Err(error)),
+            Self::Unresolved(error) => {
+                first_error.get_or_insert(error);
+                ControlFlow::Continue(())
+            }
+        }
+    }
 }
 
 fn collect_first_resolving_entry(declaration_root: &Path) -> Result<Vec<String>, StyleTraceError> {
@@ -75,32 +108,42 @@ fn collect_first_resolving_entry(declaration_root: &Path) -> Result<Vec<String>,
 
     let mut first_error: Option<StyleTraceError> = None;
     for (entry_path, export_name) in candidates {
-        match collect_entry_names(declaration_root, &entry_path, export_name) {
-            Ok(names) => return Ok(names),
-            Err(error) => {
-                first_error.get_or_insert(error);
-            }
+        let outcome = collect_entry_names(declaration_root, &entry_path, export_name);
+        if let ControlFlow::Break(settled) = outcome.settle(&mut first_error) {
+            return settled;
         }
     }
-    Err(first_error.unwrap_or_else(|| {
-        StyleTraceError::new(
-            "malformed public type graph: no style properties resolved from StyleProps",
-        )
-    }))
+    Err(first_error.unwrap_or_else(no_resolving_entry_error))
+}
+
+fn no_resolving_entry_error() -> StyleTraceError {
+    StyleTraceError::new(
+        "malformed public type graph: no style properties resolved from StyleProps",
+    )
 }
 
 fn collect_entry_names(
     declaration_root: &Path,
     entry_path: &Path,
     export_name: &str,
-) -> Result<Vec<String>, StyleTraceError> {
-    let names = collect_style_prop_names(declaration_root, entry_path, export_name, None)?.names;
-    if names.is_empty() {
-        return Err(StyleTraceError::new(format!(
+) -> EntryNames {
+    let traced = match collect_style_prop_names(declaration_root, entry_path, export_name, None) {
+        Ok(traced) => traced,
+        Err(error) => return EntryNames::Unresolved(error),
+    };
+    if let Some(cut) = traced.cuts.first() {
+        return EntryNames::Incomplete(StyleTraceError::new(surface_cut(
+            entry_path,
+            export_name,
+            cut,
+        )));
+    }
+    if traced.names.is_empty() {
+        return EntryNames::Unresolved(StyleTraceError::new(format!(
             "malformed public type graph: no style properties resolved from {export_name}"
         )));
     }
-    Ok(names)
+    EntryNames::Resolved(traced.names)
 }
 
 fn style_props_entry_candidates(declaration_root: &Path) -> Vec<(PathBuf, &'static str)> {
@@ -154,8 +197,8 @@ pub fn collect_style_prop_names(
 
     let names = resolve::resolve_reference_props(&mut ctx, entry_path, export_name)?;
     Ok(TracedNames {
+        cuts: session.lossy_cuts(&names),
         names: names.into_iter().collect(),
-        cut: session.first_cut,
     })
 }
 
@@ -182,7 +225,7 @@ pub fn collect_declared_prop_names(
 
     let names = resolve::resolve_reference_props(&mut ctx, entry_path, export_name)?;
     Ok(TracedNames {
+        cuts: session.lossy_cuts(&names),
         names: names.into_iter().collect(),
-        cut: session.first_cut,
     })
 }

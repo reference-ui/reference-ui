@@ -16,6 +16,7 @@ mod member_alias_reassign;
 mod member_alias_silent;
 mod core_decl_roots;
 mod declared_walk;
+mod guard_cuts;
 mod owned_forwarded;
 mod owned_local;
 mod owned_props;

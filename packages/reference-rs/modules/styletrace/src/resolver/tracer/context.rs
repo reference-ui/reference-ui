@@ -4,7 +4,8 @@
 //! The `TraceContext` provides scoped state for deep recursive type walks,
 //! avoiding argument soup and keeping track of visited nodes; the session's
 //! `ExpansionGuard` bounds declaration expansions so recursive generics stop,
-//! and the session keeps the first limit cut so the walk can report the loss.
+//! and the session keeps every distinct limit cut with the names it could reach,
+//! so the walk reports only the cuts that hid a name from its result.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -18,11 +19,18 @@ use crate::resolver::model::{
     ParsedModule, TypeAliasDecl, TypeDeclaration, TypeEnv, TypeExpr,
 };
 use crate::resolver::parser::parse_module;
-use super::guard::{CutReason, ExpansionGuard, GuardCut};
+use super::guard::{ExpansionGuard, GuardCut};
+use super::reach::Reach;
 use crate::resolver::path::{
     is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
     resolve_specifier,
 };
+
+/// A distinct limit cut of one session and the names its refused expansions could reach.
+pub struct CutRecord {
+    pub cut: GuardCut,
+    pub reach: Reach,
+}
 
 pub struct TraceSession {
     pub sync_root: PathBuf,
@@ -38,8 +46,8 @@ pub struct TraceSession {
     pub prune_surface: bool,
     /// Declaration expansions in progress; refuses repeats and runaway recursion.
     pub guard: ExpansionGuard,
-    /// The first expansion a guard limit refused in this session; `None` when no limit cut the walk.
-    pub first_cut: Option<GuardCut>,
+    /// Every distinct limit cut of the session, in the order the walk first met it.
+    pub cuts: Vec<CutRecord>,
 }
 
 impl TraceSession {
@@ -51,20 +59,26 @@ impl TraceSession {
             unresolved_primitive_names: None,
             prune_surface: false,
             guard: ExpansionGuard::default(),
-            first_cut: None,
+            cuts: Vec::new(),
         }
     }
 
-    /// Keep the first limit cut of the session. Later cuts are dropped: one warning per walk is
-    /// enough to find the chain, and the first cut already names a declaration and its limit.
-    pub fn note_cut(&mut self, reason: CutReason, name: &str, module: &Path) {
-        if self.first_cut.is_none() {
-            self.first_cut = Some(GuardCut {
-                reason,
-                name: name.to_string(),
-                module: module.to_path_buf(),
-            });
+    /// Record a limit cut with the names its refused expansion could reach. A repeat of the same cut
+    /// (same limit, declaration and module) folds into the first record, so the record stays one per cut.
+    pub fn note_cut(&mut self, cut: GuardCut, reach: Reach) {
+        match self.cuts.iter_mut().find(|record| record.cut == cut) {
+            Some(record) => record.reach.absorb(reach),
+            None => self.cuts.push(CutRecord { cut, reach }),
         }
+    }
+
+    /// The cuts that hid a name from the walk's result: each one whose reach is not covered by `traced`.
+    pub fn lossy_cuts(&self, traced: &BTreeSet<String>) -> Vec<GuardCut> {
+        self.cuts
+            .iter()
+            .filter(|record| !record.reach.covered_by(traced))
+            .map(|record| record.cut.clone())
+            .collect()
     }
 }
 

@@ -12,7 +12,8 @@ use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{BoundTypeExpr, TypeDeclaration, TypeEnv, TypeExpr};
 
 use super::super::context::TraceContext;
-use super::super::guard::{Entry, ExpansionSite, TracePass};
+use super::super::guard::{Entry, ExpansionSite, GuardCut, TracePass};
+use super::super::reach::cut_reach;
 use super::literals::resolve_literal_names_into;
 use super::{resolve_prop_names_into, take_or_extend};
 
@@ -46,7 +47,7 @@ pub(super) struct NamedReference<'a> {
 
 /// Expand the declaration a reference names in the current module for its pass, through the guard.
 /// An unresolvable name, a repeat of an expansion in progress, and a guard limit all contribute nothing;
-/// only a limit is recorded on the session, since only a limit loses names.
+/// a limit is recorded on the session with the names it could reach, and the trace decides later which cuts lost names.
 pub(super) fn resolve_named_decl_into(
     ctx: &mut TraceContext<'_>,
     reference: &NamedReference<'_>,
@@ -69,8 +70,9 @@ pub(super) fn resolve_named_decl_into(
     result
 }
 
-/// Ask the guard whether this expansion may run. A limit cut is recorded on the session; a repeat is
-/// silent, since the expansion it repeats already contributes its names.
+/// Ask the guard whether this expansion may run. A limit cut is recorded on the session with the names
+/// the refused expansion could reach, read from the caller's scope; a repeat is silent, since the
+/// expansion it repeats already contributes its names.
 fn admit_expansion(
     ctx: &mut TraceContext<'_>,
     reference: &NamedReference<'_>,
@@ -88,8 +90,13 @@ fn admit_expansion(
         Entry::Run => true,
         Entry::Repeat => false,
         Entry::Cut(reason) => {
-            ctx.session
-                .note_cut(reason, declaration.name(), module_path);
+            let cut = GuardCut {
+                reason,
+                name: declaration.name().to_string(),
+                module: module_path.to_path_buf(),
+            };
+            let reach = cut_reach(ctx, module_path, declaration, reference.args);
+            ctx.session.note_cut(cut, reach);
             false
         }
     }

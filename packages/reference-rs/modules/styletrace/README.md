@@ -18,9 +18,9 @@ Entries that fail to parse or read yield one `STT-W-SKIPPED-FILE` each and sibli
 | `STT-W-SKIPPED-FILE` | warning | one file unreadable or unparsable; siblings kept |
 | `STT-W-CLASS-COMPONENT` | warning | StyleProps-exposing class component; not traced |
 | `STT-W-UNRESOLVED-HOC-ARGUMENT` | warning | export-site HOC argument names no component |
-| `STT-W-TYPE-EXPANSION-LIMIT` | warning | a type declaration expansion hit the depth, argument-size or session-budget guard limit; props it would add are not traced |
+| `STT-W-TYPE-EXPANSION-LIMIT` | warning | a type declaration expansion hit the depth, argument-size or session-budget guard limit and the names it could reach are missing from the trace; those props are not traced |
 | `STT-E-SCAN-FAILED` | error | unreadable source root; trace refused |
-| `STT-E-UNRESOLVED-SURFACE` | error | no StyleProps entrypoint or sync root; trace refused |
+| `STT-E-UNRESOLVED-SURFACE` | error | no StyleProps entrypoint or sync root, or a guard limit hid a surface name; trace refused |
 
 ## Open gaps
 
