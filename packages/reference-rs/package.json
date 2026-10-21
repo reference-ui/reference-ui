@@ -96,8 +96,7 @@
     "dist/tasty.mjs",
     "dist/typegen.d.ts",
     "dist/typegen.mjs",
-    "README.md",
-    "docs"
+    "README.md"
   ],
   "scripts": {
     "agentrs": "node ../../.agents/skills/agent-rs/scripts/run.mjs",
