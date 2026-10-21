@@ -4,8 +4,10 @@
  * the Rust reader under `pnpm agentrs c atomic -t harvest`) and emits every
  * R1 number:
  * sink census, pool triple, net-new vs gross, byte cells, and Node parse
- * times. Preconditions: the census JSON is fresh, and `dist/namer.mjs` is
- * built for the react bundle. The `react.mjs` cell carries the
+ * times. Preconditions: the census JSON is fresh, and `dist/namer.mjs` and
+ * `dist/primitives.mjs` match their sources: the react bundle resolves both
+ * through the package exports, so the react cell checks them first and fails
+ * naming the stale file. The `react.mjs` cell carries the
  * re-verify-after-Jettison-acceptance caveat.
  */
 import fs from 'node:fs'
@@ -18,6 +20,7 @@ import * as csstree from 'css-tree'
 import { compile } from '../../js/index.js'
 import type { CompileResult, Want } from '../../js/types.js'
 import { LIB_SYSTEM_SPEC } from '../harness/helpers.js'
+import { assertDistFresh } from '../harness/dist-freshness.js'
 import { buildModel, type ModelWhen } from '../harness/harvest-model.js'
 import { publishRuntimeBundle } from '../../../../../reference-core/src/packager/styled.js'
 import { publishReactBundle } from '../../../../../reference-core/src/packager/react.js'
@@ -256,6 +259,7 @@ describe('enterprise harvest census', () => {
   }, 120_000)
 
   it('publishes react.mjs bytes (re-verify after Jettison acceptance)', async () => {
+    await assertDistFresh(['namer', 'primitives'])
     const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harvest-'))
     try {
       const systemName = (LIB_SYSTEM_SPEC as { name: string }).name

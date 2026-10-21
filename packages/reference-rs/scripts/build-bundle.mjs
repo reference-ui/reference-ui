@@ -1,17 +1,19 @@
 /**
- * JS bundle step for @reference-ui/rust: raw
- * esbuild over the 12 published entries, ESM-only, no dts or splitting. It
+ * JS bundle step for @reference-ui/rust: esbuild over the 12 published entries.
+ * ESM-only, no dts or splitting. It
  * takes the package checkout and emits staged .mjs outputs, cleaning stale JS
  * from dist/ only after a successful build and renaming each output in
  * atomically, so a failed build never leaves a half-empty dist/. Only react
  * stays external (the primitives entry shares the consumer's copy); the
  * manifest carries no runtime dependencies, so the external is a literal, not
- * manifest-computed. Run from the package dir: node scripts/build-bundle.mjs
+ * manifest-computed. Run from the package dir: node scripts/build-bundle.mjs.
+ * Importing it runs nothing: ENTRIES and bundleOptions() are exported so the
+ * stale-dist guard in tests builds the same bytes in memory.
  */
 import { build } from 'esbuild'
 import { mkdir, readdir, rename, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const PKG = dirname(dirname(fileURLToPath(import.meta.url)))
 const DIST = join(PKG, 'dist')
@@ -19,7 +21,7 @@ const STAGE_SUFFIX = '.__stage'
 
 // Same entries the tsup leg bundled: system aliases the atomic entry, and the
 // committed roster module (primitives.mjs) bundles the authored trio in.
-const ENTRIES = {
+export const ENTRIES = {
   index: 'modules/runtime/js/index.ts',
   tasty: 'modules/tasty/js/index.ts',
   'tasty/browser': 'modules/tasty/js/browser.ts',
@@ -37,6 +39,27 @@ const ENTRIES = {
 // tsup parity: react external, everything else bundled. Literal because the
 // manifest has no dependencies or peerDependencies to compute it from.
 const EXTERNAL = ['react']
+
+/** esbuild options for the published entries, minus the output location. */
+export function bundleOptions(entryPoints) {
+  return {
+    absWorkingDir: PKG,
+    entryPoints,
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    target: 'node18',
+    tsconfig: join(PKG, 'tsconfig.json'),
+    // tsup used ["module", "main"] on platform node; keep the lookup order.
+    mainFields: ['module', 'main'],
+    external: EXTERNAL,
+    splitting: false,
+    sourcemap: false,
+    minify: false,
+    outExtension: { '.js': '.mjs' },
+    logLevel: 'warning',
+  }
+}
 
 // Non-JS dist subtrees the tsup leg preserved across rebuilds; the tsc leg
 // regenerates declarations (modules/, contracts/, *.d.ts) after this step.
@@ -69,24 +92,7 @@ async function buildBundle() {
   const stageDir = `${DIST}${STAGE_SUFFIX}-${process.pid}`
   await rm(stageDir, { recursive: true, force: true })
   try {
-    await build({
-      absWorkingDir: PKG,
-      entryPoints: ENTRIES,
-      bundle: true,
-      format: 'esm',
-      platform: 'node',
-      target: 'node18',
-      tsconfig: join(PKG, 'tsconfig.json'),
-      // tsup used ["module", "main"] on platform node; keep the lookup order.
-      mainFields: ['module', 'main'],
-      external: EXTERNAL,
-      splitting: false,
-      sourcemap: false,
-      minify: false,
-      outdir: stageDir,
-      outExtension: { '.js': '.mjs' },
-      logLevel: 'warning',
-    })
+    await build({ ...bundleOptions(ENTRIES), outdir: stageDir })
   } catch (error) {
     await rm(stageDir, { recursive: true, force: true })
     throw error
@@ -110,9 +116,11 @@ async function buildBundle() {
   await rm(stageDir, { recursive: true, force: true })
 }
 
-try {
-  await buildBundle()
-} catch (error) {
-  console.error(error instanceof Error ? error.message : error)
-  process.exit(1)
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    await buildBundle()
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error)
+    process.exit(1)
+  }
 }
