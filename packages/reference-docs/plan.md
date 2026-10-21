@@ -104,3 +104,33 @@ message parsing (needs an ExtractDetail variant).
 - Browser support floor; Next.js support.
 - Does "a recipe nothing calls emits no CSS" belong in recipes or troubleshooting?
 - `pnpm agentdocs q` checks 0 `.mdx` files: the gate doesn't lint pages at all.
+
+
+## Wrap-up tracker (2026-10-22): everything known, to land
+
+Process for every item: implement on a branch/worktree -> landing gate (agentrs t, agentcore run,
+core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review for non-trivial work -> land.
+
+- [ ] Bounded walkers wave 1 (fix/bounded-walkers): review fixes in progress, then re-gate + land.
+- [ ] Bounded walkers wave 2: parse-depth guard (F2), symlink-safe walks (F5), corpus test (T2), boundary smoke (T5).
+- [ ] Bounded walkers wave 3: named errors for cyclic/deep token trees (F8), include brace cap (F9), expression-walker depth budgets (F3).
+- [ ] recipe({ slots }) (feat/recipe-slots): xhigh review, quiet-machine bench rerun (>=8 rounds, alternating), land.
+- [ ] Small fixes:
+  - tasty resolver reports `INSTALL.md?raw` imports as unresolved (strip query suffixes).
+  - Verify `pnpm agentrs q` thresholds vs AGENTS.md section 4 (cook saw file 1500 / complexity 60 / args 12 vs 500/15/5).
+  - Stale SPEC rows: core tests/cases/global/SPEC.md:64 (@media in globals) and :61 (@position-try is authorable via globalCss).
+  - lib book sync warns `accent`/`bg` unknown colour in Switch.tail.test.tsx:30,34.
+  - Folded JSX spreads warn on readOnly/onPointerDown (fold/call_lower.rs ignores JsxAttributes).
+  - typegen emits custom-scale range keys extract rejects (filter breakpoints.rs through range_shape).
+  - Structural unknown-property fact instead of message parsing (ExtractDetail variant).
+  - styletrace tests need gitignored fixtures/sync-root/.reference-ui: generate it in test setup so fresh worktrees pass.
+  - vendor-rust-tasty-dts.mjs fails on ./index.js specifiers (vendored tasty + styletrace d.ts stale; core types displayMembersOf locally).
+  - style-prop-reference.mdx compiles past Babel's 500 KB deopt line.
+  - `pnpm agentdocs q` lints no .mdx.
+  - A third-party tasty hook calling public getDisplayMembers() starts a fresh walk (document or guard).
+  - Docs: "a recipe nothing calls emits no CSS" goes in troubleshooting (ruling).
+- [ ] Docs from map.md: P1 (Imports and packages, Base systems, What sync can read (short, authoring only), Vite),
+      P2 (webpack, FAQ, Style HTML you don't control, Element styles), P3 (Sizes); sidebar groups (`group` field + DocSidebar).
+- [ ] Owner decisions still open: fragment import rule (recommended: ui.config -> core, theme files -> system with real
+      types, components -> react); webpack suite; browser floor; Next.js; srOnly as a feature; colorMode typed unknown;
+      Context exports public?
