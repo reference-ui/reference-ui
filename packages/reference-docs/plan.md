@@ -62,20 +62,22 @@ page (one Opus-medium writer per page). G5 (uncontrolled HTML) not started.
 ## Rulings log
 
 Orchestrator rulings where the spec was silent:
-- `debug` config key: documented as accepted-but-ignored (nothing reads it); pages point
-  to `ref sync --watch --debug`.
+- Docs never frame Reference UI by absence ("has no slot recipe", "no bundler plugin"): say what to do.
 - `.reference-ui/`: docs tell users to gitignore it (init doesn't; sync rebuilds it and
   writes host/pid lock files).
 - Same `name` twice: documented as rejected/deduplicated, not a shared layer (code says so).
 - Webpack section kept, though no kept matrix suite runs webpack since `db0e03664`.
 
+## Bugs fixed from the sweep (2026-10-21, on public-release)
+
+- `debug` config key removed (df385ab47). extendSystem token modes match the compiler (85751610c).
+  splitVariantProps keeps rest typed (0d7d9e8b9). Xhigh review: no blockers; minors + boolean/responsive
+  variant typing + shipped config MCP keys in progress.
+- In planning: 26 refused-but-typed extension props removed at the canon source; `*Only`/`*Down` keys
+  silently treated as breakpoint ranges.
+
 ## Owner decisions surfaced by the sweep
 
-- Refused-but-typed props (truncate, srOnly, boxSize, hideBelow/From, textStyle,
-  gradientFrom/To/Via): fix, untype, or document.
-- `debug` config key: wire it up or drop it (`core/src/config/types.ts:86`).
-- Token leaf with `value` + `light`: `value` becomes the dark value (`base-system/src/lower/mod.rs:302`). Bug?
-- `splitVariantProps` types both halves as variant props, so wrapper examples can't use it.
 - `tests/cases/global/SPEC.md:64` says globals are `@container` only; the walker prints `@media`. Stale row.
 - Webpack: restore a kept webpack5 matrix suite, or drop the webpack docs section.
 - Browser support floor; Next.js support; `positionTry` intent.
