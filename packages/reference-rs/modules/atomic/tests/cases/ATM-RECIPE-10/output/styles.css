@@ -1,0 +1,65 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer recipes {
+  .\@reference-ui\/lib__card__root__base { display: flex; }
+  .\@reference-ui\/lib__card__root_s_sm { padding: 12px; }
+  .\@reference-ui\/lib__card__root_s_lg { padding: 24px; }
+  .\@reference-ui\/lib__card__root_t_quiet { background-color: white; }
+  .\@reference-ui\/lib__card__root_t_loud { background-color: black; }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__card__root_s_lg { padding: 24px; }
+  }
+  .\@reference-ui\/lib__card__title__base { font-weight: 600; }
+  .\@reference-ui\/lib__card__title_s_sm { font-size: 14px; }
+  .\@reference-ui\/lib__card__title_s_lg { font-size: 20px; }
+  .\@reference-ui\/lib__card__title_t_loud { color: white; }
+  .\@reference-ui\/lib__card__title_c_lg_loud { letter-spacing: 1px; }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__card__title_s_lg { font-size: 20px; }
+  }
+  .\@reference-ui\/lib__card__body_o_true { opacity: 1; }
+  .\@reference-ui\/lib__card__body_o_false { opacity: 0.5; }
+  .\@reference-ui\/lib__banner__root__base { display: grid; }
+  .\@reference-ui\/lib__banner__icon_s_sm { width: 16px; }
+  .\@reference-ui\/lib__banner__icon_s_lg { width: 32px; }
+  @container (min-width: 640px) {
+    .sm\:\@reference-ui\/lib__banner__icon_s_sm { width: 16px; }
+  }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__banner__icon_s_sm { width: 16px; }
+  }
+  @container (min-width: 1024px) {
+    .lg\:\@reference-ui\/lib__banner__icon_s_sm { width: 16px; }
+  }
+  @container (min-width: 1280px) {
+    .xl\:\@reference-ui\/lib__banner__icon_s_sm { width: 16px; }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:\@reference-ui\/lib__banner__icon_s_sm { width: 16px; }
+  }
+  @container (min-width: 640px) {
+    .sm\:\@reference-ui\/lib__banner__icon_s_lg { width: 32px; }
+  }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__banner__icon_s_lg { width: 32px; }
+  }
+  @container (min-width: 1024px) {
+    .lg\:\@reference-ui\/lib__banner__icon_s_lg { width: 32px; }
+  }
+  @container (min-width: 1280px) {
+    .xl\:\@reference-ui\/lib__banner__icon_s_lg { width: 32px; }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:\@reference-ui\/lib__banner__icon_s_lg { width: 32px; }
+  }
+}
+}

@@ -1,6 +1,6 @@
 //! Static `recipe()` schema for one design-system utterance.
 //! Stores base styles, variant axes, default variants, and compound variant condition
-//! maps. There is no slot-recipe type: multi-part components are authored React.
+//! maps. Spec recipes carry no slots: a slotted `recipe()` call lowers to one plain recipe per slot in atomic extraction.
 //! This crate does not select variants or concatenate class names; atomic and typegen
 //! read the tables.
 

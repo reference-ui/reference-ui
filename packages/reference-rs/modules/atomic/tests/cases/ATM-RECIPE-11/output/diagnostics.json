@@ -1,0 +1,74 @@
+[
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-SLOT",
+    "message": "recipe 'stray' styles unknown slot 'header'; its slots are: root, title",
+    "file": "input/src/recipe.ts",
+    "line": 6,
+    "column": 38,
+    "span": {
+      "start": 163,
+      "end": 169
+    }
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-SLOT",
+    "message": "recipe 'listless': 'slots' must be an inline array of string literals",
+    "file": "input/src/recipe.ts",
+    "line": 9,
+    "column": 64,
+    "span": {
+      "start": 258,
+      "end": 264
+    }
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-SLOT",
+    "message": "recipe 'twice' lists slot 'root' twice",
+    "file": "input/src/recipe.ts",
+    "line": 11,
+    "column": 67,
+    "span": {
+      "start": 335,
+      "end": 341
+    }
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-SLOT",
+    "message": "recipe 'empty': 'slots' must name at least one slot",
+    "file": "input/src/recipe.ts",
+    "line": 13,
+    "column": 58,
+    "span": {
+      "start": 404,
+      "end": 406
+    }
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-DUPLICATE-RECIPE",
+    "message": "Recipe class stem 'card__root' within system '@reference-ui/lib' is claimed by slot 'root' of recipe 'card' and recipe 'card__root'",
+    "file": "input/src/recipe.ts",
+    "line": 17,
+    "column": 25,
+    "span": {
+      "start": 540,
+      "end": 603
+    }
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-DUPLICATE-RECIPE",
+    "message": "Duplicate recipe className 'shared' within system '@reference-ui/lib'",
+    "file": "input/src/recipe.ts",
+    "line": 21,
+    "column": 28,
+    "span": {
+      "start": 704,
+      "end": 762
+    }
+  }
+]
