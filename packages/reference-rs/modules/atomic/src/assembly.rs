@@ -12,14 +12,12 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rustc_hash::FxHashSet;
-
 use crate::{
     atom::{AtomSet, When},
     diagnostics::DiagnosticsSession,
     lanes::{Lanes, WorkKind},
     recipes, resolve, runtime, static_css, stylesheet, BaseSystem, CompileResult, Diagnostic,
-    DiagnosticCode, DiagnosticLocation, NativeRuntimeArtifact,
+    DiagnosticLocation, NativeRuntimeArtifact,
 };
 
 mod build;
