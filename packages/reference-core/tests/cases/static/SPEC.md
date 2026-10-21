@@ -52,7 +52,8 @@ Host: `—` for all rows. No RS rows: every cited case exists and is green.
 
 - Panda `recipes: { buttonStyle: ['*'] }` / compound-variant statics: recipe
   emission belongs to RECIPE; no static-recipe case here.
-- Static slot recipes / patterns: slots out, Panda patterns pack out.
+- Static slot recipes / patterns: a slotted `recipe()` compiles like a plain
+  one (no static expansion); Panda patterns pack out.
 - `colorPalette` no-op atoms in wildcard counts: absence (see §4).
 - Named `@container` statics (`containerNames`, `@pb/sm`): RESP owns
   container proof (RESP-07).

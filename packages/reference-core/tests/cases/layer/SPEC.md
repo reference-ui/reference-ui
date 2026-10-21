@@ -50,7 +50,8 @@ A case proving LAYER-03 asserts placement and paint, not the registry.
 goldens and the portable fixture emit it). (`styled/global.css` is not
 written; `@layer global` lives inside `styles.css`). (Panda chrome is not
 parity: `--made-with-panda`, the `*` transform-var dump — see GLOBAL-09).
-(slot recipes out; multi-part anatomy is authored global CSS + `data-slot`).
+(slotted recipes compile into the flat `recipes` layer; lib parts are authored
+global CSS + `data-slot`).
 wired the `layers` *config surface* (validated, merged after `extends`).
 LAYER-02 proves the two-system package nesting via RS-4 through `extends`; it
 does not author that surface. The surface is authored by `tests/cases/layers`
@@ -64,7 +65,7 @@ layers API yet, so Core cases cannot tick them.
 | Absent | Reason |
 | --- | --- |
 | Empty `base` / `recipes` bodies in the lib sheet | Deliberate: the rank is kept by the order statement, the bodies omitted (LAYER-01 proves the rank still holds). |
-| Panda `recipes._base` / `recipes.slots` inner layers | `layers.ts` inner-layer spelling; Reference emits flat `@layer recipes` and lib authors no slot recipes. |
+| Panda `recipes._base` / `recipes.slots` inner layers | `layers.ts` inner-layer spelling; Reference emits flat `@layer recipes`, slotted recipes included. |
 | Panda `compositions` layer | `layers.ts` has one; the lib sheet has no `textStyle`/`layerStyle` classes and no such layer. |
 | `--made-with-panda`, `*` transform-var dump | Panda cssgen chrome; GLOBAL-09 asserts their absence. |
 | `colorPalette.*` virtual atoms | 1.6k staticCss no-ops pointing at undefined vars. |

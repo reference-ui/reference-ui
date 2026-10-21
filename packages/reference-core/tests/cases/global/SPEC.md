@@ -63,6 +63,6 @@ pins the absence from the stylesheet side (no file, no banner, no var dump).
 | Static colour/spacing cardinality | STATIC group, not globalCss |
 | Viewport `@media` breakpoints in globals | `@container` only; nested `@media` itself is still proven (GLOBAL-07) |
 | `groupHover` / `peerFocus` | COND-11, not globalCss |
-| Slot recipes / `sva` | multi-part anatomy is global CSS + `data-slot` (Trace C is the proof) |
+| Slot recipes / `sva` | not globalCss: slots are a `recipe()` key (RECIPE group); lib parts use global CSS + `data-slot` (Trace C) |
 | `token()` string helper | `{path}` refs only |
 | Panda preflight | Preflight is off; reset is Reference's own (LAYER-04) |

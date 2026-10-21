@@ -28,6 +28,9 @@ this file in the same pass.
 - **fragments** — author call sites (`tokens()`, `font()`, …)
   evaluated once in Node. The collected units; the subsystem that
   collects them is **collect**.
+- **recipe slot** — one named part of a slotted `recipe()` (`slots: ['root', 'title']`).
+  It compiles as its own recipe under `${className}__${slot}` and resolves to one class
+  string in the call's result. Not the namer's cascade slot.
 - **EvaluatedSystemSpec** — the frozen wire format crossing the cut.
   Owned by `reference-rs/contracts`, never redefined.
 - **publish** — writing `.reference-ui/{system,styled,react}` from

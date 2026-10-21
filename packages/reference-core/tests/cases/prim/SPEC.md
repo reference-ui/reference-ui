@@ -54,4 +54,4 @@ lands, PRIM-01's `index.mjs` assert flips in that slice).
 | `Box`/`Flex`/`Stack` pattern fns | Pattern pack, not shipped |
 | `data-panda-theme` / `data-theme` colour mode | single `data-color-mode` stamp |
 | Liquid `primitives.liquid`, `forwardRef` codegen | Dropped; string gen + React 19 ref-as-prop |
-| `slot` recipes (`sva`) on primitives | Refused author API; multi-part is authored React |
+| `slot` recipes (`sva`) on primitives | No `sva` and no slot prop on primitives; slots are a `recipe()` key |

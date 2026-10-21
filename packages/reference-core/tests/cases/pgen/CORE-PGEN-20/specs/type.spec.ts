@@ -16,7 +16,7 @@ interface SpecInput {
   case: CoreCase;
 }
 
-// The pattern pack, the factory, and slot recipes are none of them E4
+// The pattern pack, the factory, and an sva helper are none of them E4
 // members, so importing any fails with TS2305. Materialized into a temp dir
 // at spec time because it cannot live in the repo: the harness pre-run
 // typecheck resolves @reference-ui/react to the stable surface.

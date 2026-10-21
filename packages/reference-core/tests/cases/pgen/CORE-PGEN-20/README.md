@@ -1,9 +1,10 @@
 # CORE-PGEN-20 — the forbidden surface stays forbidden: no pattern pack, no as, no factory, no panda.
 
-Pure invalidation against the vendored E4: Box, Flex, and Grid imports fail,
-the styled factory and slot recipes fail, and the polymorphic as prop fails —
-TS2305 at imports, TS2353 at the props position. The E4 text itself carries
-no panda reference of any kind, extending TYPE-06's rule to the raw file.
+Pure invalidation against the vendored E4: Box, Flex, and Grid imports fail.
+The styled factory and an `sva` helper fail (slots are a `recipe()` key, not an
+export), and the polymorphic as prop fails — TS2305 at imports, TS2353 at the
+props position. The E4 text itself carries no panda reference of any kind,
+extending TYPE-06's rule to the raw file.
 Related: CORE-PGEN-19 (the refs twin), CORE-TYPE-06 (the precedent).
 
 There is no positive file by design: the claim is absence, and absence is
