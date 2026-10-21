@@ -236,9 +236,10 @@ describe('extendSystem: named misuse', () => {
     ).toThrow('refers to unknown token colors.nope in reference-ui')
   })
 
-  it('rejects a leaf with neither a value nor a light value', () => {
-    expect(() => extendSystem(BASE, { tokens: { colors: { brand: { ink: { dark: '#fff' } } } } })).toThrow(
-      'token colors.brand.ink needs a value or a light value'
+  it('rejects a leaf whose slots are all null', () => {
+    const leaf = { value: null, light: null, dark: null } as never
+    expect(() => extendSystem(BASE, { tokens: { colors: { brand: { ink: leaf } } } })).toThrow(
+      'token colors.brand.ink needs a value, a light value or a dark value'
     )
   })
 

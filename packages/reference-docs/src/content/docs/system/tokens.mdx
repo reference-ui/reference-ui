@@ -116,8 +116,8 @@ reference: it prints as written and sync warns.
 
 ## Light and dark values
 
-Give a token `light` and `dark` values, or keep `value` as the light value and
-add `dark`:
+Give a token `light` and `dark` values. `value` fills the mode you don't name,
+so beside `dark` it is the light value:
 
 ```ts
 tokens({
@@ -218,9 +218,10 @@ function tokens(config: TokenConfig): void
 
 | Leaf key | Type | Description |
 | --- | --- | --- |
-| `value` | `string` | The token's value. Beside `dark`, the light value. |
-| `light` | `string` | Light value. Use with `dark`. |
+| `value` | `string` | The token's value. Fills the mode you don't name. |
+| `light` | `string` | Light value. |
 | `dark` | `string` | Dark value. |
 
-A leaf needs `value`, `light` or `dark`. Any other key starts a group, and a
+A leaf needs `value`, `light` or `dark`. A leaf with one of them uses it in both
+modes. Any other key starts a group, and a
 key named `_private` starts a private group.

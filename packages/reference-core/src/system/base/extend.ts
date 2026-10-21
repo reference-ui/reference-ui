@@ -1,9 +1,9 @@
-// Theming for a published base system: extendSystem returns the same system with one override block
-// appended to its own token stream, so a consumer restyles tokens without forking the base.
-// It takes a base system and a token tree, checks every override against the tokens the base declares,
-// and emits a plain BaseSystem carrying an unpublished `extended` marker. The block claims the stamps the
-// base's own token block claims: its own, then those of every system it extends. Under extends, the
-// marker becomes one `extend:<base>` fragment node, which fragments.ts appends after the base's nodes.
+// Theming for a published base system: extendSystem appends one override block to its token stream.
+// A consumer restyles tokens without forking the base. A leaf's value, light and dark slots resolve as
+// the compiler's do. It takes a base system and a token tree, checks every override against the tokens
+// the base declares, and emits a plain BaseSystem carrying an unpublished `extended` marker. The block
+// claims the stamps the base's own token block claims: its own, then those of every system it extends.
+// Under extends, the marker becomes one `extend:<base>` fragment node, appended after the base's nodes.
 
 import { isPlainObject, mergeTokenTree, tokenLeafPaths } from '../../collect/lib/merge.ts'
 import type { ReferenceTokenConfig } from '../../collect/surface/tokens.ts'
@@ -153,19 +153,36 @@ function scalarText(path: string, value: unknown): string {
   throw new ExtendSystemError(`extendSystem: token ${path} must be a string or a number.`)
 }
 
-// A leaf replaces the whole token: light is `light ?? value`, and dark is `dark ?? light`.
-function valuesOf(
-  path: string,
-  leaf: Record<string, unknown>
-): { light: string; dark: string; explicitDark: boolean } {
-  const lightValue = leaf.light ?? leaf.value
-  if (lightValue === undefined || lightValue === null) {
-    throw new ExtendSystemError(`extendSystem: token ${path} needs a value or a light value.`)
+function slotOf(path: string, leaf: Record<string, unknown>, key: 'value' | 'light' | 'dark'): string | undefined {
+  const slot = leaf[key]
+  return slot === undefined || slot === null ? undefined : scalarText(path, slot)
+}
+
+interface ModeValues {
+  light: string
+  dark: string
+  explicitDark: boolean
+}
+
+// Mirrors `pair_from_slots` in reference-rs base-system lower/mod.rs: `value` fills the mode the leaf does not
+// name, and a leaf with one slot is its light value with no dark of its own. With two slots set, `single` is
+// `value` whenever the leaf names only one mode, so `light ?? single` and `dark ?? single` give its pairs.
+function pairOf(value?: string, light?: string, dark?: string): ModeValues | undefined {
+  const single = value ?? light ?? dark
+  if (single === undefined) return undefined
+  const slots = [value, light, dark].filter((slot) => slot !== undefined).length
+  if (slots < 2) return { light: single, dark: single, explicitDark: false }
+  return { light: light ?? single, dark: dark ?? single, explicitDark: true }
+}
+
+// A one-slot leaf still replaces the whole token, so its dark is its light value wherever a dark rule must
+// cover a base dark value.
+function valuesOf(path: string, leaf: Record<string, unknown>): ModeValues {
+  const values = pairOf(slotOf(path, leaf, 'value'), slotOf(path, leaf, 'light'), slotOf(path, leaf, 'dark'))
+  if (values === undefined) {
+    throw new ExtendSystemError(`extendSystem: token ${path} needs a value, a light value or a dark value.`)
   }
-  const light = scalarText(path, lightValue)
-  const darkValue = leaf.dark
-  const explicitDark = darkValue !== undefined && darkValue !== null
-  return { light, dark: explicitDark ? scalarText(path, darkValue) : light, explicitDark }
+  return values
 }
 
 function malformed(path: string): ExtendSystemError {
@@ -229,8 +246,9 @@ function ruleLines(selector: string, pairs: readonly (readonly [string, string])
 
 /**
  * The override block, printed the way the engine prints a Portable token layer: a light rule on the
- * stamps the base claims, then a dark rule when a leaf sets a dark value or replaces a base dark
- * value. A light-only rule would lose to the base's more specific dark rule, so that case prints one too.
+ * stamps the base claims, then a dark rule holding each leaf that sets a dark value or replaces a base
+ * dark value. A light-only rule would lose to the base's more specific dark rule, so that case prints one too;
+ * a single-value leaf over a base token with no dark value prints no dark entry, as the compiler does.
  */
 function overrideBlock(stamps: readonly string[], decls: readonly Decl[], baseDark: ReadonlySet<string>): string {
   if (decls.length === 0) return ''
@@ -239,7 +257,8 @@ function overrideBlock(stamps: readonly string[], decls: readonly Decl[], baseDa
     ...ruleLines(lightSelector(stamps), decls.map((decl) => [decl.cssName, decl.light] as const)),
   ]
   if (decls.some((decl) => decl.explicitDark || baseDark.has(decl.cssName))) {
-    lines.push(...ruleLines(darkSelector(stamps), decls.map((decl) => [decl.cssName, decl.dark] as const)))
+    const darkDecls = decls.filter((decl) => decl.explicitDark || baseDark.has(decl.cssName))
+    lines.push(...ruleLines(darkSelector(stamps), darkDecls.map((decl) => [decl.cssName, decl.dark] as const)))
   }
   lines.push('}', '')
   return lines.join('\n')

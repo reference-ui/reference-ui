@@ -131,8 +131,8 @@ You can only change tokens the library declares. An unknown token path, or a
 reference to one, makes `extendSystem()` throw. To add tokens of your own,
 use `tokens()`: see [Theming](/theming).
 
-A token takes `value`, or `light` and `dark`. A token with no `dark` value
-uses its light value in both modes. A value can point at another library
+A token takes `value`, `light` or `dark`. `value` fills the mode you don't
+name. A token with one of them uses it in both modes. A value can point at another library
 token with `{colors.gray.950}`.
 
 ## Other libraries
