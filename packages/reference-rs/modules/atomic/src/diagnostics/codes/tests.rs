@@ -77,6 +77,7 @@ fn every_variant_appears_exactly_once() {
         DiagnosticCode::UnknownToken,
         DiagnosticCode::UnbracedTokenRef,
         DiagnosticCode::ExternalUnbacked,
+        DiagnosticCode::RecipeSlot,
     ] {
         assert!(variants.contains(&code), "missing table row: {code:?}");
     }

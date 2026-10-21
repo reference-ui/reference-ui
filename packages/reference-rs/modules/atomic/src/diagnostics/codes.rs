@@ -170,12 +170,16 @@ pub enum DiagnosticCode {
     /// baseSystem (`extends` / `layers`) backs; warned once per tag site,
     /// default channel, and the props still extract.
     ExternalUnbacked,
+    /// `extract/recipes/slots`: a malformed `slots` list (not an inline array of
+    /// distinct, whitespace-free string literals, or empty), or a slot-keyed
+    /// style map naming a slot the list does not. The whole definition is refused.
+    RecipeSlot,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 55] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 56] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -291,6 +295,7 @@ const CODE_TABLE: [(DiagnosticCode, &str); 55] = [
     (DiagnosticCode::UnknownToken, "ATM-W-UNKNOWN-TOKEN"),
     (DiagnosticCode::UnbracedTokenRef, "ATM-W-UNBRACED-TOKEN-REF"),
     (DiagnosticCode::ExternalUnbacked, "ATM-W-EXTERNAL-UNBACKED"),
+    (DiagnosticCode::RecipeSlot, "ATM-E-RECIPE-SLOT"),
 ];
 
 // hints.test.ts reads the negative fixture `ATM-W-NOPE` out of this file, so the refusal

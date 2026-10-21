@@ -127,7 +127,8 @@ grows an info level.
 | `ATM-E-RECIPE-SPREAD` | Spread inside a `recipe(...)` object literal | `modules/atomic/src/extract/recipes/mod.rs` |
 | `ATM-E-RECIPE-CLASSNAME` | Missing or dynamic recipe className | `modules/atomic/src/extract/recipes/mod.rs` |
 | `ATM-E-PARSE` | The source failed to parse; compile continues | `modules/atomic/src/stream.rs` |
-| `ATM-E-DUPLICATE-RECIPE` | Two recipes claim one className within a system | `modules/atomic/src/assembly.rs` |
+| `ATM-E-DUPLICATE-RECIPE` | Two recipes claim one className, or one class stem (a plain `card__root` beside slot `root` of `card`), within a system | `modules/atomic/src/recipes/identity.rs` |
+| `ATM-E-RECIPE-SLOT` | A malformed `slots` list, or a slot-keyed style map naming a slot the list does not | `modules/atomic/src/extract/recipes/slots.rs` |
 | `ATM-E-UNKNOWN-TOKEN` | Explicit `{path}` reference that names no token | `modules/atomic/src/resolve/tokens/mod.rs` |
 | `ATM-E-INVALID-BASE-SYSTEM` | The baseSystem spec failed contract validation | `modules/atomic/native.rs` |
 | `ATM-W-NON-OBJECT-CSS-ARG` | A `css()` argument, merge-list element, or conditional arm is not a static style object | `modules/atomic/src/extract/css/mod.rs` |
