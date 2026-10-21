@@ -28,7 +28,7 @@ consumers never break on codes minted after they shipped.
 | Namespace | Owner       | Status                                                 |
 | --------- | ----------- | ------------------------------------------------------ |
 | `RS`      | template    | Self: `RS-W-EXAMPLE-*` / `RS-E-EXAMPLE-*` for tests and docs only; never emitted by shipped code |
-| `ATM`     | atomic      | Live: 54-code table in `modules/atomic/src/diagnostics/codes.rs`, aligned onto the template (wire-identical, tag-matched); `-I-` telemetry stays module-local |
+| `ATM`     | atomic      | Live: 56-code table in `modules/atomic/src/diagnostics/codes.rs`, aligned onto the template (wire-identical, tag-matched); `-I-` telemetry stays module-local |
 | `ATL`     | atlas       | Live: 5-code table in `modules/atlas/src/diagnostics/codes.rs`; props warnings plus the scan refusal |
 | `TST`     | tasty       | Live: 10-code table in `modules/tasty/src/diagnostics/codes.rs`; scanner, merge, star, manifest, unresolved-import, unsupported-syntax, and augmentation warnings plus the scan refusal, and the projection-budget warning the tasty JS runtime mints (its row pins the wire string) |
 | `STT`     | styletrace  | Live: 6-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips, the class-component, unresolved-HOC-argument and type-expansion-limit warnings, plus the scan and surface refusals |
