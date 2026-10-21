@@ -109,7 +109,7 @@ describe('slotted recipe() resolution', () => {
 })
 
 describe('slot projection', () => {
-  it('names each slot `${className}__${slot}`', () => {
+  it('names each slot className__slot', () => {
     expect(slotClassName('card', 'root')).toBe('card__root')
   })
 
