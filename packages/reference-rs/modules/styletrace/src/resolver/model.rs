@@ -6,6 +6,7 @@
 
 use std::collections::BTreeSet;
 use std::path::PathBuf;
+use std::rc::Rc;
 
 use rustc_hash::FxHashMap;
 
@@ -70,8 +71,15 @@ pub(super) enum TypeExpr {
     },
 }
 
+/// Type-parameter bindings in scope during a walk, shared so a binding can keep its own scope.
+pub(super) type TypeEnv = Rc<FxHashMap<String, BoundTypeExpr>>;
+
+/// A type argument bound to a parameter, with the module and scope it was written in.
+/// `env` is the caller's scope: the argument resolves there, never in the callee's,
+/// so `Forward<T> = Wrap<T>` does not make `Wrap`'s `T` name itself.
 #[derive(Debug, Clone)]
 pub(super) struct BoundTypeExpr {
     pub module_path: PathBuf,
     pub expr: TypeExpr,
+    pub env: TypeEnv,
 }

@@ -109,7 +109,7 @@ fn resolve_reference_expr_literals_into(
     }
 
     if let Some(bound) = ctx.env.get(name) {
-        let mut next_ctx = ctx.branch(&bound.module_path, ctx.env);
+        let mut next_ctx = ctx.branch(&bound.module_path, &bound.env);
         return resolve_literal_names_into(&mut next_ctx, &bound.expr, names);
     }
 

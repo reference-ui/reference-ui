@@ -1,15 +1,14 @@
-//! Declaration expansion for the tracer: walks one interface or type alias into the names it contributes.
+//! Declaration expansion for the tracer: walks one interface or alias into the names it contributes.
 //! It takes a `DeclTarget` (the declaration, its module and the type arguments bound at the use site) and a pass accumulator.
 //! It binds the declaration's type parameters into a child environment before recursing, so its own references resolve against those arguments.
+//! Each argument keeps the caller's environment, so a parameter forwarded under its own name (`Forward<T> = Wrap<T>`) never resolves to itself.
 
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use rustc_hash::FxHashMap;
-
 use crate::resolver::error::StyleTraceError;
-use crate::resolver::model::{BoundTypeExpr, TypeDeclaration, TypeExpr};
+use crate::resolver::model::{BoundTypeExpr, TypeDeclaration, TypeEnv, TypeExpr};
 
 use super::super::context::TraceContext;
 use super::literals::resolve_literal_names_into;
@@ -118,20 +117,22 @@ fn bind_type_params<'a>(
     params: &[String],
     args: &[TypeExpr],
     arg_module_path: &Path,
-    inherited_env: &'a FxHashMap<String, BoundTypeExpr>,
-) -> Cow<'a, FxHashMap<String, BoundTypeExpr>> {
+    inherited_env: &'a TypeEnv,
+) -> Cow<'a, TypeEnv> {
     if params.is_empty() {
         return Cow::Borrowed(inherited_env);
     }
-    let mut env = inherited_env.clone();
+    let mut env = (**inherited_env).clone();
     for (index, param) in params.iter().enumerate() {
         env.insert(
             param.clone(),
             BoundTypeExpr {
                 module_path: arg_module_path.to_path_buf(),
                 expr: args.get(index).cloned().unwrap_or(TypeExpr::Unknown),
+                // Arguments were written in the caller's scope and resolve there.
+                env: TypeEnv::clone(inherited_env),
             },
         );
     }
-    Cow::Owned(env)
+    Cow::Owned(TypeEnv::new(env))
 }

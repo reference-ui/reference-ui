@@ -13,7 +13,7 @@ use rustc_hash::FxHashMap;
 
 use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{
-    BoundTypeExpr, ParsedModule, TypeAliasDecl, TypeDeclaration, TypeExpr,
+    ParsedModule, TypeAliasDecl, TypeDeclaration, TypeEnv, TypeExpr,
 };
 use crate::resolver::parser::parse_module;
 use crate::resolver::path::{
@@ -50,7 +50,7 @@ impl TraceSession {
 pub struct TraceContext<'a> {
     pub session: &'a mut TraceSession,
     pub module_path: &'a Path,
-    pub env: &'a FxHashMap<String, BoundTypeExpr>,
+    pub env: &'a TypeEnv,
     pub visited: &'a mut BTreeSet<String>,
 }
 
@@ -58,7 +58,7 @@ impl<'a> TraceContext<'a> {
     pub fn branch<'b>(
         &'b mut self,
         module_path: &'b Path,
-        env: &'b FxHashMap<String, BoundTypeExpr>,
+        env: &'b TypeEnv,
     ) -> TraceContext<'b> {
         TraceContext {
             session: self.session,

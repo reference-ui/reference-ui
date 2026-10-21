@@ -1,4 +1,4 @@
-//! Core property pass of the tracer: resolves a reference or type expression into the style-prop names it reaches.
+//! Tracer property pass: resolves a reference or type expression into the style-prop names it reaches.
 //! Literal-key expansion lives in `resolve/literals.rs` and declaration expansion in `resolve/decls.rs`, and both feed back here.
 //! It takes the trace context with a type reference or expression, and emits the sorted set of prop names; built-in utility types are delegated to `builtins`.
 
@@ -27,7 +27,7 @@ pub fn resolve_reference_props(
         return Ok(BTreeSet::new());
     }
     if let Some(bound) = ctx.env.get(name) {
-        let mut next_ctx = ctx.branch(&bound.module_path, ctx.env);
+        let mut next_ctx = ctx.branch(&bound.module_path, &bound.env);
         return resolve_prop_names(&mut next_ctx, &bound.expr);
     }
 
@@ -130,7 +130,7 @@ fn resolve_reference_expr_props_into(
     }
 
     if let Some(bound) = ctx.env.get(name) {
-        let mut next_ctx = ctx.branch(&bound.module_path, ctx.env);
+        let mut next_ctx = ctx.branch(&bound.module_path, &bound.env);
         return resolve_prop_names_into(&mut next_ctx, &bound.expr, names);
     }
 
