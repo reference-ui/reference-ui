@@ -3,14 +3,22 @@
  * verdict reads into a temporary package root, breaks exactly one of them, and checks that the reason names that part.
  * The copy writes its own native and bundle stamps from its own files, so it is fresh by construction even while other
  * work edits this checkout, and a stale verdict can only come from the change the case made. The native addon binary is
- * a placeholder in the copy: the gate reads its stamp, never the binary.
+ * a placeholder in the copy: the gate reads its stamp, never the binary. The last describe block pins the cached path:
+ * a marker for the dist as it stands is used without recomputing, and a marker whose dist has since changed is ignored.
  */
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { afterAll, describe, expect, it } from 'vitest'
-import { assertRsDistFresh, rsDistStaleness } from './dist-freshness.js'
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest'
+import {
+  assertRsDistFresh,
+  readDistState,
+  rsDistStaleness,
+  VERDICT_FILE_ENV,
+  writeDistVerdictMarker,
+  type DistVerdictMarker,
+} from './dist-freshness.js'
 import {
   hashNativeInputs,
   nativeBinaryFileName,
@@ -31,6 +39,10 @@ interface StampPaths {
 
 afterAll(() => {
   for (const copy of copies) fs.rmSync(copy, { recursive: true, force: true })
+})
+
+afterEach(() => {
+  vi.unstubAllEnvs()
 })
 
 /** The paths the checkout's bundle stamp covers. Only the paths are read; the copy computes its own digests. */
@@ -150,5 +162,35 @@ describe('the dist freshness verdict', () => {
     )
     fs.writeFileSync(source, original)
     expect(() => assertRsDistFresh(root)).toThrow('reference-rs dist is stale')
+  })
+})
+
+/** Writes a marker for `root` that carries `reasons`, from the dist state read now, and points the env var at it. */
+function stubMarkerFor(root: string, reasons: string[]): string {
+  const marker: DistVerdictMarker = {
+    version: 1,
+    packageDir: root,
+    state: readDistState(root),
+    reasons,
+  }
+  const file = path.join(root, 'verdict.json')
+  fs.writeFileSync(file, JSON.stringify(marker))
+  vi.stubEnv(VERDICT_FILE_ENV, file)
+  return file
+}
+
+describe('the cached verdict from the run marker', () => {
+  it('uses the marker verdict for a dist that matches it, without recomputing', () => {
+    const root = copyOfCheckout()
+    // The copy is fresh, so a recomputation would pass. The sentinel can only surface from the marker.
+    stubMarkerFor(root, ['SENTINEL: verdict read from the run marker'])
+    expect(() => assertRsDistFresh(root)).toThrow('SENTINEL: verdict read from the run marker')
+  })
+
+  it('ignores a marker once the dist it was computed from has changed, and recomputes', () => {
+    const root = copyOfCheckout()
+    stubMarkerFor(root, ['SENTINEL: verdict read from the run marker'])
+    fs.writeFileSync(path.join(root, 'dist', 'native', nativeStampFileName(triple())), `${'0'.repeat(64)}\n`)
+    expect(() => assertRsDistFresh(root)).toThrow(/does not match current rust inputs/)
   })
 })
