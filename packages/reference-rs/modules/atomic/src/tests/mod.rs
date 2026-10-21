@@ -6,6 +6,7 @@
 mod gates;
 pub(crate) mod packages;
 mod parallel_panic;
+mod pool_panic;
 mod seed;
 mod slot;
 mod stream;

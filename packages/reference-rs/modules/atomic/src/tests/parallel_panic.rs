@@ -56,8 +56,9 @@ fn request(styling: usize, marker: Option<(usize, &str)>) -> CompileRequest {
 
 /// Compile on a helper thread with a forced lane count, failing on timeout.
 /// The hang this gates against would stall the suite forever; the timeout
-/// turns a regression into a loud failure naming the hung scenario.
-fn compile_guarded(
+/// turns a regression into a loud failure naming the hung scenario. A compile
+/// thread that panics is named as such, not reported as a hang.
+pub(super) fn compile_guarded(
     request: CompileRequest,
     workers: Option<usize>,
     scenario: &'static str,
@@ -67,8 +68,15 @@ fn compile_guarded(
         force_lane_count(workers);
         let _ = tx.send(compile(&request));
     });
-    rx.recv_timeout(HANG_TIMEOUT)
-        .unwrap_or_else(|_| panic!("p0a hang: {scenario} never returned"))
+    match rx.recv_timeout(HANG_TIMEOUT) {
+        Ok(outcome) => outcome,
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+            panic!("p0a hang: {scenario} never returned")
+        }
+        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+            panic!("{scenario}: the compile thread panicked instead of returning")
+        }
+    }
 }
 
 /// A lane that panics before the first rendezvous must fail the compile.

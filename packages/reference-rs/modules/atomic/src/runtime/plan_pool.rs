@@ -113,6 +113,9 @@ fn resolve_shard(ctx: &PlanCtx<'_>, indexes: &[usize]) -> Vec<(usize, DetachedDe
     indexes
         .iter()
         .map(|&index| {
+            // Test-only: a declaration whose authored value carries the marker panics its lane.
+            #[cfg(test)]
+            crate::phase_gate::panic_marker(&ctx.decls[index].value.to_string(), "p1-panic-plan");
             let resolved = PlanBuilder::resolve_detached(
                 ctx.builder.system,
                 ctx.builder.base_system,

@@ -81,7 +81,15 @@ fn resolve_shard(
 ) -> Vec<(usize, ResolvedWant)> {
     indexes
         .iter()
-        .map(|&index| (index, resolve_one(wants[index], system)))
+        .map(|&index| {
+            // Test-only: a want from the marked source file panics the lane that owns it.
+            #[cfg(test)]
+            crate::phase_gate::panic_marker(
+                wants[index].file.as_deref().unwrap_or(""),
+                "p1-panic-resolve",
+            );
+            (index, resolve_one(wants[index], system))
+        })
         .collect()
 }
 
