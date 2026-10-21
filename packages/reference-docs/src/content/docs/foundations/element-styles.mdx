@@ -1,0 +1,191 @@
+---
+title: Element styles
+section: Foundations
+order: 60
+slug: element-styles
+description: Lib's base look for primitives, from text and forms to tables, media, focus and selection.
+---
+
+# Element styles
+
+Lib gives every [primitive](/primitives) a base look. Each primitive carries a
+class named after its tag, such as `ref-table` or `ref-input`, and lib styles
+those classes with `globalCss()`. The rules apply wherever your config extends
+lib's `baseSystem`.
+
+One rule targets the tag itself: `code` styles every `<code>` element on the
+page, not only the `Code` primitive.
+
+Colours come from lib's `ui.*` tokens, one group per element. See
+[Color](/color).
+
+## Page
+
+| Selector | Look |
+| --- | --- |
+| `:root` | Sets `--spacing-root` to `0.25rem`, the size of `1r`. See [Spacing](/spacing). |
+| `body` | `sans` at `4r` (16px), letter spacing `-0.01em`, `container-type: inline-size`. |
+
+## Text
+
+Headings, `P`, `Blockquote`, `Small`, `Code`, `Kbd`, `Samp` and `Pre` are
+covered in [Typography](/typography).
+
+| Element | Look | Tokens |
+| --- | --- | --- |
+| `A` | Underlined, offset `0.15em`. Focus ring on keyboard focus. | `ui.link.default`, `ui.link.hover` |
+| `Mark` | Filled highlight, `sm` radius. | `ui.mark.background`, `ui.mark.foreground` |
+| `Abbr` | Dotted underline, help cursor. | `ui.abbr.textDecoration` |
+| `Ins` | Underlined. | `ui.ins.foreground`, `ui.ins.decoration` |
+| `Del`, `S` | Struck through. | `ui.del.foreground`, `ui.s.foreground` |
+| `Q` | Italic, wrapped in curly quotes. | `ui.q.foreground` |
+| `Dfn` | Italic. | `ui.dfn.foreground` |
+| `Var` | `serif`, italic. | `ui.varTag.foreground` |
+| `Em`, `I` | Italic. | |
+| `B`, `Strong` | `bold` weight. | |
+| `U` | Underlined. | `ui.u.textDecoration` |
+| `Cite` | Italic. | `ui.cite.foreground` |
+| `Sub`, `Sup` | `0.75em`, line height `0`. | |
+
+### Lists
+
+| Element | Look | Tokens |
+| --- | --- | --- |
+| `Ul`, `Menu` | Disc markers, `4r` indent, `4r` bottom margin. | `ui.list.marker.foreground` |
+| `Ol` | Decimal markers at weight 500. | `ui.list.marker.foreground` |
+| `Li` | `1r` top margin. | |
+| `Dl`, `Dt`, `Dd` | `Dt` at weight 600; `Dd` flush left. | `ui.list.definition.description.foreground` |
+
+## Document
+
+| Element | Look | Tokens |
+| --- | --- | --- |
+| `Main`, `Header`, `Footer`, `Section`, `Article`, `Aside`, `Nav` | Block, body type. | |
+| `Span` | Body type; inherits its colour from its parent. | |
+| `Hr` | 1px top border, `6r` block margin. | `ui.hr.border` |
+| `Dialog` | Up to `36rem` wide, `6r` padding, `lg` radius, 1px border. | `ui.dialog.background`, `ui.dialog.foreground`, `ui.dialog.border` |
+| `Details` | 1px border, `md` radius, `4r` padding. | `ui.disclosure.border` |
+| `Summary` | Weight 500, pointer cursor. | |
+| `Address` | Upright, line height `1.6`. | |
+| `Data`, `Time`, `Rt`, `Rp` | Secondary text colour. | `ui.meta.foreground` |
+
+## Forms
+
+Controls share one height, `8.5r` (34px). See [Sizes](/sizes).
+
+| Element | Look | Tokens |
+| --- | --- | --- |
+| `Button` | `8.5r` tall, `3.5r` padding, `md` radius, weight 500. Three variants (below). | `ui.button.*` |
+| `Input` (text types), `Select`, `Textarea` | Full width, `8.5r` tall, 1px border, `sm` radius. Textarea resizes vertically. | `ui.field.background`, `ui.field.border`, `ui.field.borderHover`, `ui.field.placeholder` |
+| `Input type="checkbox"` | `4r` box with a tick when checked. | `ui.checkbox.*` |
+| `Input type="radio"` | `4r` disc with a ring when checked. | `ui.radio.*` |
+| `Input type="range"` | `1.5r` track, filled bar and a rounded thumb. | `ui.progress.bar.foreground` |
+| `Input type="file"` | Field border, with a button-style picker. | `ui.field.*`, `ui.button.default.*` |
+| `Progress`, `Meter` | Full width, `1.5r` rounded bar. `Meter` colours its optimum, suboptimum and low ranges. | `ui.progress.*`, `ui.meter.*` |
+| `Fieldset` | Grid with `3r` gap, 1px border, `md` radius. | `ui.fieldset.border` |
+| `Legend`, `Label` | `3.5r` (14px), weight 500. A checkbox inside a `Label` sits beside the text. | `ui.label.controlAccent` |
+
+Pick a button variant with the `variant` prop:
+
+| `variant` | Look |
+| --- | --- |
+| `default` (or none) | Grey fill, base text colour. |
+| `primary` | Near-black fill in light mode, near-white in dark mode. |
+| `ghost` | Transparent until hovered. |
+
+Disabled controls take a not-allowed cursor. A disabled `Button` uses
+`ui.button.disabled.*`; a disabled field drops to half opacity.
+
+## Tables
+
+| Element | Look | Tokens |
+| --- | --- | --- |
+| `Table` | Full width, collapsed borders, `3.5r` (14px) text, caption below. | |
+| `Tr` | 1px bottom border, tinted on hover. | `ui.table.border`, `ui.table.row.mutedBackground` |
+| `Th` | `10r` tall, left aligned, weight 500. | `ui.table.cell.foreground` |
+| `Td` | `2r` padding. | `ui.table.cell.foreground` |
+| `Tfoot` | Top border, tinted, weight 500. | `ui.table.footer.mutedBackground` |
+| `Caption` | `4r` top margin. | `ui.table.caption.foreground` |
+
+`Th` and `Td` don't wrap. Set `whiteSpace="normal"` on a cell to let it wrap.
+
+## Media
+
+| Element | Look | Tokens |
+| --- | --- | --- |
+| `Img`, `Picture`, `Video`, `Canvas`, `Svg` | Block, no wider than their container. `Img`, `Video` and `Canvas` keep their aspect ratio. | |
+| `Audio` | Block, full width. | |
+| `Iframe`, `Embed`, `Obj` (`<object>`) | Block, no wider than their container, 1px border, `md` radius. | `ui.media.embed.border` |
+| `Figure` | `6r` block margin, no inline margin. | |
+| `Figcaption` | `3.5r` (14px), `2r` top margin. | `ui.media.caption.foreground` |
+
+## Focus
+
+A primitive focused from the keyboard shows a 2px outline in
+`ui.focus.ring`, offset by 2px. A click on a button or link shows no ring.
+
+Text inputs, selects and textareas take the `ui.focus.ring` border colour on
+any focus, and add the outline only on keyboard focus. Browsers match
+`:focus-visible` on a clicked text input, so lib tracks the input method
+itself and sets `data-focus-visible` on the focused element when focus came
+from the keyboard.
+
+Importing anything from `@reference-ui/lib` starts that tracking. When your
+app uses lib's styles without importing from it, start it yourself once:
+
+```ts
+import { setupFocusVisible } from '@reference-ui/lib'
+
+setupFocusVisible()
+```
+
+`setupFocusVisible(doc?)` listens on `document`, or on the `Document` you pass.
+Later calls do nothing, and it does nothing on the server.
+
+To style keyboard focus yourself, target the attribute:
+
+```ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  '.ref-input[data-focus-visible]': {
+    outlineColor: 'blue.500',
+  },
+})
+```
+
+## Selection
+
+Selected text inside a primitive uses `ui.selection.background` and
+`ui.selection.foreground`: a near-black highlight in light mode and a
+near-white one in dark mode.
+
+## Override an element style
+
+Target the element's class with your own `globalCss()`:
+
+```ts
+// src/theme/global.ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  '.ref-hr': {
+    borderTopStyle: 'dashed',
+  },
+  '.ref-th': {
+    textTransform: 'uppercase',
+  },
+})
+```
+
+Your global CSS sits in a later [cascade layer](/cascade-layers) than lib's,
+so it wins. A style prop on one element still overrides both.
+
+To change a colour everywhere lib uses it, change its `ui.*` token with
+`extendSystem()`. See [Customization](/customization).
+
+## Related
+
+- [Customization](/customization): restyle primitives and lib's components.
+- [Global CSS](/global-css): selectors, conditions and the reset.
+- [Typography](/typography): headings, text and code.

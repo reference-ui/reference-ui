@@ -1,0 +1,80 @@
+---
+title: Sizes
+section: Foundations
+order: 70
+slug: sizes
+description: Lib's control height and icon sizes.
+---
+
+# Sizes
+
+Lib ships one control height and three icon sizes. Lib's controls and menus
+share the control height, so a button, an input and a menu item line up in a
+row.
+
+Sizes are in `r`, the [spacing unit](/spacing): `1r` is `0.25rem`, 4px at the
+browser's default font size.
+
+## Import
+
+```ts
+import {
+  controlHeight,
+  controlHeightPx,
+  controlSize,
+  defaultIconSize,
+  iconSizes,
+} from '@reference-ui/lib'
+```
+
+## Control height
+
+| Export | Value |
+| --- | --- |
+| `controlHeight` | `'8.5r'` (34px) |
+| `controlHeightPx` | `'34px'` |
+| `controlSize` | `{ height: '8.5r', paddingBlock: '0.75r' }` |
+
+These elements are `controlHeight` tall:
+
+- `Button`
+- `Input` (text types) and `Select`
+- [Field](/field)
+- [Menu](/menu) triggers and items, as a minimum height
+- [Listbox](/listbox) options, as a minimum height
+
+To match them, give your own control the same height:
+
+```tsx
+import { Div } from '@reference-ui/react'
+
+<Div height="8.5r" paddingBlock="0.75r" />
+```
+
+`controlHeightPx` is the same height in pixels, for an inline `style`:
+
+```tsx
+import { controlHeightPx } from '@reference-ui/lib'
+
+<div style={{ minHeight: controlHeightPx }} />
+```
+
+## Icon sizes
+
+| Key | Value |
+| --- | --- |
+| `small`, `sm` | `'4r'` (16px) |
+| `base`, `md` | `'5r'` (20px) |
+| `large`, `lg` | `'6r'` (24px) |
+
+`iconSizes` holds these values under both spellings. `defaultIconSize` is
+`'5r'`.
+
+The keys match the `size` prop on [icons](/icons), and `md` is the icons'
+default. A `5r` icon fits inside a `controlHeight` control.
+
+## Related
+
+- [Element styles](/element-styles): the base look of lib's form elements.
+- [Icons](/icons): the `size` prop.
+- [Spacing](/spacing): the `r` unit.
