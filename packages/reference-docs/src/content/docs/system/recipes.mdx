@@ -181,9 +181,9 @@ type ButtonVariants = RecipeVariantProps<typeof button>
 // { tone?: 'primary' | 'quiet'; size?: 'sm' | 'lg' }
 ```
 
-For a recipe with `slots`, the call is typed by slot name:
-`card({ size: 'lg' }).title` is a `string`, and a slot the recipe does not list
-is a type error.
+For a recipe with [slots](#slots), the call is typed by slot name: in the
+Slots example, `card({ size: 'lg' }).title` is a `string`, and a slot the
+recipe does not list is a type error.
 
 Each value also takes the [breakpoint](#responsive-variants) object form,
 and a variant with `true` or `false` keys takes a boolean.
