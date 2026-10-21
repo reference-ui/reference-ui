@@ -15,10 +15,23 @@ interface SpecInput {
   case: CoreCase;
 }
 
+// bad.ts opens with a `//` header that also quotes the ref, so the helper
+// skips comment lines and returns the code line carrying it. Deriving the
+// line keeps the path:line pin true when the fixture header grows.
+function badRefLine(worldDir: string): number {
+  const lines = fs.readFileSync(path.join(worldDir, 'theme', 'bad.ts'), 'utf8').split('\n');
+  const index = lines.findIndex(
+    (line) => line.includes('{colors.nope}') && !line.trimStart().startsWith('//'),
+  );
+  assert.notEqual(index, -1, 'bad.ts carries a code line with the {colors.nope} ref');
+  return index + 1;
+}
+
 // The runner served this world without syncing it: the embedded missing
 // ref fails sync with a located error naming the ref, never Panda's
 // escaped literal and never a ghost var, and no folder survives.
 export default async function run({ case: c }: SpecInput): Promise<void> {
+  const refLine = badRefLine(c.worldDir);
   const failure: unknown = await sync(c.worldDir).then(
     () => null,
     (err: unknown) => err,
@@ -30,7 +43,11 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
     /unknown token reference `\{colors\.nope\}`/,
     'the rejection names the missing ref',
   );
-  assert.match(message, /bad\.ts:3/, 'the rejection carries path:line');
+  assert.match(
+    message,
+    new RegExp(`bad\\.ts:${refLine}\\b`),
+    'the rejection carries path:line',
+  );
   assert.doesNotMatch(
     message,
     /colors\\.nope/,

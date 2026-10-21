@@ -39,10 +39,23 @@ const TOKENS_FILE = [
   '',
 ].join('\n');
 
+// bad.ts opens with a `//` header that also quotes the ref, so the helper
+// skips comment lines and returns the code line carrying it. Deriving the
+// line keeps the path:line pin true when the fixture header grows.
+function badRefLine(worldDir: string): number {
+  const lines = fs.readFileSync(path.join(worldDir, 'theme', 'bad.ts'), 'utf8').split('\n');
+  const index = lines.findIndex(
+    (line) => line.includes('{colors.nope}') && !line.trimStart().startsWith('//'),
+  );
+  assert.notEqual(index, -1, 'bad.ts carries a code line with the {colors.nope} ref');
+  return index + 1;
+}
+
 // The runner served this world without syncing it: sync() rejects with the
 // located ref error and no folder survives, while a display:true warning
 // world syncs fine (warn-and-skip by engine design).
 export default async function run({ case: c }: SpecInput): Promise<void> {
+  const refLine = badRefLine(c.worldDir);
   await assert.rejects(
     sync(c.worldDir),
     /unknown token reference `\{colors\.nope\}`/,
@@ -50,7 +63,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   );
   await assert.rejects(
     sync(c.worldDir),
-    /bad\.ts:3/,
+    new RegExp(`bad\\.ts:${refLine}\\b`),
     'missing token ref fails sync with path:line',
   );
   assert.ok(
