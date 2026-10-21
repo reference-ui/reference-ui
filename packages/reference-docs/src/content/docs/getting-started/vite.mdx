@@ -1,0 +1,49 @@
+---
+title: Vite
+section: Get started
+group: Bundlers
+order: 12
+slug: vite
+description: Run Reference UI in a Vite app.
+---
+
+# Vite
+
+`ref sync` writes your stylesheet and packages to `.reference-ui/` before
+Vite runs. Vite reads them like any other package.
+
+<Step n={1}>Add the scripts</Step>
+
+```json
+{
+  "scripts": {
+    "dev": "ref sync && concurrently --kill-others \"ref sync --watch\" \"vite\"",
+    "build": "ref sync && vite build"
+  }
+}
+```
+
+The first `ref sync` makes sure the generated packages exist before Vite
+starts. `concurrently` is a separate package; any tool that runs two commands
+side by side works.
+
+<Step n={2}>Import the stylesheet</Step>
+
+Import it once, in your entry file, before your app code.
+
+```tsx
+// src/main.tsx
+import '@reference-ui/react/styles.css'
+```
+
+Your `vite.config.ts` needs no Reference UI settings.
+
+## Verify the setup
+
+1. Run `npm run dev`. The terminal shows the sync summary, then the Vite
+   dev server.
+2. Add `padding="6r"` to a `Div`. A resync line appears and the page picks
+   up the padding.
+3. Run `npm run build`. Sync runs first, then Vite.
+
+[Sync](/sync) covers watch mode and its output in more detail.
