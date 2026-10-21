@@ -17,6 +17,7 @@ own components the way you would with CSS-in-JS.
 The compiler follows your component's props down to the primitives it
 renders. When a style prop reaches a primitive, your component takes style
 props too, so `<Card padding="6r">` compiles just like `<Div padding="6r">`.
+A component that renders a plain `<div>` gets no style props.
 
 <Step n={1}>Define its style</Step>
 
@@ -35,22 +36,23 @@ const card = css({
 
 <Step n={2}>Build the component</Step>
 
-Give the class to a primitive and pass every other prop through:
+Give the class to a primitive and pass every other prop through. Join the
+caller's `className` with yours, so both reach the element:
 
 ```tsx
 // src/components/Card.tsx
 import { Div, type DivProps } from '@reference-ui/react'
 
-export function Card(props: DivProps) {
-  return <Div {...props} className={card} />
+export function Card({ className, ...props }: DivProps) {
+  return <Div className={`${card} ${className ?? ''}`} {...props} />
 }
 ```
 
 <Step n={3}>Add variants</Step>
 
-A recipe defines different variants for your component. Swap `css()` for
-`recipe()`: it takes base styles and named variants, and returns a function
-that gives you the class names for the variants you pick.
+A recipe adds named variants to your component. Swap `css()` for
+`recipe()`: it takes a `className`, base styles and variants, and returns a
+function that gives you the class names for the variants you pick.
 
 ```tsx
 // src/components/Card.tsx
@@ -83,12 +85,12 @@ import { Div, type DivProps, type RecipeVariantProps } from '@reference-ui/react
 
 type CardProps = DivProps & RecipeVariantProps<typeof card>
 
-export function Card({ tone, ...props }: CardProps) {
-  return <Div {...props} className={card({ tone })} />
+export function Card({ tone, className, ...props }: CardProps) {
+  return <Div className={`${card({ tone })} ${className ?? ''}`} {...props} />
 }
 ```
 
-See [Recipes](/recipes) for the full reference.
+See [Recipes](/recipes) for compound and responsive variants.
 
 ## Usage
 
@@ -104,12 +106,13 @@ See [Recipes](/recipes) for the full reference.
 </Preview>
 
 Style props override the recipe, because recipe rules sit in an earlier
-cascade layer. Here `padding="6r"` replaces the recipe's `4r`.
+[cascade layer](/cascade-layers). Here `padding="6r"` replaces the recipe's `4r`.
 
 ## Further reading
 
 <LinkCards>
   <LinkCard href="/recipes" title="Recipes">Compound variants, responsive variants and the full recipe config.</LinkCard>
   <LinkCard href="/style-props" title="Style props">Every prop a primitive takes.</LinkCard>
+  <LinkCard href="/multi-part-components" title="Multi-part components">Style a component with several parts.</LinkCard>
   <LinkCard href="/share-a-design-system" title="Share a design system">Publish your components for other apps.</LinkCard>
 </LinkCards>

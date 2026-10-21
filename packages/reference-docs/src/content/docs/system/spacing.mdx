@@ -37,9 +37,11 @@ import { Div } from '@reference-ui/react'
 | `1/2r` | `calc(var(--spacing-root) / 2)` |
 | `-4r` | `calc(-4 * var(--spacing-root))` |
 
-Any number works, not only steps on a scale. Rhythm units work in any length,
+The multiplier can be any number. Rhythm units work in any length,
 including `width`, `fontSize` and multi-part values such as
-`border: '0.25r solid'`.
+`border: '0.25r solid'`. They also work inside `calc()`, as in
+`width: 'calc(100% - 4r)'`. Inside `var()`, `url()` and `env()` they stay as
+written.
 
 ## Set the root
 
@@ -58,20 +60,24 @@ globalCss({
 ```
 
 The default sits in the lowest [cascade layer](/cascade-layers), so your
-value always wins. Set the variable on any element to change the density of
-that part of the page.
+value always wins. When a system you extend sets the root, its value applies
+until you set your own. Set the variable on any element to change the density
+of that part of the page.
 
 ## Named spacing
 
-Define `spacing` tokens when a value deserves a name:
+Define `spacing` tokens when a value deserves a name. A token value can be
+a length, a reference to another token, or a rhythm value. A rhythm value
+follows the root:
 
 ```ts
 import { tokens } from '@reference-ui/system'
 
 tokens({
   spacing: {
-    gutter: { value: '1.5rem' },
+    gutter: { value: '6r' },
     section: { value: '{spacing.gutter}' },
+    rule: { value: '1px' },
   },
 })
 ```
@@ -81,7 +87,8 @@ tokens({
 ```
 
 A leading `-` negates a token: `-section` prints
-`calc(-1 * var(--spacing-section))`.
+`calc(-1 * var(--spacing-section))`. Each token is also a CSS variable, such
+as `--spacing-gutter`, for use in your own CSS.
 
 ## Numbers
 

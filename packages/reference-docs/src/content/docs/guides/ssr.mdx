@@ -9,24 +9,26 @@ description: Render Reference UI on the server, with no style setup.
 # Server-side rendering
 
 Reference UI renders on the server with no extra setup, because its CSS is
-built ahead of time. Static rendering works the same way.
+built ahead of time. Static rendering, which renders pages to HTML at build
+time, works the same way.
 
 ## How it works
 
-`ref sync` writes one stylesheet, and components only add class names.
-Nothing generates or injects CSS at runtime, so there is:
+`ref sync` writes one stylesheet. At runtime, primitives and `css()` only
+produce class names. Nothing generates or injects CSS in the browser, so
+there is:
 
 - no style registry to collect on the server,
 - no style tags to stream or hydrate,
 - no flash of unstyled content.
 
-The server and the browser render the same class names against the same
+The server and the browser produce the same class names against the same
 stylesheet, so the HTML hydrates as it is.
 
 ## Load the stylesheet
 
-Import the stylesheet once, from the module that renders your app's root,
-so your framework links it in the server HTML:
+Import the stylesheet once, in the module that renders your app's root, so
+the server HTML links it:
 
 ```tsx
 import '@reference-ui/react/styles.css'
@@ -36,7 +38,7 @@ import '@reference-ui/react/styles.css'
 
 The server can't read the browser's settings or storage. Save the user's
 choice in a cookie, read it from the request, and pass it to `colorMode` on
-your root element:
+your root primitive:
 
 ```tsx
 <Div colorMode={mode}>
@@ -47,14 +49,17 @@ your root element:
 The server and the browser then render the same mode, and the page doesn't
 flash when it hydrates. See [Light and dark](/light-and-dark) for the toggle.
 
-Don't set `data-color-mode` on `<html>` yourself. Primitives read it in the
-browser but not on the server, so the first render won't match.
+Don't set `data-color-mode` on `<html>` or `<body>` yourself. In the browser,
+primitives with no `colorMode` above them read that attribute. The server has
+no document to read, so the first render won't match.
 
 ## Library components
 
-- Content that exists only while open, such as Tooltip and Popover
-  content, renders nothing on the server. It mounts in the browser when it
-  opens. Triggers and the rest of the page are in the server HTML.
+- Content that exists only while open, such as Tooltip and Popover content,
+  renders nothing on the server. It mounts in the browser when it opens.
+  Triggers and the rest of the page are in the server HTML.
 - A [Portal](/portal) renders its children in the browser, after hydration.
 - [ReferenceLibrary](/reference-library) renders only its children on the
   server. The toast host and the live region mount in the browser.
+- Components create their ids with React's `useId`, so the ids in `aria-*`
+  attributes match between the server and the browser.

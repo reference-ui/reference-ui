@@ -1,0 +1,135 @@
+---
+title: Troubleshooting
+section: Guides
+order: 14
+slug: troubleshooting
+description: Find out why a style is missing, and fix it.
+---
+
+# Troubleshooting
+
+Most styling problems come down to one question: did `ref sync` see your
+style? Start with what sync prints, then find your symptom below.
+
+## Read sync's output
+
+By default, sync folds warnings into a count. A one-off `ref sync` adds a
+`Warnings:` row:
+
+```text
+  REF  v0.1.0  ready in 412 ms
+
+  ➜  CSS:       38.2 KB
+  ➜  Warnings:  2 [--verbose]
+```
+
+In watch mode, each resync ends its line with the count instead. See
+[Diagnostics](/diagnostics#where-they-appear).
+
+Run it again with `--verbose` to list every warning with its location and a
+fix hint:
+
+```bash
+npx ref sync --verbose
+```
+
+`--json` prints the same diagnostics as a JSON array on stdout, for scripts
+and agents. `ref sync --watch --debug` traces the file events
+watch mode receives.
+
+To also see the compiler's own diagnostics, such as values it could not read
+or spreads it could not follow, add `logs` to your config:
+
+```ts
+// ui.config.ts
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  logs: ['compiler'],
+})
+```
+
+The [Diagnostics](/diagnostics) page lists every warning code.
+
+## No styles at all
+
+**The stylesheet is not imported.** Every style lives in one stylesheet.
+Import it once, at your app's entry:
+
+```tsx
+// src/main.tsx
+import '@reference-ui/react/styles.css'
+```
+
+**Sync has not run.** Run `npx ref sync`, then check that `.reference-ui/`
+exists. [Sync](/sync#verify-the-output) lists what it should hold.
+
+## New styles don't appear
+
+Sync compiles your styles ahead of time, so a style you add after the last
+sync has no CSS yet. Run `ref sync --watch` beside your dev server so every
+change resyncs. See [Sync](/sync).
+
+## One file's styles are missing
+
+Sync compiles only the files `include` matches. Check that the file's path
+matches one of the globs in `ui.config.ts`. A pattern that matches nothing
+prints `include matched no files`.
+
+## One property is missing
+
+**The compiler could not read the value.** It reads your source without
+running it, so a value computed at runtime, such as the result of a function
+call, gets no CSS. Sync warns at the call site. In development, the browser
+console also warns `css(): no compiled class for` the property and value,
+with where it was called. Write each option as its own
+`css()` call and pick between the class names, or list the values under
+`staticCss`. See [What the compiler can read](/css#what-the-compiler-can-read).
+
+**`css()` comes from somewhere else.** The compiler only reads `css()` and
+`recipe()` calls imported from `@reference-ui/react` or
+`@reference-ui/styled`. A local function that shadows the import, or a `css`
+from another package, is not compiled.
+
+## A recipe resolves to nothing
+
+The browser console says why:
+
+- **`needs a literal className`**: give the recipe a string `className` in
+  its config. See [Recipes](/recipes).
+- **`no compiled table found`**: the recipe was added after the last sync.
+  Run `ref sync`.
+
+## Style props on a package component don't paint
+
+Components from a package take style props only when that package's system is
+in `extends` or `layers`. Sync warns `ATM-W-EXTERNAL-UNBACKED` and names the
+package. Add the `baseSystem` it names. See
+[Primitives](/primitives#your-own-components).
+
+## Another rule wins
+
+The style is in the stylesheet, but the element shows something else.
+
+Every Reference UI rule sits in a cascade layer, and CSS that is not in a
+layer wins over every layered rule. An unlayered stylesheet in your app beats
+Reference UI for the same property, whatever its selectors. Delete the old
+rule, or move it into a layer declared before the stylesheet. See
+[Cascade layers](/cascade-layers#your-own-css).
+
+Inside Reference UI, a style prop or `css()` class always beats a recipe or a
+global rule on the same element.
+
+## Sync errors
+
+Config, lock and watch errors are listed under
+[Sync: Common errors](/sync#common-errors).
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/diagnostics" title="Diagnostics">Every warning code and its fix.</LinkCard>
+  <LinkCard href="/cli" title="CLI">Every `ref sync` option.</LinkCard>
+  <LinkCard href="/css" title="css()">What the compiler can read.</LinkCard>
+  <LinkCard href="/cascade-layers" title="Cascade layers">How the stylesheet orders its rules.</LinkCard>
+</LinkCards>

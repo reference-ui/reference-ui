@@ -1,0 +1,215 @@
+---
+title: Multi-part components
+section: Guides
+order: 12
+slug: multi-part-components
+description: Style a component made of several parts, your own or another library's.
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { CardPartsDemo } from './multi-part-components-demo'
+
+# Multi-part components
+
+Some components are more than one element. A card has a root, a title and a
+body, and one `size` prop should style every part.
+
+Reference UI has no slot recipe for this. Each part is an element with its
+own class, and a `data-slot` attribute names it so a rule on another element
+can reach it. The compound components in `@reference-ui/lib`, such as `Tabs`,
+`Tree` and `Listbox`, are styled this way.
+
+## Your own component
+
+<Step n={1}>Style each part</Step>
+
+Give each part its own `recipe()`. Parts that share a variant list the same
+variant name:
+
+```tsx
+// src/components/Card.tsx
+import { css, recipe } from '@reference-ui/react'
+
+const cardRoot = recipe({
+  className: 'cardRoot',
+  base: { display: 'flex', flexDirection: 'column', borderRadius: 'md' },
+  variants: {
+    size: {
+      sm: { padding: '3r', gap: '1r' },
+      lg: { padding: '6r', gap: '2r' },
+    },
+  },
+  defaultVariants: { size: 'sm' },
+})
+
+const cardTitle = recipe({
+  className: 'cardTitle',
+  base: { margin: '0', fontWeight: '600' },
+  variants: {
+    size: {
+      sm: { fontSize: '4r' },
+      lg: { fontSize: '5r' },
+    },
+  },
+  defaultVariants: { size: 'sm' },
+})
+
+const cardBody = css({ margin: '0', opacity: 0.8 })
+```
+
+A part with no variants can take a plain `css()` class, like `cardBody`.
+
+<Step n={2}>Share the variant</Step>
+
+The root takes the prop and passes it to the other parts through React
+context. Each part calls its own recipe with that value and sets `data-slot`:
+
+```tsx
+// src/components/Card.tsx
+import { createContext, useContext } from 'react'
+import { Div, H3, P, type DivProps, type H3Props, type PProps } from '@reference-ui/react'
+
+type CardSize = 'sm' | 'lg'
+const CardSizeContext = createContext<CardSize>('sm')
+
+function CardRoot({ size = 'sm', ...props }: DivProps & { size?: CardSize }) {
+  return (
+    <CardSizeContext.Provider value={size}>
+      <Div data-slot="root" {...props} className={cardRoot({ size })} />
+    </CardSizeContext.Provider>
+  )
+}
+
+function CardTitle(props: H3Props) {
+  const size = useContext(CardSizeContext)
+  return <H3 data-slot="title" {...props} className={cardTitle({ size })} />
+}
+
+function CardBody(props: PProps) {
+  return <P data-slot="body" {...props} className={cardBody} />
+}
+
+export const Card = { Root: CardRoot, Title: CardTitle, Body: CardBody }
+```
+
+<Step n={3}>Style a part from the root</Step>
+
+Some styles depend on another part's state. An `&` selector in the root's
+styles reaches a part by its `data-slot`. Here the title underlines while the
+card is hovered:
+
+```tsx
+const cardRoot = recipe({
+  className: 'cardRoot',
+  base: {
+    display: 'flex',
+    flexDirection: 'column',
+    borderRadius: 'md',
+    '&:hover > [data-slot="title"]': { textDecoration: 'underline' },
+  },
+  // variants as before
+})
+```
+
+`Tree.Item` uses the same selector to draw its focus ring on its row:
+`'&:focus-visible > [data-slot="row"]'`.
+
+### Usage
+
+```tsx
+<Card.Root>
+  <Card.Title>Starter</Card.Title>
+  <Card.Body>One project.</Card.Body>
+</Card.Root>
+
+<Card.Root size="lg">
+  <Card.Title>Team</Card.Title>
+  <Card.Body>Every project in one place.</Card.Body>
+</Card.Root>
+```
+
+<Preview>
+  <CardPartsDemo />
+</Preview>
+
+## A library component's parts
+
+A `data-slot` attribute is a stable selector. `globalCss()` can target it to
+restyle a part of a library component everywhere. A `Tree.Item` branch wraps
+its content in a `[data-slot="row"]` element:
+
+```ts
+// src/theme/global.ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  '[role="treeitem"] > [data-slot="row"]': {
+    fontWeight: '600',
+  },
+})
+```
+
+Your global CSS sits in a later [cascade layer](/cascade-layers) than the
+library's, so it wins. Inside your own system, a global rule sits below
+recipes and `css()` classes, so it does not override your own parts' styles.
+
+## A headless library's parts
+
+Headless libraries such as Radix split each component into parts, and every
+part accepts `className`. Give each part a `css()` class:
+
+```tsx
+import { Accordion } from 'radix-ui'
+import { css } from '@reference-ui/react'
+
+const item = css({
+  borderBottom: '1px solid {colors.line}',
+  _open: { borderBottomWidth: '2px' },
+})
+
+const trigger = css({
+  display: 'flex',
+  justifyContent: 'space-between',
+  width: '100%',
+  padding: '3r',
+  _disabled: { opacity: 0.5 },
+})
+
+const content = css({ paddingInline: '3r', paddingBottom: '3r' })
+
+export function Faq() {
+  return (
+    <Accordion.Root type="single" collapsible>
+      <Accordion.Item value="billing" className={item}>
+        <Accordion.Header>
+          <Accordion.Trigger className={trigger}>Billing</Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Content className={content}>We bill monthly.</Accordion.Content>
+      </Accordion.Item>
+    </Accordion.Root>
+  )
+}
+```
+
+Headless parts expose their state as data attributes, and the named
+conditions match the common ones:
+
+| Condition | Matches |
+| --- | --- |
+| `_open` | `[data-state="open"]`, `[data-open]`, `[open]` |
+| `_closed` | `[data-state="closed"]`, `[data-closed]` |
+| `_checked` | `:checked`, `[data-checked]`, `[aria-checked=true]`, `[data-state="checked"]` |
+| `_expanded` | `[aria-expanded=true]`, `[data-expanded]`, `[data-state="expanded"]` |
+| `_selected` | `[aria-selected=true]`, `[data-selected]`, `[data-state="selected"]` |
+| `_disabled` | `:disabled`, `[disabled]`, `[data-disabled]`, `[aria-disabled=true]` |
+
+For any other attribute, use an `&` selector, such as
+`'&[data-orientation="vertical"]'`.
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/build-a-component" title="Build a component">One element, one recipe.</LinkCard>
+  <LinkCard href="/global-css" title="Global CSS">Selectors, nesting and layers.</LinkCard>
+  <LinkCard href="/style-props#conditions" title="Conditions">Every named condition.</LinkCard>
+</LinkCards>

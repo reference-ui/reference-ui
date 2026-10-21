@@ -12,17 +12,20 @@ import { GlobalCssDemo, StylePropsDemo } from './customization-demo'
 # Customization
 
 This guide shows how to customize Reference UI's primitives, the components
-in `@reference-ui/lib`, and any other library built with Reference UI:
+in `@reference-ui/lib`, and components from other libraries:
 
 - **Style props**: one instance.
 - **Global CSS**: every primitive of one kind.
-- **Tokens**: every component.
+- **Tokens**: every component that uses the token.
 - **`css()`**: components from other libraries.
+
+To decide between style props, `css()` and recipes for your own components,
+see [Choose a styling API](/choose-a-styling-api).
 
 ## Style props
 
 Style props on a library component land on its outermost element, so you
-can change one button without touching anything else:
+can change one button and leave the rest alone:
 
 <Preview>
   <StylePropsDemo />
@@ -64,10 +67,20 @@ globalCss({
 })
 ```
 
+The `variant` prop sets `data-variant` on the element, so a rule can target
+one variant with a selector such as `.ref-button[data-variant="primary"]`.
+To reach the inner parts of a compound component, see
+[Multi-part components](/multi-part-components).
+
 Your global CSS sits in a later [cascade layer](/cascade-layers) than the
-library's, so it wins.
+library's, so it wins. Style props sit in a later layer than global CSS, so
+they still override it on one element.
 
 ## Extend the library's tokens
+
+The library styles its components with its own tokens, such as
+`colors.ui.button.background`. Change a token's value and every component
+that uses it changes too.
 
 ### Create a branded copy
 
@@ -82,7 +95,12 @@ import { baseSystem } from '@reference-ui/lib/baseSystem'
 export const brandedLib = extendSystem(baseSystem, {
   tokens: {
     colors: {
-      ui: { button: { background: { light: '#0f766e', dark: '#5eead4' } } },
+      ui: {
+        button: {
+          background: { light: '#0f766e', dark: '#5eead4' },
+          hover: { light: '#115e59', dark: '#99f6e4' },
+        },
+      },
     },
   },
 })
@@ -104,10 +122,14 @@ export default defineConfig({
 })
 ```
 
-Every primary button picks up your value, so `<Button variant="primary">`
+Every primary button picks up your values, so `<Button variant="primary">`
 turns teal.
 
 ### Token values
+
+You can only change tokens the library declares. An unknown token path, or a
+reference to one, makes `extendSystem()` throw. To add tokens of your own,
+use `tokens()`: see [Theming](/theming).
 
 A token takes `value`, or `light` and `dark`. A token with no `dark` value
 uses its light value in both modes. A value can point at another library

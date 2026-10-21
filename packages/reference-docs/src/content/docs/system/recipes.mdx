@@ -36,14 +36,14 @@ const button = recipe({
 <button className={button({ tone: 'quiet' })}>Cancel</button>
 ```
 
-Pass `recipe()` an object literal. A recipe the compiler cannot read fails
-sync.
+Pass `recipe()` an inline object literal with a string `className`. A
+recipe the compiler cannot read fails sync.
 
 ## Options
 
 | Option | Type | Description |
 | --- | --- | --- |
-| `className` | `string` | Names the recipe. Two recipes with the same name in one system fail sync. |
+| `className` | `string` | Required. Names the recipe. Two recipes with the same name in one system fail sync. |
 | `base` | style object | Styles every choice gets. |
 | `variants` | `Record<string, Record<string, StyleObject>>` | One style object per value of each variant. Use `true` and `false` keys for a boolean variant. |
 | `defaultVariants` | `Record<string, string>` | The value used when a call leaves a variant out. |
@@ -51,19 +51,52 @@ sync.
 
 ## Compound variants
 
-`compoundVariants` adds styles that apply only when every listed variant
-matches:
+A compound variant applies only when every variant it lists matches.
+Here `quiet` buttons get a heavier font, but only at size `lg`:
 
 ```tsx
 const button = recipe({
   // …
   compoundVariants: [{ tone: 'quiet', size: 'lg', css: { fontWeight: '600' } }],
 })
+
+button({ tone: 'quiet', size: 'lg' }) // gets fontWeight 600
+button({ tone: 'quiet', size: 'sm' }) // does not
+```
+
+A key can match more than one value. Write it as an array:
+
+```tsx
+compoundVariants: [{ tone: 'quiet', size: ['sm', 'lg'], css: { fontWeight: '600' } }]
 ```
 
 ## Responsive variants
 
-A variant value can be responsive: `button({ size: { base: 'sm', md: 'lg' } })`.
+A variant value can be an object of [breakpoints](/responsive):
+
+```tsx
+<button className={button({ size: { base: 'sm', md: 'lg' } })}>Save</button>
+```
+
+The button is `sm` until its container reaches `md`, then `lg`. If the object
+has no `base`, the default variant applies below the breakpoints it names.
+
+Compound variants match the `base` value only. In the example above, a
+compound for `size: 'lg'` does not apply at `md`.
+
+## Values picked at runtime
+
+Every value of every variant gets a class, so a value chosen at runtime
+needs no `staticCss`:
+
+```tsx
+function SaveButton({ size }: { size: 'sm' | 'lg' }) {
+  return <button className={button({ size })}>Save</button>
+}
+```
+
+Responsive values work the same way. If any call passes a variable, sync
+emits every breakpoint of that recipe.
 
 ## Helpers
 

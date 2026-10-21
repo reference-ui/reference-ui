@@ -11,6 +11,11 @@ description: Compile your styles and types, once or in watch mode.
 `ref sync` compiles your stylesheet and types from `ui.config.ts` and the
 files its `include` globs match.
 
+Sync compiles only the style values it finds in your source. A value you add
+after the last sync has no CSS until the next one.
+
+## What sync writes
+
 Sync writes four packages to `.reference-ui/` and links each one into
 `node_modules/@reference-ui/`, so you import them like any other package.
 
@@ -19,10 +24,14 @@ Sync writes four packages to `.reference-ui/` and links each one into
 | `@reference-ui/react` | Primitives such as `Div`, `css()`, `recipe()`, and `styles.css` |
 | `@reference-ui/system` | `tokens()`, `font()`, `keyframes()`, `globalCss()`, and your `baseSystem` |
 | `@reference-ui/styled` | Token and style prop types |
-| `@reference-ui/types` | Type metadata about your components |
+| `@reference-ui/types` | [`Reference`](/reference) for the types in your `include` files |
 
-Sync compiles only the style values it finds in your source. A value you add
-after the last sync has no CSS until the next one.
+Don't edit these files. Each sync rewrites them from `ui.config.ts` and your
+source.
+
+`ref init` does not add `.reference-ui/` to `.gitignore`. Add it yourself.
+Sync rebuilds the folder on every run, and while a sync runs, its
+`sync.lock/` folder records that process's id and host.
 
 ## Usage
 

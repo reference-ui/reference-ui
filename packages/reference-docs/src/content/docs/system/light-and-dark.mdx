@@ -65,6 +65,21 @@ export function Root() {
 }
 ```
 
+## Reading the mode
+
+`useColorMode` returns the mode set by the nearest `colorMode` above the
+component. It returns `undefined` when no ancestor sets one, which means
+light.
+
+```tsx
+import { useColorMode } from '@reference-ui/react'
+
+function ModeLabel() {
+  const mode = useColorMode() ?? 'light'
+  return <span>{mode}</span>
+}
+```
+
 ## System setting
 
 Tokens don't read the operating system's `prefers-color-scheme` setting. To
@@ -81,12 +96,18 @@ the mode from the request instead. See [Server-side rendering](/ssr).
 
 ## Per-mode styles
 
-`_dark` applies styles when an ancestor is in dark mode, so it doesn't apply
-on the element that sets `colorMode`. Use it for the odd value that has no
-token:
+`_dark` and `_light` apply styles when an ancestor is in that mode, so they
+don't apply on the element that sets `colorMode`. Use them for the odd value
+that has no token:
 
 ```tsx
-<Div boxShadow="raised" _dark={{ boxShadow: 'none' }} />
+<Div boxShadow="0 1px 3px rgb(0 0 0 / 0.2)" _dark={{ boxShadow: 'none' }} />
+```
+
+`_osDark` and `_osLight` follow the system setting instead of `colorMode`:
+
+```tsx
+<Div bg="white" _osDark={{ bg: 'black' }} />
 ```
 
 ## Further reading

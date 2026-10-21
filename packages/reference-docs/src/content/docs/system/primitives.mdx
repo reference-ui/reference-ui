@@ -37,7 +37,7 @@ your tokens.
 
 ## One component per element
 
-There is no generic `Box` and no `as` prop. You choose the element by
+Each HTML element has its own component. You choose the element by
 choosing the component, so each one is typed for its element: `A` takes
 `href`, `Input` takes `value`, and `ref` gives you the real
 `HTMLAnchorElement` or `HTMLInputElement`.
@@ -47,9 +47,9 @@ choosing the component, so each one is typed for its element: `A` takes
 | Prop | Description |
 | --- | --- |
 | Element props | Everything the element accepts: `id`, `className`, `aria-*`, `data-*`, event handlers, `children`, `ref`. They reach the DOM unchanged. |
-| Style props | CSS properties as props. See [Style props](/style-props). They never reach the DOM. |
+| Style props | CSS properties and conditions such as `_hover` as props. See [Style props](/style-props). They never reach the DOM. |
 | `css` | A style object, or an array of them, applied like [`css()`](/css). It wins over a style prop for the same property. |
-| `colorMode` | `'light'` or `'dark'`. Sets `data-color-mode` on the element. |
+| `colorMode` | `'light'` or `'dark'`. Sets `data-color-mode` on the element and the primitives inside it. |
 | `variant` | Sets `data-variant` on the element, for `globalCss()` rules that select on it. |
 
 Your `className` is added to the classes the primitive generates. Every
@@ -70,7 +70,8 @@ primitive also carries a class named after its tag, such as `ref-div` or
 
 `colorMode` sets the mode for an element and everything inside it, whatever
 the page uses. Modes nest. Tokens with [light and dark values](/tokens#light-and-dark-values)
-resolve in the nearest mode.
+resolve in the nearest mode. [Light and dark](/light-and-dark) shows how to
+toggle it.
 
 Read the current mode with `useColorMode()`. It returns the nearest
 primitive's mode, or the `data-color-mode` of `html` or `body`:
@@ -86,17 +87,20 @@ function ModeLabel() {
 
 ## `data-layer`
 
-The outermost primitive sets `data-layer` to your system's
-[`name`](/config#name). Primitives inside it inherit it. A primitive with
-`colorMode`, or one from another system, sets it again. The stylesheet uses
-the attribute to keep two systems on one page apart.
+A primitive sets `data-layer` to your system's [`name`](/config#name).
+Inside a colour mode, a primitive skips it when its nearest primitive
+ancestor is from the same system. A primitive with `colorMode`, or one from
+another system, always sets it. The stylesheet uses the attribute to keep
+two systems on one page apart. See [Cascade layers](/cascade-layers).
 
 ## Your own components
 
 A component that passes style props on to a primitive takes style props
 too. `<Card padding="4r" />` compiles when `Card` spreads its props onto a
 `Div`. The compiler follows props through spreads, other components,
-re-exports and barrel files, so there is nothing to register.
+higher-order components, re-exports and barrel files, so there is nothing to
+register. Class components are not followed: `ref sync` warns
+`STT-W-CLASS-COMPONENT` for one that takes style props.
 
 A prop the component keeps for itself, such as a `size` it turns into
 `data-size`, stays the component's own prop.

@@ -10,7 +10,8 @@ description: Define a font family, its files and its weights.
 
 `font()` defines a font family: its CSS stack, the files to load, and the
 weights it ships. Sync turns it into tokens, `@font-face` rules and the
-`font` and `weight` props.
+`font` and `weight` props. Lib's own families are listed on
+[Typography](/typography).
 
 ## Define a family
 
@@ -23,7 +24,6 @@ font('display', {
   fontFace: {
     src: 'url(/fonts/playfair-display.woff2) format("woff2")',
     fontWeight: '400 900',
-    fontDisplay: 'swap',
   },
   weights: {
     normal: '420',
@@ -72,6 +72,7 @@ import { P } from '@reference-ui/react'
 | --- | --- |
 | `weight="bold"` with `font` or `fontFamily` on the same element | The family's `bold` |
 | `weight="bold"` with no family on the element | The CSS value, `700` |
+| `weight="bold"` with two different families on the element | The CSS value, `700` |
 | `weight="display.bold"` | The display family's `bold`, anywhere |
 | `weight="display.black"` when display has no `black` | The CSS value, `900` |
 | `weight="550"` | `550` |
@@ -82,10 +83,13 @@ does not set the family itself, such as a child.
 
 ## Load the files
 
-Sync writes one `@font-face` rule for each `fontFace` entry. Point `src` at
-files in your app's public folder, or at a font provider's URL.
+Sync writes one `@font-face` rule for each `fontFace` entry. Its
+`font-family` is the first name in `value`, and its `font-display` is `swap`
+unless you set `fontDisplay`. Point `src` at files in your app's public
+folder, or at a font provider's URL.
 
-Pass an array when a family has several files:
+Pass an array when a family has several files. Each rule gets the same
+family name:
 
 ```ts
 font('body', {
@@ -130,7 +134,7 @@ function font(name: string, options: FontOptions): void
 | `src` | `string` | Yes | The `src` descriptor, such as `url(…) format("woff2")`. |
 | `fontWeight` | `string` | No | The weight or range the file covers, such as `'400 900'`. |
 | `fontStyle` | `string` | No | `normal` or `italic`. |
-| `fontDisplay` | `string` | No | How text shows while the file loads, such as `swap`. |
+| `fontDisplay` | `string` | No | How text shows while the file loads. Defaults to `swap`. |
 | `sizeAdjust` | `string` | No | Scales the glyphs, such as `'105%'`. |
 | `descentOverride` | `string` | No | Overrides the descent metric, such as `'20%'`. |
 

@@ -17,7 +17,7 @@ import { globalCss } from '@reference-ui/system'
 
 globalCss({
   ':root': {
-    '--header-height': '16r',
+    '--spacing-root': '0.3rem',
   },
   body: {
     fontFamily: 'body',
@@ -41,6 +41,13 @@ like.
 Values work as they do in [`css()`](/css#values): token names, `{colors.brand}`
 references, rhythm units such as `4r`, and plain CSS. A key set to
 `undefined` is dropped, which helps when you spread a shared object.
+
+A custom property value prints as written. Only a value that is a whole
+reference, such as `'{colors.brand}'`, becomes the token's `var()`. The
+`--spacing-root` rule above rescales every rhythm unit. See
+[Spacing](/spacing).
+
+An unknown property name is dropped with a warning.
 
 ## Nesting and conditions
 
@@ -72,9 +79,35 @@ globalCss({
 })
 ```
 
-Breakpoint keys such as `md` and `mdDown` work too. In global CSS they print
-`@media` queries, where style props and `css()` print `@container` queries.
-See [Responsive](/responsive).
+An at-rule key at the top level wraps every selector inside it:
+
+```ts
+globalCss({
+  '@media print': {
+    nav: { display: 'none' },
+    body: { color: 'black' },
+  },
+})
+```
+
+## Breakpoints
+
+Breakpoint keys, range keys such as `mdDown` or `smToLg`, and responsive
+objects and arrays work as they do on style props. In global CSS they print
+`@media` queries on the viewport, where style props and `css()` print
+`@container` queries. See [Responsive](/responsive).
+
+```ts
+globalCss({
+  body: {
+    fontSize: { base: '14px', lg: '16px' },
+    padding: ['2r', null, '4r'],
+    mdDown: { lineHeight: 1.4 },
+  },
+})
+```
+
+The `lg` value prints `font-size: 16px` inside `@media (min-width: 1024px)`.
 
 ## Where global rules sit
 
@@ -118,6 +151,7 @@ export default defineConfig({
 function globalCss(rules: GlobalCssConfig): void
 ```
 
-`GlobalCssConfig` maps selectors to rules. A rule holds CSS properties in
-camelCase, custom properties (`--name`), nested `&` selectors, named
-conditions, breakpoint keys, and `@media` or `@container` keys.
+`GlobalCssConfig` maps selectors, or top-level at-rules, to rules. A rule
+holds CSS properties in camelCase, custom properties (`--name`), nested `&`
+selectors, named conditions, breakpoint and range keys, responsive values,
+and `@media` or `@container` keys.

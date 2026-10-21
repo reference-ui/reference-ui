@@ -8,9 +8,8 @@ description: Lay out a page that adapts to the space it has.
 
 # Responsive layouts
 
-Responsive styles follow the width of the nearest container, not the
-viewport. A layout built this way adapts the same in a full page, a sidebar
-or a dialog.
+Responsive styles in Reference UI follow the width of the nearest container.
+A layout built this way adapts the same in a full page, a sidebar or a dialog.
 
 <Step n={1}>Check the page is a container</Step>
 
@@ -26,9 +25,13 @@ globalCss({
 })
 ```
 
+Without a container, responsive styles never match. `ref sync` warns when
+your global CSS defines none.
+
 <Step n={2}>Change values at breakpoints</Step>
 
-Pass an object with a value per breakpoint. `base` applies at every width:
+Pass an object with a value per breakpoint. `base` applies at every width,
+and each breakpoint applies from its width up:
 
 ```tsx
 <Div
@@ -43,8 +46,12 @@ Pass an object with a value per breakpoint. `base` applies at every width:
 </Div>
 ```
 
-One column on narrow screens, two from `md` (768px), four from `xl`
+One column in narrow space, two from `md` (768px), four from `xl`
 (1280px). The full scale is on [Responsive](/responsive).
+
+Write the narrow layout as `base` first, then add the breakpoints where it
+needs to change. `sm` means 640px and up, so it never targets the narrowest
+space.
 
 <Step n={3}>Show and hide by width</Step>
 
@@ -53,10 +60,13 @@ One column on narrow screens, two from `md` (768px), four from `xl`
 <Button display={{ md: 'none' }}>Menu</Button>
 ```
 
-## Respond to a panel, not the page
+To limit a style to one band of widths, use a range key such as `mdOnly` or
+`smToLg`. [Responsive](/responsive#ranges) lists them.
+
+## Respond to a panel
 
 Mark any element with `container`, and responsive styles inside it follow
-that element's width instead:
+that element's width instead of the page:
 
 ```tsx
 <Div display="grid" gridTemplateColumns="16rem 1fr">
@@ -81,9 +91,25 @@ To skip past nearer containers, name one and target it in `r`:
 </Main>
 ```
 
+`'content/md'` matches when the container named `content` is at least
+768px wide.
+
+## Switch a recipe variant
+
+A recipe variant takes the same breakpoint object:
+
+```tsx
+<button className={button({ size: { base: 'sm', md: 'lg' } })}>Save</button>
+```
+
+The button is `sm` until its container reaches `md`, then `lg`.
+[Recipes](/recipes#responsive-variants) covers how compound variants treat
+these values.
+
 ## Further reading
 
 <LinkCards>
   <LinkCard href="/responsive" title="Responsive">Breakpoints, ranges, `r` keys and viewport queries.</LinkCard>
+  <LinkCard href="/recipes" title="Recipes">Variants, compound variants and responsive variants.</LinkCard>
   <LinkCard href="/spacing" title="Spacing">The rhythm unit and spacing tokens.</LinkCard>
 </LinkCards>

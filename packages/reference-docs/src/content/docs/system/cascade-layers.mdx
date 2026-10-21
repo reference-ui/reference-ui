@@ -9,7 +9,9 @@ description: How the stylesheet orders its rules, and how your own CSS fits in.
 # Cascade layers
 
 The stylesheet puts every rule in a CSS cascade layer, so which rule wins
-depends on its layer, not on selector specificity or file order.
+depends on its layer, not on selector specificity or file order. The output
+relies on the CSS [`@layer`](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer)
+rule.
 
 ## Layer order
 
@@ -32,15 +34,21 @@ earlier one:
 So a style prop always overrides a recipe or a global rule on the same
 element, with no `!important`.
 
+A layer with no rules prints no block, but keeps its place in the order.
+
 ## One layer per system
 
 All six layers sit inside a layer named after your system's
-[`name`](/config#name). Each system in `extends` and `layers` gets its own
-layer too, ordered before yours:
+[`name`](/config#name). Each system in [`extends`](/config#extends) and
+[`layers`](/config#layers) gets its own layer too, ordered before yours:
 
 ```css
 @layer root { :root { --spacing-root: 0.25rem } }
-@layer reference-ui, my-app;
+@layer reference-icons, reference-ui, my-app;
+@layer reference-icons {
+  @layer reset, global, base, tokens, recipes, utilities;
+  /* … */
+}
 @layer reference-ui {
   @layer reset, global, base, tokens, recipes, utilities;
   /* … */
@@ -52,7 +60,18 @@ layer too, ordered before yours:
 ```
 
 Systems in `extends` come first, then systems in `layers`, then yours, each
-group in config order. Your rules win over theirs.
+group in config order. A system's own upstreams come before it: here
+`reference-ui` layers in `reference-icons`. A system reached twice prints
+once, at its first position.
+
+Your rules win over theirs. The system order applies first, so even a rule
+in your `global` layer beats a style prop in an upstream system.
+
+Only your system prints a reset. Upstream systems print without theirs, so
+your `normalizeCss` decides the reset for the whole page.
+
+Layer names are escaped as CSS identifiers. A system named `@acme/ui` prints
+as `@layer \@acme\/ui`.
 
 The `root` layer comes before everything. It holds only the default
 `--spacing-root`, so any `--spacing-root` you set wins. See
@@ -62,7 +81,7 @@ The `root` layer comes before everything. It holds only the default
 
 CSS that is not in a layer wins over every layered rule. A stylesheet you
 import beside `@reference-ui/react/styles.css` therefore overrides Reference
-UI styles for the same property, whatever the selectors.
+UI styles for the same property, whatever the selectors and load order.
 
 To rank your CSS below Reference UI instead, put it in a layer declared
 before the stylesheet:
@@ -75,6 +94,10 @@ before the stylesheet:
   .button { padding: 8px; }
 }
 ```
+
+A layer's rank comes from where it is first declared, not from import order.
+The same works for another library that ships its own layers: declare its
+layer before the Reference UI stylesheet loads to rank it below.
 
 Prefer `globalCss()` for new rules: it puts them in your system's `global`
 layer and lets them use your tokens.

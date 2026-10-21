@@ -12,7 +12,7 @@ import { AnimationDemo } from './animation-demo'
 # Animation
 
 `keyframes()` defines the steps of an animation. An `animations` token gives
-it a name, a duration and an easing, so an element runs it with one prop.
+it a duration and an easing, so an element runs it with one prop.
 
 <Preview>
   <AnimationDemo />
@@ -28,11 +28,11 @@ Call `keyframes()` with one entry per animation. Each entry maps steps
 import { keyframes } from '@reference-ui/system'
 
 keyframes({
-  fadeIn: {
+  rise: {
     from: { opacity: '0', transform: 'translateY(4px)' },
     to: { opacity: '1', transform: 'translateY(0)' },
   },
-  pulse: {
+  breathe: {
     '0%, 100%': { opacity: '1' },
     '50%': { opacity: '0.5' },
   },
@@ -40,44 +40,54 @@ keyframes({
 ```
 
 Each entry becomes one `@keyframes` rule in the `global`
-[cascade layer](/cascade-layers). Token names, `{colors.brand}` references and
-rhythm units work inside the steps.
+[cascade layer](/cascade-layers). Values in the steps resolve tokens and
+rhythm units the same way style props do.
 
 ## Name an animation
 
-Add an `animations` token whose value is a CSS `animation` shorthand:
+Add an `animations` token whose value is a CSS `animation` shorthand. Its
+first word is the keyframes name:
 
 ```ts
 import { tokens } from '@reference-ui/system'
 
 tokens({
   animations: {
-    fade: {
-      in: { value: 'fadeIn 0.2s ease-out both' },
+    rise: {
+      quick: { value: 'rise 0.2s ease-out both' },
     },
-    pulse: {
-      slow: { value: 'pulse 2s ease-in-out infinite' },
+    breathe: {
+      slow: { value: 'breathe 2s ease-in-out infinite' },
     },
   },
 })
 ```
 
+Lib already ships [presets](/motion) such as `fadeIn.quick` and `spin.slow`.
+
 ## Run an animation
 
-`animation` looks up names in the `animations` category:
+`animation` takes a token path from the `animations` category:
 
 ```tsx
 import { Div, css } from '@reference-ui/react'
 
-<Div animation="fade.in" />
+<Div animation="rise.quick" />
 
-const loading = css({ animation: 'pulse.slow' })
+const loading = css({ animation: 'breathe.slow' })
 ```
 
 The class uses the token's variable, so changing the token's duration or
 easing changes every element that uses it.
 
-You can also write the shorthand directly: `animation="fadeIn 0.2s ease-out"`.
+`animation` also takes a raw shorthand, and `animationName` takes a keyframes
+name for use with the longhands:
+
+```tsx
+<Div animation="rise 0.2s ease-out" />
+
+<Div animationName="rise" animationDuration="0.6s" animationTimingFunction="ease-out" />
+```
 
 ## Reduced motion
 
@@ -85,11 +95,11 @@ You can also write the shorthand directly: `animation="fadeIn 0.2s ease-out"`.
 `_motionSafe` when they do not:
 
 ```tsx
-<Div animation="pulse.slow" _motionReduce={{ animation: 'none' }} />
+<Div animation="breathe.slow" _motionReduce={{ animation: 'none' }} />
 ```
 
-With the [reset](/global-css#the-reset) on, animations and transitions
-already shrink to almost nothing for these users.
+The [reset](/global-css#the-reset) is on by default. For these users it cuts
+animation and transition durations to `0.01ms` and runs each animation once.
 
 ## Reference
 
@@ -97,13 +107,13 @@ already shrink to almost nothing for these users.
 function keyframes(config: KeyframesConfig): void
 
 type KeyframesConfig = Record<
-  string,                                         // animation name
+  string,                                         // keyframes name
   Record<string, Record<string, string | number>> // step: declarations
 >
 ```
 
 | Token category | Value | Used by |
 | --- | --- | --- |
-| `animations` | A CSS `animation` shorthand | `animation`, `animationName` |
+| `animations` | A CSS `animation` shorthand | `animation` |
 | `durations` | A time, such as `150ms` | `transitionDuration` |
 | `easings` | A timing function | `transitionTimingFunction` |

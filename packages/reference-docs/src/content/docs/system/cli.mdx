@@ -54,7 +54,12 @@ Reads the config and your source, then writes the generated packages to
 | `--debug` | Trace the file events watch mode receives. |
 
 Only one sync runs per project at a time. A one-off sync that finds a watch
-session already running hands the work to it and exits with code 0.
+session already running asks it to resync, then exits with code 0. A second
+`ref sync --watch` attaches to the running session and stays open until it
+stops.
+
+With `--watch --json`, each sync prints its own diagnostics array on stdout,
+failed ones included.
 
 ## clean
 
@@ -63,4 +68,5 @@ npx ref clean [dir]
 ```
 
 Removes `.reference-ui/` and the `node_modules/@reference-ui/` links sync
-created. Run `ref sync` afterwards to generate them again.
+created. A sync that is still running, watch mode included, is stopped first.
+Run `ref sync` afterwards to generate them again.

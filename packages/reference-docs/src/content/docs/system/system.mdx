@@ -16,10 +16,6 @@ types that check your style values.
 
 <SystemDiagram />
 
-TODO: the diagram shows Atlas as an output, but `ref sync` writes only the
-`system`, `styled`, `react` and `types` packages. Atlas runs in the Reference
-MCP server. Owner to confirm how the diagram should show it.
-
 ## What you write
 
 - **Primitives and style props.** A primitive is a component for one HTML
@@ -34,24 +30,29 @@ MCP server. Owner to confirm how the diagram should show it.
   [CSS](/css), [Recipes](/recipes), [Responsive](/responsive) and
   [Global CSS](/global-css).
 
-All of it lives in the files your `ui.config.ts` `include` globs match.
+Sync reads the files that your `ui.config.ts` `include` globs match.
 
-The core ships no design of its own: no colours, fonts or spacing scale
-beyond the rhythm unit. Define those yourself, or extend a system that
-defines them, such as `@reference-ui/lib`.
+Reference UI ships no colours, fonts or spacing scale, only the rhythm unit.
+Define your own, or extend a system that defines them, such as
+`@reference-ui/lib`.
 
 ## What sync does
 
-`ref sync` runs each file that calls `tokens()`, `font()`, `keyframes()` or
-`globalCss()`, and merges the results into one description of your system.
-It also reads every style prop and `css()` call in your source. A Rust engine
-compiles both into CSS.
+`ref sync` runs in two passes:
 
-The engine reads your source without running it, and compiles only the style
-values it finds there. [CSS](/css#what-the-compiler-can-read) lists what it
-can read. [Sync](/sync) covers the command.
+1. **Collect** runs each file that calls `tokens()`, `font()`, `keyframes()`
+   or `globalCss()`, and merges the results into one description of your
+   system.
+2. **Compile** reads every style prop, `css()` and `recipe()` call in your
+   source. A Rust engine compiles them, with that description, into CSS.
+
+The engine reads your source without running it, so it compiles only the
+style values it can see there. [CSS](/css#what-the-compiler-can-read) lists
+what it can read. [Sync](/sync) covers the command.
 
 ## What you get
+
+Sync writes three things to `.reference-ui/`:
 
 - **A stylesheet.** One `styles.css` with a rule for each style value you
   use, ordered in [cascade layers](/cascade-layers). Import it once:

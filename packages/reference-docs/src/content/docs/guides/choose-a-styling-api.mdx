@@ -1,0 +1,143 @@
+---
+title: Choose a styling API
+section: Guides
+order: 6
+slug: choose-a-styling-api
+description: Which styling API to reach for, from one element to the whole system.
+---
+
+# Choose a styling API
+
+Reference UI has five ways to write styles: style props, `css()`,
+`recipe()`, `globalCss()` and tokens. They take the same keys and values, so
+a style can move from one to the next as more of your app uses it.
+
+Start with the smallest one that fits. Move a style up when a second place
+needs it.
+
+| You are styling | Use |
+| --- | --- |
+| One element | [Style props](#style-props) |
+| A class for several elements, or for an element that is not a primitive | [`css()`](#css) |
+| A component with variants | [`recipe()`](#recipe) |
+| Elements you don't render yourself | [`globalCss()`](#globalcss) |
+| A value many styles share | [Tokens](#tokens) |
+
+## Style props
+
+Write styles straight on a [primitive](/primitives). Conditions such as
+`_hover` sit beside the rest:
+
+```tsx
+import { Div, H3 } from '@reference-ui/react'
+
+<Div padding="4r" bg="surface" borderRadius="card" _hover={{ bg: 'surface/80' }}>
+  <H3 color="brand">Plan</H3>
+</Div>
+```
+
+See [Style props](/style-props) for every prop and value.
+
+## css()
+
+Use `css()` when the same styles go on several elements, or on an element
+that is not a primitive, such as a component from another library. It
+returns a class name:
+
+```tsx
+import { css } from '@reference-ui/react'
+
+const card = css({ padding: '4r', bg: 'surface', borderRadius: 'card' })
+
+<article className={card}>…</article>
+```
+
+The compiler reads `css()` calls from your source without running it. When
+the choice is made at runtime, write one call per option and pick between
+the class names. See [What the compiler can read](/css#what-the-compiler-can-read).
+
+## recipe()
+
+A component with options, such as `tone` or `size`, soon fills one `css()`
+call with ternaries. A lookup table of `css()` classes is a variant without
+the name. Swap it for `recipe()`, which takes base styles and named
+variants, and returns a function that gives the class names for the
+variants you pick:
+
+```tsx
+import { recipe } from '@reference-ui/react'
+
+const card = recipe({
+  className: 'card',
+  base: { padding: '4r', borderRadius: 'card' },
+  variants: {
+    tone: {
+      plain: { bg: 'surface' },
+      brand: { bg: 'brand', color: 'white' },
+    },
+  },
+  defaultVariants: { tone: 'plain' },
+})
+
+<article className={card({ tone: 'brand' })}>…</article>
+```
+
+[Build a component](/build-a-component) turns a recipe into a typed
+component, and [Recipes](/recipes) has every option.
+
+## globalCss()
+
+Use `globalCss()` for elements you don't render yourself: `body`, `:root`,
+HTML from Markdown or a CMS, or every primitive of one kind through its
+`ref-*` class:
+
+```ts
+// src/theme/global.ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  body: { color: 'text', backgroundColor: 'surface' },
+  '.prose a': { color: 'brand' },
+})
+```
+
+See [Global CSS](/global-css) for selectors, nesting and the reset.
+
+## Tokens
+
+When the same value turns up in several styles, name it as a token. Every
+style prop, `css()` call, recipe and global rule can use the name, and a new
+value reaches all of them:
+
+```ts
+// src/theme/tokens.ts
+import { tokens } from '@reference-ui/system'
+
+tokens({
+  colors: {
+    brand: { value: '#4f46e5' },
+  },
+})
+```
+
+See [Theming](/theming) for fonts, animations and dark mode, and
+[Tokens](/tokens) for the full reference.
+
+## Which style wins
+
+Each API writes its rules to its own [cascade layer](/cascade-layers).
+Global rules sit below recipes, and recipes sit below utilities, where style
+props and `css()` classes live. On one element, the more local style wins,
+with no `!important`. Here the style prop replaces the recipe's `4r`:
+
+```tsx
+<Div className={card()} padding="6r">…</Div>
+```
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/build-a-component" title="Build a component">Make your own component from a primitive and a recipe.</LinkCard>
+  <LinkCard href="/customization" title="Customization">Change primitives, library components and other libraries.</LinkCard>
+  <LinkCard href="/cascade-layers" title="Cascade layers">The layer order and how systems stack.</LinkCard>
+</LinkCards>

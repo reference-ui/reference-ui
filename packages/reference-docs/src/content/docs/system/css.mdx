@@ -88,6 +88,13 @@ it matches.
 
 ## What the compiler can read
 
+The compiler reads `css()` calls only when `css` is imported from
+`@reference-ui/react` or `@reference-ui/styled`. A renamed import, such as
+`import { css as style }`, still counts, and so does a file of yours that
+re-exports `css` from either package. A local function named `css`, or a
+`css` from another package, is not read. The same rule applies to
+[`recipe()`](/recipes).
+
 The compiler reads your source without running it. It can read:
 
 - literal objects and values in a `css()` call or a style prop;
@@ -99,16 +106,30 @@ A value it cannot read, such as the result of a function call, gets no CSS.
 `ref sync` warns at the call site, and in development the browser console
 names the property and value that missed.
 
+### Values chosen at runtime
+
 When the choice is made at runtime, write each option as its own `css()`
 call and pick between the class names:
 
-```ts
+```tsx
 const toneClass = {
   info: css({ color: 'blue' }),
   danger: css({ color: 'red' }),
 }
 
 <p className={toneClass[kind]}>…</p>
+```
+
+When the value itself comes from runtime data, read it from a custom property
+and set that property in `style`:
+
+```tsx
+<div
+  className={css({ bg: 'var(--swatch)' })}
+  style={{ '--swatch': user.color }}
+>
+  …
+</div>
 ```
 
 ### Generate values ahead of time

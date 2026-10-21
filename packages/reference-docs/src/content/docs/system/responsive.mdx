@@ -12,6 +12,13 @@ Responsive styles follow the width of a container, not the viewport. A card
 that switches layout at `md` does so when the space it sits in reaches
 768px, whether that is a page, a sidebar or a dialog.
 
+```tsx
+<Div padding={{ base: '2r', md: '4r' }} />
+```
+
+Breakpoints are mobile-first: each one prints `@container (min-width: …)`, so
+a style set at a breakpoint holds at every wider width.
+
 ## Mark a container
 
 A responsive style matches only inside a container. Make an element one with
@@ -39,8 +46,9 @@ globalCss({
 ```
 
 `@reference-ui/lib` already does this, so projects that extend it have a page
-container. Without any container, responsive styles never match, and
-`ref sync` warns when your global CSS defines none.
+container. If no global rule on `:root`, `html` or `body` sets a container
+type, `ref sync` warns, since responsive styles outside a container never
+match.
 
 ## Breakpoints
 
@@ -57,17 +65,17 @@ Wider breakpoints override narrower ones.
 
 ## Write a responsive value
 
-**Arrays** list values from `base` up. Index 0 is `base`, index 1 is `sm`,
-and so on. `null` skips a breakpoint:
-
-```tsx
-<Div width={['100%', null, '50%']} /> // 100%, then 50% from md
-```
-
 **Objects** name the breakpoints for one property:
 
 ```tsx
 <Div padding={{ base: '2r', md: '4r', xl: '8r' }} />
+```
+
+**Arrays** list values from `base` up. Index 0 is `base`, index 1 is `sm`,
+and so on. `null` or `undefined` skips a breakpoint:
+
+```tsx
+<Div width={['100%', null, '50%']} /> // 100%, then 50% from md
 ```
 
 **Breakpoint keys** group several properties:
@@ -85,7 +93,9 @@ css({
 
 Nested keys must all match: `sm: { md: { … } }` applies only when both do.
 
-## Ranges
+## Target a range
+
+By default a breakpoint style holds from that width up. These keys bound it:
 
 | Key | Matches | Example |
 | --- | --- | --- |
@@ -93,28 +103,56 @@ Nested keys must all match: `sm: { md: { … } }` applies only when both do.
 | `<bp>Only` | From `bp` to the next breakpoint | `mdOnly`: `(min-width: 768px) and (max-width: 1023.98px)` |
 | `<from>To<to>` | From `from` up to `to` | `smToLg`: `(min-width: 640px) and (max-width: 1023.98px)` |
 
+```ts
+css({ width: '100%', mdOnly: { width: '50%' } })
+```
+
 The upper bound stops 0.02px short, so adjacent ranges never overlap.
 
 ## Custom widths
 
-The `r` prop takes pixel widths that are not on the scale:
+The `r` prop takes widths that are not on the scale. A numeric key is a
+pixel width; a breakpoint name works too:
 
 ```tsx
 <Div width="100%" r={{ 300: { width: '50%' }, 900: { width: '33%' } }} />
 ```
 
-Each key prints `@container (min-width: <key>px)`. `r` works on primitives
+Each key prints `@container (min-width: <width>px)`. `r` works on primitives
 and in `css()`.
 
-## Viewport and named containers
+## Named containers
 
-Write the at-rule as a key when you need the viewport or a named container:
+A responsive style follows its nearest container. To follow one further up,
+name it and prefix the `r` key with that name:
+
+```tsx
+<Div container="sidebar">
+  <Div r={{ 'sidebar/md': { padding: '4r' } }} />
+</Div>
+```
+
+`'sidebar/md'` prints `@container sidebar (min-width: 768px)`.
+
+## Recipe variants
+
+A variant value takes the same object form, so a recipe can switch variants
+by container width:
+
+```ts
+button({ size: { base: 'sm', md: 'lg' } })
+```
+
+See [Recipes](/recipes).
+
+## Viewport
+
+Write an `@media` query as a key when a style should follow the viewport:
 
 ```ts
 css({
   padding: '2r',
   '@media (min-width: 800px)': { padding: '6r' },
-  '@container sidebar (min-width: 400px)': { padding: '4r' },
 })
 ```
 

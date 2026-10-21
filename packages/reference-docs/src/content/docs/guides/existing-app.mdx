@@ -34,8 +34,12 @@ export default defineConfig({
 })
 ```
 
-`normalizeCss: false` turns off the CSS reset, so screens you haven't moved
-keep their look.
+Style props and `css()` calls in files outside `include` get no CSS.
+
+`normalizeCss: false` turns off the CSS reset. The reset sets
+`box-sizing: border-box` on every element, removes the margins on `body`,
+`h1` to `h4` and paragraphs, and makes images block elements. With it off,
+screens you haven't moved keep their look.
 
 <Step n={3}>Import the stylesheet</Step>
 
@@ -52,12 +56,27 @@ existing CSS is unlayered, so where both style the same element, your
 existing styles win.
 
 The library's global CSS targets primitives by their `ref-` classes, such
-as `ref-button`, so it leaves your existing markup alone. The exception is
-`body`, where it sets the font, the font size and `container-type`. A
-`body` rule of your own still wins for each property it sets.
+as `ref-button`, so it leaves most of your existing markup alone. Two element
+selectors are the exception:
+
+- `body` gets the font family, letter spacing, font size and
+  `container-type: inline-size`.
+- `code` gets the inline code style: monospace font, background, border and
+  padding.
+
+A rule of your own for either element still wins for each property it sets.
 
 If a converted screen still shows its old styles, an old selector is
-reaching it. Delete that rule once nothing else needs it.
+reaching it. Delete that rule once nothing else needs it. To let converted
+screens win instead, move the old CSS into a layer declared before the
+stylesheet, as [Cascade layers](/cascade-layers#your-own-css) shows.
+
+If your existing CSS uses cascade layers of its own, the layer whose name
+appears first ranks lowest, so import order decides between the two. To
+fix the order, declare every layer name in one `@layer` statement at the
+top of a stylesheet that loads before both. Reference UI's layer names are
+`root` and one per system, listed in
+[One layer per system](/cascade-layers#one-layer-per-system).
 
 ## Move over
 

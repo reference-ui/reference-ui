@@ -1,4 +1,4 @@
-// System introduction diagram: authoring surface, sync, engine, outputs.
+// System introduction diagram: authoring surface, sync, engine, the outputs sync writes.
 // It takes nothing and emits the layered architecture figure for the System introduction
 // page. Colocated with the page that embeds it.
 import { Div, Span, css } from '@reference-ui/react'
@@ -6,9 +6,10 @@ import { Diagram } from '../../../components/diagram/Diagram'
 
 /**
  * The System > Introduction diagram: three authoring blocks, `ref sync`, the
- * Rust engine, and its three outputs, top to bottom. It composes the shared
- * Diagram kit, so it inherits the kit's light and dark palette. Below 480px of
- * container width each row of blocks stacks into one column.
+ * Rust engine, and the three things sync writes (stylesheet, types,
+ * packages), top to bottom. It composes the shared Diagram kit, so it inherits
+ * the kit's light and dark palette. Below 480px of container width each row
+ * of blocks stacks into one column.
  */
 
 const frame = css({ container: true, marginBottom: '6r' })
@@ -93,7 +94,7 @@ export function SystemDiagram() {
               <Block name="Types" detail=".d.mts" />
             </Diagram.Panel>
             <Diagram.Panel tone="green">
-              <Block name="Atlas" detail="component map" />
+              <Block name="Packages" detail="@reference-ui/react" />
             </Diagram.Panel>
           </Div>
         </Diagram.Column>

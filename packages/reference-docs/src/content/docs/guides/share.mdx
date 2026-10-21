@@ -39,14 +39,31 @@ Export it, and list it in `files` so it gets published:
 }
 ```
 
-The base system carries your tokens, your compiled styles and the names of
-your components. The app's sync builds its stylesheet from it, so you don't
+The base system carries:
+
+- your tokens, fonts and keyframes, as definitions the app's sync reads;
+- the styles your sync compiled, global CSS and recipes included;
+- your components' names, and the props each one keeps for itself.
+
+Your `recipe()` definitions don't travel. The app receives their compiled
+classes, not the recipe configs, so each recipe stays as your sync built it.
+
+The app's sync builds its stylesheet from the base system, so you don't
 export a stylesheet.
 
 <Step n={3}>Build the package</Step>
 
 Run `ref sync` before you build. The app never syncs your source, so your
-components' styles come only from your sync.
+components' styles come only from your sync. A `prepack` script keeps the
+published files current:
+
+```json
+{
+  "scripts": {
+    "prepack": "ref sync && npm run build"
+  }
+}
+```
 
 Bundle `@reference-ui/react` into your build output, and leave it out of
 `dependencies` and `peerDependencies`. Your sync generates it bound to your

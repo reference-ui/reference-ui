@@ -1,0 +1,263 @@
+---
+title: Diagnostics
+section: System
+order: 16
+slug: diagnostics
+description: What sync's warnings and errors mean, and how to fix each one.
+---
+
+# Diagnostics
+
+When `ref sync` finds a problem in your config or source files, it reports a
+diagnostic. Each one has a severity, a code, a message and, where it applies,
+a location:
+
+```text
+src/App.tsx:4:9 ATM-W-UNKNOWN-CONDITION: Unknown condition "_hovr"
+```
+
+Look up the code below to see what caused it and how to fix it.
+
+## Severity
+
+The letter after the prefix gives the severity.
+
+- **`W`, warning**: sync finished and wrote its output, but a style may have
+  no CSS, or may be printed as written. Warnings never change the exit code.
+- **`E`, error**: sync fails with exit code 1. It keeps the output of the
+  last good sync, so your app keeps its previous stylesheet.
+
+The prefix names the part of sync that raised the code: `ATM` for the style
+compiler, `TGN` for the generated types, `TST` for the API reference build,
+and `BSS` for your config and the systems you extend.
+
+## Where they appear
+
+By default, sync folds warnings into a count. A one-off sync adds a
+`Warnings:` row, and each watch resync ends its line with the count:
+
+```text
+⎔ ref sync ⫶ 412 ms ⫶ 38.2 KB ⫶ ⚠ 2 warnings [--verbose]
+```
+
+Run with `--verbose` to list each warning with its location and a fix hint.
+Repeats of the same warning at the same location print once, with a count:
+
+```bash
+npx ref sync --verbose
+```
+
+```text
+  src/App.tsx:4:9 ATM-W-UNKNOWN-CONDITION: Unknown condition "_hovr" — use a condition from the theme
+```
+
+Warnings from the compiler channel carry a `[compiler]` tag, and warnings
+from the API reference build carry `[ref]`.
+
+Errors always print, with every code and location:
+
+```text
+[ref] sync failed: native compile failed:
+- ATM-E-UNKNOWN-TOKEN: unknown token reference `{colors.nope}` (src/App.tsx:8:7)
+```
+
+## Compiler diagnostics
+
+The default list holds only problems sync can prove. Set `logs` in
+`ui.config.ts` to also see what the compiler could not read, such as dynamic
+values and spreads:
+
+```ts
+// ui.config.ts
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  logs: ['compiler'],
+})
+```
+
+They join the warning count and print under `--verbose` with the
+`[compiler]` tag. `debug: true` turns on debug logging for sync itself and
+does not add these diagnostics. See [Config](/config#diagnostics).
+
+## JSON output
+
+`ref sync --json` prints the diagnostics as one JSON array on stdout. Every
+other line moves to stderr, so you can parse stdout directly:
+
+```bash
+npx ref sync --json > diagnostics.json
+```
+
+```json
+[{"severity":"warning","code":"ATM-W-UNKNOWN-CONDITION","message":"Unknown condition \"_hovr\"","file":"src/App.tsx","line":4,"column":9,"span":{"start":81,"end":86},"help":["use a condition from the theme"]}]
+```
+
+Each entry has `severity`, `code` and `message`, plus `file`, `line`,
+`column`, `span` and `help` when they are known. The array is not deduped.
+In watch mode, each resync prints its own array.
+
+When a one-off sync fails, stdout stays empty and the error goes to stderr.
+
+## Codes
+
+A code never changes once it ships, while messages may be reworded. Match on
+the code in any tooling you build.
+
+### Config
+
+- `BSS-W-SLOW-CONFIG`: `ui.config.ts` took over 750 ms to load, usually
+  because it imports `@reference-ui/lib` instead of
+  `@reference-ui/lib/baseSystem`. Import the subpath the warning names.
+- `BSS-W-TOKEN-SHADOW`: one of your tokens replaces a different value from a
+  system you extend. The warning names the path and both values. Rename your
+  token if the override is not intended.
+
+### Style values
+
+- `ATM-W-UNKNOWN-PROPERTY`: a style prop that does not exist, like
+  `frobnicate`. It gets no CSS. Check the spelling.
+- `ATM-W-UNKNOWN-CONDITION`: a condition that does not exist, like `_hovr`,
+  in a style or in `globalCss()`. Use a condition from the theme.
+- `ATM-W-MISSING-CONTAINER-ROOT`: you use responsive styles, but your global
+  CSS defines no container, so they never match. Add one. See
+  [Responsive](/responsive#mark-a-container).
+- `ATM-W-INVALID-CSS-VALUE`: a boolean or `null` where CSS needs a value,
+  like `display: true`. Use a value the property accepts.
+- `ATM-W-NON-CANONICAL-NUMERIC`: a number written in hex, octal or binary,
+  or as `Infinity` or `NaN`, like `width: '0x10'`. Write a plain decimal.
+- `ATM-W-RESPONSIVE-LEAF-IMPORTANT`: a `!` marker on one value of a
+  responsive object, like `width: { base: '50px!' }`. Sync drops the marker.
+  Remove it.
+- `ATM-W-UNREALIZABLE-EXTENSION`: a style prop that has no real CSS form yet.
+  It gets no CSS. Remove the prop.
+- `ATM-W-MISSING-STYLE-PLAN`: a style that will get no class at runtime, for
+  a reason sync could not name. Write the value so sync can read it.
+
+### Tokens
+
+- `ATM-W-UNKNOWN-TOKEN-PATH`: a dotted path that names no token, like
+  `caretColor: 'ui.missing.path'`. Point it at an existing token.
+- `ATM-W-UNKNOWN-TOKEN`: a name on a spacing, radius, size or font-size prop
+  that is neither a token in its category nor a CSS keyword, like
+  `p="upGap"`. Sync prints it as written. Declare the token or write a CSS
+  value.
+- `ATM-W-UNKNOWN-COLOR`: a value on a colour prop that is neither a colour
+  token nor a CSS colour. Sync prints it as written. Use a colour token or a
+  CSS colour.
+- `ATM-W-UNKNOWN-TONE`: a tone after a colour's slash that is not declared,
+  like `blue.500/mediun`. Declare it under `tones`, or write a number from 0
+  to 100. See [Tokens](/tokens#tones).
+- `ATM-W-MALFORMED-OPACITY`: a slash with no valid amount after it, like
+  `red.500/`. Write `/<0-100>` or a tone name.
+- `ATM-W-UNTERMINATED-BRACE`: a `{` in a value with no closing `}`. Close
+  the brace.
+- `ATM-E-UNKNOWN-TOKEN`: a braced reference that names no token, like
+  `'{colors.nope}'`. Point it at an existing token.
+- `ATM-W-UNBRACED-TOKEN-REF`: a token value that is another token's name
+  without braces, like `value: 'gray.900'`. Sync prints it as written. Write
+  `'{colors.gray.900}'`.
+- `TGN-W-UNKNOWN-TOKEN-CATEGORY`: a token category sync has no type for. Its
+  tokens are left out of the generated types. Move them into a category from
+  [Tokens](/tokens#categories).
+- `TGN-W-EMPTY-FONT-FAMILY`: a font family that declares no weights. It is
+  left out of the generated types. Declare its weights.
+
+### Recipes
+
+- `ATM-E-RECIPE-ARG-SHAPE`: the argument to `recipe()` is not an inline
+  object literal, like `recipe('nope')`. Pass the config object inline.
+- `ATM-E-RECIPE-SPREAD`: a spread inside the `recipe()` object. Write each
+  key inline.
+- `ATM-E-RECIPE-CLASSNAME`: a recipe with no `className`, or one that is not
+  a string literal. Give it a string `className`.
+- `ATM-E-DUPLICATE-RECIPE`: two recipes in one system share a `className`.
+  Rename one.
+- `TGN-W-INVALID-RECIPE-NAME`: a `className` that cannot form a TypeScript
+  type name. The recipe is left out of the generated types. Rename it.
+- `TGN-W-DUPLICATE-RECIPE-STEM`: two recipe names form the same type name.
+  The later one is left out of the generated types. Rename one.
+- `TGN-W-EMPTY-RECIPE`: a recipe with no variant values, or a variant with
+  none. The recipe or variant is left out of the generated types. Add the
+  values or remove it.
+- `TGN-W-INVALID-COMPOUND-VARIANT`: a `compoundVariants` entry names a
+  variant or value the recipe does not declare. The entry is left out of the
+  generated types. Fix the name.
+
+### Global CSS and `staticCss`
+
+- `ATM-W-EMPTY-AT-RULE`: an at-rule key in `globalCss()` with no query, like
+  `'@supports'`. Fill in the query or remove the key.
+- `ATM-W-UNSUPPORTED-GLOBAL-VALUE`: an array or nested object under a
+  condition in `globalCss()`. Use a single value.
+- `ATM-W-STATIC-WILDCARD`: a `'*'` in `staticCss` on a property with no
+  token category, like `display`. List the values instead.
+
+### `strict`
+
+- `TGN-W-UNKNOWN-STRICT-CATEGORY`: a `strict` entry other than `colors`,
+  `radii` or `spacing`. It is skipped. Use one of those three.
+- `TGN-W-ABSENT-STRICT-CATEGORY`: a `strict` category with no tokens in your
+  system. Nothing is restricted. Declare tokens in it, or remove it from
+  `strict`.
+
+### Components and files
+
+- `ATM-E-PARSE`: a file in `include` has a syntax error. Fix the syntax.
+- `ATM-W-TRACE-SKIPPED`: sync skipped a file while looking for components
+  that pass style props on. The message says why. The rest of the files are
+  still read.
+- `ATM-W-EXTERNAL-UNBACKED`: style props on a component from a package whose
+  system is in neither `extends` nor `layers`. The props get no CSS. Add the
+  `baseSystem` the warning names. See [Primitives](/primitives#your-own-components).
+
+### Compiler channel
+
+These appear only with `logs: ['compiler']`. Each marks a value sync could
+not read, so it gets no CSS. Write a literal value, or list the values under
+`staticCss`. See [What the compiler can read](/css#what-the-compiler-can-read).
+
+- `ATM-W-DYNAMIC-EXPRESSION`: a function call or other expression, like
+  `color: maybeColor()`.
+- `ATM-W-DYNAMIC-MEMBER`: a member lookup, like `width: props.w`.
+- `ATM-W-DYNAMIC-IDENTIFIER`: a variable sync cannot resolve.
+- `ATM-W-MUTATED-BINDING`: a variable that is reassigned before the style
+  reads it.
+- `ATM-W-DYNAMIC-TEMPLATE`: a template string with parts sync cannot read.
+- `ATM-W-DYNAMIC-UNARY`, `ATM-W-DYNAMIC-BINARY`: an operator sync cannot
+  fold to a value, like `typeof x`.
+- `ATM-W-UNFOLDABLE-KEY`: a computed key, like `[dynamicKey]: '10px'`.
+- `ATM-W-UNFOLDABLE-SPREAD`: a spread of an object sync cannot resolve.
+- `ATM-W-UNFOLDABLE-OBJECT-PROP`, `ATM-W-PARTIAL-OBJECT-PROP`: a spread
+  object whose property is dynamic, in whole or in one branch.
+- `ATM-W-RESPONSIVE-ARRAY-SPREAD`: a spread inside a responsive array.
+- `ATM-W-UNKNOWN-BREAKPOINT`: a breakpoint name that does not exist.
+- `ATM-W-NON-OBJECT-CONDITION`: a condition whose value is not an object,
+  like `_hover: 'red'`.
+- `ATM-W-NON-OBJECT-CSS-ARG`: a `css()` argument that is not a literal
+  object, like `css(fn())`.
+- `ATM-W-NON-OBJECT-JSX-STYLE`: a `css` prop or condition prop that is not a
+  literal object, like `css={cond && { … }}`.
+- `ATM-W-TAGGED-TEMPLATE-SITE`: `css` used as a tagged template. Call it
+  with an object.
+- `ATM-W-TOKEN-CALL-REFUSED`: a `token()` call sync cannot read.
+
+### API reference build
+
+After each sync, sync scans your TypeScript types in the background to build
+API reference documents. Its warnings carry the `[ref]` tag.
+
+- `TST-W-PARSE-ERROR`: a file has a syntax error. Sync keeps what it could
+  read. Fix the syntax.
+- `TST-W-UNRESOLVED-IMPORT`: an import or re-export path names a file that
+  does not exist. Create the file or fix the path.
+- `TST-W-UNSUPPORTED-SYNTAX`: `declare global`, `import x = require()` or
+  `export =`. The statement is skipped. Use named exports.
+- `TST-W-UNSUPPORTED-AUGMENTATION`: a `declare module './x'` block. Its
+  declarations are not merged. Declare them in the module itself.
+- `TST-W-STAR-AMBIGUITY`: two `export *` sources export the same name, so
+  the name is left out. Re-export it by name.
+- `TST-W-DUPLICATE-DECLARATION`: one file declares a name twice. The last
+  one is kept. Merge them or rename one.
+- `TST-W-DUPLICATE-MEMBER`: merged interfaces declare one member twice. The
+  first one is kept. Remove or rename one.

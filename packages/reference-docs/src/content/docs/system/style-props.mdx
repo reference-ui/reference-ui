@@ -68,6 +68,8 @@ A style prop accepts:
   (`opacity={0.5}`);
 - a responsive array or object, `p={['2r', '4r']}` or
   `p={{ base: '2r', md: '4r' }}` (see [Responsive](/responsive));
+- an object keyed by condition, `color={{ base: 'ink', _hover: 'brand' }}`
+  (see [Conditions on one property](#conditions-on-one-property));
 - `null`, `false` or `undefined`, which set nothing.
 
 The compiler must be able to read the value from your source. See
@@ -113,3 +115,15 @@ An unknown condition, such as a misspelt `_hovr`, adds no CSS, and
 
 For other selectors and at-rules, use the `css` prop with `&`, `@media` or
 `@container` keys. See [CSS](/css#selectors-and-at-rules).
+
+### Conditions on one property
+
+To change a single property, put the condition on its value instead:
+
+```tsx
+<Button color={{ base: 'ink', _hover: 'brand', md: 'ink/80' }} />
+```
+
+`base` is the value with no condition. The other keys are any condition from
+the table above or a breakpoint name. Each key takes a plain value, one level
+deep. To combine conditions, nest the condition props instead.

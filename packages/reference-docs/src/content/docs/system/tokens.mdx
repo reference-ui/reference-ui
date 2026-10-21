@@ -61,26 +61,30 @@ beside your tokens.
 
 ## Categories
 
-The property decides which category a token name is looked up in.
+The property decides which category a token name is looked up in. Each value
+is a CSS string, printed into the token's variable as written.
 
-| Category | Properties |
-| --- | --- |
-| `colors` | Every colour property: `color`, `background`, `borderColor`, `fill`, … |
-| `spacing` | `margin*`, `padding*`, `gap`, `rowGap`, `columnGap`, `inset`, `top`, `right`, `bottom`, `left` |
-| `sizes` | `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `size` |
-| `radii` | `borderRadius` and every corner radius |
-| `fonts` | `fontFamily` (see [Fonts](/fonts)) |
-| `fontSizes` | `fontSize` |
-| `fontWeights` | `fontWeight` |
-| `lineHeights` | `lineHeight` |
-| `letterSpacings` | `letterSpacing` |
-| `shadows` | `boxShadow` |
-| `zIndex` | `zIndex` |
-| `gradients` | `background`, `backgroundImage` |
-| `easings` | `transitionTimingFunction` |
-| `durations` | `transitionDuration` |
-| `animations` | `animation`, `animationName` (see [Animation](/animation)) |
-| `tones` | The amount after a colour's slash (see [Tones](#tones)) |
+| Category | Properties | Value |
+| --- | --- | --- |
+| `colors` | Every colour property: `color`, `background`, `borderColor`, `fill`, … | A colour: `'#4f46e5'`, `'oklch(60% 0.2 270)'` |
+| `spacing` | `margin*`, `padding*`, `gap`, `rowGap`, `columnGap`, `inset`, `top`, `right`, `bottom`, `left` | A length: `'1rem'` |
+| `sizes` | `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `size` | A length: `'40rem'` |
+| `radii` | `borderRadius` and every corner radius | A length: `'0.5rem'` |
+| `fonts` | `fontFamily` (see [Fonts](/fonts)) | A font stack: `'Inter, sans-serif'` |
+| `fontSizes` | `fontSize` | A length: `'0.875rem'` |
+| `fontWeights` | `fontWeight` | A weight: `'600'` |
+| `lineHeights` | `lineHeight` | A number or length: `'1.5'` |
+| `letterSpacings` | `letterSpacing` | A length: `'0.01em'` |
+| `shadows` | `boxShadow` | A shadow: `'0 1px 2px rgb(0 0 0 / 0.1)'` |
+| `zIndex` | `zIndex` | An integer: `'10'` |
+| `gradients` | `background`, `backgroundImage` | A gradient: `'linear-gradient(to right, red, blue)'` |
+| `easings` | `transitionTimingFunction` | A timing function: `'cubic-bezier(0.4, 0, 0.2, 1)'` |
+| `durations` | `transitionDuration` | A time: `'200ms'` |
+| `animations` | `animation`, `animationName` (see [Animation](/animation)) | An animation: `'spin 1s linear infinite'` |
+| `tones` | The amount after a colour's slash (see [Tones](#tones)) | A percentage: `'10%'` |
+
+Write numbers as strings: `zIndex: { modal: { value: '50' } }`. A number,
+array or object value fails `ref sync` as an invalid token leaf.
 
 Shorthands such as `p` and `bg` use the category of the property they stand
 for.
@@ -107,7 +111,8 @@ can hold several references. References work the same way in `css()`, style
 props and `globalCss()`.
 
 A reference to a token that does not exist fails `ref sync` and names the
-reference.
+reference. A whole value written without braces, such as `'red.500'`, is not a
+reference: it prints as written and sync warns.
 
 ## Light and dark values
 
