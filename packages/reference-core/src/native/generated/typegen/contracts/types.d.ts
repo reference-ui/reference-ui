@@ -284,6 +284,13 @@ export interface NativeCompileRequest {
      * the check reads local global CSS only.
      */
     upstreamContainerRoot?: boolean;
+    /**
+     * Component names each extended upstream system publishes (its
+     * `jsxElements`), keyed by system name. They ride apart from `jsxHosts`
+     * because they are never own hosts: an upstream's component renders through
+     * that package's runtime. Absent when no upstream publishes a name.
+     */
+    upstreamHosts?: Record<string, string[]>;
 }
 export interface OutputInventory {
     expectedPaths: string[];

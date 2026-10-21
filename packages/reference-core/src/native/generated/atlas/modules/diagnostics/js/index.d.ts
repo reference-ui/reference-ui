@@ -21,29 +21,12 @@ export type { Diagnostic as GeneratedDiagnostic } from './generated/Diagnostic.j
 export { createLabel, createSpan, parseLocation } from './location.js';
 export type { DiagnosticLocation } from './location.js';
 export { MAX_FRAMES, renderBatch, renderFrame } from './render.js';
-/** Wire code text (`NS-SEV-NAME`); validated by `parseCode`, not by the type. */
-export type DiagnosticCode = string;
+export { DiagnosticParseError, REGISTERED_NAMESPACES, TEMPLATE_NAMESPACE, codeNamespace, codeSeverityTag, isRegisteredNamespace, parseCode, } from './codes.js';
+export type { DiagnosticCode } from './codes.js';
+export { warningHintFor } from './hints.js';
+export { SUGGESTION_CODES, supportsSuggestions, suggest, suggestForCode } from './suggest.js';
 /** Parsed diagnostic: the generated wire shape, guaranteed valid by construction or `parseDiagnostic`. */
 export type Diagnostic = GeneratedDiagnostic;
-/** Namespace owned by the template itself; mirrors `TEMPLATE_NAMESPACE` in Rust. */
-export declare const TEMPLATE_NAMESPACE = "RS";
-/**
- * Machine-readable copy of the REGISTRY.md namespace table; mirrors `REGISTERED_NAMESPACES`.
- * Advisory only: parsing stays shape-open so consumers keep reading newer codes.
- */
-export declare const REGISTERED_NAMESPACES: readonly string[];
-/** A payload that failed template validation, carrying the reason. */
-export declare class DiagnosticParseError extends Error {
-    name: string;
-}
-/** Parse and validate a wire code; anything off-shape throws with the reason. */
-export declare function parseCode(input: unknown): DiagnosticCode;
-/** Namespace segment of a validated code, e.g. `ATM`. */
-export declare function codeNamespace(code: DiagnosticCode): string;
-/** Severity tag a code was minted with: `W` or `E`. */
-export declare function codeSeverityTag(code: DiagnosticCode): 'W' | 'E';
-/** Advisory check against the registry table; unregistered but well-shaped codes still parse. */
-export declare function isRegisteredNamespace(code: DiagnosticCode): boolean;
 /** Build a warning; throws `DiagnosticParseError` on a bad code, tag mismatch, or blank message. */
 export declare function createWarning(code: string, message: string, location?: DiagnosticLocation): Diagnostic;
 /** Build an error; throws `DiagnosticParseError` on a bad code, tag mismatch, or blank message. */
@@ -83,20 +66,3 @@ export declare function hint(text: string): string;
 export declare function didYouMean(known: string): string;
 /** Join message lines with newlines; line one stays the complete subject. */
 export declare function joinLines(lines: string[]): string;
-/** The fix hint for a warning code, or undefined when the code has none. */
-export declare function warningHintFor(code: string | undefined): string | undefined;
-export declare const SUGGESTION_CODES: readonly string[];
-/** Whether `code` may carry a did-you-mean suggestion: membership in `SUGGESTION_CODES`. */
-export declare function supportsSuggestions(code: string): boolean;
-/**
- * Pick the closest candidate for one diagnostic code, or undefined when the code is not a
- * suggestion code or all candidates are far off. Modules wire their own known sets as
- * `candidates`; the gate decides whether suggesting is legitimate, the distance decides
- * whether any candidate is near enough.
- */
-export declare function suggestForCode(code: string, unknown: string, candidates: string[]): string | undefined;
-/**
- * Pick the closest candidate to an unknown name, or undefined when all are far off.
- * Mirrors the Rust helper exactly: within a third of the name, minimum three edits.
- */
-export declare function suggest(unknown: string, candidates: string[]): string | undefined;
