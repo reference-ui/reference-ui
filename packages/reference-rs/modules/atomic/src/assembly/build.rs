@@ -1,5 +1,5 @@
-//! Build helpers for assembly: partition the wants into the own atom set and the foreign groups
-//! their backing names, lower each partition into its atoms, resolve the recipes against the consumer system, and
+//! Build helpers for assembly: partition the wants into own and foreign sets by backing.
+//! Lower each partition into its atoms, resolve the recipes against the consumer system, and
 //! emit the css runtime map. Each helper reads the filled sinks and the consumer
 //! `BaseSystem` and returns its product, so the stage order stays in `finish`. A pooled lane that panics
 //! comes back as a `Result` error through these helpers, never as a resumed unwind.
@@ -153,8 +153,8 @@ impl<'a> RecipeInputs<'a> {
     }
 }
 
-/// Deduplicate spec and extracted recipes, then compile them to rules.
-/// Selections join by className; spec recipes stay open by construction.
+/// Claim each spec and extracted recipe's identity, then compile the survivors to rules.
+/// Selections join by the authored className; spec recipes stay open by construction.
 pub(super) fn compile_recipes(
     inputs: &RecipeInputs<'_>,
     system: &BaseSystem,
@@ -162,21 +162,11 @@ pub(super) fn compile_recipes(
     sink: Option<&mut DiagnosticsSession>,
 ) -> Vec<recipes::CompiledRecipe> {
     let spec_recipes = recipes::from_spec(&system.recipes, diagnostics);
-    let mut seen = FxHashSet::default();
-    let mut valid = Vec::new();
-    for recipe in spec_recipes.iter().chain(inputs.extracted.iter()) {
-        if !seen.insert(&recipe.class_name) {
-            diagnostics.push(recipe.location.error(
-                DiagnosticCode::DuplicateRecipe,
-                format!(
-                    "Duplicate recipe className '{}' within system '{}'",
-                    recipe.class_name, system.name
-                ),
-            ));
-        } else {
-            valid.push(recipe.clone());
-        }
-    }
+    let valid = recipes::identity::claim(
+        spec_recipes.iter().chain(inputs.extracted.iter()),
+        &system.name,
+        diagnostics,
+    );
     let mut session = resolve::ResolveSession {
         system,
         diagnostics,

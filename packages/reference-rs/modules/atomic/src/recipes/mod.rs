@@ -4,6 +4,7 @@
 //! Preserves strict layer isolation preventing recipe atoms from polluting utility want sets.
 
 pub mod name;
+pub(crate) mod identity;
 mod rules;
 mod spec;
 mod table;
