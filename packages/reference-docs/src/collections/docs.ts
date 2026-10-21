@@ -1,6 +1,6 @@
 // Docs collection schema and transform.
 // It takes raw MDX frontmatter and emits validated doc metadata: title, section, order,
-// slug, and the optional description lead.
+// slug, and the optional group (a sub-section heading in the sidebar) and description lead.
 import { defineCollection } from '@content-collections/core'
 import { z } from 'zod'
 
@@ -12,6 +12,7 @@ export const docsCollection = defineCollection({
   schema: z.object({
     title: z.string(),
     section: z.string(),
+    group: z.string().optional(),
     order: z.number(),
     slug: z.string(),
     description: z.string().optional(),

@@ -1,14 +1,17 @@
 // Full-height docs navigation rail.
-// It takes nothing and emits the wordmark plus the shared DocNav section list, which the
-// mobile nav reuses. Hidden on small viewports by container query.
+// It takes nothing and emits the wordmark plus the shared DocNav tree (section, then
+// optional group heading, then pages), which the mobile nav reuses. Hidden on small
+// viewports by container query.
 import { Link, useRouterState } from '@tanstack/react-router'
+import { useEffect, useRef } from 'react'
 import { Aside, Div, Nav, css } from '@reference-ui/react'
-import { docsBySection } from '../collections/runtime'
+import { type DocMeta, type NavSection, navSections } from '../collections/runtime'
 import { Brand } from './Brand'
 
 /**
  * Full-height navigation rail: brand header pinned at the top, then section
- * navigation in the scrolling remainder. Hidden below the desktop breakpoint;
+ * navigation in the scrolling remainder. Groups nest under a quiet heading with
+ * a hairline down their pages. Hidden below the desktop breakpoint;
  * the drawer reuses `DocNav`.
  */
 
@@ -65,9 +68,16 @@ function NavDocLink({
   const pathname = useRouterState({ select: s => s.location.pathname })
   const isActive = slug === 'initialize' ? pathname === '/' : pathname === `/${slug}`
   const className = [navLinkBase, isActive ? navLinkActive : navLinkIdle].join(' ')
+  const ref = useRef<HTMLAnchorElement>(null)
+
+  // A long rail hides deep pages; bring the current one into view without jumping.
+  useEffect(() => {
+    if (isActive) ref.current?.scrollIntoView({ block: 'nearest' })
+  }, [isActive])
 
   return (
     <Link
+      ref={ref}
       to={slug === 'initialize' ? '/' : '/$slug'}
       params={slug === 'initialize' ? undefined : { slug }}
       className={className}
@@ -78,18 +88,56 @@ function NavDocLink({
   )
 }
 
+const groupLabel = css({
+  fontSize: '0.8125rem',
+  fontWeight: '500',
+  lineHeight: '1.4',
+  color: 'docsText',
+  padding: '2r 3r',
+})
+
+const groupItems = css({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.5r',
+  marginLeft: '3r',
+  paddingLeft: '2r',
+  borderLeft: '1px solid',
+  borderLeftColor: 'docsBorder',
+})
+
+type OnNavigate = (() => void) | undefined
+
+function NavLinks({ items, onNavigate }: { items: DocMeta[]; onNavigate: OnNavigate }) {
+  return items.map(({ slug, title }) => (
+    <NavDocLink key={slug} slug={slug} title={title} onNavigate={onNavigate} />
+  ))
+}
+
+function NavSectionBlock({ section, onNavigate }: { section: NavSection; onNavigate: OnNavigate }) {
+  return (
+    <Div display="flex" flexDirection="column">
+      <Div className={sectionLabel}>{section.name}</Div>
+      <Div display="flex" flexDirection="column" gap="0.5r">
+        <NavLinks items={section.items} onNavigate={onNavigate} />
+        {section.groups.map(group => (
+          <Div key={group.name} display="flex" flexDirection="column" marginTop="2r">
+            <Div className={groupLabel}>{group.name}</Div>
+            <Div className={groupItems}>
+              <NavLinks items={group.items} onNavigate={onNavigate} />
+            </Div>
+          </Div>
+        ))}
+      </Div>
+    </Div>
+  )
+}
+
 export function DocNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <Nav display="flex" flexDirection="column" gap="7r">
-      {Object.entries(docsBySection).map(([section, items]) => (
-        <Div key={section} display="flex" flexDirection="column">
-          <Div className={sectionLabel}>{section}</Div>
-          <Div display="flex" flexDirection="column" gap="0.5r">
-            {items.map(({ slug, title }) => (
-              <NavDocLink key={slug} slug={slug} title={title} onNavigate={onNavigate} />
-            ))}
-          </Div>
-        </Div>
+      {navSections.map(section => (
+        <NavSectionBlock key={section.name} section={section} onNavigate={onNavigate} />
       ))}
     </Nav>
   )
@@ -98,7 +146,7 @@ export function DocNav({ onNavigate }: { onNavigate?: () => void }) {
 export function DocSidebar() {
   return (
     <Aside
-      width="260px"
+      width="288px"
       flexShrink="0"
       display="none"
       height="100%"
