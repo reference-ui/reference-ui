@@ -22,6 +22,8 @@ export interface ReactTypesInput {
   recipes: Record<string, unknown>
   /** Synced role of the project; omitted means none, the pre-register output. */
   role?: SyncedRole
+  /** Width breakpoints recipe classes are compiled for; omitted means `base` only. */
+  recipeBreakpoints?: readonly string[]
 }
 
 /**
@@ -104,7 +106,7 @@ export function recipeVariantTypeNames(recipes: Record<string, unknown>): string
 }
 
 function styledImportLine(variantStems: readonly string[]): string {
-  const names = ['BreakpointKey', 'StyleConditionKey', 'StyleProps as NarrowStyleProps', 'SystemStyleObject', ...variantStems]
+  const names = ['StyleConditionKey', 'StyleProps as NarrowStyleProps', 'SystemStyleObject', ...variantStems]
   return `import type { ${names.join(', ')} } from '@reference-ui/styled'`
 }
 
@@ -202,7 +204,64 @@ function perTagDecls(): string[] {
   return lines
 }
 
-function namedGraphLines(): string[] {
+/** `'base'` plus each recipe breakpoint, quoted and deduplicated in scale order. */
+function recipeBreakpointUnion(breakpoints: readonly string[]): string {
+  return [...new Set(['base', ...breakpoints])].map(name => JSON.stringify(name)).join(' | ')
+}
+
+/** Recipe selection, split and runtime-fn declarations, keyed by this system's recipe breakpoints. */
+function recipeTypeLines(breakpointUnion: string): string[] {
+  return [
+    '/** Breakpoint keys a recipe value object takes: `base` plus the breakpoints recipe classes exist for. */',
+    `export type RecipeBreakpointKey = ${breakpointUnion}`,
+    '/** Breakpoint object for one variant value: `base` applies below every query. */',
+    'export type RecipeResponsiveValue<T> = { [K in RecipeBreakpointKey]?: T }',
+    '/** Values one axis accepts: its option keys (numeric ones in either spelling), plus booleans for `true`/`false` keys. */',
+    'export type RecipeOptionValue<O> =',
+    '  | Extract<keyof O, string>',
+    '  | Extract<keyof O, number>',
+    `  | \`\${Extract<keyof O, number>}\``,
+    "  | ([Extract<keyof O, 'true' | 'false'>] extends [never] ? never : boolean)",
+    '/** Selection for one variants table: every axis optional, plain or responsive. */',
+    'export type RecipeVariantSelection<V> = {',
+    '  [K in keyof V]?: RecipeOptionValue<V[K]> | RecipeResponsiveValue<RecipeOptionValue<V[K]>>',
+    '}',
+    '/** Variant selection inferred from one recipe fn config: every axis optional. */',
+    'export type RecipeVariantProps<T> = T extends RecipeRuntimeFn<infer C>',
+    `  ? C extends { variants: infer V extends Record<string, Record<string, unknown>> }`,
+    '    ? RecipeVariantSelection<V>',
+    '    : Record<string, RecipePropValue | undefined | null>',
+    '  : Record<string, RecipePropValue | undefined | null>',
+    '/** Axis names of one recipe config; never when it has no variants. */',
+    'export type RecipeVariantKey<TConfig> = TConfig extends { variants: infer V } ? Extract<keyof V, string> : never',
+    '/** Selection one recipe config takes; empty when it has no variants. */',
+    'export type RecipeConfigSelection<TConfig> = TConfig extends { variants: infer V } ? RecipeVariantSelection<V> : {}',
+    '/** Omit applied to each member of a union, so narrowing still works on the result. */',
+    'export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never',
+    '/** Resolved recipe function: classes for a selection plus variant metadata. */',
+    '/** Call positions route through RecipeVariantProps<RecipeRuntimeFn<TConfig>>: */',
+    '/** RecipeVariantProps<TConfig> would miss the fn-config infer and fall wide. */',
+    'export interface RecipeRuntimeFn<TConfig extends RecipeConfig = RecipeConfig> {',
+    '  (props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): string',
+    '  raw(props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): RecipeStyleObject',
+    '  variantKeys: string[]',
+    '  variantMap: Record<string, string[]>',
+    // P is bound by the selection with no intersection on the param: an intersection lets
+    // 'nope' & { base? } through and breaks generic wrappers. The `& object` keeps the bound from
+    // being weak, so props with no axis key pass. A recipe with no variants binds P to object only.
+    // The variants half is picked from P, matching the runtime, so it keeps the caller's value
+    // types. A bare RecipeRuntimeFn knows no axes, so either half may hold any of P's props.
+    '  /** Split props into `[variants, rest]`: the recipe selection, and every other prop. */',
+    '  splitVariantProps<P extends RecipeConfigSelection<TConfig> & object>(',
+    '    props: P',
+    '  ): RecipeConfig extends TConfig',
+    '    ? [Partial<P>, Partial<P>]',
+    '    : [Pick<P, Extract<keyof P, RecipeVariantKey<TConfig>>>, DistributiveOmit<P, RecipeVariantKey<TConfig>>]',
+    '}',
+  ]
+}
+
+function namedGraphLines(breakpointUnion: string): string[] {
   return [
     `export type * from '@reference-ui/styled'`,
     '/** One css() input: a style object, a list of them, or a conditional skip. */',
@@ -234,47 +293,7 @@ function namedGraphLines(): string[] {
     '  defaultVariants?: Record<string, string>',
     '  compoundVariants?: RecipeCompoundConfig[]',
     '}',
-    '/** Breakpoint object for one variant value: `base` applies below every query. */',
-    'export type RecipeResponsiveValue<T> = { [K in BreakpointKey]?: T }',
-    '/** Values one axis accepts: its option keys, plus booleans when it has a `true` or `false` key. */',
-    "export type RecipeOptionValue<O> = Extract<keyof O, string> | ([Extract<keyof O, 'true' | 'false'>] extends [never] ? never : boolean)",
-    '/** Selection for one variants table: every axis optional, plain or responsive. */',
-    'export type RecipeVariantSelection<V> = {',
-    '  [K in keyof V]?: RecipeOptionValue<V[K]> | RecipeResponsiveValue<RecipeOptionValue<V[K]>>',
-    '}',
-    '/** Variant selection inferred from one recipe fn config: every axis optional. */',
-    'export type RecipeVariantProps<T> = T extends RecipeRuntimeFn<infer C>',
-    `  ? C extends { variants: infer V extends Record<string, Record<string, unknown>> }`,
-    '    ? RecipeVariantSelection<V>',
-    '    : Record<string, RecipePropValue | undefined | null>',
-    '  : Record<string, RecipePropValue | undefined | null>',
-    '/** Axis names of one recipe config; never when it has no variants. */',
-    'export type RecipeVariantKey<TConfig> = TConfig extends { variants: infer V } ? Extract<keyof V, string> : never',
-    '/** Selection one recipe config takes; empty when it has no variants. */',
-    'export type RecipeConfigSelection<TConfig> = TConfig extends { variants: infer V } ? RecipeVariantSelection<V> : {}',
-    '/** Props a split accepts: each axis key holds a value of that axis, every other key passes. */',
-    'export type RecipeSplitInput<P, TConfig> = {',
-    '  [K in keyof P]: K extends keyof RecipeConfigSelection<TConfig> ? RecipeConfigSelection<TConfig>[K] : P[K]',
-    '}',
-    '/** Omit applied to each member of a union, so narrowing still works on the result. */',
-    'export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never',
-    '/** Resolved recipe function: classes for a selection plus variant metadata. */',
-    '/** Call positions route through RecipeVariantProps<RecipeRuntimeFn<TConfig>>: */',
-    '/** RecipeVariantProps<TConfig> would miss the fn-config infer and fall wide. */',
-    'export interface RecipeRuntimeFn<TConfig extends RecipeConfig = RecipeConfig> {',
-    '  (props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): string',
-    '  raw(props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): RecipeStyleObject',
-    '  variantKeys: string[]',
-    '  variantMap: Record<string, string[]>',
-    // P is bound by a map over its own keys, not by the selection: the all-optional selection would
-    // fail the weak-type check for props with no axis key, and intersecting it lets 'nope' & {base?}
-    // through. A recipe with no variants checks nothing, so its input is P alone. The variants
-    // half is picked from P, matching the runtime, so it keeps the caller's narrower value types.
-    '  /** Split props into `[variants, rest]`: the recipe selection, and every other prop. */',
-    '  splitVariantProps<P extends RecipeSplitInput<P, TConfig>>(',
-    '    props: P',
-    '  ): [Pick<P, Extract<keyof P, RecipeVariantKey<TConfig>>>, DistributiveOmit<P, RecipeVariantKey<TConfig>>]',
-    '}',
+    ...recipeTypeLines(breakpointUnion),
     'export declare function recipe<const TConfig extends RecipeConfig>(config: TConfig): RecipeRuntimeFn<TConfig>',
     '',
   ]
@@ -323,7 +342,7 @@ export function generateReactTypesSource(input: ReactTypesInput): string {
     `export { Fragment } from 'react'`,
     `export { createElement } from 'react'`,
     '',
-    ...namedGraphLines(),
+    ...namedGraphLines(recipeBreakpointUnion(input.recipeBreakpoints ?? [])),
     ...consumerFillLines(role),
   ]
   return lines.join('\n')

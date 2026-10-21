@@ -39,6 +39,8 @@ export interface ReactPublishInput {
   recipes: Record<string, unknown>
   /** Synced role: decides what react.d.mts declares for SyncedSystem (omitted means none). */
   role?: SyncedRole
+  /** Width breakpoints recipe classes are compiled for: the runtime's responsive gate. */
+  recipeBreakpoints?: readonly string[]
 }
 
 function runtimeModulePath(...parts: string[]): string {
@@ -166,7 +168,12 @@ export async function publishReactBundle(input: ReactPublishInput): Promise<void
   mkdirSync(dir, { recursive: true })
   writeFileSync(
     join(dir, 'react.d.mts'),
-    generateReactTypesSource({ stylePropNames: input.stylePropNames, recipes: input.recipes, role: input.role }),
+    generateReactTypesSource({
+      stylePropNames: input.stylePropNames,
+      recipes: input.recipes,
+      role: input.role,
+      recipeBreakpoints: input.recipeBreakpoints,
+    }),
     'utf-8'
   )
 

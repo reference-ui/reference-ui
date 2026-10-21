@@ -25,6 +25,16 @@ export function syncedRoleFor(liveOutDir: string): SyncedRole {
 }
 
 /**
+ * Breakpoints the runtime derives responsive recipe classes for: the hoisted
+ * list, or the union of table-level lists in older artifacts.
+ */
+function recipeBreakpointsOf(runtime: AssemblyInput['runtime']): string[] {
+  if (runtime.responsiveBreakpoints !== undefined) return runtime.responsiveBreakpoints
+  const names = Object.values(runtime.recipes).flatMap(table => table.responsiveBreakpoints ?? [])
+  return [...new Set(names)]
+}
+
+/**
  * Assemble the generated folder: shells, data, bundles, declarations. Called
  * once per sync with the compile output; failures propagate to sync, which
  * drops the stage and keeps the last-good folder. Sync commits the result
@@ -46,6 +56,7 @@ export async function assembleSystem(input: AssemblyInput): Promise<CoreDiagnost
     stylePropNames: input.runtime.stylePropNames,
     recipes: input.spec.recipes,
     role: syncedRoleFor(input.liveOutDir),
+    recipeBreakpoints: recipeBreakpointsOf(input.runtime),
   })
   const typegenDiagnostics = await publishTypesBundle(input.outDir, input.spec, input.strict)
   // After the react leg: its bundle is the alias target this leg reads.

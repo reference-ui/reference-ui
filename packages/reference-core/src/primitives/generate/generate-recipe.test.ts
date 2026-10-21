@@ -1,7 +1,8 @@
 // Type-level tests for the recipe declarations in the generated react types.
 // They bake a system with one recipe, then run strict tsc over a wrapper probe that splits its props with splitVariantProps.
 // The probe passes only when rest keeps the caller's other props (union members included) and drops the axis keys, when props with no axis
-// key or a recipe with no variants are accepted, when boolean and responsive variant values type-check, and when a wrong value is rejected.
+// key, generic wrappers or a recipe with no variants are accepted, when boolean, numeric and responsive values type-check (recipe breakpoints
+// only), when a bare RecipeRuntimeFn splits into Partial halves, and when a wrong value is rejected.
 
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
@@ -20,7 +21,7 @@ afterEach(() => {
 
 const WRAPPER_PROBE = [
   "import type { ReactNode } from 'react'",
-  "import { recipe } from './index.mjs'",
+  "import { recipe, type RecipeRuntimeFn } from './index.mjs'",
   "const card = recipe({ className: 'card', variants: { tone: { quiet: {}, loud: {} } } })",
   "type CardProps = { tone?: 'quiet' | 'loud'; className?: string; children?: ReactNode; id?: string }",
   'export function wrapper(props: CardProps) {',
@@ -63,15 +64,32 @@ const WRAPPER_PROBE = [
   "export const responsive = card({ tone: { base: 'quiet', md: 'loud' } })",
   "const [literal, literalRest] = card.splitVariantProps({ tone: 'loud', id: 'x' })",
   "export const literalCheck: ['loud', string] = [literal.tone, literalRest.id]",
+  "// @ts-expect-error mdDown is a style-prop breakpoint, not a recipe one",
+  "card({ tone: { base: 'quiet', mdDown: 'loud' } })",
+  "export const recipeBreakpoints = card({ tone: { base: 'quiet', md: 'loud', lg: 'quiet' } })",
+  "const cols = recipe({ className: 'cols', variants: { n: { 1: {}, 2: {} } } })",
+  "export const numeric = [cols({ n: 1 }), cols({ n: '2' })]",
+  "// @ts-expect-error 3 is not an n option",
+  "cols({ n: 3 })",
+  'export function genericWrapper<T extends CardProps>(props: T) {',
+  '  const [variants, rest] = card.splitVariantProps(props)',
+  '  return [card(variants), rest]',
+  '}',
+  'export function bare(fn: RecipeRuntimeFn, props: { tone?: string; id?: string }) {',
+  '  const [variants, rest] = fn.splitVariantProps(props)',
+  '  const tone: string | undefined = variants.tone',
+  '  const id: string | undefined = rest.id',
+  '  return [tone, id]',
+  '}',
   "export const responsiveBoolean = toggle({ on: { base: false, md: true } })",
 ]
 
 describe('generateReactTypesSource recipe splitVariantProps under strict tsc', () => {
-  it('types variants and rest for wrappers, unions, booleans and breakpoints', () => {
+  it('types variants and rest for wrappers, unions, booleans, numbers and breakpoints', () => {
     const dir = probeDir('__recipe-split')
     writeFileSync(
       join(dir, 'index.d.mts'),
-      generateReactTypesSource({ stylePropNames: ['color'], recipes: {}, role: 'none' })
+      generateReactTypesSource({ stylePropNames: ['color'], recipes: {}, role: 'none', recipeBreakpoints: ['md', 'lg'] })
     )
     writeFileSync(join(dir, 'probe.ts'), `${WRAPPER_PROBE.join('\n')}\n`)
     expect(checkProbe(dir)).toBe('')
@@ -92,7 +110,6 @@ function probeDir(name: string): string {
     join(styledDir, 'index.d.ts'),
     [
       "export type StyleConditionKey = '_hover'",
-      "export type BreakpointKey = 'base' | 'md'",
       'export type StyleProps = { color?: unknown }',
       'export type SystemStyleObject = StyleProps & { [K in StyleConditionKey]?: SystemStyleObject }',
       '',

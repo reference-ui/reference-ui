@@ -157,7 +157,6 @@ function writeStyledStub(dir: string): void {
     join(styledDir, 'index.d.ts'),
     [
       "export type StyleConditionKey = '_hover' | '@sm'",
-      "export type BreakpointKey = 'base' | 'md'",
       'export type StyleProps = {',
       '  color?: unknown',
       '  backgroundColor?: unknown',
