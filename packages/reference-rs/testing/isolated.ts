@@ -3,13 +3,16 @@
  * returns then ends as a reported signal or timeout, not a dead Vitest worker. runIsolated takes a built dist
  * entry (or an absolute .mjs path), an export name, JSON arguments and a kill budget, and returns the parsed JSON
  * result with the signal, exit status, wall time, timeout flag and stderr tail. expectBounded checks that record
- * against a time budget and either returns the result or throws a message that names the cause.
+ * against a time budget and either returns the result or throws a message that names the cause. runIsolated first
+ * asserts that the dist is fresh (dist-freshness.ts), so a stale build fails loudly instead of measuring old code.
+ * withTempDir gives a case a directory the parent removes, since a child killed by its timeout never cleans up.
  */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { assertRsDistFresh } from './dist-freshness.js'
 
 /** One export to call in a child process. */
 export interface IsolatedCall {
@@ -21,6 +24,11 @@ export interface IsolatedCall {
   args?: readonly unknown[]
   /** Kill budget in milliseconds; the child gets SIGKILL when it is reached. */
   timeoutMs: number
+  /**
+   * The reference-rs package root whose dist is verified and resolves short module names. Defaults to this
+   * checkout; the runner's own tests point it at a copy whose dist is stale.
+   */
+  packageDir?: string
 }
 
 /** How the child ended. `result` is set only for an exit with status 0 that wrote its result. */
@@ -39,7 +47,7 @@ export interface IsolatedRun<T = unknown> {
 }
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const DIST_DIR = path.resolve(HERE, '..', 'dist')
+const PACKAGE_DIR = path.resolve(HERE, '..')
 const STDERR_TAIL_CHARS = 2000
 const STDERR_LIMIT_BYTES = 8 * 1024 * 1024
 
@@ -73,12 +81,28 @@ export function runIsolated<T = unknown>(call: IsolatedCall): IsolatedRun<T> {
   if (!(call.timeoutMs > 0)) {
     throw new Error(`runIsolated: timeoutMs must be a positive number of milliseconds, got ${call.timeoutMs}`)
   }
-  const modulePath = resolveModule(call.module)
+  const packageDir = call.packageDir ?? PACKAGE_DIR
+  const modulePath = resolveModule(call.module, packageDir)
+  assertRsDistFresh(packageDir)
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'rs-isolated-'))
   try {
     return spawnAndRead<T>(modulePath, call, path.join(scratch, 'result.json'))
   } finally {
     fs.rmSync(scratch, { recursive: true, force: true })
+  }
+}
+
+/**
+ * Runs `fn` with a fresh temporary directory and removes it when `fn` returns or throws. A case that hands a
+ * directory to a child process creates it here, in the parent: a child killed by its timeout never reaches its own
+ * cleanup, so a directory the child made would outlive the run.
+ */
+export function withTempDir<T>(prefix: string, fn: (dir: string) => T): T {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix))
+  try {
+    return fn(dir)
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
   }
 }
 
@@ -106,8 +130,8 @@ export function expectBounded<T>(run: IsolatedRun<T>, bound: { ms: number }): T 
   return run.result
 }
 
-function resolveModule(module: string): string {
-  const file = path.isAbsolute(module) ? module : path.join(DIST_DIR, `${module}.mjs`)
+function resolveModule(module: string, packageDir: string): string {
+  const file = path.isAbsolute(module) ? module : path.join(packageDir, 'dist', `${module}.mjs`)
   if (!fs.existsSync(file)) {
     throw new Error(
       `runIsolated: ${file} does not exist; build the JS dist first (pnpm run build:js in packages/reference-rs)`,

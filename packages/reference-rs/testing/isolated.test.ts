@@ -3,13 +3,17 @@
  * Each test writes small driver modules into a temporary folder and calls them in a real child process,
  * so a signal, a timeout, a thrown error and a large or async result are observed the way a case sees them.
  * The expectBounded tests use synthetic records to pin the message each failure names, which is what a failing case prints.
+ * The last two describe blocks pin withTempDir (a directory the parent owns is removed after its child is killed) and
+ * the refusal of a stale dist before anything spawns; the verdict's own cases live in dist-freshness.test.ts.
  */
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { expectBounded, runIsolated } from './isolated.js'
+import { expectBounded, runIsolated, withTempDir } from './isolated.js'
 import type { IsolatedRun } from './isolated.js'
+import { nativeBinaryFileName } from '../modules/runtime/js/shared/native-inputs.js'
+import { getReferenceNativeTriple } from '../modules/runtime/js/shared/targets.js'
 
 const CRASH_DRIVER = `export function crash() {
   process.kill(process.pid, 'SIGILL')
@@ -31,10 +35,20 @@ export function boom() { throw new Error('boom from driver') }
 export function rustMinStack() { return process.env.RUST_MIN_STACK ?? null }
 `
 
+const MARK_AND_HANG_DRIVER = `import fs from 'node:fs'
+import path from 'node:path'
+export function markAndHang(scratch) {
+  fs.writeFileSync(path.join(scratch, 'marker'), 'written before the hang\\n')
+  for (;;) {}
+}
+`
+
 let dir = ''
 let crashModule = ''
 let hangModule = ''
 let callsModule = ''
+let markModule = ''
+const fakeRoots: string[] = []
 
 function writeDriver(name: string, source: string): string {
   const file = path.join(dir, name)
@@ -42,11 +56,27 @@ function writeDriver(name: string, source: string): string {
   return file
 }
 
+/** A package root with Rust sources and a native binary, but no inputs stamp beside it. */
+function fakeRsRoot(): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rs-dist-stale-'))
+  fakeRoots.push(root)
+  fs.writeFileSync(path.join(root, 'Cargo.toml'), '[workspace]\n')
+  fs.writeFileSync(path.join(root, 'Cargo.lock'), '')
+  fs.mkdirSync(path.join(root, 'modules', 'demo', 'src'), { recursive: true })
+  fs.writeFileSync(path.join(root, 'modules', 'demo', 'src', 'lib.rs'), 'pub fn demo() {}\n')
+  const triple = getReferenceNativeTriple()
+  if (triple === null) throw new Error('no native addon target on this host')
+  fs.mkdirSync(path.join(root, 'dist', 'native'), { recursive: true })
+  fs.writeFileSync(path.join(root, 'dist', 'native', nativeBinaryFileName(triple)), 'not an addon')
+  return root
+}
+
 beforeAll(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rs-isolated-test-'))
   crashModule = writeDriver('crash.mjs', CRASH_DRIVER)
   hangModule = writeDriver('hang.mjs', HANG_DRIVER)
   callsModule = writeDriver('calls.mjs', CALLS_DRIVER)
+  markModule = writeDriver('mark-and-hang.mjs', MARK_AND_HANG_DRIVER)
 })
 
 afterEach(() => {
@@ -55,6 +85,30 @@ afterEach(() => {
 
 afterAll(() => {
   fs.rmSync(dir, { recursive: true, force: true })
+  for (const root of fakeRoots) fs.rmSync(root, { recursive: true, force: true })
+})
+
+describe('withTempDir keeps the directory with the parent, so a killed child cannot leak it', () => {
+  it('removes the directory after its child is killed by the timeout', () => {
+    let owned = ''
+    withTempDir('rs-isolated-owned-', (scratch) => {
+      owned = scratch
+      const run = runIsolated({ module: markModule, fn: 'markAndHang', args: [scratch], timeoutMs: 1000 })
+      expect(run.timedOut).toBe(true)
+      expect(fs.existsSync(path.join(scratch, 'marker'))).toBe(true)
+    })
+    expect(owned).not.toBe('')
+    expect(fs.existsSync(owned)).toBe(false)
+  })
+})
+
+describe('runIsolated refuses a stale reference-rs dist before it spawns', () => {
+  it('throws the stale message, naming the native addon, instead of running the call', () => {
+    const root = fakeRsRoot()
+    expect(() =>
+      runIsolated({ module: callsModule, fn: 'echo', args: [1], timeoutMs: 10_000, packageDir: root }),
+    ).toThrow(/reference-rs dist is stale: native addon .*run pnpm agentrs b \/ build:js/s)
+  })
 })
 
 describe('runIsolated reports how the child ended', () => {

@@ -8,11 +8,12 @@ re-expands every path takes factorial time in the clique's size; the per-query v
 linear in the clique's edges.
 
 `input/` holds the clique alone. The station compiles `input/` in process, and no walk starts
-without an import, so the clique alone stays cheap there. `driver.mjs` copies `input/` into a
-temp project, adds the consumer `src/app.ts`, and compiles it through the built atomic dist in
-a child process. `spec.ts` runs that child through `runIsolated` with a 30 s kill budget and
-requires it to finish inside 2000 ms through `expectBounded`. A hang or a slow walk fails this
-case by name and does not stall the suite.
+without an import, so the clique alone stays cheap there. `spec.ts` copies `input/` into a temp
+project it owns through `withTempDir`, adds the consumer `src/app.ts`, and compiles that project
+through `driver.mjs` in a child process. The child runs under `runIsolated` with a 30 s kill
+budget and must finish inside 2000 ms through `expectBounded`. A hang or a slow walk fails this
+case by name and does not stall the suite. The parent removes the temp project, so a child killed
+by its budget cannot leak it.
 
 Siblings: ATM-BOUND-01 (a deep value compiles in a child process), ATM-SITE-40 (a missing export
 through an alias, the single-chain shape of the same lookup).
