@@ -92,7 +92,7 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 | `ATM-W-STATIC-WILDCARD` | default | `staticCss: { display: ['*'] }` |
 | `ATM-W-EMPTY-AT-RULE` | default | `globalCss({ '@supports': { … } })` |
 | `ATM-W-UNSUPPORTED-GLOBAL-VALUE` | default | `globalCss({ body: { color: { sm: […] } } })` |
-| `ATM-W-TRACE-SKIPPED` | default | Unparsable sibling beside traced files |
+| `ATM-W-TRACE-SKIPPED` | default | Fallback: a trace diagnostic that names no StyleTrace code. StyleTrace skips keep their own `STT-…` code, e.g. `STT-W-SKIPPED-FILE` for an unparsable sibling beside traced files |
 | `ATM-E-MISSING-HOST-GRAPH` | default | Style-bearing JSX with empty `jsxHosts` |
 | `ATM-E-RECIPE-ARG-SHAPE` | default | `recipe('nope')` |
 | `ATM-E-RECIPE-SPREAD` | default | `recipe({ className: 'x', ...rest })` |

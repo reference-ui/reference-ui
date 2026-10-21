@@ -143,7 +143,7 @@ export const DEFAULT_ROWS: ReproRow[] = [
     },
   },
   {
-    code: 'ATM-W-TRACE-SKIPPED',
+    code: 'STT-W-SKIPPED-FILE',
     severity: 'warning',
     channel: 'diagnostics',
     configExtra: '',

@@ -10,6 +10,8 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
+use styletrace::StyletraceDiagnosticCode;
+
 use crate::lanes::{entered_spawns, force_lane_count, hold_force_serial};
 use crate::{
     compile, BaseSystem, CompileRequest, CompileResult, Diagnostic, DiagnosticCode, VirtualSource,
@@ -143,12 +145,14 @@ const OWNING_CARD: &str = "import { Div } from '@reference-ui/react'\nexport fun
 /// On-disk page spelling the traced `label`, the declared `size`, and a real style.
 const OWNING_APP: &str = "import { Card } from './Card'\nexport function App() {\n  return <Card mt=\"4r\" size=\"lg\" label=\"x\" />\n}\n";
 
-/// Trace warnings whose file ends with `suffix`.
+/// Trace skip warnings whose file ends with `suffix`: the StyleTrace skip code.
 fn trace_warnings<'a>(result: &'a CompileResult, suffix: &str) -> Vec<&'a Diagnostic> {
     result
         .diagnostics
         .iter()
-        .filter(|diagnostic| diagnostic.code == DiagnosticCode::TraceSkipped)
+        .filter(|diagnostic| {
+            diagnostic.code == DiagnosticCode::Styletrace(StyletraceDiagnosticCode::SkippedFile)
+        })
         .filter(|diagnostic| {
             diagnostic
                 .file
@@ -308,4 +312,38 @@ fn same_file_owned_props_stay_in_their_file() {
     for result in both_paths(&tree) {
         assert_eq!(sized_files(&result), vec![app.as_str()], "{:?}", result.wants);
     }
+}
+
+/// A React class whose props expose StyleProps: StyleTrace warns and does not trace it.
+const CLASS_CARD: &str = "import * as React from 'react'\nimport { Div, type StyleProps } from '@reference-ui/react'\nexport type CardProps = StyleProps & { title?: string }\nexport class Card extends React.Component<CardProps> {\n  render() {\n    return <Div {...this.props} />\n  }\n}\n";
+
+/// A props alias chain sixty-five declarations deep, past the expansion guard.
+fn chain_wrapper() -> String {
+    let links: String = (1..=64)
+        .map(|index| format!("type Link{index} = Link{}\n", index - 1))
+        .collect();
+    format!(
+        "import {{ Div, type StyleProps }} from '@reference-ui/react'\ntype Link0 = StyleProps\n{links}export function Chained(props: Link64) {{\n  return <Div {{...props}} />\n}}\n"
+    )
+}
+
+/// StyleTrace warnings keep their own codes through the compile output: the class
+/// component and the guard-cut chain surface as `STT-W-…`, never as the generic code.
+#[test]
+fn styletrace_warnings_keep_their_own_codes() {
+    let tree = Tree::new("stt-codes");
+    tree.write("src/Card.tsx", CLASS_CARD);
+    tree.write("src/Chain.tsx", &chain_wrapper());
+    let result = compile(&request(&tree, Vec::new())).expect("compile succeeds");
+    let codes: Vec<&str> = result
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.code.as_str())
+        .collect();
+    assert!(codes.contains(&"STT-W-CLASS-COMPONENT"), "codes: {codes:?}");
+    assert!(
+        codes.contains(&"STT-W-TYPE-EXPANSION-LIMIT"),
+        "codes: {codes:?}"
+    );
+    assert!(!codes.contains(&"ATM-W-TRACE-SKIPPED"), "codes: {codes:?}");
 }

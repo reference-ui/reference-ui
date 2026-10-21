@@ -1,12 +1,9 @@
 [
   {
     "severity": "warning",
-    "code": "ATM-W-TRACE-SKIPPED",
+    "code": "STT-W-SKIPPED-FILE",
     "message": "StyleTrace: failed to parse input/src/types.ts: 1 parse error(s)",
-    "file": "input/src/types.ts",
-    "help": [
-      "check the StyleTrace host graph for 'input/src/types.ts'"
-    ]
+    "file": "input/src/types.ts"
   },
   {
     "severity": "error",

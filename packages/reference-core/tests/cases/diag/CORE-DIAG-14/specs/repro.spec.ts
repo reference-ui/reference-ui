@@ -1,7 +1,7 @@
-// repro.spec.ts — spec for the ATM-W-TRACE-SKIPPED case. Takes { case } from the
+// repro.spec.ts — spec for the STT-W-SKIPPED-FILE case. Takes { case } from the
 // runner with the world as-committed (the hook is off: the broken fixture
 // compiles by design) and asserts node-side. Emits nothing on success;
-// throws when ATM-W-TRACE-SKIPPED stops reproducing through the whole compiler.
+// throws when STT-W-SKIPPED-FILE stops reproducing through the whole compiler.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -25,8 +25,8 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   try {
     const result = await compileWorld(c.worldDir);
     const entries = result.diagnostics;
-    const found = entries.filter((entry) => entry.code === 'ATM-W-TRACE-SKIPPED');
-    assert.ok(found.length > 0, 'ATM-W-TRACE-SKIPPED reproduces through the whole compiler');
+    const found = entries.filter((entry) => entry.code === 'STT-W-SKIPPED-FILE');
+    assert.ok(found.length > 0, 'STT-W-SKIPPED-FILE reproduces through the whole compiler');
     for (const entry of found) {
       assert.equal(entry.severity, 'warning');
       assert.ok(entry.message.trim().length > 0, 'the repro carries a non-blank message');

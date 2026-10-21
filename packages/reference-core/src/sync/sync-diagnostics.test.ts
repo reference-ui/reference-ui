@@ -82,6 +82,22 @@ const BACKCHANNEL_FILE = [
   '',
 ].join('\n')
 
+// A class component whose props expose StyleProps: StyleTrace warns STT-W-CLASS-COMPONENT
+// and leaves the class untraced, so the warning is the whole verdict for this file.
+const CLASS_CARD_FILE = [
+  "import * as React from 'react'",
+  "import { Div, type StyleProps } from '@reference-ui/react'",
+  '',
+  'export type CardProps = StyleProps & { title?: string }',
+  '',
+  'export class Card extends React.Component<CardProps> {',
+  '  render() {',
+  '    return <Div {...this.props} />',
+  '  }',
+  '}',
+  '',
+].join('\n')
+
 // Mirror of the ATM-DIAG-07 channel-family predicate: true facts that
 // prove no exact runtime miss ride the compiler channel only.
 function hasChannelCode(output: string): boolean {
@@ -182,6 +198,24 @@ describe('sync diagnostics', () => {
     }
 
     expect(calls).toBe(0)
+  })
+})
+
+describe('sync styletrace diagnostics', () => {
+  it('lists a StyleTrace warning under its own code with its fix hint under verbose', async () => {
+    const dir = await writeProject({
+      'ui.config.ts': configFile(''),
+      'theme/tokens.ts': TOKENS_FILE,
+      'theme/card.tsx': CLASS_CARD_FILE,
+    })
+
+    const { calls, warningCount } = await syncWithWarnCapture(dir, { verbose: true })
+    const output = calls.join('\n')
+
+    expect(warningCount).toBe(1)
+    expect(output).toContain('STT-W-CLASS-COMPONENT')
+    expect(output).toContain('rewrite it as a function component so its style props are traced')
+    expect(output).not.toContain('ATM-W-TRACE-SKIPPED')
   })
 })
 

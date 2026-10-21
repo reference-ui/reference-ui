@@ -6,6 +6,10 @@
 //! parsing free-text messages. Codes are part of the serialized contract and
 //! must never be renamed once a case golden pins them. New language slices
 //! extend this enum; they never reuse a code for a different failure class.
+//! StyleTrace mints its own `STT-…` codes, which atomic forwards unchanged
+//! through [`DiagnosticCode::Styletrace`] instead of re-minting them.
+
+use styletrace::StyletraceDiagnosticCode;
 
 mod wire;
 
@@ -64,10 +68,13 @@ pub enum DiagnosticCode {
     EmptyAtRule,
     /// `stylesheet/global`: list or nested value under a conditional key.
     UnsupportedGlobalValue,
-    /// `hosts`: a StyleTrace file skipped with its siblings kept.
+    /// `hosts`: a trace diagnostic that names no StyleTrace code, the generic fallback.
+    /// StyleTrace skips report under their own `STT-…` code, never this one.
     TraceSkipped,
     /// `extract`: style-bearing JSX with no resolvable host graph.
     MissingHostGraph,
+    /// `hosts`: a StyleTrace outcome warning, forwarded under the code styletrace minted it with.
+    Styletrace(StyletraceDiagnosticCode),
     /// `extract/recipes`: `recipe(...)` first arg is not an inline object.
     RecipeArgShape,
     /// `extract/recipes`: spread inside a `recipe(...)` object literal.

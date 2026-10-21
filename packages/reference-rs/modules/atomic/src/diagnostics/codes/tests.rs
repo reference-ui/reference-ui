@@ -1,6 +1,6 @@
-//! Table-level contract for `DiagnosticCode`: every row round-trips through serde and parsing,
-//! every variant appears exactly once, and the shared template agrees on each code's namespace and
-//! severity tag. Assertions run over `CODE_TABLE` itself, so a new row is covered without a new test.
+//! Table-level contract for `DiagnosticCode`: rows round-trip and variants stay unique.
+//! The shared template agrees on each row's namespace and severity tag, and forwarded StyleTrace codes
+//! keep their own `STT` namespace. Assertions run over `CODE_TABLE` itself, so a new row needs no new test.
 
 use super::*;
 
@@ -111,5 +111,31 @@ fn template_tags_match_table_severity() {
         } else {
             assert!(code.is_error_code(), "tag drift: {text}");
         }
+    }
+}
+
+/// Every StyleTrace outcome warning forwards under its own string: the same wire text in every
+/// direction, a registered `STT` namespace in the template, and a warning tag the template agrees on.
+#[test]
+fn styletrace_codes_forward_unchanged() {
+    use styletrace::StyletraceDiagnosticCode;
+    for code in [
+        StyletraceDiagnosticCode::SkippedFile,
+        StyletraceDiagnosticCode::ClassComponent,
+        StyletraceDiagnosticCode::UnresolvedHocArgument,
+        StyletraceDiagnosticCode::TypeExpansionLimit,
+    ] {
+        let forwarded = DiagnosticCode::Styletrace(code);
+        let text = code.as_str();
+        assert_eq!(forwarded.as_str(), text);
+        assert_eq!(text.parse(), Ok(forwarded));
+        let json = serde_json::to_string(&forwarded).unwrap();
+        assert_eq!(json, format!("\"{text}\""));
+        let back: DiagnosticCode = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, forwarded);
+        let template = diagnostics::DiagnosticCode::parse(text).unwrap();
+        assert!(template.is_registered_namespace(), "unregistered: {text}");
+        assert_eq!(template.namespace(), "STT");
+        assert!(template.is_warning_code(), "tag drift: {text}");
     }
 }

@@ -10,7 +10,7 @@ import type { AtomicCaseSpec } from '../../harness/helpers.js'
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-89',
   verify(result) {
-    const traceSkips = result.diagnostics.filter(d => d.code === 'ATM-W-TRACE-SKIPPED')
+    const traceSkips = result.diagnostics.filter(d => d.code === 'STT-W-SKIPPED-FILE')
 
     const cardSkips = traceSkips.filter(d => d.file?.endsWith('/src/Card.tsx'))
     expect(cardSkips, 'the host trace names the on-disk failure once').toHaveLength(1)

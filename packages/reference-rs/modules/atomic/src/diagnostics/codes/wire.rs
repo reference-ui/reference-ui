@@ -1,19 +1,24 @@
-//! Wire behavior for `DiagnosticCode`: the stable string form, `Display`, `FromStr`, and the serde
-//! impls that serialize and deserialize through the same table. Every direction reads `CODE_TABLE`
-//! from the parent module, so a code string cannot drift between serialization and parsing. Unknown
-//! strings refuse with a message instead of guessing a variant.
+//! Wire behavior for `DiagnosticCode`: string form, `Display`, `FromStr`, and serde.
+//! Every direction reads `CODE_TABLE` from the parent module, so a code string cannot drift between
+//! serialization and parsing. A forwarded StyleTrace code takes its string from styletrace's own table,
+//! so the two sides cannot drift either.
+//! Unknown strings refuse with a message instead of guessing a variant.
 
 use std::fmt;
 use std::str::FromStr;
 
 use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use styletrace::StyletraceDiagnosticCode;
 
 use super::{DiagnosticCode, CODE_TABLE};
 
 impl DiagnosticCode {
     /// The stable wire string pinned in goldens and host filters.
     pub fn as_str(&self) -> &'static str {
+        if let Self::Styletrace(code) = self {
+            return code.as_str();
+        }
         for (code, text) in CODE_TABLE {
             if code == *self {
                 return text;
@@ -38,7 +43,10 @@ impl FromStr for DiagnosticCode {
                 return Ok(variant);
             }
         }
-        Err(format!("unknown diagnostic code `{code}`"))
+        match code.parse::<StyletraceDiagnosticCode>() {
+            Ok(forwarded) => Ok(Self::Styletrace(forwarded)),
+            Err(_) => Err(format!("unknown diagnostic code `{code}`")),
+        }
     }
 }
 
@@ -54,7 +62,9 @@ impl Visitor<'_> for CodeVisitor {
     type Value = DiagnosticCode;
 
     fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("a stable `ATM-W-…` / `ATM-E-…` diagnostic code")
+        f.write_str(
+            "a stable `ATM-W-…` / `ATM-E-…` or forwarded `STT-W-…` / `STT-E-…` diagnostic code",
+        )
     }
 
     fn visit_str<E: de::Error>(self, value: &str) -> Result<Self::Value, E> {

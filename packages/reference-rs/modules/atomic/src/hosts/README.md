@@ -1,7 +1,7 @@
 # Hosts
 
-StyleProps gating resolves from two name sets: caller-configured `jsxHosts`
-plus engine-traced component names, unioned before extraction so configured
+StyleProps gating resolves from two name sets: configured `jsxHosts` and
+traced component names. Both are unioned before extraction, so configured
 hosts and discovered wrappers compile without a file-local import.
 
 Tracing runs against the engine-owned surface (runtime prop names, typegen
@@ -31,6 +31,11 @@ A source that is not on disk is never traced: it cannot be an entry, and no
 import edge resolves to it. Serial and lane folds share that rule
 (`on_disk_source`), so a virtual wrapper adds no traced host on either path;
 only configured `jsxHosts` admit it.
+
+Every StyleTrace warning or skip that the trace reports reaches the compile
+output under the `STT-…` code StyleTrace minted it with, so a hint keyed by
+that code shows where the author reads it. The generic `ATM-W-TRACE-SKIPPED`
+is only the fallback for a trace diagnostic that names no StyleTrace code.
 
 ## Must not
 

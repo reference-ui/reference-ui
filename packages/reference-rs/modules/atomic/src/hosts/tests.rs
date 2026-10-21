@@ -75,6 +75,7 @@ fn test_trace_skip_converts_to_host_report() {
         .unwrap()
         .with_location("entry.ts", None, None),
     );
+    assert_eq!(located.code.as_str(), "STT-W-SKIPPED-FILE");
     assert_eq!(located.file.as_deref(), Some("entry.ts"));
     assert_eq!(located.message, "trace skipped: unparsable");
     let bare = super::diagnostics::convert_trace_diagnostic(
@@ -82,6 +83,19 @@ fn test_trace_skip_converts_to_host_report() {
     );
     assert_eq!(bare.file, None);
     assert_eq!(bare.message, "trace skipped");
+}
+
+/// A trace diagnostic that names no StyleTrace code keeps the generic trace-skipped code.
+#[test]
+fn test_trace_diagnostic_without_styletrace_code_keeps_generic_code() {
+    let unnamed = super::diagnostics::convert_trace_diagnostic(
+        styletrace::StyletraceDiagnostic::warning("ATM-W-UNKNOWN-PROPERTY", "not a trace code")
+            .unwrap(),
+    );
+    assert_eq!(
+        unnamed.code,
+        crate::diagnostics::DiagnosticCode::TraceSkipped
+    );
 }
 
 fn owned_request(jsx_hosts: Option<Vec<String>>, owned: &[(&str, &[&str])]) -> CompileRequest {
