@@ -5,7 +5,8 @@
 //! specifier text, so [`ImportResolver`] memoizes every external outcome —
 //! negative results included — and every `package.json` read by absolute
 //! path. One resolver is created per scan and shared across discovery and
-//! extraction, so a repeated import never re-walks the disk. Relative
+//! extraction, so a repeated import never re-walks the disk. A `?query` or
+//! `#hash` suffix is dropped before any lookup, in both branches. Relative
 //! imports stay uncached: they depend on the importing file and its lookup
 //! policy.
 
@@ -22,7 +23,7 @@ use serde_json::Value;
 
 use self::package_entry::{find_installed_declaration_provider, resolve_package_import_from_root};
 use super::model::ResolvedModule;
-use super::paths::{is_external_file_id, split_package_specifier};
+use super::paths::{is_external_file_id, split_package_specifier, strip_query_and_hash};
 
 pub(crate) use relative::FileLookup;
 
@@ -102,8 +103,10 @@ impl ImportResolver {
         .is_some()
     }
 
-    /// Memoized external resolution; negative outcomes are cached too.
+    /// Memoized external resolution; negative outcomes are cached too. The memo key is the path
+    /// part of the specifier, so `pkg/x?raw` and `pkg/x` share one entry.
     pub(super) fn resolve_external(&self, source_module: &str) -> Option<ResolvedModule> {
+        let source_module = strip_query_and_hash(source_module);
         if let Some(cached) = self.external.borrow().get(source_module).cloned() {
             return cached;
         }

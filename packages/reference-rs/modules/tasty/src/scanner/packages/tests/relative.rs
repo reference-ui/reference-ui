@@ -113,6 +113,17 @@ fn dotted_basename_on_disk_is_not_dangling() {
 }
 
 #[test]
+fn query_and_hash_suffixes_name_the_file_on_disk() {
+    let root = TempDir::new("scanner-packages-suffix-disk");
+    root.write("src/notes.md", "# Notes\n");
+    let resolver = ImportResolver::new(root.path());
+
+    assert!(resolver.names_file_on_disk("src/index.ts", "./notes.md?raw"));
+    assert!(resolver.names_file_on_disk("src/index.ts", "./notes.md#usage"));
+    assert!(!resolver.names_file_on_disk("src/index.ts", "./missing.md?raw"));
+}
+
+#[test]
 fn js_specifier_maps_to_typescript_sources() {
     let root = TempDir::new("scanner-packages-js-sources");
     let resolver = ImportResolver::new(root.path());

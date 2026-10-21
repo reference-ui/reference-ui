@@ -3,14 +3,15 @@
 //! TypeScript's extensions appended to the whole name (so a dotted basename such as `theme.fragments` is never
 //! read as an extension), then directory index files. A runtime specifier (`.js`, `.mjs`, `.cjs`) probes its declaration
 //! siblings first (`.d.ts`, plus `.d.mts` or `.d.cts` for `.mjs` and `.cjs`), then the source siblings TypeScript maps it
-//! to (`.ts` or `.tsx`, `.mts`, `.cts`), so packages and dist stay declaration-driven.
+//! to (`.ts` or `.tsx`, `.mts`, `.cts`), so packages and dist stay declaration-driven. A `?query` or `#hash` suffix is
+//! dropped before the join, since bundlers read it as a directive on the file rather than as part of its name.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use crate::constants::scanner::{TS_INDEX_FILENAMES, TS_PATH_EXTENSIONS};
 
-use crate::scanner::paths::{normalize_relative_path, path_to_unix};
+use crate::scanner::paths::{normalize_relative_path, path_to_unix, strip_query_and_hash};
 
 /// Whether filesystem lookup is allowed when resolving relative imports beyond the known set.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -35,7 +36,7 @@ pub(super) fn resolve_relative_import(
 ) -> Option<String> {
     let current_path = Path::new(current_file_id);
     let base_dir = current_path.parent().unwrap_or_else(|| Path::new(""));
-    let joined = normalize_relative_path(&base_dir.join(source_module));
+    let joined = normalize_relative_path(&base_dir.join(strip_query_and_hash(source_module)));
 
     declaration_candidates(&joined, true)
         .into_iter()

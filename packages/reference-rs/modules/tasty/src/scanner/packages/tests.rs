@@ -51,6 +51,27 @@ fn external_import_uses_types_exports_for_root_and_subpath() {
 }
 
 #[test]
+fn external_import_drops_query_and_hash_before_lookup() {
+    let root = TempDir::new("scanner-packages-suffix-external");
+    root.write(
+        "node_modules/fancy-lib/package.json",
+        r#"{ "name": "fancy-lib", "exports": { "./tokens": { "types": "./dist/tokens.d.ts" } } }"#,
+    );
+    root.write(
+        "node_modules/fancy-lib/dist/tokens.d.ts",
+        "export interface Tokens {}\n",
+    );
+
+    let plain = resolve_external_import(root.path(), "fancy-lib/tokens")
+        .expect("plain subpath should resolve");
+    for specifier in ["fancy-lib/tokens?raw", "fancy-lib/tokens#types"] {
+        let suffixed = resolve_external_import(root.path(), specifier)
+            .unwrap_or_else(|| panic!("{specifier} should resolve like its path"));
+        assert_eq!(suffixed.file_id, plain.file_id, "specifier: {specifier}");
+    }
+}
+
+#[test]
 fn external_import_falls_back_to_installed_types_provider() {
     let root = TempDir::new("scanner-packages-types-provider");
     root.write(

@@ -1,6 +1,6 @@
 //! Path normalization surface.
-//! Converts filesystem paths to Unix-style file ids, stable symbol ids, module specifiers, and package names.
-//! Never touches the filesystem.
+//! Converts filesystem paths to Unix-style file ids, stable symbol ids, module specifiers, and package names,
+//! and reduces an import specifier to the path its file lookups run on. Never touches the filesystem.
 
 mod module_specifier;
 mod package;
@@ -11,6 +11,16 @@ use crate::constants::scanner::{NODE_MODULES_DIR, TS_PATH_SUFFIXES};
 
 pub(crate) fn path_to_unix(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
+}
+
+/// The path part of an import specifier: everything before its first `?` or `#`. A query such as
+/// `?raw` or `?url` and a `#hash` are bundler directives on the file the path names, not part of
+/// its name, so every file lookup runs on this prefix. The result borrows from the specifier.
+pub(crate) fn strip_query_and_hash(specifier: &str) -> &str {
+    match specifier.find(['?', '#']) {
+        Some(index) => &specifier[..index],
+        None => specifier,
+    }
 }
 
 pub(crate) fn symbol_id(file_id: &str, name: &str) -> String {
@@ -75,4 +85,33 @@ pub(crate) fn is_external_file_id(file_id: &str) -> bool {
     file_id
         .split('/')
         .any(|segment| segment == NODE_MODULES_DIR)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::strip_query_and_hash;
+
+    #[test]
+    fn strip_query_and_hash_keeps_only_the_path_before_the_first_delimiter() {
+        let cases = [
+            ("./notes.md?raw", "./notes.md"),
+            ("./styles.css?inline", "./styles.css"),
+            ("./data.json?url", "./data.json"),
+            ("./notes.md#usage", "./notes.md"),
+            ("./notes.md?raw#usage", "./notes.md"),
+            ("./a?b#c?d", "./a"),
+            ("./view.ts?x=1&y=2", "./view.ts"),
+            ("pkg/file.md?raw", "pkg/file.md"),
+            ("@scope/pkg?raw", "@scope/pkg"),
+            ("./plain.ts", "./plain.ts"),
+            ("pkg", "pkg"),
+        ];
+        for (specifier, expected) in cases {
+            assert_eq!(
+                strip_query_and_hash(specifier),
+                expected,
+                "specifier: {specifier}"
+            );
+        }
+    }
 }
