@@ -1,5 +1,6 @@
 //! Reads the owned props of an export's declared component, whether or not that component traces.
 //! A name follows its re-export, or the first `export *` source that declares it, down to the component record that holds its owned props.
+//! One query enters each module and name at most once: `explored` records every entry, and an entry met again answers nothing, so a star cycle cannot multiply its paths. Pruning that way keeps the first declaration in source order: a branch that yields nothing holds no declaration reachable from it, so skipping it later cannot change which one comes first.
 //! It takes a module and an export name and emits the owned set, or nothing when the component keeps no prop. Trace verdicts and host decisions stay in `analyzer.rs` and `memo.rs`; this walk never marks a host.
 
 use std::collections::BTreeSet;
@@ -11,21 +12,21 @@ use crate::resolver::StyleTraceError;
 
 impl StyleTraceAnalyzer<'_> {
     /// The owned props of the component `export_name` names in `module_path`, traced or not.
-    /// `visited` holds each module and name on the walk, so a re-export cycle answers nothing.
+    /// `explored` is this query's sorted list of entered nodes; a node already on it answers nothing.
     pub(super) fn declared_export_owned(
         &mut self,
         module_path: &Path,
         export_name: &str,
-        visited: &mut Vec<String>,
+        explored: &mut Vec<String>,
     ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
         let visit = format!("{}::{export_name}", module_path.display());
-        if visited.contains(&visit) {
-            return Ok(None);
+        match explored.binary_search(&visit) {
+            Ok(_) => Ok(None),
+            Err(at) => {
+                explored.insert(at, visit);
+                self.declared_export_target(module_path, export_name, explored)
+            }
         }
-        visited.push(visit);
-        let owned = self.declared_export_target(module_path, export_name, visited);
-        visited.pop();
-        owned
     }
 
     /// What an export names: a local component, an import, or, for a name with no direct export,
@@ -34,7 +35,7 @@ impl StyleTraceAnalyzer<'_> {
         &mut self,
         module_path: &Path,
         export_name: &str,
-        visited: &mut Vec<String>,
+        explored: &mut Vec<String>,
     ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
         let target = self
             .modules
@@ -48,8 +49,8 @@ impl StyleTraceAnalyzer<'_> {
             Some(ExportTarget::Imported {
                 source,
                 imported_name,
-            }) => self.declared_import_owned(module_path, &source, &imported_name, visited),
-            None => self.declared_export_all_owned(module_path, export_name, visited),
+            }) => self.declared_import_owned(module_path, &source, &imported_name, explored),
+            None => self.declared_export_all_owned(module_path, export_name, explored),
         }
     }
 
@@ -72,7 +73,7 @@ impl StyleTraceAnalyzer<'_> {
         module_path: &Path,
         source: &str,
         imported_name: &str,
-        visited: &mut Vec<String>,
+        explored: &mut Vec<String>,
     ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
         if source == "@reference-ui/react" {
             return Ok(None);
@@ -84,7 +85,7 @@ impl StyleTraceAnalyzer<'_> {
             return Ok(None);
         };
         self.ensure_module_loaded(&resolved)?;
-        self.declared_export_owned(&resolved, imported_name, visited)
+        self.declared_export_owned(&resolved, imported_name, explored)
     }
 
     /// The owned props of a name with no direct export: the first `export *` source that declares it.
@@ -92,7 +93,7 @@ impl StyleTraceAnalyzer<'_> {
         &mut self,
         module_path: &Path,
         export_name: &str,
-        visited: &mut Vec<String>,
+        explored: &mut Vec<String>,
     ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
         let sources = self
             .modules
@@ -101,7 +102,7 @@ impl StyleTraceAnalyzer<'_> {
             .unwrap_or_default();
         for source in sources {
             if let Some(owned) =
-                self.declared_import_owned(module_path, &source, export_name, visited)?
+                self.declared_import_owned(module_path, &source, export_name, explored)?
             {
                 return Ok(Some(owned));
             }

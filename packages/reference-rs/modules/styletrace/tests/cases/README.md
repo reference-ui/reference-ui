@@ -1,3 +1,3 @@
 # Styletrace cases
 
-Committed wrapper-tracing stations, `STT-<FAMILY>-<NN>`. Wrapper stations pin local, re-exported, and barrel-wrapped components forwarding StyleProps to primitives; barrel and re-export stations pin namespace and star flows; package stations pin cross-package tracing; pipe stations pin styling-pipeline routing; negative stations pin what stays untraced.
+Committed wrapper-tracing stations, `STT-<FAMILY>-<NN>`. Wrapper stations pin local, re-exported, and barrel-wrapped components forwarding StyleProps to primitives; barrel and re-export stations pin namespace and star flows; package stations pin cross-package tracing; pipe stations pin styling-pipeline routing; negative stations pin what stays untraced. Bounded stations (`STT-BOUND-<NN>`) pin a walk that must finish inside a time budget: the spec writes the hostile input into a scratch tree and traces it in a child process, so the in-process compile only sees a small input.
