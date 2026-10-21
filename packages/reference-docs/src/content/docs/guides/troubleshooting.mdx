@@ -101,6 +101,16 @@ The browser console says why:
 - **`no compiled table found`**: the recipe was added after the last sync.
   Run `ref sync`.
 
+## A recipe that nothing calls emits no CSS
+
+The recipe's class is on the element, but it has no styles.
+
+Sync generates a recipe's CSS only from the calls it finds in your source.
+A recipe that no file calls emits no rules, not even its base styles. A call
+sync cannot follow counts as no call: one made through a local object, a map
+or a prop, `.raw()`, or a computed key. Call the recipe directly, in a file
+that `include` matches. See [Recipes](/recipes).
+
 ## Style props on a package component don't paint
 
 Components from a package take style props only when that package's system is
