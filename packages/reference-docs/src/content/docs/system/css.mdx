@@ -89,23 +89,9 @@ it matches.
 
 ## What the compiler can read
 
-The compiler reads `css()` calls only when `css` is imported from
-`@reference-ui/react` or `@reference-ui/styled`. A renamed import, such as
-`import { css as style }`, still counts, and so does a file of yours that
-re-exports `css` from either package. A local function named `css`, or a
-`css` from another package, is not read. The same rule applies to
-[`recipe()`](/recipes).
-
-The compiler reads your source without running it. It can read:
-
-- literal objects and values in a `css()` call or a style prop;
-- `const` objects and values, in the same file or imported from another;
-- both branches of a ternary, such as `active ? 'brand' : 'text'`;
-- spreads of objects it can read, including `...(flag && extra)`.
-
-A value it cannot read, such as the result of a function call, gets no CSS.
-`ref sync` warns at the call site, and in development the browser console
-names the property and value that missed.
+`ref sync` reads `css()` calls without running them. A value it cannot read
+gets CSS only when that value already has CSS. See
+[What sync can read](/what-sync-can-read) for which calls and values count.
 
 ### Values chosen at runtime
 
