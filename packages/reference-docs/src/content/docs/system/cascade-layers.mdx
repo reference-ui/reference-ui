@@ -102,3 +102,11 @@ layer before the Reference UI stylesheet loads to rank it below.
 
 Prefer `globalCss()` for new rules: it puts them in your system's `global`
 layer and lets them use your tokens.
+
+## Browser support
+
+The generated CSS needs browsers that support these three features:
+
+- **Cascade layers** (`@layer`): every rule the stylesheet prints sits in a layer.
+- **Container queries** (`@container`): breakpoints such as `md`, and the [`r` prop](/responsive#custom-widths), print them.
+- **`color-mix()`**: numeric opacity, such as `blue.500/40`, and [tones](/tones), such as `blue.500/medium`, print it.
