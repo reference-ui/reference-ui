@@ -261,7 +261,7 @@ mod tests {
                 backing: crate::atom::Backing::Own,
             },
             DiagnosticFact::HostOutcome {
-                code: DiagnosticCode::TraceSkipped,
+                code: DiagnosticCode::Styletrace(styletrace::StyletraceDiagnosticCode::SkippedFile),
                 file: None,
                 message: "trace skipped".into(),
             },

@@ -270,7 +270,7 @@ fn fold_harvest(input: &RecordIn<'_>, program: &oxc_ast::ast::Program<'_>) -> Op
 /// Fold the trace module while the program is still alive. Only on-disk sources
 /// fold, the set serial traces: a virtual source is skipped silently on both
 /// paths, so lanes must not trace one serial never sees. A failed fold keeps no
-/// module, and the host re-parse warns once as ATM-W-TRACE-SKIPPED. Parse errors
+/// module, and the host re-parse warns once as STT-W-SKIPPED-FILE. Parse errors
 /// return early because `fold_errors` already reports them as ATM-E-PARSE.
 fn fold_trace(input: &RecordIn<'_>, program: &oxc_ast::ast::Program<'_>) -> Option<styletrace::TraceModule> {
     let root = input.trace_root?;

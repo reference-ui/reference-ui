@@ -34,8 +34,8 @@ only configured `jsxHosts` admit it.
 
 Every StyleTrace warning or skip that the trace reports reaches the compile
 output under the `STT-…` code StyleTrace minted it with, so a hint keyed by
-that code shows where the author reads it. The generic `ATM-W-TRACE-SKIPPED`
-is only the fallback for a trace diagnostic that names no StyleTrace code.
+that code shows where the author reads it. `ATM-W-TRACE-SKIPPED` is retired:
+no host path emits it.
 
 ## Must not
 

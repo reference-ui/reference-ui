@@ -85,16 +85,30 @@ fn test_trace_skip_converts_to_host_report() {
     assert_eq!(bare.message, "trace skipped");
 }
 
-/// A trace diagnostic that names no StyleTrace code keeps the generic trace-skipped code.
+/// Every StyleTrace outcome code forwards unchanged, so a skip keeps the code it was minted with.
 #[test]
-fn test_trace_diagnostic_without_styletrace_code_keeps_generic_code() {
-    let unnamed = super::diagnostics::convert_trace_diagnostic(
+fn test_trace_codes_forward_unchanged() {
+    for text in [
+        "STT-W-SKIPPED-FILE",
+        "STT-W-CLASS-COMPONENT",
+        "STT-W-UNRESOLVED-HOC-ARGUMENT",
+        "STT-W-TYPE-EXPANSION-LIMIT",
+    ] {
+        let report = super::diagnostics::convert_trace_diagnostic(
+            styletrace::StyletraceDiagnostic::warning(text, "trace warning").unwrap(),
+        );
+        assert_eq!(report.code.as_str(), text);
+    }
+}
+
+/// A diagnostic with a non-StyleTrace code cannot come from StyleTrace; reporting it under a
+/// generic code would hide the broken invariant, so the conversion fails loudly instead.
+#[test]
+#[should_panic(expected = "styletrace outcome diagnostics carry its own codes")]
+fn test_non_styletrace_trace_code_fails_loudly() {
+    let _ = super::diagnostics::convert_trace_diagnostic(
         styletrace::StyletraceDiagnostic::warning("ATM-W-UNKNOWN-PROPERTY", "not a trace code")
             .unwrap(),
-    );
-    assert_eq!(
-        unnamed.code,
-        crate::diagnostics::DiagnosticCode::TraceSkipped
     );
 }
 

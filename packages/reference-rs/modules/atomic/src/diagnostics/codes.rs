@@ -68,8 +68,9 @@ pub enum DiagnosticCode {
     EmptyAtRule,
     /// `stylesheet/global`: list or nested value under a conditional key.
     UnsupportedGlobalValue,
-    /// `hosts`: a trace diagnostic that names no StyleTrace code, the generic fallback.
-    /// StyleTrace skips report under their own `STT-…` code, never this one.
+    /// Retired: every StyleTrace skip reports under its own `STT-…` code (forwarded through
+    /// `Styletrace` below), so this code is never emitted. Kept for wire stability — pinned
+    /// codes are never renamed or removed.
     TraceSkipped,
     /// `extract`: style-bearing JSX with no resolvable host graph.
     MissingHostGraph,

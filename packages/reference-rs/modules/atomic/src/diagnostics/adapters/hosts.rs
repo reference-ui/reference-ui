@@ -52,7 +52,7 @@ mod tests {
     #[test]
     fn host_report_without_file_stays_unlocated() {
         let fact = DiagnosticFact::from(HostReport {
-            code: DiagnosticCode::TraceSkipped,
+            code: DiagnosticCode::Styletrace(styletrace::StyletraceDiagnosticCode::SkippedFile),
             file: None,
             message: "trace skipped".to_string(),
         });

@@ -1,26 +1,27 @@
 //! Trace-failure reporting for host discovery.
 //! Turns per-file StyleTrace diagnostics into host skip reports so one
 //! unparsable entry neither fails the compile nor silences its siblings.
-//! Each report keeps the StyleTrace code that minted it; only a diagnostic
-//! that names no StyleTrace code falls back to the generic trace-skipped code.
-//! Policy owns the final file-only warning wrap.
+//! StyleTrace mints every outcome diagnostic from its own code table, so each
+//! report forwards the StyleTrace code unchanged. Policy owns the final
+//! file-only warning wrap.
 
 use crate::diagnostics::{adapters::hosts::HostReport, DiagnosticCode};
 
-/// One host skip report per trace diagnostic, under the code styletrace minted it with.
+/// One host skip report per trace diagnostic, under the StyleTrace code that minted it.
 pub(crate) fn convert_trace_diagnostic(diagnostic: styletrace::StyletraceDiagnostic) -> HostReport {
     HostReport {
-        code: trace_code(diagnostic.code.as_str()),
+        code: DiagnosticCode::Styletrace(trace_code(diagnostic.code.as_str())),
         file: diagnostic.file,
         message: diagnostic.message,
     }
 }
 
-/// The forwarded StyleTrace code for a diagnostic's code text. Text that names no StyleTrace
-/// code keeps the generic code, so a skip is reported rather than dropped.
-fn trace_code(text: &str) -> DiagnosticCode {
+/// The StyleTrace code a diagnostic's text names. It always parses: StyleTrace builds outcome
+/// diagnostics only from its typed table, so a miss is a styletrace bug. Failing loudly beats
+/// reporting the skip under a code the registry never assigned to it.
+fn trace_code(text: &str) -> styletrace::StyletraceDiagnosticCode {
     match text.parse::<styletrace::StyletraceDiagnosticCode>() {
-        Ok(code) => DiagnosticCode::Styletrace(code),
-        Err(_) => DiagnosticCode::TraceSkipped,
+        Ok(code) => code,
+        Err(error) => unreachable!("styletrace outcome diagnostics carry its own codes: {error}"),
     }
 }

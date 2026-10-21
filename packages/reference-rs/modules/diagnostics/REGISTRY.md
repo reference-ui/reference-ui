@@ -92,9 +92,10 @@ with their registry row.
 
 ## Inventory
 
-Atomic rows are the aligned `ATM` vocabulary: every warn/err code parses in
-the template and pins a whole-compiler repro in Core's `repro.test.ts`; the
-four `-I-` rows stay module-local until the template grows an info level.
+Atomic rows are the aligned `ATM` vocabulary: every live warn/err code parses in
+the template and pins a whole-compiler repro in Core's `repro.test.ts`; retired
+rows are exempt, and the four `-I-` rows stay module-local until the template
+grows an info level.
 
 | Code | Meaning | Raised in |
 | ---- | ------- | --------- |
@@ -120,7 +121,7 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `ATM-W-STATIC-WILDCARD` | Wildcard on a prop with no token category | `modules/atomic/src/static_css.rs` |
 | `ATM-W-EMPTY-AT-RULE` | At-rule key with an empty query | `modules/atomic/src/stylesheet/global/walker.rs` |
 | `ATM-W-UNSUPPORTED-GLOBAL-VALUE` | List or nested value under a conditional key | `modules/atomic/src/stylesheet/global/walker.rs` |
-| `ATM-W-TRACE-SKIPPED` | A StyleTrace file skipped with its siblings kept | `modules/atomic/src/hosts/diagnostics.rs` |
+| `ATM-W-TRACE-SKIPPED` | Retired: never emitted, kept for wire stability | — (retired, see `codes.rs`) |
 | `ATM-E-MISSING-HOST-GRAPH` | Style-bearing JSX with no resolvable host graph | `modules/atomic/src/extract/jsx/mod.rs` |
 | `ATM-E-RECIPE-ARG-SHAPE` | `recipe(...)` first arg is not an inline object | `modules/atomic/src/extract/recipes/mod.rs` |
 | `ATM-E-RECIPE-SPREAD` | Spread inside a `recipe(...)` object literal | `modules/atomic/src/extract/recipes/mod.rs` |
