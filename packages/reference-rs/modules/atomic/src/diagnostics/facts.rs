@@ -263,7 +263,7 @@ pub enum DiagnosticFact {
         backing: Backing,
     },
     /// One skipped host trace: a file-only line with a dependency message, under the
-    /// code its StyleTrace origin minted (the generic trace-skipped code otherwise).
+    /// StyleTrace code that minted it.
     HostOutcome {
         code: DiagnosticCode,
         file: Option<Box<str>>,
