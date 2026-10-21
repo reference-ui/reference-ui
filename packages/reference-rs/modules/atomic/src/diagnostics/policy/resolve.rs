@@ -59,9 +59,6 @@ fn name_help(suggestion: Option<&str>, name: &NameDetail) -> Vec<String> {
             suggestion,
             "use a condition from the theme".to_string(),
         ),
-        NameDetail::UnrealizableExtension { prop } => {
-            vec![format!("drop '{prop}'; the dialect has no served css form")]
-        }
     }
 }
 
@@ -160,9 +157,6 @@ fn name_sentence(name: &NameDetail) -> String {
         }
         NameDetail::Condition { name } => {
             format!("Unknown condition \"{name}\"")
-        }
-        NameDetail::UnrealizableExtension { prop } => {
-            format!("`{prop}` has no CSS lowering; the declaration was dropped")
         }
     }
 }

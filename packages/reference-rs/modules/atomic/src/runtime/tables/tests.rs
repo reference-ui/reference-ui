@@ -90,7 +90,6 @@ fn keyword_sets_come_from_gate_consts_sorted() {
             "lineWidth",
             "mathFns",
             "outlineStyle",
-            "unrealizable",
             "zeroBorder",
         ]
     );
@@ -102,7 +101,6 @@ fn keyword_sets_come_from_gate_consts_sorted() {
         keywords["zeroBorder"],
         vec!["0", "0%", "0em", "0px", "0rem"]
     );
-    assert_eq!(keywords["unrealizable"].len(), 1);
     for set in keywords.values() {
         let mut sorted = set.clone();
         sorted.sort();

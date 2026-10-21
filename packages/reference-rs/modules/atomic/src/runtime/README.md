@@ -67,7 +67,7 @@ intentional rule change carries the bump; the freshness guard
 Permanent home. Each rule names the Rust site the runtime namer mirrors.
 Table-shaped rules travel as lowerings or keyword sets; the rest are
 procedures with one golden each. Counts (lib): aliases 315 ·
-prefixes 994 · color props 67 · unrealizable 1 ·
+prefixes 994 · color props 67 ·
 lowerings 29 props · breakpoints verbatim with `base` first, widths
 alongside (name → post-`into_px` width, `base` absent) for the range
 gate alone — the class never contains them.
@@ -104,10 +104,12 @@ spell the key byte-identical (pinned by
 `every_canon_prefix_resolves_through_table_or_verbatim`). There is no
 kebab arm: the oracle never kebabs on a table miss.
 
-The 27 unrealizable extensions (`truncate`, `spaceX`, `translateX`,
-…) ship as `keywords.unrealizable` and refuse; the interpreter checks
-lowerings before the set, mirroring `expand_or_passthrough`
-(`textGradient` stays claimed). No alias may target a macro or
+`textGradient`, canon's one unrealizable extension, is always claimed
+by its lowering, so no unrealizable keyword set ships. Canon keeps
+`UNREALIZABLE_EXTENSIONS` because the guard tests read it: every entry
+must have a lowering (`every_unrealizable_extension_has_a_runtime_lowering`
+here, `every_unrealizable_extension_is_claimed_by_a_lowering` in
+resolve). No alias may target a macro or
 runtime-owned prop (guard test); lowering keys are canonical.
 
 Refusal granularity is per-declaration after lowering: `border: 'NaN

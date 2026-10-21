@@ -2,7 +2,7 @@
 //! Coordinates dialect utilities (`font`, `weight`, `container`, `size`, `r`), shorthand expansion, rhythm, and tokens.
 //! Font tracking, named weights, and token lookup come from `BaseSystem`, not a second preset table here.
 //! Refusals report typed resolve facts through the session sink and render byte-identical lines via policy.
-//! Dialect extensions with no CSS realization refuse at the expansion fall-through (warn-and-skip, default-visible).
+//! Extensions with no CSS form are claimed by lowering arms (`textGradient`); canon ships no other.
 
 pub mod conditions;
 pub mod container;
@@ -216,31 +216,7 @@ fn expand_or_passthrough(
     if let Some(expanded) = shorthands::expand_shorthand(&want.prop, &want.value) {
         return expanded;
     }
-    if refuse_unrealizable_extension(want, session) {
-        return Vec::new();
-    }
     vec![(want.prop.clone(), want.value.clone())]
-}
-
-/// Refuse a dialect extension with no CSS realization: default-visible
-/// diagnostic naming the prop, no atoms. True when the prop refused.
-fn refuse_unrealizable_extension(want: &Want, session: &mut ResolveSession<'_, '_>) -> bool {
-    let canonical = canon::resolve_canonical_prop(&want.prop);
-    if !canon::is_unrealizable_extension(canonical) {
-        return false;
-    }
-    session.emit(
-        want_key(session, &want.prop, atom_value_to_json(&want.value)),
-        ResolveOutcome::Rejected {
-            code: DiagnosticCode::UnrealizableExtension,
-            detail: ResolveDetail::Declaration(DeclarationDetail::Name(
-                NameDetail::UnrealizableExtension {
-                    prop: want.prop.clone(),
-                },
-            )),
-        },
-    );
-    true
 }
 
 /// Props and values the `border: true` macro stamps, in emit order.

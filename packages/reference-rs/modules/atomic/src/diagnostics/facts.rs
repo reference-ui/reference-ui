@@ -167,8 +167,6 @@ pub enum NameDetail {
     Property { prop: Box<str> },
     /// `Unknown condition "{name}"`.
     Condition { name: Box<str> },
-    /// `` `{prop}` has no CSS lowering; the declaration was dropped ``.
-    UnrealizableExtension { prop: Box<str> },
 }
 
 /// Value-shape resolve refusals.

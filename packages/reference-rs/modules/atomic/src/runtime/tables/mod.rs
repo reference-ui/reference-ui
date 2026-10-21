@@ -134,10 +134,6 @@ fn build_keywords() -> BTreeMap<String, Vec<String>> {
         "zeroBorder".to_string(),
         sorted_set(border::ZERO_BORDER_VALUES),
     );
-    keywords.insert(
-        "unrealizable".to_string(),
-        sorted_set(canon::UNREALIZABLE_EXTENSIONS),
-    );
     keywords
 }
 

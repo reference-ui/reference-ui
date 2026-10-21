@@ -4,8 +4,8 @@
  * value, first match runs. `scalar` steps run for string/number values
  * alone, mirroring the `extract_raw_val` gate. Mirrors `resolve/mod.rs::lower_macro` plus
  * `resolve/shorthands::expand_shorthand` (macro, then pair, flex, border,
- * dimensional) with the `unrealizable` fall-through when no lowering claims
- * the prop. `pair`/`emit`/`macro`/`keep`/`drop` apply to all value kinds;
+ * dimensional); a prop no lowering claims passes through unchanged.
+ * `pair`/`emit`/`macro`/`keep`/`drop` apply to all value kinds;
  * `trbl`/`trio`/`rewrite` terminate to identity for token/bool/null.
  */
 import type { LowerStep, NamerGuard, NamerTables } from '../../../../contracts/types.js'
@@ -50,10 +50,9 @@ function renderValue(value: NamerValue): string {
 }
 
 /**
- * Lower one canonical prop/value through its ordered steps. Missing lowering
- * falls to the `unrealizable` refusal, else identity; a matched step runs and
- * later steps never do. (Only `textGradient` pairs a lowering with the
- * unrealizable set, and its emit is unguarded, so fall-through order is moot.)
+ * Lower one canonical prop/value through its ordered steps. A prop no lowering
+ * claims passes through unchanged; a matched step runs and later steps never
+ * do. When no step matches, the pair is identity as well.
  */
 export function interpretLowering(
   origProp: string,
@@ -63,7 +62,6 @@ export function interpretLowering(
 ): LoweredPair[] {
   const steps = tables.lowerings[canon]
   if (steps === undefined) {
-    if ((tables.keywords['unrealizable'] ?? []).includes(canon)) return []
     return [[origProp, value]]
   }
   const ctx: LowerContext = { orig: origProp, canon, value, tables, rendered: renderValue(value) }

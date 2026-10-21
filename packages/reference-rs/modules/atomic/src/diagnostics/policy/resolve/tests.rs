@@ -50,16 +50,6 @@ fn declaration_sentences_pin_legacy_strings() {
         Policy::render_resolve(&report(rejected(ResolveDetail::Declaration(declaration))));
     assert_eq!(rendered.message, "Unknown condition \"_nope\"");
 
-    let declaration = DeclarationDetail::Name(NameDetail::UnrealizableExtension {
-        prop: "translateX".into(),
-    });
-    let rendered =
-        Policy::render_resolve(&report(rejected(ResolveDetail::Declaration(declaration))));
-    assert_eq!(
-        rendered.message,
-        "`translateX` has no CSS lowering; the declaration was dropped"
-    );
-
     let declaration = DeclarationDetail::Value(ValueDetail::NonCanonicalNumber {
         prop: "width".into(),
         spelling: "0x10".into(),
@@ -235,14 +225,6 @@ fn value_token_and_extension_shapes_echo_their_parts() {
                 value: "1px solid {colors.gray.800".into(),
             }),
             "close the '{' in '1px solid {colors.gray.800'",
-        ),
-        (
-            ResolveDetail::Declaration(DeclarationDetail::Name(
-                NameDetail::UnrealizableExtension {
-                    prop: "translateX".into(),
-                },
-            )),
-            "drop 'translateX'; the dialect has no served css form",
         ),
     ];
     for (detail, expected) in cases {
