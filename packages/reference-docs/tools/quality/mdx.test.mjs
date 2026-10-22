@@ -9,7 +9,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { after, describe, it } from 'node:test'
-import { collectionFindings } from './mdx-collection.mjs'
+import { collectionTier } from './mdx-collection.mjs'
 import { loadCompiler } from './mdx-compile.mjs'
 import { compilePool } from './mdx-pool.mjs'
 import { checkContract, parseFrontmatter } from './mdx-frontmatter.mjs'
@@ -374,6 +374,7 @@ describe('the MDX tier on a temporary docs tree', () => {
 })
 
 describe('the collection check', () => {
+  const collectionFindings = async ({ docsDir }) => (await collectionTier({ docsDir })).errors
   // The frontmatter's description has an unquoted colon, so content-collections drops the page.
   const DROPPED = PAGE(VALID.replace('slug: page', 'slug: dropped').replace('A page.', 'Foo: bar'))
   const CONFIG_FILE = docsDir => path.join(docsDir, 'src/collections/content-collections.ts')

@@ -1,13 +1,12 @@
-// Collection check of the docs gate. It takes the docs package directory and builds the docs collection
+// Collection tier of the docs gate. It takes the docs package directory and builds the docs collection
 // in-process from the app's own config, into a scratch directory, so it never reads an earlier sync's
-// output. It emits one finding for each .mdx page under src/content that the build leaves out, or one
-// finding when the build fails and no page explains it. content-collections drops a page whose
-// frontmatter does not parse and reports nothing for it, so the built documents are the only place that
-// drop shows.
+// output. It returns `{ errors, missing }`: one error for each .mdx page under src/content that the build
+// leaves out, or one error when the build fails and no page explains it, and `missing` names
+// content-collections when it is not installed. content-collections drops a page whose frontmatter does
+// not parse and reports nothing for it, so the built documents are the only place that drop shows.
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { createBuilder } from '@content-collections/core'
 import { walk } from './walk.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -19,8 +18,14 @@ const SCRATCH_ROOT = path.join(HERE, '..', '..', 'node_modules', '.cache', 'docs
 const NOT_LISTED =
   'not in the docs collection, so its route shows Not found; its frontmatter does not parse or a field is invalid'
 
-/** Findings for the .mdx pages the docs collection leaves out, or for a build that fails and names no page. */
-export async function collectionFindings({ docsDir }) {
+/** Errors for the .mdx pages the docs collection leaves out, or for a build that fails and names no page. */
+export async function collectionTier({ docsDir }) {
+  let createBuilder
+  try {
+    ({ createBuilder } = await import('@content-collections/core'))
+  } catch {
+    return { errors: [], missing: 'content-collections' }
+  }
   const configFile = path.join(docsDir, CONFIG)
   await mkdir(SCRATCH_ROOT, { recursive: true })
   // Its type makes the generated index load as ESM, since Node's package lookup stops at node_modules.
@@ -28,22 +33,22 @@ export async function collectionFindings({ docsDir }) {
   const scratch = await mkdtemp(path.join(SCRATCH_ROOT, 'run-'))
   try {
     const outputDir = path.join(scratch, 'generated')
-    const build = await buildCollection(configFile, scratch, outputDir)
+    const build = await buildCollection(createBuilder, configFile, scratch, outputDir)
     const built = await builtPaths(docsDir, outputDir)
     if (built) {
       const missing = await unlistedPages(docsDir, built)
       // A build that fails after writing its output, with pages missing, failed on those pages: the
-      // page findings say which, so the build's own error would only repeat them.
-      if (missing.length || !build.failed) return missing
+      // page errors say which, so the build's own error would only repeat them.
+      if (missing.length || !build.failed) return { errors: missing, missing: null }
     }
-    return [buildFinding(configFile, build)]
+    return { errors: [buildFinding(configFile, build)], missing: null }
   } finally {
     await rm(scratch, { recursive: true, force: true })
   }
 }
 
 /** Runs the collection build into `outputDir`. `failed` says whether it threw, and `error` is what it threw. */
-async function buildCollection(configFile, scratch, outputDir) {
+async function buildCollection(createBuilder, configFile, scratch, outputDir) {
   try {
     const builder = await createBuilder(configFile, {
       configName: 'collection-config.mjs',
@@ -57,7 +62,7 @@ async function buildCollection(configFile, scratch, outputDir) {
   }
 }
 
-/** One finding for the build as a whole, named by its first error line. */
+/** One error for the build as a whole, named by its first error line. */
 function buildFinding(file, build) {
   const detail = build.failed
     ? String(build.error?.message ?? build.error).split('\n')[0]
@@ -89,7 +94,7 @@ async function builtPaths(docsDir, outputDir) {
   )
 }
 
-/** One finding for each .mdx page under src/content whose path is not in `built`. */
+/** One error for each .mdx page under src/content whose path is not in `built`. */
 async function unlistedPages(docsDir, built) {
   const pages = new Set()
   await walk(path.join(docsDir, 'src/content'), MDX_EXTS, pages)
