@@ -1,11 +1,15 @@
-# CORE-BOUND-05 — a real ref sync of 70 files and one file at 2,000 nesting exits 0 with no signal, inside 10 s, and its stylesheet has both colours
+# CORE-BOUND-05 — a real ref sync refuses a file nested 2,000 levels with a located ATM-E-PARSE inside 10 s, and syncs one nested 1,000 levels to exit 0 with both colours
 
-A css value 2,000 parentheses deep killed the sync with SIGILL before the native containment.
 The world is a consumer whose include reaches `src/`, and it has no sources of its own.
-The spec writes 70 small files and the deep file into a temp copy that it owns.
-The copy is synced through the spawned bin under a 10 s kill budget.
+Each spec writes 70 small styled files and one deep file into a temp copy that it owns (`specs/deep-world.ts`), then syncs
+the copy through the spawned bin under a 10 s kill budget.
 
-The child must end with no signal and exit 0, and the published stylesheet must carry both colours.
-The blue comes from the small files and the red from the deep value.
+`specs/nesting-2000.spec.ts` is the refusal side. A css value 2,000 parentheses deep is the shape that killed the sync with
+SIGILL before the native containment, and the nesting gate now refuses it before Oxc parses it. The child must end with no
+signal inside the budget and exit 1, and its output must name `ATM-E-PARSE`, the file at `src/deep.ts:3:1` and the 1024 limit.
 
-> Search terms: nesting, deep parentheses, lane stack, SIGILL, sync budget, ref sync, native containment, CSS equality, temp world
+`specs/nesting-1000.spec.ts` is the sync side. A css value 1,000 parentheses deep sits just inside the gate, so Oxc parses it.
+The child must end with no signal and exit 0, and the published stylesheet must carry both colours: the blue comes from the
+small files and the red from the deep value.
+
+> Search terms: nesting, deep parentheses, nesting gate, ATM-E-PARSE, refusal, lane stack, SIGILL, sync budget, ref sync, native containment, CSS equality, temp world

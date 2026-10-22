@@ -1,1 +1,1 @@
-{"id": "CORE-BOUND-05", "name": "a real ref sync of 70 files and one file at 2,000 nesting exits 0 with no signal, inside 10 s, and its stylesheet has both colours", "sync": false}
+{"id": "CORE-BOUND-05", "name": "a real ref sync refuses a file nested 2,000 levels with a located ATM-E-PARSE inside 10 s, and syncs one nested 1,000 levels to exit 0 with both colours", "sync": false}
