@@ -59,6 +59,12 @@ this file in the same pass.
   excluded. Bundlers alias the id here; tsconfig paths point
   typechecking at the same file, so every resolver agrees on what
   authors can import.
+- **system barrel**: the sync-time target of the `@reference-ui/system`
+  id (`src/collect/lib/system-alias.ts`). It exports the generated
+  entry's runtime names, with core's real collectors, and its
+  `baseSystem` throws a named error when a theme file reads it. Its
+  exports are not a second author surface: `extendSystem` is a
+  `@reference-ui/core` call, so the system id never carries it.
 - **dist** — per-world build output (`world/dist/`, gitignored):
   transpiled app sources. The harness rebuilds it clean on every
   run; pages reference it, never `src/`.

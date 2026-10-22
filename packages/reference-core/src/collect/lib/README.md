@@ -8,6 +8,11 @@ two to identical selection on every tree. Each matched file bundles
 to a self-contained IIFE with the author ids aliased back at Core
 source — at collection time no generated package exists yet, so the
 bootstrap import map is the one lie the pipeline tells on purpose.
+The system id gets a barrel of its own, `system-alias.ts`, which exports
+the generated entry's runtime names: a theme file imports the same
+surface during sync that it imports after sync, except `baseSystem`,
+which throws a named error on first read, because the system being
+built has no published form yet.
 Preparation gathers upstream portable bundles, local IIFEs, and the
 retention ref; evaluation runs the whole assembly exactly once as a
 single Node script with upstream bundles first (the `globalCss`

@@ -28,7 +28,7 @@ const DIST = join(PKG, 'dist')
 // loudly — never ship a silent miss.
 const PATH_LITERAL_SOURCES = new Map([
   ['src/config/bundle.ts', ['index.ts']],
-  ['src/collect/lib/bootstrap.ts', ['index.ts', 'react-unbound.ts']],
+  ['src/collect/lib/bootstrap.ts', ['index.ts', 'react-unbound.ts', 'system-alias.ts']],
   ['src/packager/react.ts', ['index.ts']],
   ['src/packager/reference-types.ts', ['types.d.mts', 'types.tsx']],
 ])
@@ -41,6 +41,7 @@ const TWINS = [
   ['src/entry/react-unbound.js', 'src/entry/react-unbound.ts'],
   ['src/entry/types.js', 'src/entry/types.tsx'],
   ['src/runtime/index.js', 'src/runtime/index.ts'],
+  ['src/collect/lib/system-alias.js', 'src/collect/lib/system-alias.ts'],
 ]
 
 // Verbatim asset copies: package-relative files sync reads at runtime that
