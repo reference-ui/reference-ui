@@ -6,7 +6,7 @@
  * Enforces:
  * 1. File Length: Warning at > 365 lines, failure at > 500 lines ("Can you split this up, please?").
  * 2. Function Cyclomatic Complexity (McCabe): Target <= 10, warning at > 10, failure at > 15.
- * 3. Function Cognitive Complexity: Target <= 15, warning at > 15, failure at > 20.
+ * 3. Function Cognitive Complexity (SonarSource): Target <= 15, warning at > 15, failure at > 20. Nesting starts at zero inside the function body.
  * 4. Function Length: Warning at > 80 lines, failure at > 120 lines.
  * 5. Function arguments: Warning at > 4, failure at > 5. Introduce a context struct.
  * 6. Clippy #[allow]/#[expect] is banned. Fix the architecture; do not silence lints.
@@ -482,6 +482,225 @@ function cleanRustCode(code) {
   return cleaned
 }
 
+const COGNITIVE_TOKEN_RE =
+  /(\s+)|([A-Za-z_$][\w$]*)|('[A-Za-z_]\w*)|(\d[\w.]*)|(\?\.(?!\d)|\?\?=?|&&=?|\|\|=?|=>|::|\.\.\.|[\s\S])/g
+
+const COGNITIVE_WORD_KINDS = {
+  rust: new Map([
+    ['if', 'if'], ['else', 'else'], ['for', 'nest'], ['while', 'nest'], ['loop', 'nest'],
+    ['match', 'match'], ['fn', 'fn'], ['break', 'jump'], ['continue', 'jump'],
+  ]),
+  js: new Map([
+    ['if', 'if'], ['else', 'else'], ['for', 'nest'], ['while', 'nest'], ['do', 'nest'],
+    ['catch', 'nest'], ['switch', 'match'], ['function', 'fn'], ['break', 'jump'], ['continue', 'jump'],
+  ]),
+}
+
+// After these words a bar or ampersand is a prefix (closure or borrow), not a binary operator.
+const NON_OPERAND_WORDS = new Set(['return', 'move', 'in', 'of', 'typeof', 'await', 'yield'])
+
+// A slash starts a JS regex literal only where an operand cannot end, so `a / b` stays division.
+const JS_REGEX_LITERAL_RE =
+  /(^|[(,=:\[!&|?{};+\-*%<>~^]|\b(?:return|typeof|case|do|else|in|of|void|delete|throw|new|yield|await))(\s*)(\/(?![*\/])(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^\/\\\[\n])+\/[a-z]*)/gm
+
+/**
+ * Cognitive complexity (SonarSource) of one function body, cleaned of strings and comments and
+ * starting at its opening brace. A structure (if, loop, catch, match or switch, ternary, or a
+ * labelled break or continue) costs 1 plus its nesting depth; else and else-if cost a flat 1; each
+ * run of like && or || costs 1. Only structure bodies, arrow and closure bodies and nested fns add
+ * depth, so the function body is depth zero and object literals, bare blocks and match arms add none.
+ */
+export function cognitiveComplexity(body, language) {
+  const source = language === 'js' ? blankJsRegexLiterals(body) : body
+  const tokens = tokenizeCognitive(source)
+  const walk = {
+    language,
+    score: 0,
+    nesting: 0,
+    frames: [],
+    header: null,
+    parens: 0,
+    logicalOp: null,
+    afterDoBody: false,
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    const afterDoBody = walk.afterDoBody
+    walk.afterDoBody = false
+    if (tokens[i].type === 'word') stepWord(walk, tokens, i, afterDoBody)
+    else if (tokens[i].type === 'op') stepPunct(walk, tokens, i)
+  }
+  return walk.score
+}
+
+function blankJsRegexLiterals(body) {
+  return body.replace(JS_REGEX_LITERAL_RE, (_, lead, gap, literal) => `${lead}${gap}${' '.repeat(literal.length)}`)
+}
+
+function tokenizeCognitive(source) {
+  const tokens = []
+  let newline = false
+  for (const m of source.matchAll(COGNITIVE_TOKEN_RE)) {
+    if (m[1] !== undefined) {
+      if (m[1].includes('\n')) newline = true
+      continue
+    }
+    const type = m[2] !== undefined ? 'word' : m[3] !== undefined ? 'life' : m[4] !== undefined ? 'num' : 'op'
+    tokens.push({ type, value: m[0], newline })
+    newline = false
+  }
+  return tokens
+}
+
+function stepWord(walk, tokens, i, afterDoBody) {
+  const { value } = tokens[i]
+  const prev = tokens[i - 1]
+  // `x.catch(` and `x?.for` are member names, not keywords.
+  if (prev?.type === 'op' && (prev.value === '.' || prev.value === '?.')) return
+  switch (COGNITIVE_WORD_KINDS[walk.language].get(value)) {
+    case 'if':
+      return stepIf(walk, prev)
+    case 'else':
+      // A Rust let-else (`let P = e else { .. }`) follows an expression, not a block; it is an early exit, not a branch.
+      if (walk.language === 'rust' && !(prev?.type === 'op' && prev.value === '}')) return
+      walk.score += 1
+      return setHeader(walk, 'nest', false)
+    case 'nest':
+      // The `while` closing a do-body is the tail of the do-while, already counted at `do`.
+      if (value === 'while' && afterDoBody) return
+      return enterStructure(walk, 'nest', value === 'do')
+    case 'match':
+      return enterStructure(walk, 'match', false)
+    case 'fn':
+      return setHeader(walk, 'nest', false)
+    case 'jump':
+      return stepJump(walk, tokens, i)
+    default:
+      return
+  }
+}
+
+function stepIf(walk, prev) {
+  if (prev?.type === 'word' && prev.value === 'else') return
+  if (isMatchGuard(walk)) return
+  enterStructure(walk, 'nest', false)
+}
+
+function stepJump(walk, tokens, i) {
+  const next = tokens[i + 1]
+  const labelled = walk.language === 'rust' ? next?.type === 'life' : next?.type === 'word' && !next.newline
+  if (labelled) walk.score += 1 + walk.nesting
+}
+
+function stepPunct(walk, tokens, i) {
+  switch (tokens[i].value) {
+    case '(':
+      walk.parens++
+      return
+    case ')':
+      walk.parens = Math.max(0, walk.parens - 1)
+      return
+    case '{':
+      return openBlock(walk, tokens[i - 1])
+    case '}':
+      return closeBlock(walk)
+    case ';':
+      walk.logicalOp = null
+      if (walk.parens === 0) walk.header = null
+      return
+    case ',':
+      walk.logicalOp = null
+      return setArmBody(walk, false)
+    case ':':
+      walk.logicalOp = null
+      return
+    case '=>':
+      walk.logicalOp = null
+      if (walk.language === 'rust') setArmBody(walk, true)
+      return
+    case '?':
+      return stepQuestion(walk, tokens, i)
+    case '&&':
+    case '||':
+      return stepLogical(walk, tokens, i)
+    default:
+      return
+  }
+}
+
+// Rust's `?` is the try operator, which does not count; JS `?` is a ternary unless it marks `name?: T`.
+function stepQuestion(walk, tokens, i) {
+  if (walk.language !== 'js') return
+  const next = tokens[i + 1]
+  if (next?.type === 'op' && next.value === ':') return
+  walk.logicalOp = null
+  walk.score += 1 + walk.nesting
+}
+
+function stepLogical(walk, tokens, i) {
+  const op = tokens[i].value
+  if (!endsOperand(tokens[i - 1])) return
+  if (walk.logicalOp !== op) {
+    walk.score += 1
+    walk.logicalOp = op
+  }
+}
+
+function endsOperand(tok) {
+  if (!tok) return false
+  if (tok.type === 'word') return !NON_OPERAND_WORDS.has(tok.value)
+  if (tok.type === 'num') return true
+  return tok.type === 'op' && (tok.value === ')' || tok.value === ']' || tok.value === '}' || tok.value === '?')
+}
+
+function enterStructure(walk, block, doLoop) {
+  walk.score += 1 + walk.nesting
+  setHeader(walk, block, doLoop)
+}
+
+// The next `{` at the same paren depth is this keyword's body.
+function setHeader(walk, block, doLoop) {
+  walk.header = { parens: walk.parens, block, doLoop }
+}
+
+function openBlock(walk, prev) {
+  walk.logicalOp = null
+  let block = 'plain'
+  let doLoop = false
+  const header = walk.header
+  if (header && header.parens === walk.parens) {
+    block = header.block
+    doLoop = header.doLoop
+    walk.header = null
+  } else if (walk.language === 'js' && prev?.value === '=>') {
+    block = 'nest'
+  } else if (walk.language === 'rust' && (prev?.value === '|' || prev?.value === '||')) {
+    block = 'nest'
+  }
+  walk.frames.push({ block, parens: walk.parens, armBody: false, doLoop })
+  if (block !== 'plain') walk.nesting++
+}
+
+function closeBlock(walk) {
+  walk.logicalOp = null
+  if (walk.parens === 0) walk.header = null
+  const frame = walk.frames.pop()
+  if (!frame) return
+  if (frame.block !== 'plain') walk.nesting--
+  walk.afterDoBody = frame.doLoop
+  setArmBody(walk, false)
+}
+
+// Rust match arms: a `pat if cond =>` guard sits before its `=>`, so an `if` there is not a structure.
+function isMatchGuard(walk) {
+  const top = walk.frames[walk.frames.length - 1]
+  return walk.language === 'rust' && top?.block === 'match' && top.parens === walk.parens && !top.armBody
+}
+
+function setArmBody(walk, value) {
+  const top = walk.frames[walk.frames.length - 1]
+  if (top?.block === 'match' && top.parens === walk.parens) top.armBody = value
+}
+
 /**
  * Analyzes Rust function-level complexity from clean text.
  */
@@ -555,19 +774,11 @@ export function analyzeRustComplexity(content) {
     // Compute Cyclomatic Complexity (McCabe)
     // Base = 1
     let cyclomatic = 1
-    let cognitive = 0
-
-    // Measure decision points line-by-line / block-by-block
-    let currentNesting = 0
     const bodyLines = body.split('\n')
 
     for (const bLine of bodyLines) {
       const trimmed = bLine.trim()
       
-      // Update nesting depth based on braces
-      const opens = (trimmed.match(/\{/g) || []).length
-      const closes = (trimmed.match(/\}/g) || []).length
-
       // Decision keywords:
       // if (and else if)
       const ifMatches = trimmed.match(/\bif\b/g) || []
@@ -581,15 +792,9 @@ export function analyzeRustComplexity(content) {
                             tryOperatorMatches.length + logicalAndMatches.length + logicalOrMatches.length
 
       cyclomatic += totalBranches
-
-      // Cognitive complexity penalizes nesting
-      if (ifMatches.length > 0 || loopMatches.length > 0 || matchArmMatches.length > 0) {
-        cognitive += (ifMatches.length + loopMatches.length + matchArmMatches.length) * (1 + currentNesting)
-      }
-      cognitive += logicalAndMatches.length + logicalOrMatches.length + tryOperatorMatches.length
-
-      currentNesting = Math.max(0, currentNesting + opens - closes)
     }
+
+    const cognitive = cognitiveComplexity(body, 'rust')
 
     functions.push({
       name: fnName,
@@ -721,14 +926,10 @@ export function analyzeJsComplexity(content) {
     const body = cleaned.slice(braceIndex, endIndex + 1)
 
     let cyclomatic = 1
-    let cognitive = 0
-    let currentNesting = 0
 
     const bodyLines = body.split('\n')
     for (const bLine of bodyLines) {
       const trimmed = bLine.trim()
-      const opens = (trimmed.match(/\{/g) || []).length
-      const closes = (trimmed.match(/\}/g) || []).length
 
       const ifMatches = trimmed.match(/\bif\b/g) || []
       const caseMatches = trimmed.match(/\bcase\b/g) || []
@@ -741,14 +942,9 @@ export function analyzeJsComplexity(content) {
                             catchMatches.length + ternaryMatches.length + logicalMatches.length
 
       cyclomatic += totalBranches
-
-      if (ifMatches.length > 0 || loopMatches.length > 0 || caseMatches.length > 0) {
-        cognitive += (ifMatches.length + loopMatches.length + caseMatches.length) * (1 + currentNesting)
-      }
-      cognitive += catchMatches.length + ternaryMatches.length + logicalMatches.length
-
-      currentNesting = Math.max(0, currentNesting + opens - closes)
     }
+
+    const cognitive = cognitiveComplexity(body, 'js')
 
     functions.push({
       name: fnName,
