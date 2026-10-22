@@ -2,13 +2,17 @@
 //! Provides safe string unquoting, bounds-checked span slicing over source buffers, and character hygiene helpers.
 //! Used across AST extraction passes and code generators to eliminate redundant string allocations.
 //! The `testing` module holds the shared scratch workspaces and base-system fixtures compiler-crate tests use.
+//! The `includes` module compiles include globs into one scope, and the `walk` module is the disk traversal that
+//! consumes it.
 //! The `parse` module is the nesting gate every production Oxc parse goes through, so a source nested past the bound
 //! is refused before the parser recurses into it.
 
 use oxc_span::Span;
 
+pub mod includes;
 pub mod parse;
 pub mod testing;
+pub mod walk;
 
 /// Slice a span from source text, safely clamped to bounds.
 #[inline]

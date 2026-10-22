@@ -1,4 +1,4 @@
-//! Single-pattern glob tokens and matching for the atomic include scope.
+//! Single-pattern glob tokens and matching for the include scope.
 //! Parses one brace-expanded pattern into a token stream where `**` crosses
 //! directories while `*`, `?`, and `[...]` stay inside a segment. Matching is a
 //! small backtracking walk shared by every candidate path the scope tests.

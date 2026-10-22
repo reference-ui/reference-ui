@@ -84,7 +84,6 @@ dependencies = [
  "canon",
  "criterion",
  "diagnostics",
- "dunce",
  "indexmap",
  "module_graph",
  "oxc_allocator",
@@ -1452,9 +1451,11 @@ name = "shared"
 version = "0.1.0"
 dependencies = [
  "base_system",
+ "dunce",
  "oxc_allocator",
  "oxc_parser",
  "oxc_span",
+ "rustc-hash",
  "serde_json",
 ]
 

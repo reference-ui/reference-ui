@@ -1,0 +1,13 @@
+# Include scoping
+
+Glob scoping for source discovery. The include patterns compile once, so a disk scan and a virtual file list honor one scope: `**` crosses directories, `*` and `?` stay in a segment, braces expand, classes match one character, and a leading `!` negates. An absent or empty list leaves the scope open. The traversal in `crate::walk` is the consumer: it keys each directory on the `GlobState` this module steps, and atomic re-exports the scope from `atomic::includes`.
+
+## Two layers over one token list
+
+Each pattern is brace-expanded into alternatives, and each alternative is a token list. `glob::matches` reads that list against a whole path. A walk needs a second reading: before it enters a directory, it must know whether anything below that directory can still be included. The same token lists therefore also run as an automaton that consumes one character at a time, and the automaton's state is a plain value that can be stored and compared.
+
+- **Token positions.** A state is the closed set of positions in the token list that the text so far can reach. `*` and `**` and a `**/` head add the position after them without consuming anything. `?` and a class consume one character that is not `/`; `*` consumes non-`/` text; `**` consumes anything. A `**/` head that has taken characters since its last `/` sits in an open position, because it cannot yet hand over to the next token. A `/` returns it to the plain head.
+- **Directory state.** A `GlobState` keeps the closed positions for each alternative (positives, then negatives) and for each candidate form. The raw form is the normalized path. The relative form is the path below the bound root, and it exists only when the root strips off. The root state is the prefix that every path under the root begins with. Stepping into a directory feeds its name and a `/`. A pair that is already dead stores nothing, so two directories with equal states give the same verdict on every file beneath them.
+- **Verdict.** A file is in scope when some positive alternative accepts on some form, and no negative alternative accepts on any form. A scope with no positives always passes the positive side, so a negation-only scope means everything except the negatives. This is the rule `matches_file` applies to the joined path, so a walk can reach it without rereading the path.
+
+The automaton mirrors `glob::matches` token for token. The includes tests check that exhaustively over short patterns and paths, check that stepping in parts equals stepping whole, and check that the stepped verdict equals `matches_file` over several roots, include sets and directory chains.
