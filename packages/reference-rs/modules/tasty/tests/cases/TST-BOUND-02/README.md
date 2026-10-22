@@ -8,7 +8,7 @@ is 30 s and the budget through `expectBounded` is 2000 ms.
 Type lowering in tasty is quadratic in the nesting depth: a 1,000-level alias builds in about 0.7 s, and the unguarded
 5,000-level alias runs past 90 s. The pre-scan counts `<` after an identifier in TypeScript files, so `Array<` nests
 the same way `(` does, and it refuses `deep.d.ts` before Oxc sees it. The build must report exactly one
-`TST-W-PARSE-ERROR` that names `deep.d.ts` at line 1 with the message `nesting deeper than 1024 levels at line 1`,
+`TST-W-PARSE-ERROR` that names `deep.d.ts` at line 1 with the message `nesting deeper than 1024 levels at line 1; split or flatten the deeply nested expression`,
 and must still emit `Box` from `index.ts`.
 
 Siblings: TST-BOUND-01 (display members terminate on cyclic and growing heritage within 2 s), TST-AUD-01 (the

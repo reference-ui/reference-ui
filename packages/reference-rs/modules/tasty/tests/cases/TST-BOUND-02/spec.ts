@@ -52,7 +52,7 @@ const spec: StationSpec<TastyCaseResult> = {
     const parseErrors = report.diagnostics.filter(d => d.code === 'TST-W-PARSE-ERROR')
     expect(parseErrors, 'one TST-W-PARSE-ERROR for the deep declaration').toHaveLength(1)
     expect(parseErrors[0]!.file).toMatch(/deep\.d\.ts$/)
-    expect(parseErrors[0]!.message).toBe('nesting deeper than 1024 levels at line 1')
+    expect(parseErrors[0]!.message).toBe('nesting deeper than 1024 levels at line 1; split or flatten the deeply nested expression')
     expect(report.symbols).toEqual(['Box'])
   },
 }
