@@ -1,8 +1,8 @@
-// loops.spec.ts — spec for CORE-BOUND-03, two self-linked directories and a linked sibling under a sync budget. It takes
+// loops.spec.ts — spec for CORE-BOUND-03: loops and a linked sibling, synced under a budget. It takes
 // { case } from the runner and builds two temp projects from the committed world: a baseline whose palette is written out
 // as real files, and a linked project with src/loopA -> ., src/loopB -> . and src/palette -> ../lib. Each project is synced
-// through the spawned bin under a 10 s budget: both must exit 0, and the two stylesheets must be byte-identical. Emits
-// nothing on success; throws naming the failed leg on failure. Both temp projects are removed in a finally, so a child
+// through the spawned bin under a 10 s budget: both must exit 0 with no tasty build failure printed, and the two stylesheets
+// must be byte-identical. Emits nothing on success; throws naming the failed leg on failure. Both temp projects are removed in a finally, so a child
 // killed by its budget leaves nothing behind.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -57,6 +57,12 @@ function syncLeg(label: string, dir: string): string {
     run.status,
     0,
     `${label}: ref sync exits 0 inside ${SYNC_BUDGET_MS} ms, got status ${run.status} and signal ${run.signal}${reason}: ${run.stderr}`
+  );
+  const output = `${run.stdout}${run.stderr}`;
+  assert.doesNotMatch(
+    output,
+    /TST-E-SCAN-FAILED|Build failed/,
+    `${label}: ref sync prints no tasty build failure, got: ${output}`
   );
   return readFileSync(path.join(dir, '.reference-ui', 'styled', 'styles.css'), 'utf8');
 }

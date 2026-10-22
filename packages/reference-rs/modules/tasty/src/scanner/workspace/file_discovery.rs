@@ -1,7 +1,8 @@
-//! Walks the include globs under the scan root and keeps the TypeScript sources the walk reaches, as sorted
-//! root-relative file ids. The walk follows symlinks, so a link whose target is gone is skipped instead of failing
-//! the whole scan: the CSS side already drops it, and the sync names the link once. Any other walk error, such as
-//! a symlink loop, still fails the scan.
+//! Walks the include globs under the scan root and keeps the TypeScript sources the walk reaches.
+//! It emits them as sorted root-relative file ids. The walk follows symlinks, so a link whose target is gone is skipped
+//! instead of failing the whole scan: the CSS side already drops it, and the sync names the link once. A link that closes
+//! a loop is cut the same way the atomic walk cuts it: its target is an ancestor already on the walk path, so its files
+//! are listed through that path. Any other walk error still fails the scan.
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -33,15 +34,22 @@ pub(super) fn discover_file_ids(
         .map(|file_ids| file_ids.into_iter().collect())
 }
 
-/// The walk step's entry, or `None` for a dangling symlink the walk cannot read; every other error fails the scan.
+/// The walk step's entry, or `None` for an entry the walk cuts: a dangling symlink, or a link that closes a loop.
+/// Every other error fails the scan.
 fn walked_entry(
     entry: Result<globwalk::DirEntry, WalkError>,
 ) -> Result<Option<globwalk::DirEntry>, String> {
     match entry {
         Ok(entry) => Ok(Some(entry)),
-        Err(err) if is_dangling_link(&err) => Ok(None),
+        Err(err) if is_dangling_link(&err) || is_loop_link(&err) => Ok(None),
         Err(err) => Err(scan_failed(format!("failed to walk scan root: {err}"))),
     }
+}
+
+/// True when the walk stopped at a symlink that points back to one of its ancestors. The ancestor is already on the
+/// walk path, so the files under it are listed through that path and skipping the closing link drops none of them.
+fn is_loop_link(err: &WalkError) -> bool {
+    err.loop_ancestor().is_some()
 }
 
 /// True when the walk failed on a symlink whose target does not exist: the error names the link, carries
