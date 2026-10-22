@@ -1,6 +1,6 @@
 # Styletrace
 
-`styletrace` takes a source tree and a Reference sync root and emits the sorted names of exported JSX components whose StyleProps reach a Reference primitive or the Reference style pipeline, plus located, coded diagnostics. `trace()` returns names; `traceDetailed()` returns bindings, diagnostics, and owned props. Part of reference-rs.
+`styletrace` takes a source tree and a Reference sync root. It emits the sorted names of exported JSX components whose StyleProps reach a Reference primitive or the Reference style pipeline, plus located, coded diagnostics. `trace()` returns names; `traceDetailed()` returns bindings, diagnostics, and owned props. Part of reference-rs.
 
 ## Identity rules
 
@@ -21,6 +21,8 @@ Entries that fail to parse or read yield one `STT-W-SKIPPED-FILE` each and sibli
 | `STT-W-TYPE-EXPANSION-LIMIT` | warning | a type declaration expansion hit the depth, argument-size or session-budget guard limit and the names it could reach are missing from the trace; those props are not traced |
 | `STT-E-SCAN-FAILED` | error | unreadable source root; trace refused |
 | `STT-E-UNRESOLVED-SURFACE` | error | no StyleProps entrypoint or sync root, or a guard limit hid a surface name; trace refused |
+
+A guard cut behind `STT-W-TYPE-EXPANSION-LIMIT` counts as lossy when the static reach of its refused declaration (the names its body declares or references, the arguments written at the site, and the in-scope bindings they read) is not a subset of the names the trace finally returns, or when a declaration it reads fails to load. The check is conservative: it can over-report, for example by counting an argument the callee never reads, but it never misses a lost name.
 
 ## Open gaps
 
