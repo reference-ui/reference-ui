@@ -25,3 +25,6 @@ export {
   type GlobalCssRule,
 } from './collect/surface/index.ts'
 export { recipe, type RecipeConfig } from './collect/surface/index.ts'
+// getRhythm lives here too: the sync-time alias for @reference-ui/system points at this barrel, so a theme or
+// component file that imports it from that id needs it exported here (CORE-SYNC-19).
+export { getRhythm } from './system/base/rhythm.ts'
