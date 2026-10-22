@@ -1,11 +1,12 @@
 //! Per-file Oxc parse + statement walk that produces [`ParsedFileAst`](crate::ast::model::ParsedFileAst).
-//! Parses with Oxc and runs the statement loop; extract_files is the entry point.
+//! Parses with Oxc and runs the statement loop; extract_files is the entry point. A file the nesting gate refuses
+//! yields an empty shell and one TST-W-PARSE-ERROR, so its siblings still extract.
 
 use std::collections::BTreeMap;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Comment, Statement, TSInterfaceDeclaration, TSTypeAliasDeclaration};
-use oxc_parser::Parser;
+use shared::parse::parse_bounded;
 use oxc_span::{GetSpan, SourceType};
 
 use super::module_bindings::{ExportOutputs, ExportScope};
@@ -44,7 +45,13 @@ fn extract_file(
 ) -> Result<ParsedFileAst, DiagnosticError> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(&scanned_file.file_id).unwrap_or_default();
-    let parsed = Parser::new(&allocator, &scanned_file.source, source_type).parse();
+    let parsed = match parse_bounded(&allocator, &scanned_file.source, source_type) {
+        Ok(parsed) => parsed,
+        Err(refusal) => {
+            diagnostics.push(crate::diagnostics::nesting_refused(&scanned_file.file_id, refusal)?);
+            return Ok(refused_file(scanned_file));
+        }
+    };
 
     record_parse_errors(scanned_file, parsed.errors.len(), diagnostics)?;
     diagnostics.extend(unresolved_import_diagnostics(
@@ -274,6 +281,22 @@ fn binds_own_parameter(shell: &SymbolShell, name: &str) -> bool {
         .type_parameters
         .iter()
         .any(|parameter| parameter.name == name)
+}
+
+/// The shell of a file the nesting gate refused: its identity and no declarations, so every sibling still resolves
+/// and the refusal is reported once, as TST-W-PARSE-ERROR.
+fn refused_file(scanned_file: &ScannedFile) -> ParsedFileAst {
+    ParsedFileAst {
+        file_id: scanned_file.file_id.clone(),
+        module_specifier: scanned_file.module_specifier.clone(),
+        library: scanned_file.library.clone(),
+        import_bindings: BTreeMap::new(),
+        value_bindings: BTreeMap::new(),
+        export_bindings: BTreeMap::new(),
+        reexport_target: BTreeMap::new(),
+        export_all_targets: Vec::new(),
+        exports: Vec::new(),
+    }
 }
 
 fn record_parse_errors(

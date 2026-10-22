@@ -1,10 +1,10 @@
 //! Module specifier discovery.
 //! Extracts the import and export module specifiers of a file so the crawler can follow them.
-//! Syntax-level only; it never resolves.
+//! Syntax-level only; it never resolves. A file the nesting gate refuses yields no specifiers.
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Statement;
-use oxc_parser::Parser;
+use shared::parse::parse_bounded;
 use oxc_span::{SourceType, Span};
 
 pub(crate) fn extract_module_specifiers(file_id: &str, source: &str) -> Vec<String> {
@@ -27,7 +27,11 @@ fn extract_module_specifiers_with(
 ) -> Vec<String> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(file_id).unwrap_or_default();
-    let program = Parser::new(&allocator, source, source_type).parse().program;
+    // A file the nesting gate refuses yields no specifiers; extract_file reports the refusal once.
+    let Ok(parsed) = parse_bounded(&allocator, source, source_type) else {
+        return Vec::new();
+    };
+    let program = parsed.program;
     let mut module_specifiers = Vec::new();
 
     for statement in &program.body {

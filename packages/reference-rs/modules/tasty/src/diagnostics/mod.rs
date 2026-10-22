@@ -9,6 +9,8 @@ mod codes;
 pub use codes::TastyDiagnosticCode;
 pub use diagnostics::{Diagnostic, DiagnosticError};
 
+use shared::parse::NestingRefusal;
+
 /// Tasty diagnostics are template diagnostics: severity plus validated code plus message.
 /// No sibling shape — the submodule owns the vocabulary, the template owns the representation.
 pub type TastyDiagnostic = Diagnostic;
@@ -21,6 +23,19 @@ pub(crate) fn parse_error(file_id: &str, error_count: usize) -> Result<Diagnosti
         format!("parse reported {error_count} error(s); keeping the recoverable declarations"),
     )?
     .with_location(file_id, None, None))
+}
+
+/// A file the nesting gate refused before Oxc saw it: the file contributes no declarations, and the parse-failure
+/// code locates the line where nesting crossed the limit.
+pub(crate) fn nesting_refused(
+    file_id: &str,
+    refusal: NestingRefusal,
+) -> Result<Diagnostic, DiagnosticError> {
+    Ok(Diagnostic::warning(
+        TastyDiagnosticCode::ParseError.as_str(),
+        refusal.message(),
+    )?
+    .with_location(file_id, Some(refusal.line), None))
 }
 
 /// Same-file same-name alias or mixed group: keeps the last shell, `kinds` names the pair.

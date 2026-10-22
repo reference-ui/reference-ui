@@ -6,7 +6,7 @@
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{TSTupleElement, TSType};
-use oxc_parser::Parser;
+use shared::parse::parse_bounded;
 use oxc_span::{GetSpan, SourceType};
 
 use crate::model::{TupleElement, TypeRef};
@@ -87,7 +87,12 @@ impl<'a> LoweringContext<'a> {
         let wrapped_source = format!("type __TastyTupleElement = {element_source};");
         let allocator = Allocator::default();
         let source_type = SourceType::from_path("tuple-element.ts").unwrap_or_default();
-        let parse_result = Parser::new(&allocator, &wrapped_source, source_type).parse();
+        // A refused wrapper falls back to the raw summary, the same as an element the wrapper cannot parse.
+        let Ok(parse_result) = parse_bounded(&allocator, &wrapped_source, source_type) else {
+            return TypeRef::Raw {
+                summary: element_source.to_string(),
+            };
+        };
 
         // Reparse a single tuple element through a synthetic alias so we can reuse
         // the normal type-lowering path without special-casing every tuple variant.

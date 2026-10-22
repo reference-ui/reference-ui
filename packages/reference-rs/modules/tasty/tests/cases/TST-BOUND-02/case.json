@@ -1,0 +1,1 @@
+{"id": "TST-BOUND-02", "name": "a .d.ts nested 5,000 Array levels deep is refused with TST-W-PARSE-ERROR while its sibling is emitted"}

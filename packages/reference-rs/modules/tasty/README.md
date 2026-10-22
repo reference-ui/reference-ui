@@ -58,6 +58,8 @@ by `projectionBudgetWarning` and listed in the shared registry. A missing scan r
 in the shared registry; codes a golden pins are
 wire contract.
 
+A file the nesting gate refuses (nested deeper than 1,024 levels; in TypeScript, `<` after an identifier counts as a generic opener) contributes no declarations and is reported as one `TST-W-PARSE-ERROR` located at the line where the limit was crossed. Its siblings build normally, and its imports are not followed.
+
 ## Projection hooks
 
 A type parameter the walk cannot resolve is answered by the projection hook the caller supplies when it creates the api
