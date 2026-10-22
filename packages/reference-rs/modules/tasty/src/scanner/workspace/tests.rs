@@ -1,5 +1,6 @@
 //! Workspace discovery tests.
-//! Pins traversal layout, library boundaries, dangling-link tolerance, and resolver memoization over temp-dir fixtures.
+//! Pins traversal layout, library boundaries, dangling-link tolerance, the failure for a missing scan root, and resolver
+//! memoization over temp-dir fixtures.
 
 mod dangling_links;
 mod discovery_layout;
@@ -128,4 +129,21 @@ fn scan_workspace_marks_reexported_scoped_libraries_as_bridged() {
         .iter()
         .any(|file| file.file_id == "node_modules/@scope/widgets/index.d.ts"));
     assert!(workspace.bridged_libraries.contains("@scope/widgets"));
+}
+
+#[test]
+fn scan_workspace_fails_with_the_walk_error_when_the_root_is_missing() {
+    let root = TempDir::new("scanner-workspace-missing-root");
+    let missing = root.path().join("absent");
+    let err = scan_workspace(&missing, &["**/*.ts".to_string()])
+        .err()
+        .expect("a missing scan root fails the scan");
+    let io = std::fs::metadata(&missing).expect_err("the root is absent");
+    assert_eq!(
+        err,
+        format!(
+            "TST-E-SCAN-FAILED: failed to walk scan root: IO error for operation on {}: {io}",
+            missing.display()
+        )
+    );
 }

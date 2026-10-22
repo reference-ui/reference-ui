@@ -3,6 +3,7 @@
 //! once per directory and include state, so a loop or a clique of links stays bounded. Each real file is listed once,
 //! under its real path when one is in scope, else under its first link alias in walk order. A candidate needs a ts, tsx,
 //! mts or cts extension and must be a regular file through its metadata, so a dangling link is skipped, not a failure.
+//! An absent scan root fails the scan with the walk error it always raised.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -19,6 +20,7 @@ const SKIPPED_DIR: &str = "node_modules";
 
 /// The sorted root-relative ids of the in-scope sources, one per real file.
 pub(super) fn discover_file_ids(root_dir: &Path, include: &[String]) -> Result<Vec<String>, String> {
+    check_scan_root(root_dir)?;
     let root_text = root_dir.to_string_lossy().into_owned();
     let scope = IncludeScope::compile(include);
     let matcher = scope.matcher(Some(root_text.as_str()));
@@ -33,6 +35,17 @@ pub(super) fn discover_file_ids(root_dir: &Path, include: &[String]) -> Result<V
         }
     }
     Ok(file_ids.into_iter().collect())
+}
+
+/// Fails the scan when the root path itself is absent, with the message the scan has always given for that error. A link as
+/// the root is not absent, so a dangling one lists nothing, as before.
+fn check_scan_root(root_dir: &Path) -> Result<(), String> {
+    fs::symlink_metadata(root_dir).map(|_| ()).map_err(|err| {
+        scan_failed(format!(
+            "failed to walk scan root: IO error for operation on {}: {err}",
+            root_dir.display()
+        ))
+    })
 }
 
 /// Tasty's walk sink: it keeps the TypeScript sources that are regular files, never enters `node_modules`, and records
