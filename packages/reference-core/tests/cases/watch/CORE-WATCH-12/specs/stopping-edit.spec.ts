@@ -25,7 +25,8 @@ const arrivedOf = (dir: string): string => join(dir, 'resync.arrived');
 const spinningOf = (dir: string): string => join(dir, 'spinning.flag');
 
 // The config holds a load in the pid the gate file names (the watch's) until the file is removed, and marks its arrival.
-function gatedConfig(dir: string): string {
+// A process evaluates an unchanged config bundle once, so the gated resync stamps the config anew to load it for real.
+function gatedConfig(dir: string, stamp = 'boot'): string {
   return [
     "import { existsSync, readFileSync, writeFileSync } from 'node:fs'",
     "import { defineConfig } from '@reference-ui/core'",
@@ -36,6 +37,7 @@ function gatedConfig(dir: string): string {
     '}',
     "if (gated()) writeFileSync(ARRIVED, '')",
     'while (gated()) await new Promise((resolve) => setTimeout(resolve, 10))',
+    `export const holdStamp = ${JSON.stringify(stamp)}`,
     '',
     'export default defineConfig({',
     "  name: 'core-watch-12',",
@@ -95,6 +97,7 @@ export default async function run(_input: SpecInput): Promise<void> {
 
     // The gate goes up first, so the resync this fragment causes waits before it reads anything.
     writeFileSync(gateOf(dir), String(watch.child.pid));
+    writeFileSync(join(dir, 'ui.config.ts'), gatedConfig(dir, 'held'));
     mkdirSync(join(dir, 'theme'), { recursive: true });
     writeFileSync(join(dir, 'theme', 'spin.ts'), spinningFragment(dir));
     await waitUntil(() => existsSync(arrivedOf(dir)), 'the watch resync to reach the gate');
