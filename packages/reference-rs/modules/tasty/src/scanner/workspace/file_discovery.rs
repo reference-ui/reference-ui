@@ -7,7 +7,6 @@
 
 use std::collections::{BTreeSet, HashMap};
 use std::ffi::OsStr;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use globwalk::{GlobWalkerBuilder, WalkError};
@@ -105,7 +104,7 @@ fn offer(chosen: &mut HashMap<PathBuf, Candidate>, identity: PathBuf, candidate:
 }
 
 fn canonical_or_self(path: &Path) -> PathBuf {
-    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+    dunce::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
 fn build_glob_walker(root_dir: &Path, include: &[String]) -> Result<globwalk::GlobWalker, String> {
@@ -135,4 +134,21 @@ fn normalized_file_id(root_dir: &Path, path: &Path) -> Result<String, String> {
         ))
     })?;
     Ok(path_to_unix(relative))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::canonical_or_self;
+
+    /// A canonical parent carries no verbatim prefix, so identity joins compare equal on Windows. The test runs on every
+    /// platform; the prefix check only bites on Windows.
+    #[test]
+    fn canonical_paths_carry_no_verbatim_prefix() {
+        let dir = std::env::temp_dir().join(format!("tasty-canonical-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("src")).expect("temp root");
+        let canonical = canonical_or_self(&dir);
+        assert!(!canonical.to_string_lossy().starts_with(r"\\?\"), "{}", canonical.display());
+        assert!(canonical.join("src").is_dir(), "{}", canonical.display());
+        std::fs::remove_dir_all(&dir).expect("cleanup");
+    }
 }

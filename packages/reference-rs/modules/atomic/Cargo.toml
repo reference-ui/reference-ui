@@ -12,6 +12,7 @@ description = "Native atomic CSS compiler for Reference UI"
 alloc-trace = []
 
 [dependencies]
+dunce.workspace = true
 canon.workspace = true
 base_system.workspace = true
 diagnostics.workspace = true

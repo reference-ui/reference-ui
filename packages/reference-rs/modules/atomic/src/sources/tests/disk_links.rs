@@ -295,3 +295,16 @@ fn a_file_reached_only_through_a_nested_link_is_listed_once() {
     std::fs::remove_dir_all(&root).unwrap();
     std::fs::remove_dir_all(&outside).unwrap();
 }
+
+/// A canonical root is a plain path, so a forward-slash join resolves on Windows too. The test runs on every platform;
+/// the verbatim-prefix check only bites on Windows.
+#[test]
+fn canonical_roots_carry_no_verbatim_prefix() {
+    let root = temp_root("canonical-prefix");
+    std::fs::create_dir_all(root.join("src")).unwrap();
+    std::fs::write(root.join("src/a.ts"), "export const a = 1;\n").unwrap();
+    let canonical = crate::sources::walk::canonical_or_self(&root);
+    assert!(!canonical.to_string_lossy().starts_with(r"\\?\"), "{}", canonical.display());
+    assert!(canonical.join("src/a.ts").is_file(), "{}", canonical.display());
+    std::fs::remove_dir_all(&root).unwrap();
+}

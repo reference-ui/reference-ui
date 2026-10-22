@@ -12,6 +12,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace.dependencies]
+dunce = "1"
 oxc_parser = "0.115"
 oxc_ast = "0.115"
 oxc_ast_visit = "0.115"

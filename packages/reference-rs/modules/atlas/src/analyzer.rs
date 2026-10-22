@@ -1,8 +1,9 @@
-//! Runs one Atlas analysis over a project: discovers and parses the app's sources, loads the packages it references
-//! or includes, builds the tracked component set, counts usage and observations across the app's modules, and
-//! assembles the result. It takes an `AtlasConfig` and emits an `AtlasAnalysisResult`. The root is canonicalized when the
-//! analyzer is built, so every module key and lookup shares one spelling. A scan or parse failure becomes a result with
-//! one diagnostic and no components, so a bad tree never surfaces as a Rust error.
+//! Runs one Atlas analysis over a project.
+//! It discovers and parses the app's sources, loads the packages it references or includes, builds the tracked component
+//! set, counts usage and observations across the app's modules, and assembles the result. It takes an `AtlasConfig` and
+//! emits an `AtlasAnalysisResult`. The root is canonicalized with `dunce` when the analyzer is built, so every module key
+//! and lookup shares one spelling without a Windows verbatim prefix. A scan or parse failure becomes a result with one
+//! diagnostic and no components, so a bad tree never surfaces as a Rust error.
 
 use crate::config::AtlasConfig;
 use crate::diagnostics::{AtlasDiagnostic, DiagnosticError};
@@ -296,7 +297,7 @@ fn is_dependency_path(path: &Path, app_root: &Path) -> bool {
 
 /// The root's real path as a string, or the root unchanged when it cannot be resolved.
 fn canonical_root(root: &str) -> String {
-    match std::fs::canonicalize(root) {
+    match dunce::canonicalize(root) {
         Ok(path) => path.to_string_lossy().into_owned(),
         Err(_) => root.to_string(),
     }
@@ -322,4 +323,22 @@ fn normalize_diagnostics(mut diagnostics: Vec<AtlasDiagnostic>) -> Vec<AtlasDiag
         left.code == right.code && left.file == right.file && left.message == right.message
     });
     diagnostics
+}
+
+#[cfg(test)]
+mod canonical_root_tests {
+    use super::canonical_root;
+
+    /// A canonical root is a plain path, so `root.join("src/x.ts")` resolves on Windows too. The test runs on every platform;
+    /// the verbatim-prefix check only bites on Windows.
+    #[test]
+    fn canonical_root_carries_no_verbatim_prefix() {
+        let dir = std::env::temp_dir().join(format!("atlas-canonical-root-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("src")).expect("temp root");
+        std::fs::write(dir.join("src/x.ts"), "export const x = 1;\n").expect("temp file");
+        let canonical = canonical_root(&dir.to_string_lossy());
+        assert!(!canonical.starts_with(r"\\?\"), "verbatim prefix in {canonical}");
+        assert!(std::path::Path::new(&canonical).join("src/x.ts").is_file(), "{canonical}");
+        std::fs::remove_dir_all(&dir).expect("cleanup");
+    }
 }

@@ -206,7 +206,7 @@ pub(super) fn walk_tree(
 
 /// The canonical form of `path`, or `path` itself when it cannot be resolved, so a missing root walks nothing.
 pub(super) fn canonical_or_self(path: &Path) -> PathBuf {
-    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+    dunce::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
 /// Walks one directory in name order: subdirectories are entered when the scope can reach them, and files are
@@ -234,7 +234,7 @@ fn enter_dir(entry: &WalkEntry, place: &Place, walk: &mut WalkCtx) {
     }
     let link = is_symlink(entry);
     let canon = if link {
-        let Ok(target) = fs::canonicalize(path) else {
+        let Ok(target) = dunce::canonicalize(path) else {
             return;
         };
         if walk.path.contains(&target) {

@@ -35,7 +35,7 @@ pub(super) fn discover_source_files(root_dir: &Path) -> Result<Vec<PathBuf>, Sty
     }
 
     let mut walk = SourceWalk::default();
-    let root = fs::canonicalize(root_dir).unwrap_or_else(|_| root_dir.to_path_buf());
+    let root = dunce::canonicalize(root_dir).unwrap_or_else(|_| root_dir.to_path_buf());
     collect_source_files(root_dir, &root, false, &mut walk)?;
     drain_deferred(&mut walk);
     walk.files.sort();
@@ -112,7 +112,7 @@ fn child_canon(
     if !link {
         return Some(parent.join(entry.file_name()));
     }
-    let target = fs::canonicalize(entry.path()).ok()?;
+    let target = dunce::canonicalize(entry.path()).ok()?;
     if parent.starts_with(&target) || !walk.linked.insert(target.clone()) {
         return None;
     }
@@ -157,4 +157,22 @@ pub(super) fn format_relative_module(
         .replace('\\', "/")
         .trim_start_matches('/')
         .to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::discover_source_files;
+
+    /// Discovered paths sit under a canonical root with no verbatim prefix. The test runs on every platform; the
+    /// prefix check only bites on Windows.
+    #[test]
+    fn discovered_paths_carry_no_verbatim_prefix() {
+        let dir = std::env::temp_dir().join(format!("styletrace-canonical-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("src")).expect("temp root");
+        std::fs::write(dir.join("src/a.tsx"), "export const a = 1;\n").expect("temp file");
+        let found = discover_source_files(&dir).expect("discovery");
+        assert!(found.iter().all(|path| !path.to_string_lossy().starts_with(r"\\?\")), "{found:?}");
+        assert!(found.iter().any(|path| path.ends_with("src/a.tsx")), "{found:?}");
+        std::fs::remove_dir_all(&dir).expect("cleanup");
+    }
 }

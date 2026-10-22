@@ -39,5 +39,5 @@ pub(super) fn resolve_relative_module(
 }
 
 fn normalize_existing_path(path: PathBuf) -> Option<PathBuf> {
-    std::fs::canonicalize(path).ok()
+    dunce::canonicalize(path).ok()
 }
