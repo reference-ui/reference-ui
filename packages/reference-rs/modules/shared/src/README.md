@@ -1,3 +1,3 @@
 # Shared crate sources
 
-Common text, span, and AST utilities for the whole workspace. `lib.rs` provides unquoting, bounds-checked span slicing over source buffers, and character hygiene helpers used across extraction passes and generators to avoid redundant allocations. The `testing` module holds the scratch workspaces and base-system fixtures the compiler crates test against.
+Common text, span, and AST utilities for the whole workspace. `lib.rs` provides unquoting, bounds-checked span slicing over source buffers, and character hygiene helpers used across extraction passes and generators to avoid redundant allocations. The `testing` module holds the scratch workspaces and base-system fixtures the compiler crates test against. The `parse` module is the nesting gate: `parse.rs` owns the bounded parse API and its one `Parser::new` call, and `parse/scan.rs` holds the linear pre-scan that refuses a source nested past `MAX_NESTING` before Oxc sees it.

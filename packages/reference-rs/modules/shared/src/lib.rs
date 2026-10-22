@@ -1,10 +1,13 @@
-//! Common text manipulation, span slicing, and AST utility functions shared across the compiler workspace.
+//! Common text manipulation, span slicing, and AST utilities shared across the compiler workspace.
 //! Provides safe string unquoting, bounds-checked span slicing over source buffers, and character hygiene helpers.
 //! Used across AST extraction passes and code generators to eliminate redundant string allocations.
 //! The `testing` module holds the shared scratch workspaces and base-system fixtures compiler-crate tests use.
+//! The `parse` module is the nesting gate every production Oxc parse goes through, so a source nested past the bound
+//! is refused before the parser recurses into it.
 
 use oxc_span::Span;
 
+pub mod parse;
 pub mod testing;
 
 /// Slice a span from source text, safely clamped to bounds.

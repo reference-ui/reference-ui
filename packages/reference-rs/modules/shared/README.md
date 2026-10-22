@@ -1,7 +1,7 @@
 # Shared
 
-Foundational text, span, and test-fixture routines reused across the Rust
-domain crates in `@reference-ui/rust`.
+Foundational text, span, parse-gate, and test-fixture routines shared by the Rust
+domain crates.
 
 ## What it is
 
@@ -14,6 +14,12 @@ domain crates in `@reference-ui/rust`.
 3. **Testing fixtures** — RAII scratch workspaces,
    in-memory `BaseSystem` fixtures, and frozen wire-contract fixtures
    shared by compiler-crate tests, so no crate hand-rolls its own.
+4. **Nesting gate** — `parse::parse_bounded` runs one linear pre-scan
+   before Oxc sees a source (`parse/scan.rs`): brackets, and TypeScript
+   generic `<`, nested past `MAX_NESTING` (1,024) are refused as a
+   `NestingRefusal` with the line where the limit was crossed. Every
+   production Oxc parse in `reference-rs` goes through it, and the
+   `complexity.mjs` gate fails any other `Parser::new(` in production code.
 
 Internal workspace dependency (`rlib`): no public Node-API symbols, no
 standalone JavaScript entrypoint.
