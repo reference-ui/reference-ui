@@ -511,6 +511,7 @@ async function runVitestTests(args, rsDir) {
     ['typegen', 'typegen'],
     ['runtime', 'runtime'],
     ['shared', 'runtime'],
+    ['corpus', 'corpus'],
   ])
 
   // Validation: --update-goldens is supported for case harnesses
