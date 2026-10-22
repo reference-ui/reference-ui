@@ -6,7 +6,7 @@ and traces that workspace through `traceDetailed` in a child process under `runI
 2000 ms through `expectBounded`).
 
 The pre-scan refuses `deep.ts` before Oxc sees it. The trace must report exactly one `STT-W-SKIPPED-FILE` that names
-`deep.ts` with the message `StyleTrace: nesting deeper than 1024 levels at line 1`, and must still trace `Card`.
+`deep.ts` with the message `StyleTrace: nesting deeper than 1024 levels at line 1; split or flatten the deeply nested expression`, and must still trace `Card`.
 
 The depth is sized past the current build's limit. On the exports' 256 MiB thread the unguarded trace survives
 5,000 and 50,000 levels, with `Card` traced and no skip, and dies with SIGILL at 300,000, so the red run fails by

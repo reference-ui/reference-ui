@@ -49,7 +49,7 @@ const spec: StyletraceCaseSpec = {
       expect(skips, 'one STT-W-SKIPPED-FILE for the deep file').toHaveLength(1)
       expect(skips[0]!.file).toMatch(/deep\.ts$/)
       expect(skips[0]!.message).toBe(
-        'StyleTrace: nesting deeper than 1024 levels at line 1'
+        'StyleTrace: nesting deeper than 1024 levels at line 1; split or flatten the deeply nested expression'
       )
       const names = [...new Set(detailed.bindings.map(binding => binding.name))].sort()
       expect(names).toEqual(['Card'])
