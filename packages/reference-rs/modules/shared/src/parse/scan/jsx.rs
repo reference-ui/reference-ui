@@ -1,31 +1,14 @@
 //! JSX element nesting for `.tsx` and `.jsx` sources.
-//! A JSX element is one level from its start tag to its closing tag, and a child's text is raw, so its quotes and brackets
-//! are not code. A `<` opens an element only
-//! where an expression can start and only when a tag header follows it; a comparison, a TypeScript generic (`foo<T>()`) and
-//! an arrow generic (`<T,>(x) => x`, `<T extends U>`) are not tags, and a string or comment that mentions `<` is skipped
-//! before any `<` in it is read. JSX attribute strings take no escapes, as JSX attribute strings do.
+//! A JSX element is one level once its closing tag or its `/>` is seen, and a child's text is raw, so its quotes and brackets
+//! are not code. A `<` opens an element only where an expression can start and only when a tag header follows it; a
+//! comparison, a TypeScript generic (`foo<T>()`) and an arrow generic (`<T,>(x) => x`, `<T extends U>`) are not tags, and a
+//! string or comment that mentions `<` is skipped before any `<` in it is read. JSX text cannot hold a `>` or a `}`, so an
+//! element that meets one was never an element, as in the function type `<T>(x: T) => T`: it ends there, and a `}` also
+//! closes the brace around it. JSX attribute strings take no escapes, as JSX attribute strings do.
 
 use super::literals::count_newlines;
-use super::{is_identifier_byte, Open, Scan};
+use super::{Open, Scan};
 use crate::parse::NestingRefusal;
-
-/// Keywords after which an expression starts, so a `<` right after one opens a JSX element (`return <div />`).
-const EXPRESSION_KEYWORDS: &[&[u8]] = &[
-    b"return",
-    b"yield",
-    b"await",
-    b"typeof",
-    b"void",
-    b"delete",
-    b"case",
-    b"do",
-    b"else",
-    b"in",
-    b"of",
-    b"instanceof",
-    b"throw",
-    b"default",
-];
 
 /// How far past a `<` a type-argument list may run before it is read as not closing; no real tag comes near this.
 const TYPE_ARGS_LOOKAHEAD: usize = 2048;
@@ -40,44 +23,6 @@ fn is_name_byte(byte: u8) -> bool {
 }
 
 impl Scan<'_> {
-    /// Whether an expression can start at `at`, judged by the nearest code before it. An operator, an opener, a separator,
-    /// the start of the file, or a keyword that takes an operand starts one; an identifier, a closer or a string before
-    /// `at` means a comparison or a generic.
-    pub(super) fn starts_expression(&self, at: usize) -> bool {
-        let end = self.code_end_before(at);
-        if end == 0 {
-            return true;
-        }
-        let before = self.src[end - 1];
-        if is_identifier_byte(before) {
-            return EXPRESSION_KEYWORDS.contains(&self.word_ending_at(end));
-        }
-        match before {
-            b'(' | b'[' | b'{' | b',' | b'=' | b':' | b'?' | b';' | b'!' | b'&' | b'|' | b'+' | b'-' | b'*' | b'%' | b'~'
-            | b'^' | b'}' => true,
-            b'>' => self.preceded_by(end - 1, b'='),
-            _ => false,
-        }
-    }
-
-    /// The index just past the last non-space byte before `at`.
-    fn code_end_before(&self, at: usize) -> usize {
-        let mut end = at;
-        while end > 0 && self.src[end - 1].is_ascii_whitespace() {
-            end -= 1;
-        }
-        end
-    }
-
-    /// The identifier that ends at `end`, possibly empty.
-    fn word_ending_at(&self, end: usize) -> &[u8] {
-        let mut start = end;
-        while start > 0 && is_identifier_byte(self.src[start - 1]) {
-            start -= 1;
-        }
-        &self.src[start..end]
-    }
-
     /// Reads the head of a JSX tag at `at`, a `<`. `<>` is a fragment. `<name` is an element whose attributes begin after
     /// the name and any type arguments. Returns whether it is a fragment and where the attributes begin, or None when the
     /// text is not a tag: a comparison, or a generic such as `<T,>` and `<T extends U>`.
@@ -97,22 +42,28 @@ impl Scan<'_> {
     }
 
     /// Opens the element or fragment that `element_header` read at `at`. `next` is where its attributes begin, past any
-    /// type arguments, which may span lines.
-    pub(super) fn open_element(&mut self, at: usize, fragment: bool, next: usize) -> Result<usize, NestingRefusal> {
+    /// type arguments, which may span lines. The element opened on the line of its `<`.
+    pub(super) fn open_element(
+        &mut self,
+        at: usize,
+        fragment: bool,
+        next: usize,
+    ) -> Result<usize, NestingRefusal> {
+        let line = self.line;
         if fragment {
-            return self.open(Open::JsxChildren, next);
+            return self.open_soft(Open::JsxChildren, line, next);
         }
         self.line += count_newlines(&self.src[at..next]);
-        self.open(Open::JsxTag, next)
+        self.open_soft(Open::JsxTag, line, next)
     }
 
     /// One byte inside a start tag: an attribute string, a comment, the `/>` or `>` that ends the tag, an attribute
     /// expression, or an element used as an attribute value. The only other special byte is a newline.
     pub(super) fn jsx_tag(&mut self, at: usize) -> Result<usize, NestingRefusal> {
         match self.src[at] {
-            b'>' | b'/' => Ok(self.jsx_tag_end(at)),
+            b'>' | b'/' => self.jsx_tag_end(at),
             b'"' | b'\'' => Ok(self.skip_jsx_string(at)),
-            b'{' => self.open(Open::Brace, at + 1),
+            b'{' => self.open_hard(Open::Brace, at + 1),
             b'<' => self.jsx_child_element(at),
             _ => {
                 self.line += 1;
@@ -123,19 +74,19 @@ impl Scan<'_> {
 
     /// `>` ends the start tag, so the element's children open. `/>` ends a self-closing element, which closes with its
     /// tag. `/*` and `//` are comments inside the tag, and a lone `/` is nothing.
-    fn jsx_tag_end(&mut self, at: usize) -> usize {
+    fn jsx_tag_end(&mut self, at: usize) -> Result<usize, NestingRefusal> {
         if self.src[at] == b'>' {
             self.retag_top(Open::JsxChildren);
-            return at + 1;
+            return Ok(at + 1);
         }
         match self.byte_at(at + 1) {
             Some(b'>') => {
-                self.pop();
-                at + 2
+                self.confirm_top()?;
+                Ok(at + 2)
             }
-            Some(b'*') => self.skip_block(at),
-            Some(b'/') => self.skip_line(at),
-            _ => at + 1,
+            Some(b'*') => Ok(self.skip_block(at)),
+            Some(b'/') => Ok(self.skip_line(at)),
+            _ => Ok(at + 1),
         }
     }
 
@@ -150,22 +101,25 @@ impl Scan<'_> {
         end
     }
 
-    /// Replaces the start tag on top of the stack with the element's children, a change of kind with no change of depth.
-    fn retag_top(&mut self, to: Open) {
-        if let Some(top) = self.stack.last_mut() {
-            let from = *top;
-            *top = to;
-            self.counts[from.index()] -= 1;
-            self.counts[to.index()] += 1;
-        }
-    }
-
     /// One byte among JSX children. A `{` opens an expression container, and a `<` either opens a child element or, when
-    /// it starts `</`, closes this one. The only other special byte is a newline; every other byte is text.
-    pub(super) fn jsx_children(&mut self, at: usize) -> Result<usize, NestingRefusal> {
+    /// it starts `</`, closes this one. A `}` closes down to the nearest brace and a `>` ends the element, since neither
+    /// can be JSX text; the `>` is read again as code. The only other special byte is a newline; every other byte is text.
+    pub(super) fn jsx_children(
+        &mut self,
+        at: usize,
+        template: &mut bool,
+    ) -> Result<usize, NestingRefusal> {
         match self.src[at] {
-            b'{' => self.open(Open::Brace, at + 1),
-            b'<' if self.byte_at(at + 1) == Some(b'/') => Ok(self.close_jsx_element(at)),
+            b'{' => self.open_hard(Open::Brace, at + 1),
+            b'}' => {
+                self.close_brace_into(template);
+                Ok(at + 1)
+            }
+            b'>' => {
+                self.drop_top();
+                Ok(at)
+            }
+            b'<' if self.byte_at(at + 1) == Some(b'/') => self.close_jsx_element(at),
             b'<' => self.jsx_child_element(at),
             _ => {
                 self.line += 1;
@@ -182,23 +136,27 @@ impl Scan<'_> {
         }
     }
 
-    /// A closing tag `</name>` or `</>` ends the element whose children are open on top of the stack.
-    fn close_jsx_element(&mut self, at: usize) -> usize {
+    /// A closing tag `</name>` or `</>` ends the element whose children are open on top of the stack, and the element
+    /// counts from here.
+    fn close_jsx_element(&mut self, at: usize) -> Result<usize, NestingRefusal> {
         let end = self.src[at..]
             .iter()
             .position(|&byte| byte == b'>')
             .map_or(self.src.len(), |offset| at + offset + 1);
         self.line += count_newlines(&self.src[at..end]);
-        if self.stack.last() == Some(&Open::JsxChildren) {
-            self.pop();
+        if self.top() == Some(Open::JsxChildren) {
+            self.confirm_top()?;
         }
-        end
+        Ok(end)
     }
 
     /// The index just past the `>` that closes the type arguments opened at `open`, or None when they do not close within
-    /// `TYPE_ARGS_LOOKAHEAD` bytes. An `=>` inside them is a function type, not a closer.
+    /// `TYPE_ARGS_LOOKAHEAD` bytes or the scan's lookahead. An `=>` inside them is a function type, not a closer.
     fn type_args_end(&self, open: usize) -> Option<usize> {
-        let limit = (open + TYPE_ARGS_LOOKAHEAD).min(self.src.len());
+        let allowed = self.lookahead.get();
+        let limit = (open + TYPE_ARGS_LOOKAHEAD)
+            .min(self.src.len())
+            .min(open.saturating_add(allowed));
         let mut depth = 0usize;
         for at in open..limit {
             let byte = self.src[at];
@@ -207,10 +165,12 @@ impl Scan<'_> {
             } else if byte == b'>' && !self.preceded_by(at, b'=') {
                 depth -= 1;
                 if depth == 0 {
+                    self.lookahead.set(allowed - (at + 1 - open));
                     return Some(at + 1);
                 }
             }
         }
+        self.lookahead.set(allowed - limit.saturating_sub(open));
         None
     }
 
@@ -253,7 +213,10 @@ impl Scan<'_> {
     /// The first index at or after `from` that is not whitespace. Lookahead only: the caller consumes nothing here.
     fn skip_spaces(&self, from: usize) -> usize {
         let mut at = from;
-        while self.byte_at(at).is_some_and(|byte| byte.is_ascii_whitespace()) {
+        while self
+            .byte_at(at)
+            .is_some_and(|byte| byte.is_ascii_whitespace())
+        {
             at += 1;
         }
         at

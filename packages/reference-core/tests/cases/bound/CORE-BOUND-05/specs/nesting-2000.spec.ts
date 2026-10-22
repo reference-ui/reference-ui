@@ -1,8 +1,9 @@
 // nesting-2000.spec.ts — the refusal side of CORE-BOUND-05, nested 2,000 levels.
 // It syncs 71 files, one of them nested 2,000 levels, through the spawned bin under a 10 s kill budget. It takes { case }
 // from the runner and syncs a temp copy that it owns. The nesting gate refuses src/deep.ts before Oxc parses it, so the child
-// must end with no signal and exit 1 inside the budget, and its output must name ATM-E-PARSE at src/deep.ts:3:1 and the 1024
-// limit. Emits nothing on success; throws naming the failed leg on failure. The temp copy is removed in a finally.
+// must end with no signal and exit 1 inside the budget, and its output must name ATM-E-PARSE at src/deep.ts:3:1 and carry the
+// whole refusal sentence for line 3. Emits nothing on success; throws naming the failed leg on failure. The temp copy is
+// removed in a finally.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { rmSync } from 'node:fs';
@@ -45,7 +46,11 @@ export default async function run(_input: SpecInput): Promise<void> {
     );
     assert.match(output, /ATM-E-PARSE/, `the refusal names ATM-E-PARSE: ${output}`);
     assert.match(output, /src\/deep\.ts:3:1/, `the refusal is located at src/deep.ts:3:1: ${output}`);
-    assert.match(output, /1024/, `the refusal names the 1024 limit: ${output}`);
+    assert.match(
+      output,
+      /nesting deeper than 1024 levels at line 3; split or flatten the deeply nested expression/,
+      `the refusal says the whole sentence for line 3: ${output}`
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

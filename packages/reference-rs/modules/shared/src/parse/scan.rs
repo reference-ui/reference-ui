@@ -1,21 +1,31 @@
 //! A single linear pass that tracks the open constructs of one source.
-//! It reports the deepest nesting it reaches, or the first point where that nesting passes `MAX_NESTING`. It takes the source bytes, whether the file is TypeScript
-//! and whether it is JSX, and emits a depth or a `NestingRefusal` with the line of the opener that crossed the limit.
-//! String literals, template text and comments are opaque runs, and a template's `${` opens a counted expression. In
-//! TypeScript `<` after an identifier opens a generic, closed by `>` (a `=>` does not close it), and `;` or a closing
-//! bracket drops the openers a comparison left behind, so `a < b` never accumulates depth. In `.tsx` and `.jsx` files
-//! each JSX element is one level from its start tag to its closing tag, and JSX text is not code. `scan/jsx.rs` holds the
-//! JSX rules, `scan/stack.rs` the stack of open constructs, and `scan/literals.rs` the skipped runs. This is a bound, not a
-//! lexer: a construct it misreads can shift the count by a level, so the real-code scan checks that no ordinary file comes
-//! near the limit.
+//! It reports the deepest nesting it reaches, or the first point where that nesting passes `MAX_NESTING`. It takes the
+//! source bytes, whether the file is TypeScript and whether it is JSX, and emits a depth or a `NestingRefusal` with the line
+//! of the construct whose nesting crossed the limit. A bracket or a template `${` counts the moment it opens. A TypeScript
+//! generic `<` and a JSX element are guesses, so they count only once their closer is seen, and a comparison, a shift or a
+//! misread tag that never closes counts for nothing. Strings, regex literals, template text and comments are opaque runs.
+//! `scan/stack.rs` holds the stack and that rule, `scan/jsx.rs` the element rules, `scan/expression.rs` the test for where an
+//! expression starts, `scan/literals.rs` and `scan/regex.rs` the skipped runs, and `scan/raw.rs` the bracket count that backs
+//! the scan up. This is a bound, not a lexer: a real-code survey checks that no ordinary file comes near the limit, and the
+//! two wider limits catch what a misreading lets through.
 
+use std::cell::Cell;
+
+mod expression;
 mod jsx;
 mod literals;
+mod raw;
+mod regex;
 mod stack;
+
+#[cfg(test)]
+pub(super) use raw::peak as raw_peak;
+pub(super) use raw::{can_refuse, check_raw};
+use stack::Frame;
 
 use super::NestingRefusal;
 
-/// Bytes that can change the scan's state in code: quotes, comment slashes, escapes, newlines, template backticks,
+/// Bytes that can change the scan's state in code: quotes, comment and regex slashes, escapes, newlines, template backticks,
 /// brackets, `<` and `>` (generics, arrows and JSX), and `;`. Every other byte only advances the scan.
 const CODE_SPECIAL: [bool; 256] = special_bytes(b"\"'`/\\\n()[]{}<>;");
 
@@ -28,8 +38,16 @@ const TEMPLATE_SPECIAL: [bool; 256] = special_bytes(b"`$\\\n");
 const JSX_TAG_SPECIAL: [bool; 256] = special_bytes(b"\"'/<>{\n");
 
 /// Bytes that can change the state among JSX children: `<` (a child element or a closing tag), `{` (an expression
-/// container) and newlines. Everything else is text, quotes and brackets included.
-const JSX_CHILDREN_SPECIAL: [bool; 256] = special_bytes(b"<{\n");
+/// container) and newlines, plus `>` and `}`, which JSX text cannot hold, so one means the element was never an element.
+/// Everything else is text, quotes and brackets included.
+const JSX_CHILDREN_SPECIAL: [bool; 256] = special_bytes(b"<>{}\n");
+
+/// The bytes a lookahead may read per source byte before the scan stops looking ahead. A real source spends a small
+/// fraction of it, and a hostile one cannot make the scan quadratic.
+const LOOKAHEAD_PER_BYTE: usize = 8;
+
+/// The lookahead a source gets however short it is.
+const LOOKAHEAD_FLOOR: usize = 4096;
 
 const fn special_bytes(bytes: &[u8]) -> [bool; 256] {
     let mut table = [false; 256];
@@ -52,7 +70,8 @@ fn special(mode: Mode) -> &'static [bool; 256] {
 
 /// One open construct on the scan stack. `Angle` is a TypeScript generic opener and `TemplateExpr` is the `${` of a
 /// template literal. `JsxTag` is a JSX start tag still reading its attributes, and `JsxChildren` is an element or
-/// fragment whose children are open; a JSX element is one level from its start tag to its closing tag.
+/// fragment whose children are open. The first four count the moment they open; `Angle`, `JsxTag` and `JsxChildren` are soft
+/// and count only once their closer is seen.
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Open {
     Paren,
@@ -70,6 +89,11 @@ impl Open {
     fn index(self) -> usize {
         self as usize
     }
+
+    /// A generic or an element: it counts only once its closer is seen, so a misread one costs nothing.
+    fn is_soft(self) -> bool {
+        matches!(self, Open::Angle | Open::JsxTag | Open::JsxChildren)
+    }
 }
 
 /// What the next byte means: ordinary code, template text, the attributes of a JSX start tag, or JSX children.
@@ -82,15 +106,19 @@ enum Mode {
 }
 
 /// The scan's state: the open constructs, how many of each kind are open (so a closer with no opener of its kind
-/// costs nothing), the current line, and the deepest stack reached so far.
+/// costs nothing), the current line, the deepest counted nesting so far, and the lookahead still allowed.
 pub(super) struct Scan<'s> {
     src: &'s [u8],
     typescript: bool,
     jsx: bool,
-    stack: Vec<Open>,
+    stack: Vec<Frame>,
     counts: [usize; Open::KINDS],
     line: u32,
     deepest: usize,
+    #[cfg(test)]
+    peak: usize,
+    trivia: (usize, usize),
+    lookahead: Cell<usize>,
 }
 
 impl<'s> Scan<'s> {
@@ -103,23 +131,36 @@ impl<'s> Scan<'s> {
             counts: [0; Open::KINDS],
             line: 1,
             deepest: 0,
+            #[cfg(test)]
+            peak: 0,
+            trivia: (0, 0),
+            lookahead: Cell::new(src.len().saturating_mul(LOOKAHEAD_PER_BYTE) + LOOKAHEAD_FLOOR),
         }
     }
 
-    /// Scans the whole source and returns the deepest nesting, or the first refusal. Ordinary bytes take the table
-    /// check and move on; only the bytes that can change the state reach the handlers.
-    pub(super) fn run(mut self) -> Result<usize, NestingRefusal> {
+    /// Scans the whole source and returns the deepest nesting, or the first refusal. The mode is read once per special
+    /// byte; the bytes between two special bytes take one table check each and move on.
+    pub(super) fn run(&mut self) -> Result<usize, NestingRefusal> {
+        let src = self.src;
         let mut template = false;
         let mut at = 0;
-        while at < self.src.len() {
+        while at < src.len() {
             let mode = self.mode(template);
-            at = if special(mode)[self.src[at] as usize] {
-                self.step(at, mode, &mut template)?
-            } else {
-                at + 1
-            };
+            let table = special(mode);
+            while at < src.len() && !table[src[at] as usize] {
+                at += 1;
+            }
+            if at < src.len() {
+                at = self.step(at, mode, &mut template)?;
+            }
         }
         Ok(self.deepest)
+    }
+
+    /// The most constructs the stack held at once, counted or not; the survey reports it beside the depth.
+    #[cfg(test)]
+    pub(super) fn peak_open(&self) -> usize {
+        self.peak
     }
 
     /// The mode is set by the construct on top of the stack, except that template text, which only code can open,
@@ -128,19 +169,24 @@ impl<'s> Scan<'s> {
         if template {
             return Mode::Template;
         }
-        match self.stack.last() {
+        match self.top() {
             Some(Open::JsxTag) => Mode::JsxTag,
             Some(Open::JsxChildren) => Mode::JsxChildren,
             _ => Mode::Code,
         }
     }
 
-    fn step(&mut self, at: usize, mode: Mode, template: &mut bool) -> Result<usize, NestingRefusal> {
+    fn step(
+        &mut self,
+        at: usize,
+        mode: Mode,
+        template: &mut bool,
+    ) -> Result<usize, NestingRefusal> {
         match mode {
             Mode::Code => self.code(at, template),
             Mode::Template => self.template(at, template),
             Mode::JsxTag => self.jsx_tag(at),
-            Mode::JsxChildren => self.jsx_children(at),
+            Mode::JsxChildren => self.jsx_children(at, template),
         }
     }
 
@@ -178,17 +224,14 @@ impl<'s> Scan<'s> {
 
     fn code_byte(&mut self, byte: u8, at: usize) -> Result<usize, NestingRefusal> {
         match byte {
-            b'(' | b'[' | b'{' => self.open(bracket_kind(byte), at + 1),
+            b'(' | b'[' | b'{' => self.open_hard(bracket_kind(byte), at + 1),
             b'<' => self.code_less_than(at),
-            _ => {
-                self.close_or_drop(byte, at);
-                Ok(at + 1)
-            }
+            _ => self.close_or_drop(byte, at),
         }
     }
 
     /// A `<` in code opens a JSX element where an expression can start, and a TypeScript generic right after an
-    /// identifier. Anything else is a comparison, and counts for nothing.
+    /// identifier. Anything else is a comparison, and counts for nothing. Either one is only a guess until it closes.
     fn code_less_than(&mut self, at: usize) -> Result<usize, NestingRefusal> {
         if self.jsx && self.starts_expression(at) {
             if let Some((fragment, next)) = self.element_header(at) {
@@ -196,19 +239,21 @@ impl<'s> Scan<'s> {
             }
         }
         if self.opens_generic(at) {
-            return self.open(Open::Angle, at + 1);
+            return self.open_soft(Open::Angle, self.line, at + 1);
         }
         Ok(at + 1)
     }
 
-    /// Closers pop their opener, and `>` and `;` drop the generics a comparison left open; none of these can refuse.
-    fn close_or_drop(&mut self, byte: u8, at: usize) {
+    /// Closers pop their opener. A `>` closes the generic on top unless it is part of `=>`, and `;` drops the generics a
+    /// comparison left open.
+    fn close_or_drop(&mut self, byte: u8, at: usize) -> Result<usize, NestingRefusal> {
         match byte {
             b')' | b']' => self.close(bracket_kind(byte)),
-            b'>' => self.drop_angle_unless_arrow(at),
+            b'>' => self.close_angle_unless_arrow(at)?,
             b';' => self.drop_angles(),
             _ => {}
         }
+        Ok(at + 1)
     }
 
     /// In TypeScript `<` opens a generic only directly after an identifier, as in `Array<`.
@@ -223,7 +268,7 @@ impl<'s> Scan<'s> {
         }
         if self.src[at] == b'$' && self.byte_at(at + 1) == Some(b'{') {
             *template = false;
-            return self.open(Open::TemplateExpr, at + 2);
+            return self.open_hard(Open::TemplateExpr, at + 2);
         }
         Ok(self.skip_text(at))
     }

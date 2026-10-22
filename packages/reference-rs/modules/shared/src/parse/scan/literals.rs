@@ -1,15 +1,16 @@
 //! The literals and comments the pre-scan reads past as opaque runs.
-//! The runs are string literals, which end at their line when they never close, block and line comments, and backslash
-//! escapes. Each skip reports the newlines it covers, so a refusal names the
-//! line it is on, and no quote or bracket inside a skipped run reaches the scan's state.
+//! The runs are string literals, which end at their line when they never close, regex literals, block and line comments, and
+//! backslash escapes. Each skip reports the newlines it covers, so a refusal names the line it is on, and no quote or
+//! bracket inside a skipped run reaches the scan's state. Each comment's span is noted for the test of where an expression
+//! starts.
 
 use super::Scan;
 
 impl Scan<'_> {
-    /// Comments, string literals and backslash escapes are opaque to the count; returns the index past them.
+    /// Comments, string literals, regex literals and backslash escapes are opaque to the count; returns the index past them.
     pub(super) fn skip_literal(&mut self, at: usize) -> Option<usize> {
         match self.src[at] {
-            b'/' => self.skip_comment(at),
+            b'/' => self.skip_comment(at).or_else(|| self.skip_regex(at)),
             quote @ (b'\'' | b'"') => Some(self.skip_string(at, quote)),
             b'\\' => Some(self.skip_escape(at)),
             _ => None,
@@ -34,16 +35,19 @@ impl Scan<'_> {
     }
 
     /// Ends on the newline, which the main loop counts.
-    pub(super) fn skip_line(&self, at: usize) -> usize {
-        self.src[at..]
+    pub(super) fn skip_line(&mut self, at: usize) -> usize {
+        let end = self.src[at..]
             .iter()
             .position(|byte| *byte == b'\n')
-            .map_or(self.src.len(), |offset| at + offset)
+            .map_or(self.src.len(), |offset| at + offset);
+        self.note_comment(at, end);
+        end
     }
 
     pub(super) fn skip_block(&mut self, at: usize) -> usize {
         let end = block_close(self.src, at + 2).map_or(self.src.len(), |found| found + 2);
         self.line += count_newlines(&self.src[at..end]);
+        self.note_comment(at, end);
         end
     }
 
