@@ -59,7 +59,7 @@ impl AtlasAnalyzer {
             Err(message) => return failed_result(&message),
         };
 
-        let mut modules = parse_modules(&local_sources, Some(&app_root), None);
+        let mut modules = parse_modules(&local_sources, Some(&app_root), None, &mut diagnostics)?;
         let include_packages = collect_included_packages(&self.config);
         let package_indexes =
             self.load_packages(&mut modules, &include_packages, &mut diagnostics)?;
@@ -173,7 +173,7 @@ impl AtlasAnalyzer {
             }
         };
 
-        let package_modules = parse_modules(&source_files, None, Some(package_name));
+        let package_modules = parse_modules(&source_files, None, Some(package_name), diagnostics)?;
         let index_path = resolve_package_index(package_modules.keys());
         modules.extend(package_modules);
         Ok(index_path)

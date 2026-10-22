@@ -20,9 +20,10 @@ Unresolved or unsupported inputs emit typed `ATL-*` diagnostics, never guessed d
 | `ATL-W-UNSUPPORTED-PROPS-ANNOTATION` | warning | inline object props annotation; component omitted |
 | `ATL-W-UNRESOLVED-INCLUDE-PACKAGE` | warning | included package does not resolve; skipped |
 | `ATL-W-PACKAGE-SCAN-FAILED` | warning | resolved package unreadable; siblings kept |
+| `ATL-W-SKIPPED-FILE` | warning | source file nested past the nesting gate; skipped, siblings kept |
 | `ATL-E-SCAN-FAILED` | error | discovery itself fails; analysis refused |
 
-Atlas has no parse-failure code. A source file nested deeper than 1,024 levels is refused by the nesting gate in `shared` before Oxc parses it, and it is skipped with no diagnostic: it contributes no components, props or call sites, and its siblings analyze normally.
+A source file nested deeper than 1,024 levels is refused by the nesting gate in `shared` before Oxc parses it. Atlas reports it as `ATL-W-SKIPPED-FILE`, located at the file, with the line where the nesting crossed the limit and the fix: split or flatten the deeply nested expression. The file contributes no components, props or call sites; its siblings analyze normally.
 
 ## Invariants
 

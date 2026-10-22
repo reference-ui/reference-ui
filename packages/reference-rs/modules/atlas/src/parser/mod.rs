@@ -2,7 +2,7 @@
 //! It records what the file imports, declares and exports. Collection is split by statement family: imports here, components in `components`,
 //! export statements in `exports`, and type shapes in `types`, all sharing one per-file `FileCtx` and one
 //! mutable `ModuleParseState`. `parse_modules` takes the discovered source files and returns the module map
-//! keyed by path; a file the nesting gate refuses is left out of that map.
+//! keyed by path; a file the nesting gate refuses is left out of that map and reported as `ATL-W-SKIPPED-FILE`.
 
 mod components;
 mod exports;
@@ -10,6 +10,7 @@ mod jsx;
 mod types;
 mod utils;
 
+use crate::diagnostics::{skipped_file, AtlasDiagnostic, DiagnosticError};
 use crate::internal::{ComponentDecl, ImportBinding, ImportKind, ModuleInfo, ReExport, TypeDef};
 use crate::scanner::SourceFile;
 use oxc_allocator::Allocator;
@@ -17,7 +18,7 @@ use oxc_ast::ast::{
     ExportAllDeclaration, Function, ImportDeclarationSpecifier, ImportOrExportKind, Statement,
     TSInterfaceDeclaration, TSTypeAliasDeclaration,
 };
-use shared::parse::parse_bounded;
+use shared::parse::{parse_bounded, NestingRefusal};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -29,37 +30,43 @@ use utils::{
     slice_span, unquote,
 };
 
+/// Parses the discovered files into the module map. A file the nesting gate refuses is left out of the map and reported
+/// as `ATL-W-SKIPPED-FILE` at its path, so its siblings still analyze.
 pub fn parse_modules(
     source_files: &[SourceFile],
     app_root: Option<&Path>,
     package_name: Option<&str>,
-) -> HashMap<PathBuf, ModuleInfo> {
-    source_files
-        .iter()
-        .filter_map(|source_file| {
-            let display_source = package_name
-                .map(|name| name.to_string())
-                .unwrap_or_else(|| local_source_display(app_root.unwrap(), &source_file.path));
-            let app_relative_path = app_root
-                .and_then(|root| source_file.path.strip_prefix(root).ok())
-                .map(path_to_posix);
-
-            parse_module(source_file, &display_source, app_relative_path)
-                .map(|module| (source_file.path.clone(), module))
-        })
-        .collect()
+    diagnostics: &mut Vec<AtlasDiagnostic>,
+) -> Result<HashMap<PathBuf, ModuleInfo>, DiagnosticError> {
+    let mut modules = HashMap::new();
+    for source_file in source_files {
+        let display_source = package_name
+            .map(|name| name.to_string())
+            .unwrap_or_else(|| local_source_display(app_root.unwrap(), &source_file.path));
+        let app_relative_path = app_root
+            .and_then(|root| source_file.path.strip_prefix(root).ok())
+            .map(path_to_posix);
+        let location = app_relative_path
+            .clone()
+            .unwrap_or_else(|| source_file.path.display().to_string());
+        match parse_module(source_file, &display_source, app_relative_path) {
+            Ok(module) => {
+                modules.insert(source_file.path.clone(), module);
+            }
+            Err(refusal) => diagnostics.push(skipped_file(&location, refusal)?),
+        }
+    }
+    Ok(modules)
 }
 
-/// Parses one file into its module record. `None` means the nesting gate refused the file: atlas has no parse-failure
-/// code, so the file is left out of the module map without a diagnostic.
+/// Parses one file into its module record, or returns the nesting gate's refusal before Oxc sees the file.
 fn parse_module(
     source_file: &SourceFile,
     display_source: &str,
     app_relative_path: Option<String>,
-) -> Option<ModuleInfo> {
+) -> Result<ModuleInfo, NestingRefusal> {
     let allocator = Allocator::default();
-    let parsed =
-        parse_bounded(&allocator, &source_file.content, source_file.source_type).ok()?;
+    let parsed = parse_bounded(&allocator, &source_file.content, source_file.source_type)?;
     let mut state = ModuleParseState::default();
     let default_name = default_export_name(&source_file.path);
     let ctx = FileCtx {
@@ -81,7 +88,7 @@ fn parse_module(
         .map(|binding| (binding.local.clone(), binding.source.clone()))
         .collect::<HashMap<_, _>>();
 
-    Some(ModuleInfo {
+    Ok(ModuleInfo {
         path: source_file.path.clone(),
         content: source_file.content.clone(),
         display_source: display_source.to_string(),
@@ -231,5 +238,44 @@ fn collect_imports(
                 );
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_modules;
+    use crate::scanner::SourceFile;
+    use oxc_span::SourceType;
+    use std::path::PathBuf;
+
+    #[test]
+    fn a_refused_file_is_reported_at_its_path_and_its_sibling_still_parses() {
+        let root = PathBuf::from("/app");
+        let deep = format!(
+            "export const deep = css({{ color: {}'red'{} }})\n",
+            "(".repeat(1100),
+            ")".repeat(1100)
+        );
+        let files = vec![
+            SourceFile {
+                path: root.join("src/Deep.tsx"),
+                content: deep,
+                source_type: SourceType::tsx(),
+            },
+            SourceFile {
+                path: root.join("src/Card.tsx"),
+                content: "export function Card() { return <div /> }\n".to_string(),
+                source_type: SourceType::tsx(),
+            },
+        ];
+        let mut diagnostics = Vec::new();
+        let modules = parse_modules(&files, Some(&root), None, &mut diagnostics).unwrap();
+
+        assert!(modules.contains_key(&root.join("src/Card.tsx")));
+        assert!(!modules.contains_key(&root.join("src/Deep.tsx")));
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].code.as_str(), "ATL-W-SKIPPED-FILE");
+        assert_eq!(diagnostics[0].file.as_deref(), Some("src/Deep.tsx"));
+        assert_eq!(diagnostics[0].line, Some(1));
     }
 }

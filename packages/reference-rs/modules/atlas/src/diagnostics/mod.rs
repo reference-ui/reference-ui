@@ -85,10 +85,37 @@ pub(crate) fn package_scan_failed(
     )])
 }
 
+/// A source file nested past the nesting gate: it is refused before Oxc parses it and left out of the module map, so
+/// its siblings still analyze. The file locates the warning, and the line is where the nesting crossed the limit.
+pub(crate) fn skipped_file(
+    file: &str,
+    refusal: shared::parse::NestingRefusal,
+) -> Result<Diagnostic, DiagnosticError> {
+    let warning = Diagnostic::warning(AtlasDiagnosticCode::SkippedFile.as_str(), refusal.message())?;
+    Ok(warning.with_location(file, Some(refusal.line), None))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use diagnostics::Severity;
+
+    #[test]
+    fn skipped_file_locates_the_refused_file_at_its_line() {
+        let refusal = shared::parse::NestingRefusal {
+            depth: 1025,
+            line: 3,
+        };
+        let skipped = skipped_file("src/Deep.tsx", refusal).unwrap();
+        assert_eq!(skipped.code.as_str(), "ATL-W-SKIPPED-FILE");
+        assert_eq!(skipped.severity, Severity::Warning);
+        assert_eq!(skipped.file.as_deref(), Some("src/Deep.tsx"));
+        assert_eq!(skipped.line, Some(3));
+        assert_eq!(
+            skipped.message,
+            "nesting deeper than 1024 levels at line 3; split or flatten the deeply nested expression"
+        );
+    }
 
     #[test]
     fn constructors_emit_located_warnings_with_stable_codes() {

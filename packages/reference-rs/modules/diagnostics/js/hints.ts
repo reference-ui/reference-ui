@@ -65,6 +65,7 @@ const WARNING_HINTS: Record<string, string> = {
   'ATL-W-UNSUPPORTED-PROPS-ANNOTATION': 'name the props type instead of inlining the object',
   'ATL-W-UNRESOLVED-INCLUDE-PACKAGE': 'check the package name or install it alongside the app',
   'ATL-W-PACKAGE-SCAN-FAILED': 'fix the package dir so it scans or drop it from include',
+  'ATL-W-SKIPPED-FILE': 'split or flatten the deeply nested expression in the file',
   'STT-W-SKIPPED-FILE': 'fix the file so it parses and reads cleanly',
   'STT-W-CLASS-COMPONENT':
     'rewrite it as a function component so its style props are traced',

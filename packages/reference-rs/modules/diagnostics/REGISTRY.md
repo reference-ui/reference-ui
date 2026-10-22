@@ -172,6 +172,7 @@ grows an info level.
 | `ATL-W-UNRESOLVED-INCLUDE-PACKAGE` | Included package resolves nowhere; the package is skipped | `modules/atlas/src/analyzer.rs` |
 | `ATL-E-SCAN-FAILED` | File discovery or read failed; the analysis is refused with empty components | `modules/atlas/src/analyzer.rs` |
 | `ATL-W-PACKAGE-SCAN-FAILED` | A resolved package's discovery or read failed; the package is skipped, siblings kept | `modules/atlas/src/analyzer.rs` |
+| `ATL-W-SKIPPED-FILE` | A source file nested past the nesting gate is refused before parsing; the file is left out of the module map and its siblings analyze | `modules/atlas/src/parser/mod.rs` |
 | `STT-W-SKIPPED-FILE` | An entry or edge file failed to parse or read; the file is skipped, siblings kept | `modules/styletrace/src/analysis/surface.rs`, `modules/styletrace/src/analysis/analyzer.rs` |
 | `STT-E-SCAN-FAILED` | Source discovery or read failed; the trace is refused as a coded throw | `modules/styletrace/src/analysis/source_files.rs` |
 | `STT-E-UNRESOLVED-SURFACE` | The StyleProps surface cannot be built, so the trace is refused as a coded throw. Two causes: no sync root, StyleProps entrypoint or primitives surface, or a malformed or unreadable declaration that leaves no StyleProps names; or a guard limit (depth, argument size or session budget) cut an expansion on the surface and hid names, and the message names the declaration, its module and the limit | `modules/styletrace/src/resolver/sync_root.rs`, `modules/styletrace/src/analysis/surface.rs`, `modules/styletrace/src/resolver/tracer/mod.rs` |

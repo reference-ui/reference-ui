@@ -19,6 +19,7 @@ export type AtlasDiagnosticCode =
   | 'ATL-W-UNRESOLVED-INCLUDE-PACKAGE'
   | 'ATL-E-SCAN-FAILED'
   | 'ATL-W-PACKAGE-SCAN-FAILED'
+  | 'ATL-W-SKIPPED-FILE'
 
 export type { Component } from './generated/Component.js'
 

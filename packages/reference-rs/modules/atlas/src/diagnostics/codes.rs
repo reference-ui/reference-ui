@@ -25,12 +25,14 @@ pub enum AtlasDiagnosticCode {
     ScanFailed,
     /// `analyzer`: a package's discovery or read failed; the package is skipped, siblings kept.
     PackageScanFailed,
+    /// `parser`: a source file nested past the nesting gate is refused before parsing; the file is skipped, siblings kept.
+    SkippedFile,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(AtlasDiagnosticCode, &str); 5] = [
+const CODE_TABLE: [(AtlasDiagnosticCode, &str); 6] = [
     (
         AtlasDiagnosticCode::UnresolvedPropsType,
         "ATL-W-UNRESOLVED-PROPS-TYPE",
@@ -48,6 +50,7 @@ const CODE_TABLE: [(AtlasDiagnosticCode, &str); 5] = [
         AtlasDiagnosticCode::PackageScanFailed,
         "ATL-W-PACKAGE-SCAN-FAILED",
     ),
+    (AtlasDiagnosticCode::SkippedFile, "ATL-W-SKIPPED-FILE"),
 ];
 
 impl AtlasDiagnosticCode {
@@ -135,6 +138,7 @@ mod tests {
             AtlasDiagnosticCode::UnresolvedIncludePackage,
             AtlasDiagnosticCode::ScanFailed,
             AtlasDiagnosticCode::PackageScanFailed,
+            AtlasDiagnosticCode::SkippedFile,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }
