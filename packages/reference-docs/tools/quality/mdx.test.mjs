@@ -1,12 +1,13 @@
-// Unit tests for the MDX tier of the docs gate. It takes each check's module and fixture pages
-// written to a temporary docs tree, and asserts the findings by rule and line. The compile tests
-// run the app's real pipeline, so they take a few seconds. Run with
+// Unit tests for the MDX tier and the collection check of the docs gate. It takes each check's module
+// and fixture pages written to a temporary docs tree, and asserts the findings by rule and line. The
+// compile tests run the app's real pipeline, so they take a few seconds. Run with
 // `pnpm --filter @reference-ui/reference-docs run quality:test`.
 import assert from 'node:assert/strict'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { after, describe, it } from 'node:test'
+import { collectionFindings } from './mdx-collection.mjs'
 import { loadCompiler } from './mdx-compile.mjs'
 import { compilePool } from './mdx-pool.mjs'
 import { checkContract, parseFrontmatter } from './mdx-frontmatter.mjs'
@@ -17,11 +18,31 @@ import { mdxTier } from './mdx.mjs'
 const DASH = '—'
 const PAGE = (fields, body = '# Title\n') => `---\n${fields}\n---\n\n${body}`
 const VALID = 'title: Title\nsection: Guides\norder: 1\nslug: page\ndescription: A page.'
+const withSlug = slug => VALID.replace('slug: page', `slug: ${slug}`)
 const scratch = []
 
 after(async () => {
   for (const dir of scratch) await rm(dir, { recursive: true, force: true })
 })
+
+/** Writes `files` into a temporary docs tree under src/content/docs. */
+async function fixtureSite(files) {
+  const docsDir = await mkdtemp(path.join(tmpdir(), 'mdx-gate-'))
+  scratch.push(docsDir)
+  const dir = path.join(docsDir, 'src/content/docs')
+  await mkdir(dir, { recursive: true })
+  for (const [name, text] of Object.entries(files)) await writeFile(path.join(dir, name), text)
+  return { docsDir, dir }
+}
+
+/** Writes a generated docs collection listing `paths`, in the shape content-collections emits. */
+async function builtCollection(docsDir, paths) {
+  const dir = path.join(docsDir, 'src/collections/.content-collections/generated')
+  await mkdir(dir, { recursive: true })
+  const docs = paths.map(p => ({ title: 'T', section: 'G', order: 1, slug: 's', description: 'd', path: p }))
+  await writeFile(path.join(dir, 'allDocs.js'), `export default ${JSON.stringify(docs)}\n`)
+  await writeFile(path.join(dir, 'index.js'), 'import allDocs from "./allDocs.js";\nexport { allDocs };\n')
+}
 
 describe('frontmatter', () => {
   it('reads typed fields with their lines', () => {
@@ -254,16 +275,6 @@ describe('compile with the app pipeline', () => {
 })
 
 describe('the MDX tier on a temporary docs tree', () => {
-  async function fixtureSite(files) {
-    const docsDir = await mkdtemp(path.join(tmpdir(), 'mdx-gate-'))
-    scratch.push(docsDir)
-    const dir = path.join(docsDir, 'src/content/docs')
-    await mkdir(dir, { recursive: true })
-    for (const [name, text] of Object.entries(files))
-      await writeFile(path.join(dir, name), text)
-    return { docsDir, dir }
-  }
-
   it('reports each kind of finding on the page that holds it, and nothing on clean pages', async () => {
     const { docsDir } = await fixtureSite({
       'clean.mdx': PAGE(
@@ -325,5 +336,26 @@ describe('the MDX tier on a temporary docs tree', () => {
     assert.deepEqual([...results.keys()].sort(), files.slice().sort())
     assert.ok(results.get(files[2]).error.line > 1, 'the syntax error keeps its line')
     assert.deepEqual([...results.get(files[1]).headings], ['here'])
+  })
+})
+
+describe('the collection check', () => {
+  it('names each page the built collection leaves out, and only those', async () => {
+    const { docsDir } = await fixtureSite({ 'kept.mdx': PAGE(withSlug('kept')), 'dropped.mdx': PAGE(withSlug('dropped')) })
+    await builtCollection(docsDir, ['../content/docs/kept.mdx'])
+    const found = await collectionFindings({ docsDir })
+    assert.deepEqual(found.map(f => [path.basename(f.file), f.line, f.ruleId]), [['dropped.mdx', 1, 'docs/collection']])
+  })
+
+  it('is clean when the built collection lists every page', async () => {
+    const { docsDir } = await fixtureSite({ 'kept.mdx': PAGE(withSlug('kept')) })
+    await builtCollection(docsDir, ['../content/docs/kept.mdx'])
+    assert.deepEqual(await collectionFindings({ docsDir }), [])
+  })
+
+  it('asks for a sync when the collection has not been built', async () => {
+    const { docsDir } = await fixtureSite({ 'kept.mdx': PAGE(withSlug('kept')) })
+    const [found] = await collectionFindings({ docsDir })
+    assert.match(found.message, /missing or unreadable; run pnpm --filter .+ run sync$/)
   })
 })

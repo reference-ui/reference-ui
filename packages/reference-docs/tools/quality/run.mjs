@@ -2,9 +2,10 @@
 /**
  * Docs quality gate. It takes optional paths, walks the docs sources, and
  * runs two Biome passes (a failing error config and a loud warn config), a
- * strict TypeScript pass, a banned-suppression scan, a file-length tier, and
- * the MDX tier (compile, frontmatter, dashes, internal links). The tiers run
- * side by side. It prints one greppable finding per line and exits 0 (clean),
+ * strict TypeScript pass, a banned-suppression scan, a file-length tier, the
+ * MDX tier (compile, frontmatter, dashes, internal links), and the collection
+ * check (every page reaches the built docs collection). The tiers run side by
+ * side. It prints one greppable finding per line and exits 0 (clean),
  * 1 (findings), or 2 (tooling missing). It is structural only; no formatting
  * opinions.
  */
@@ -14,6 +15,7 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { collectionFindings } from './mdx-collection.mjs'
 import { mdxTier } from './mdx.mjs'
 import { walk } from './walk.mjs'
 
@@ -232,17 +234,25 @@ async function main() {
   }
   const files = await collect(paths)
   const texts = await readTexts(files)
-  const [biome, tsc, mdx] = await Promise.all([
+  const [biome, tsc, mdx, collection] = await Promise.all([
     biomeTier(files),
     tscTier(files, paths.length === 0),
     mdxTier({ docsDir: DOCS_DIR, paths }),
+    collectionFindings({ docsDir: DOCS_DIR }),
   ])
   let missing = biome.missing
   missing = tsc.missing ?? missing
   missing = mdx.missing ?? missing
   const length = fileLengthTier(files, texts)
   const suppressions = suppressionTier(files, texts)
-  const errors = [...suppressions, ...length.errors, ...biome.errors, ...tsc.errors, ...mdx.errors]
+  const errors = [
+    ...suppressions,
+    ...length.errors,
+    ...biome.errors,
+    ...tsc.errors,
+    ...mdx.errors,
+    ...collection,
+  ]
   const warnings = [...length.warnings, ...biome.warnings]
   const sorts = (a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : a.line - b.line)
   printGroup('suppressions', errors.filter(v => v.ruleId === 'docs/suppression').sort(sorts))

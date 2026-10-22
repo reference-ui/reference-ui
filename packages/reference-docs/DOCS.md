@@ -50,11 +50,14 @@ Flat and quiet, in the spirit of shadcn/ui:
   extensions are ignored.
 - Frontmatter contract: `title`, `section`, `order` (a number), `slug`, and
   `description` (the page header's lead), plus optional `group` (a sub-section
-  heading in the sidebar). The docs gate requires the first five. The
-  collection schema in `src/collections/docs.ts` still makes `description`
-  optional, so the gate is the stricter of the two. Pages and groups interleave
+  heading in the sidebar). The collection schema in `src/collections/docs.ts`
+  and the docs gate both require the first five. Pages and groups interleave
   in `order`; a group sits where its lowest-order page would. Orders step by 10
   so new pages slot in.
+- content-collections drops a page whose frontmatter does not parse, and says
+  nothing about it. So `sync` fails when a page is missing from the built
+  documents, naming it, and the gate's `docs/collection` check finds the same
+  gap in the generated output.
 - `src/collections/` owns schema, transforms, and slug-to-module lookup.
 - Vite owns MDX module loading; content-collections owns metadata only.
 
