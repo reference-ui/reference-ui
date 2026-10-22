@@ -1,8 +1,9 @@
 //! Recipe identity claims within one system: every recipe owns its class stem and authored className.
 //! Takes spec and extracted recipes in order and emits those whose identity is free, refusing the rest
-//! with `ATM-E-DUPLICATE-RECIPE` at their call site. A stem is `card` for a plain recipe or `card__root`
-//! for slot `root` of a slotted `card`. Slots of one call share its className; a second call claiming
-//! that className, or a plain recipe named like a slot stem, is refused. The first claimant wins.
+//! with `ATM-E-DUPLICATE-RECIPE`, once per distinct message at their call site. A stem is `card` for a
+//! plain recipe or `card__root` for slot `root` of a slotted `card`. Slots of one call share its
+//! className; a second call claiming that className, or a plain recipe named like a slot stem, is
+//! refused. The first claimant wins.
 
 use rustc_hash::FxHashMap;
 
@@ -19,11 +20,7 @@ pub(crate) fn claim<'r>(
     let mut kept = Vec::new();
     for recipe in recipes {
         if let Some(message) = claims.refusal(recipe, system) {
-            diagnostics.push(
-                recipe
-                    .location
-                    .error(DiagnosticCode::DuplicateRecipe, message),
-            );
+            claims.report(recipe, message, diagnostics);
             continue;
         }
         claims.take(recipe);
@@ -32,11 +29,14 @@ pub(crate) fn claim<'r>(
     kept
 }
 
-/// Stems and authored classNames claimed so far, with the call site each className came from.
+/// Stems and authored classNames claimed so far, with the call site each className came from, and
+/// the refusals already reported. Every slot of a refused call is refused at one call site, so the
+/// reported list is what keeps a duplicate call to one diagnostic per distinct message.
 #[derive(Default)]
 struct Claims<'r> {
     stems: FxHashMap<&'r str, &'r Recipe>,
     names: FxHashMap<&'r str, &'r DiagnosticLocation>,
+    reported: Vec<(String, &'r DiagnosticLocation)>,
 }
 
 impl<'r> Claims<'r> {
@@ -50,6 +50,25 @@ impl<'r> Claims<'r> {
             Some(site) if **site != recipe.location => Some(duplicate_name(name, system)),
             _ => None,
         }
+    }
+
+    /// Push one refusal, unless the same message already went out at this call site.
+    fn report(
+        &mut self,
+        recipe: &'r Recipe,
+        message: String,
+        diagnostics: &mut Vec<Diagnostic>,
+    ) {
+        let site = &recipe.location;
+        if self
+            .reported
+            .iter()
+            .any(|(text, at)| *text == message && *at == site)
+        {
+            return;
+        }
+        diagnostics.push(site.error(DiagnosticCode::DuplicateRecipe, message.clone()));
+        self.reported.push((message, site));
     }
 
     fn take(&mut self, recipe: &'r Recipe) {
@@ -187,6 +206,45 @@ mod tests {
         assert_eq!(
             diags[0].message,
             "Duplicate recipe className 'card' within system 'sys'"
+        );
+    }
+
+    #[test]
+    fn a_duplicate_slotted_call_is_reported_once() {
+        let (kept, diags) = run(&[
+            slot("card", "root", 1),
+            slot("card", "title", 1),
+            slot("card", "body", 1),
+            slot("card", "root", 2),
+            slot("card", "title", 2),
+            slot("card", "body", 2),
+        ]);
+        assert_eq!(kept, vec!["card__root", "card__title", "card__body"]);
+        assert_eq!(diags.len(), 1, "{:?}", diags);
+        assert_eq!(diags[0].code, DiagnosticCode::DuplicateRecipe);
+        assert_eq!(
+            diags[0].message,
+            "Duplicate recipe className 'card' within system 'sys'"
+        );
+        assert_eq!(diags[0].line, Some(2));
+    }
+
+    #[test]
+    fn a_stem_collision_keeps_one_message_per_refused_recipe() {
+        let (kept, diags) = run(&[
+            slot("card", "root", 1),
+            slot("card", "title", 1),
+            plain("card__root", 2),
+            plain("card__title", 2),
+        ]);
+        assert_eq!(kept, vec!["card__root", "card__title"]);
+        let messages: Vec<&str> = diags.iter().map(|diag| diag.message.as_str()).collect();
+        assert_eq!(
+            messages,
+            vec![
+                "Recipe class stem 'card__root' within system 'sys' is claimed by slot 'root' of recipe 'card' and recipe 'card__root'",
+                "Recipe class stem 'card__title' within system 'sys' is claimed by slot 'title' of recipe 'card' and recipe 'card__title'",
+            ]
         );
     }
 }
