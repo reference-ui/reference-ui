@@ -4,9 +4,9 @@
 //! Admits identity from the prop or from a `<Name>Recipe` binding (core parity);
 //! refuses dynamic or otherwise absent identity and enforces fail-closed compilation.
 //! A field the walker cannot read (a style value, variant map or compound that is neither an inline
-//! object nor a const object literal) refuses the whole definition with `ATM-E-RECIPE-FIELD`, and
-//! `source.rs` resolves the const references that do read. A `slots` key lowers the call to one plain
-//! recipe per slot (`slots.rs`).
+//! object nor a const object literal, or a default or predicate that is neither a literal nor a const
+//! string) refuses the whole definition with `ATM-E-RECIPE-FIELD`, and `source.rs` resolves the const
+//! references that do read. A `slots` key lowers the call to one plain recipe per slot (`slots.rs`).
 
 use oxc_ast::ast::{
     CallExpression, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind,

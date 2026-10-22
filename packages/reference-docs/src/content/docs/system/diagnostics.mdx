@@ -208,6 +208,13 @@ the code in any tooling you build.
     inline.
   - A recipe with `slots` writes `variants`, each axis and each compound inline.
     A slot entry, like `base: { root: rootStyles }`, may name a const object.
+  - A default or a compound predicate is neither a string, boolean or number
+    literal nor a `const` in the same file that holds one, like
+    `defaultVariants: { size: pick() }` or `tone: LET_TONE` where `LET_TONE`
+    is a `let`. Write a literal, or name a `const` value. A predicate may also
+    be a list of them, and an empty or partly unreadable list is refused.
+  - `defaultVariants` is a name or a spread, like `defaultVariants: DEFAULTS`.
+    Write it inline, with each default as a plain key.
 - `TGN-W-INVALID-RECIPE-NAME`: a `className` that cannot form a TypeScript
   type name. The recipe is left out of the generated types. Rename it.
 - `TGN-W-DUPLICATE-RECIPE-STEM`: two recipe names form the same type name.

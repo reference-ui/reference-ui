@@ -1,0 +1,35 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer recipes {
+  .\@reference-ui\/lib__chip_s_sm { font-size: 12px; }
+  .\@reference-ui\/lib__chip_s_md { font-size: 14px; }
+  .\@reference-ui\/lib__chip_t_loud { color: red; }
+  .\@reference-ui\/lib__chip_t_quiet { color: gray; }
+  .\@reference-ui\/lib__chip_c_loud_sm { font-weight: 700; }
+  .\@reference-ui\/lib__tag_t_loud { color: red; }
+  .\@reference-ui\/lib__tag_t_quiet { color: gray; }
+  .\@reference-ui\/lib__tag_c_loud { text-decoration: underline; }
+  .\@reference-ui\/lib__pill_o_true { opacity: 1; }
+  .\@reference-ui\/lib__pill_o_false { opacity: 0.5; }
+  .\@reference-ui\/lib__pill_t_loud { color: red; }
+  .\@reference-ui\/lib__pill_t_quiet { color: gray; }
+  .\@reference-ui\/lib__pill_c_on_loud { font-weight: 700; }
+  .\@reference-ui\/lib__card__root_s_sm { padding: 12px; }
+  .\@reference-ui\/lib__card__root_s_md { padding: 16px; }
+  .\@reference-ui\/lib__card__root_t_loud { color: red; }
+  .\@reference-ui\/lib__card__root_t_quiet { color: gray; }
+  .\@reference-ui\/lib__card__root_c_loud_sm { font-weight: 700; }
+  .\@reference-ui\/lib__card__title_s_sm { font-size: 14px; }
+  .\@reference-ui\/lib__card__title_s_md { font-size: 16px; }
+  .\@reference-ui\/lib__card__title_c_loud_sm { letter-spacing: 1px; }
+}
+}

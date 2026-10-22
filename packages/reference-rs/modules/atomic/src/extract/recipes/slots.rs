@@ -5,7 +5,8 @@
 //! not an inline object, or a slot-map key the list does not name refuses the whole definition with
 //! `ATM-E-RECIPE-SLOT`. A slotted recipe also takes its `variants` maps and compound entries inline: a
 //! named or spread map, or a compound that is not an inline object, refuses with `ATM-E-RECIPE-FIELD`,
-//! as does a slot entry the walk cannot read.
+//! as does a slot entry the walk cannot read. A default or a compound predicate that reads as no scalar
+//! refuses once for the definition, since every slot shares it.
 
 use oxc_ast::ast::{
     ArrayExpressionElement, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind,

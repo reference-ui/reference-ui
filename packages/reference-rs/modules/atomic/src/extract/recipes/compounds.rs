@@ -1,14 +1,17 @@
 //! Compound variant rules of a recipe: each `compoundVariants` entry, its predicates, and its `css`.
 //! Takes the walk and the `compoundVariants` value and appends one compound per inline entry to the
 //! draft. The list and each entry must be written inline, since a const array records no predicate
-//! values, and a `css` reads through the same style positions as a base or variant value.
+//! values, and a `css` reads through the same style positions as a base or variant value. A predicate
+//! reads a literal, a same-file const string, or a non-empty list of them (`source.rs`); one that reads
+//! as none refuses its field, so a compound is never widened by a predicate it could not read.
 //! A compound with no predicate or no style lowers nothing, as before.
 
 use indexmap::IndexMap;
 use oxc_ast::ast::{ArrayExpression, Expression, ObjectExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
 
-use super::walk::{inline_hint, normalized_value, static_key, unwrap_expression, RecipeWalk};
+use super::source::predicate_values;
+use super::walk::{inline_hint, static_key, unwrap_expression, RecipeWalk};
 use crate::recipes::RecipeCompound;
 
 pub(super) fn handle_recipe_compounds(walk: &mut RecipeWalk<'_, '_>, val: &Expression<'_>) {
@@ -76,7 +79,9 @@ fn extract_compound(
             }
             continue;
         }
-        extract_compound_predicate(&prop.value, key, &mut predicates);
+        if let Some(values) = read_predicate(walk, field, &key, &prop.value) {
+            predicates.insert(key, values);
+        }
     }
     if wants.is_empty() || predicates.is_empty() {
         return None;
@@ -84,32 +89,25 @@ fn extract_compound(
     Some(RecipeCompound { predicates, wants })
 }
 
-fn extract_compound_predicate(
+/// The values of one predicate of the compound entry at `entry`, or `None` once it refused. A value
+/// that reads as no scalar, and no non-empty list of scalars, refuses the predicate's own field.
+pub(super) fn read_predicate(
+    walk: &mut RecipeWalk<'_, '_>,
+    entry: &str,
+    key: &str,
     val: &Expression<'_>,
-    key: String,
-    predicates: &mut IndexMap<String, Vec<String>>,
-) {
-    let unwrapped = unwrap_expression(val);
-    if let Expression::ArrayExpression(arr) = unwrapped {
-        let values = extract_predicate_array(arr);
-        if !values.is_empty() {
-            predicates.insert(key, values);
-        }
-        return;
-    }
-    if let Some(s) = normalized_value(unwrapped) {
-        predicates.insert(key, vec![s]);
-    }
-}
-
-fn extract_predicate_array(arr: &ArrayExpression<'_>) -> Vec<String> {
-    let mut values = Vec::new();
-    for el in &arr.elements {
-        if let Some(expr) = el.as_expression() {
-            if let Some(s) = normalized_value(expr) {
-                values.push(s);
-            }
-        }
+) -> Option<Vec<String>> {
+    let values = predicate_values(walk.ctx, val);
+    if values.is_none() {
+        let field = format!("{entry}.{key}");
+        let message = format!(
+            "recipe '{}': '{field}' is not a string literal, a const string, or a non-empty list of them",
+            walk.site.class_name
+        );
+        let help = format!(
+            "write {field} as a string literal or a list of them, or name a const string declared in this file"
+        );
+        walk.refuse(val.span(), message, help);
     }
     values
 }

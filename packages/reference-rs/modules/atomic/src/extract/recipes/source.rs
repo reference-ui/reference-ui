@@ -2,16 +2,18 @@
 //! the entries `css(name)` reads: the scope table records each entry and `lower_const_object` lowers
 //! them, as it does for `css()`. `map_entries` reads a map value (`variants`, an axis, a value map, or
 //! a spread) as named entries, inline or recorded, and `recorded_style` lowers one recorded entry as a
-//! style object. A value none of these can read refuses its field, and an imported object's unfoldable
-//! spreads warn at the call site, as `css()` warns them.
+//! style object. A default or a compound predicate reads a scalar instead: `scalar_text` reads a literal
+//! or a same-file const that holds one, and `predicate_values` reads one scalar or a non-empty list of
+//! them. A value none of these can read refuses its field, and an imported object's unfoldable spreads
+//! warn at the call site, as `css()` warns them.
 
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind};
 use oxc_span::{GetSpan, Span};
 use smallvec::smallvec;
 
-use super::walk::{static_key, unwrap_expression, RecipeWalk};
+use super::walk::{boolean_str, normalized_value, static_key, unwrap_expression, RecipeWalk};
 use crate::atom::backing::OWN;
-use crate::atom::Want;
+use crate::atom::{AtomValue, Want};
 use crate::diagnostics::DiagnosticCode;
 use crate::extract::constants::{ConstObject, ObjectProp};
 use crate::extract::expressions::object::lower::LowerSite;
@@ -191,6 +193,48 @@ pub(super) fn lower_const_style(
         .object_walk_into(Some(walk.site.origin), wants, &OWN);
     lower_const_object(&mut obj_ctx, obj, site);
     scope::apply_to_wants(&mut wants[wants_at..]);
+}
+
+/// The text a scalar position reads as: a string, boolean or number literal, or a same-file `const`
+/// that holds exactly one such leaf. A call, a ternary, a `let`, an import or an unbound name reads as
+/// `None`, and the caller refuses its field.
+pub(super) fn scalar_text(ctx: &ExtractContext<'_>, expr: &Expression<'_>) -> Option<String> {
+    let target = unwrap_expression(expr);
+    if let Some(text) = normalized_value(target) {
+        return Some(text);
+    }
+    let Expression::Identifier(ident) = target else {
+        return None;
+    };
+    atom_text(ctx.scoped().const_scalar(ident.name.as_str())?)
+}
+
+/// The values of a compound predicate: one scalar, or a non-empty array of scalars. An empty array,
+/// or an entry that reads as no scalar (a spread or a hole included), reads as `None`.
+pub(super) fn predicate_values(
+    ctx: &ExtractContext<'_>,
+    expr: &Expression<'_>,
+) -> Option<Vec<String>> {
+    let target = unwrap_expression(expr);
+    let Expression::ArrayExpression(list) = target else {
+        return scalar_text(ctx, target).map(|text| vec![text]);
+    };
+    if list.elements.is_empty() {
+        return None;
+    }
+    list.elements
+        .iter()
+        .map(|element| element.as_expression().and_then(|item| scalar_text(ctx, item)))
+        .collect()
+}
+
+/// The text one recorded leaf reads as: the same text its literal would read as.
+fn atom_text(leaf: &AtomValue) -> Option<String> {
+    match leaf {
+        AtomValue::String(text) | AtomValue::Number(text) => Some(text.to_string()),
+        AtomValue::Bool(value) => Some(boolean_str(*value)),
+        AtomValue::Token { .. } | AtomValue::Null => None,
+    }
 }
 
 /// Diagnose nested spreads of an imported object that could not unfold, as `css()` does at its call.

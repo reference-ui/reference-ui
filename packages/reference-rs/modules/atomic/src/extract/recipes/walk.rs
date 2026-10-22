@@ -1,9 +1,10 @@
 //! Recipe object walker: base styles, variant matrices, defaults, and compounds.
 //! Takes a recipe object literal, its site (class name, origin, optional slot) and the extract
-//! context, and emits a `RecipeDraft` of style wants, or `None` once a field refused. A field is
+//! context, and emits a `RecipeDraft` of style wants, or `None` once a field refused. A style field is
 //! read from an inline object literal, or from a const object literal the scope table resolves
-//! (`source.rs`); any other value refuses the whole definition with `ATM-E-RECIPE-FIELD` at the
-//! value, naming the field. With a slot, every style position reads only that slot's entry.
+//! (`source.rs`); a default or a compound predicate reads a literal or a same-file const string. Any
+//! other value refuses the whole definition with `ATM-E-RECIPE-FIELD` at the value, naming the field.
+//! With a slot, every style position reads only that slot's entry.
 
 use indexmap::IndexMap;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind, PropertyKey};
@@ -12,7 +13,7 @@ use smallvec::smallvec;
 
 use super::compounds::handle_recipe_compounds;
 use super::located_error;
-use super::source::{const_object, lower_const_style};
+use super::source::{const_object, lower_const_style, scalar_text};
 use super::variants::handle_recipe_variants;
 use crate::atom::backing::OWN;
 use crate::atom::Want;
@@ -169,7 +170,7 @@ fn handle_recipe_property(walk: &mut RecipeWalk<'_, '_>, prop: &ObjectProperty<'
     match key.as_str() {
         "base" => handle_recipe_base(walk, &prop.value),
         "variants" => handle_recipe_variants(walk, &prop.value),
-        "defaultVariants" => handle_recipe_defaults(&prop.value, &mut walk.draft),
+        "defaultVariants" => handle_recipe_defaults(walk, &prop.value),
         "compoundVariants" => handle_recipe_compounds(walk, &prop.value),
         _ => {}
     }
@@ -182,21 +183,51 @@ fn handle_recipe_base(walk: &mut RecipeWalk<'_, '_>, val: &Expression<'_>) {
     }
 }
 
-fn handle_recipe_defaults(val: &Expression<'_>, draft: &mut RecipeDraft) {
+/// Read `defaultVariants` into the draft: an inline object of plain keys, each a literal or a same-file
+/// const string. Anything else refuses the definition at its field, so no default drops out silently.
+/// The slot check runs this same read once for a slotted recipe, before any slot is walked.
+pub(super) fn handle_recipe_defaults(walk: &mut RecipeWalk<'_, '_>, val: &Expression<'_>) {
     let Expression::ObjectExpression(obj) = unwrap_expression(val) else {
+        let message = format!(
+            "recipe '{}': 'defaultVariants' must be an inline object literal",
+            walk.site.class_name
+        );
+        walk.refuse(val.span(), message, inline_hint("defaultVariants"));
         return;
     };
     for prop_kind in &obj.properties {
-        let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
-            continue;
-        };
-        let Some(key) = static_key(&prop.key) else {
-            continue;
-        };
-        if let Some(str_val) = normalized_value(&prop.value) {
-            draft.default_variants.insert(key, str_val);
+        match prop_kind {
+            ObjectPropertyKind::SpreadProperty(spread) => {
+                let message = format!(
+                    "recipe '{}': 'defaultVariants' spreads a value; write each default inline",
+                    walk.site.class_name
+                );
+                let help = "write each entry of defaultVariants inline".to_string();
+                walk.refuse(spread.span, message, help);
+            }
+            ObjectPropertyKind::ObjectProperty(prop) => read_default(walk, prop),
         }
     }
+}
+
+/// One default: its key names the variant and its value is a scalar. A computed key refuses the map.
+fn read_default(walk: &mut RecipeWalk<'_, '_>, prop: &ObjectProperty<'_>) {
+    let Some(key) = static_key(&prop.key) else {
+        walk.refuse_computed("defaultVariants", prop.key.span());
+        return;
+    };
+    if let Some(text) = scalar_text(walk.ctx, &prop.value) {
+        walk.draft.default_variants.insert(key, text);
+        return;
+    }
+    let field = format!("defaultVariants.{key}");
+    let message = format!(
+        "recipe '{}': '{field}' is not a string literal or a const string declared in this file",
+        walk.site.class_name
+    );
+    let help =
+        format!("write {field} as a string literal, or name a const string declared in this file");
+    walk.refuse(prop.value.span(), message, help);
 }
 
 /// Lower an inline style object into `wants` under the origin, in its own family scope.
@@ -278,7 +309,7 @@ pub(crate) fn static_key_is(key: &PropertyKey<'_>, name: &str) -> bool {
     }
 }
 
-fn boolean_str(val: bool) -> String {
+pub(super) fn boolean_str(val: bool) -> String {
     if val {
         "true".to_string()
     } else {

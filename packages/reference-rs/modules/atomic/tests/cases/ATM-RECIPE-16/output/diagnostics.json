@@ -1,0 +1,107 @@
+[
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'callDefault': 'defaultVariants.size' is not a string literal or a const string declared in this file",
+    "file": "input/src/recipe.ts",
+    "line": 10,
+    "column": 28,
+    "span": {
+      "start": 290,
+      "end": 296
+    },
+    "help": [
+      "write defaultVariants.size as a string literal, or name a const string declared in this file"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'letDefault': 'defaultVariants.size' is not a string literal or a const string declared in this file",
+    "file": "input/src/recipe.ts",
+    "line": 16,
+    "column": 28,
+    "span": {
+      "start": 471,
+      "end": 478
+    },
+    "help": [
+      "write defaultVariants.size as a string literal, or name a const string declared in this file"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'callTone': 'compoundVariants[0].tone' is not a string literal, a const string, or a non-empty list of them",
+    "file": "input/src/recipe.ts",
+    "line": 25,
+    "column": 30,
+    "span": {
+      "start": 670,
+      "end": 676
+    },
+    "help": [
+      "write compoundVariants[0].tone as a string literal or a list of them, or name a const string declared in this file"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'letTone': 'compoundVariants[0].tone' is not a string literal, a const string, or a non-empty list of them",
+    "file": "input/src/recipe.ts",
+    "line": 34,
+    "column": 30,
+    "span": {
+      "start": 907,
+      "end": 915
+    },
+    "help": [
+      "write compoundVariants[0].tone as a string literal or a list of them, or name a const string declared in this file"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'callList': 'compoundVariants[0].tone' is not a string literal, a const string, or a non-empty list of them",
+    "file": "input/src/recipe.ts",
+    "line": 43,
+    "column": 30,
+    "span": {
+      "start": 1148,
+      "end": 1164
+    },
+    "help": [
+      "write compoundVariants[0].tone as a string literal or a list of them, or name a const string declared in this file"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'namedDefaults': 'defaultVariants' must be an inline object literal",
+    "file": "input/src/recipe.ts",
+    "line": 51,
+    "column": 20,
+    "span": {
+      "start": 1411,
+      "end": 1419
+    },
+    "help": [
+      "write defaultVariants inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'spreadDefaults': 'defaultVariants' spreads a value; write each default inline",
+    "file": "input/src/recipe.ts",
+    "line": 57,
+    "column": 22,
+    "span": {
+      "start": 1594,
+      "end": 1605
+    },
+    "help": [
+      "write each entry of defaultVariants inline"
+    ]
+  }
+]

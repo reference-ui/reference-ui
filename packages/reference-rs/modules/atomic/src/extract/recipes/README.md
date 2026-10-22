@@ -28,6 +28,15 @@ maps and compound entries inline, because the slot check reads every key from th
 literal. A const object literal records no computed keys, so a key computed inside
 one is not read, as for `css(name)`.
 
+A default (`defaultVariants`) and a compound predicate are scalars, not maps. Each
+reads a string, boolean or number literal, or a `const` in scope at the call that
+holds exactly one such leaf: a `let`, an import, a call, a ternary, a mutated name
+or an unbound name refuses the field. A predicate may also be a non-empty list of
+scalars, and an empty list or one unreadable entry refuses it. The defaults map is
+written inline, since a name or a spread refuses it. A slotted recipe reads these
+shared fields once in the slot check, so a refusal names its field once rather than
+once per slot.
+
 Closed classes and the variant table are the `recipes` stage (`ATM-RECIPE-*`).
 This folder only finds the expressions. `sva` is not a site.
 

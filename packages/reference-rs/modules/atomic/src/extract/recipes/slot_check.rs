@@ -2,14 +2,20 @@
 //! Every slot map is an inline object naming only listed slots, and every `variants` map and compound
 //! entry is written inline. It takes the definition's listed slots and its fields and emits
 //! `ATM-E-RECIPE-SLOT` for a slot map that breaks the rules, or `ATM-E-RECIPE-FIELD` for a map or
-//! compound the walk cannot read, one refusal where each stands. The walk never runs for a definition
-//! this check refuses, so no slot repeats the refusal.
+//! compound the walk cannot read, one refusal where each stands. `defaultVariants` and each compound
+//! predicate are shared by every slot, so the check reads them once, with the walker's own reads, and
+//! their refusals land once too. The walk never runs for a definition this check refuses, so no slot
+//! repeats a refusal.
 
 use oxc_ast::ast::{ArrayExpressionElement, Expression, ObjectProperty, ObjectPropertyKind};
 use oxc_span::{GetSpan, Span};
 
+use super::compounds::read_predicate;
 use super::slots::push_refusal;
-use super::walk::{field_refusal, inline_hint, static_key, unwrap_expression};
+use super::walk::{
+    field_refusal, handle_recipe_defaults, inline_hint, static_key, unwrap_expression,
+    RecipeDraft, RecipeSite, RecipeWalk,
+};
 use crate::extract::ExtractContext;
 
 /// The slot-key walk: which slots are listed, where refusals go, and whether any fired.
@@ -26,8 +32,31 @@ impl SlotKeyCheck<'_, '_> {
         match static_key(&prop.key).as_deref() {
             Some("base") => self.map(&prop.value),
             Some("variants") => self.variants(&prop.value),
+            Some("defaultVariants") => {
+                self.walked(|walk| handle_recipe_defaults(walk, &prop.value));
+            }
             Some("compoundVariants") => self.compounds(&prop.value),
             _ => {}
+        }
+    }
+
+    /// Run one walker read over this definition. The walker's own rules decide what refuses, its
+    /// refusals land in this check's diagnostics, and the check is unclean when the read refused.
+    fn walked(&mut self, read: impl FnOnce(&mut RecipeWalk<'_, '_>)) {
+        let mut walk = RecipeWalk {
+            // The reads here lower no style, so no origin or slot is ever consulted.
+            site: RecipeSite {
+                class_name: self.class_name,
+                origin: "",
+                slot: None,
+            },
+            ctx: &mut *self.ctx,
+            draft: RecipeDraft::default(),
+            refused: false,
+        };
+        read(&mut walk);
+        if walk.refused {
+            self.clean = false;
         }
     }
 
@@ -126,12 +155,16 @@ impl SlotKeyCheck<'_, '_> {
             }
             ObjectPropertyKind::ObjectProperty(prop) => prop,
         };
-        let key = static_key(&prop.key);
-        if key.is_none() {
+        let Some(key) = static_key(&prop.key) else {
             self.refuse_computed(field, prop.key.span());
-        }
-        if key.as_deref() == Some("css") {
+            return;
+        };
+        if key == "css" {
             self.map(&prop.value);
+        } else {
+            self.walked(|walk| {
+                read_predicate(walk, field, &key, &prop.value);
+            });
         }
     }
 

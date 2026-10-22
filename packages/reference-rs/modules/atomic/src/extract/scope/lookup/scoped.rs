@@ -1,11 +1,11 @@
-//! The walker-facing lookup handle: `Scoped` answers each identifier question at one fixed use-site
-//! scope. Accessors cover static leaves, pure-helper descriptors, style objects and arrays, import
-//! bindings, mutation poison, and unfoldable import spreads. Locals resolve first and imports
-//! through the module graph, so every method agrees with the chain rules in the parent module.
-//! Takes a name and emits borrowed values or facts from the chain; nothing here allocates a new
-//! scope.
+//! The walker-facing lookup handle: `Scoped` answers each name at one fixed use-site scope.
+//! Accessors cover static leaves, the single leaf of a same-file `const`, pure-helper
+//! descriptors, style objects and arrays, import bindings, mutation poison, and unfoldable import
+//! spreads. Locals resolve first and imports through the module graph, so every method agrees with
+//! the chain rules in the parent module. Takes a name and emits borrowed values or facts from the
+//! chain; nothing here allocates a new scope.
 
-use super::super::binding::{Binding, BindingInit, ImportRef};
+use super::super::binding::{Binding, BindingInit, BindingKind, ImportRef};
 use super::{
     local_array, local_object, local_object_prop, local_scalar_residue, local_scalars, Lookup,
     Scoped,
@@ -65,6 +65,26 @@ impl<'a> Scoped<'a> {
     /// The first static leaf for single-valued positions.
     pub fn scalar(self, name: &str) -> Option<&'a AtomValue> {
         self.scalar_leaves(name).first()
+    }
+
+    /// The only static leaf of a name bound by a `const` in this file. A `let`, `var`, param,
+    /// function, import or unbound name answers nothing, and so does a mutated binding, a const with
+    /// several leaves, or one that dropped a dynamic arm: a value position reads only what is certain.
+    pub fn const_scalar(self, name: &str) -> Option<&'a AtomValue> {
+        // A write anywhere in the project poisons the name, so its value is no longer certain.
+        if self.mutated(name) {
+            return None;
+        }
+        let Lookup::Local(binding) = self.chain.resolve(name, self.scope) else {
+            return None;
+        };
+        if !matches!(binding.kind, BindingKind::Const) || local_scalar_residue(binding) {
+            return None;
+        }
+        match local_scalars(binding) {
+            [only] => Some(only),
+            _ => None,
+        }
     }
 
     /// The lowered pure-helper descriptor for a name: the same-file binding,
