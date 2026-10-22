@@ -1,11 +1,12 @@
 //! Shared fixtures for the source-discovery tests.
-//! A process-unique temp root, the tricky disk tree with live and decoy files, and the scan and compile request builders for the retention token path. The `disk` and `disk_links` children pin the walk and `retention` pins the completeness contract against these fixtures. Compiled only under `cfg(test)`.
+//! A process-unique temp root, the tricky disk tree with live and decoy files, and the scan and compile request builders for the retention token path. The `disk`, `disk_links` and `disk_alias` children pin the walk and `retention` pins the completeness contract against these fixtures. Compiled only under `cfg(test)`.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::CompileRequest;
 
 mod disk;
+mod disk_alias;
 mod disk_links;
 mod retention;
 

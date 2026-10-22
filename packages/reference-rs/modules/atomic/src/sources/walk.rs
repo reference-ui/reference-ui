@@ -1,18 +1,19 @@
 //! Disk walk for source discovery, shared by the collecting scan and the union backfill.
 //! It takes a root, the include scope and the canonical identities already claimed, and emits the in-scope
 //! `(path, content)` pairs in walk order. A directory is entered only when an include pattern can still reach
-//! it by its path from the root, and a symlinked directory is entered under every alias that passes that test,
-//! unless its target is already on the path being walked, which ends a loop at the link that closes it. A file
-//! reached through several paths is emitted once, under its first in-scope path in walk order, real paths before
-//! link aliases. The ignore set and the extension gate are shared with the native scan gate, so the two cannot
-//! drift apart.
+//! it by its path from the root. Every directory entered records its canonical path and the include state of the
+//! path that reached it; a symlinked directory is walked only when that pair is new, which bounds the walk by the
+//! directories times the states they reach, so cliques and lattices of links finish, while a real directory is
+//! always walked. A file reached through several paths is emitted once, under its first in-scope path in walk
+//! order, real paths before link aliases. The ignore set and the extension gate are shared with the native scan
+//! gate, so the two cannot drift apart.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use rustc_hash::FxHashSet;
 
-use crate::includes::FileMatcher;
+use crate::includes::{FileMatcher, GlobState};
 
 /// Directories the disk walk never descends into (build + metadata).
 const IGNORE_DIRS: &[&str] = &[
@@ -154,20 +155,21 @@ fn agrees(prefix: &[String], rel: &Path) -> bool {
         .all(|(literal, part)| part.as_os_str() == literal.as_str())
 }
 
-/// Where a walk stands: the canonical path of the directory, its path from the walk root, and whether a link
-/// carried the walk there.
+/// Where a walk stands: the canonical path of the directory, its path from the walk root, whether a link carried the
+/// walk there, and the include state of that path.
 struct Place<'a> {
     canon: &'a Path,
     rel: &'a Path,
     via_link: bool,
+    state: &'a GlobState,
 }
 
-/// The state of one traversal: the scope, the identities claimed so far, the canonical directories on the path
-/// being walked, the link-alias files waiting for the real tree, and the output.
+/// The state of one traversal: the scope, the identities claimed so far, the (canonical directory, include state)
+/// pairs already visited, the link-alias files waiting for the real tree, and the output.
 struct WalkCtx<'w, 'm, 'a> {
     scope: &'w WalkScope<'m, 'a>,
     claimed: FxHashSet<PathBuf>,
-    path: Vec<PathBuf>,
+    visited: FxHashSet<(PathBuf, GlobState)>,
     deferred: Vec<(PathBuf, PathBuf)>,
     acc: &'w mut Vec<(String, String)>,
 }
@@ -181,6 +183,7 @@ pub(super) fn scan_dir(dir: &Path, scope: &WalkScope, acc: &mut Vec<(String, Str
 /// The one traversal behind the collecting scan and the union backfill. `claimed` holds the canonical identities
 /// the caller already provides, so the walk never reads a file the list carries under another path. Link aliases
 /// wait until the real tree is done, so a file listed under its real path is never listed again through a link.
+/// `root` is the path the scope's matcher was bound to, so the root state strips the same prefix `matches_file` does.
 pub(super) fn walk_tree(
     root: &Path,
     scope: &WalkScope,
@@ -188,17 +191,20 @@ pub(super) fn walk_tree(
     acc: &mut Vec<(String, String)>,
 ) {
     let root_canon = canonical_or_self(root);
+    let root_state = scope.matcher.root_state(root);
     let mut walk = WalkCtx {
         scope,
         claimed,
-        path: vec![root_canon.clone()],
+        visited: FxHashSet::default(),
         deferred: Vec::new(),
         acc,
     };
+    walk.visited.insert((root_canon.clone(), root_state.clone()));
     let place = Place {
         canon: &root_canon,
         rel: Path::new(""),
         via_link: false,
+        state: &root_state,
     };
     walk_dir(root, &place, &mut walk);
     drain_deferred(&mut walk);
@@ -221,8 +227,10 @@ fn walk_dir(dir: &Path, place: &Place, walk: &mut WalkCtx) {
     }
 }
 
-/// Enters one kept directory unless the include cannot reach it, or a link's target is already on the path being
-/// walked: that link closes a loop. The canonical path is pushed for the whole subtree and popped after it.
+/// Enters one kept directory unless the include cannot reach it. Its state is the parent's state stepped by the entry
+/// name, and its (canonical directory, state) pair is recorded. A real directory is always walked; a link is walked
+/// only when its pair is new, so a link that closes a loop or repeats an earlier alias is cut where the earlier visit
+/// already covers it.
 fn enter_dir(entry: &WalkEntry, place: &Place, walk: &mut WalkCtx) {
     let path = &entry.path;
     let Some(name) = path.file_name() else {
@@ -237,21 +245,22 @@ fn enter_dir(entry: &WalkEntry, place: &Place, walk: &mut WalkCtx) {
         let Ok(target) = dunce::canonicalize(path) else {
             return;
         };
-        if walk.path.contains(&target) {
-            return;
-        }
         target
     } else {
         place.canon.join(name)
     };
-    walk.path.push(canon.clone());
+    let state = walk.scope.matcher.step(place.state, name);
+    let fresh = walk.visited.insert((canon.clone(), state.clone()));
+    if link && !fresh {
+        return;
+    }
     let child = Place {
         canon: &canon,
         rel: &rel,
         via_link: place.via_link || link,
+        state: &state,
     };
     walk_dir(path, &child, walk);
-    walk.path.pop();
 }
 
 /// True when the entry is itself a symbolic link. A type the readdir did not report costs one lstat.
