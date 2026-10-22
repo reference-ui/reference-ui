@@ -9,10 +9,11 @@
 /**
  * Node implementation of the TastyApi over emitted artifacts.
  * Loads and validates the manifest, resolves symbols by id or name through the SymbolResolver, and serves members, references, display helpers, and diagnostics.
- * Entry points are createTastyApi and createTastyApiFromManifest.
+ * Entry points are createTastyApi and createTastyApiFromManifest. Each public projection call builds one ProjectionContext here, so its whole walk shares one path and one step budget, and getDisplayResult reports the walk limits that dropped members from that call.
  */
 import type { CreateTastyApiOptions, CreateTastyApiFromManifestOptions, RawTastyDiagnostic, RawTastyManifest, RawTastyMember, RawTastySymbolIndexEntry, RawTastySymbolRef, RawTastyTypeRef, TastyApi, TastyMember, TastyGraphApi, TastySymbol, TastySymbolRef, TastySymbolSearchResult, TastyTypeParameterMemberProjector, TastyTypeRef } from '../api-types.js';
 import { type ArtifactImporter } from './shared.js';
+import { type ProjectionContext } from './object-projection-references.js';
 interface CreateTastyApiRuntimeOptions {
     manifestPath: string;
     importer: ArtifactImporter;
@@ -38,7 +39,17 @@ export declare class TastyApiRuntime implements TastyApi {
     loadManifestSymbolRef(ref: TastySymbolRef): Promise<TastySymbol | undefined>;
     private graphFlattenInterfaceMembers;
     private graphGetDisplayMembers;
+    /** Reads `truncated` and `notices` from this call's own record after the walk settles, so overlapping calls never share them. */
+    private graphGetDisplayResult;
     private graphProjectObjectLikeMembers;
+    /**
+     * The context one public call starts with: an empty path, no type parameter in scope, and the walk limits for this
+     * call. A limit that drops members ends the walk with a partial result, records its notice on this call, and publishes
+     * it to runtimeWarnings.
+     */
+    private createRootContext;
+    /** An interface's flattened members under a projection's own context, so that walk shares its path and budget. */
+    flattenInterfaceUnder(symbol: TastySymbol, context: ProjectionContext): Promise<TastyMember[]>;
     private graphCollectUserOwnedReferences;
     ready(): Promise<void>;
     loadManifest(): Promise<RawTastyManifest>;

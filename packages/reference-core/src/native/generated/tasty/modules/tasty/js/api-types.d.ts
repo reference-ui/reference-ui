@@ -9,6 +9,7 @@
 /**
  * Public TypeScript API surface of the tasty runtime.
  * Declares the TastyApi, symbol, member, type-ref, JSDoc, and browser-runtime interfaces over the RawTasty* generated payloads it re-exports.
+ * A display projection comes back as a TastyDisplayResult, which carries whether a walk limit cut that call's walk short and the notices it raised.
  */
 import type { TastyManifest as RawTastyManifest, TastyMember as RawTastyMember, TastyMemberKind as RawTastyMemberKind, TastyStructuredTypeRef as RawTastyStructuredTypeRef, TastySymbol as RawTastySymbol, TastyTypeParameter as RawTastyTypeParameter, TastyTypeRef as RawTastyTypeRef, TastyTypeReference as RawTastyTypeReference } from './generated/index.js';
 export type { TastyChunkModule as RawTastyChunkModule, TastyFnParam as RawTastyFnParam, TastyInterfaceSymbol as RawTastyInterfaceSymbol, TastyJsDoc as RawTastyJsDoc, TastyJsDocTag as RawTastyJsDocTag, TastyManifest as RawTastyManifest, TastyMappedModifierKind as RawTastyMappedModifierKind, TastyMember as RawTastyMember, TastyMemberKind as RawTastyMemberKind, TastyModule as RawTastyModule, TastyStructuredTypeRef as RawTastyStructuredTypeRef, TastySymbol as RawTastySymbol, TastySymbolIndexEntry as RawTastySymbolIndexEntry, TastySymbolKind as RawTastySymbolKind, TastySymbolRef as RawTastySymbolRef, TastyTemplateLiteralPart as RawTastyTemplateLiteralPart, TastyTupleElement as RawTastyTupleElement, TastyTypeAliasSymbol as RawTastyTypeAliasSymbol, TastyTypeOperatorKind as RawTastyTypeOperatorKind, TastyTypeParameter as RawTastyTypeParameter, TastyTypeRef as RawTastyTypeRef, TastyTypeReference as RawTastyTypeReference, } from './generated/index.js';
@@ -105,6 +106,17 @@ export interface TastySymbolRef {
     getIfLoaded(): TastySymbol | undefined;
     load(): Promise<TastySymbol>;
 }
+/**
+ * One public display projection: its members, and the walk limits that dropped members from that call. `truncated` is
+ * true when the step budget or the nesting-depth guard cut the walk short, so `members` is partial. `notices` holds the
+ * text each such limit raised, once each, naming the symbol and the limit. Both come from the call's own record, so calls
+ * that overlap on one api never share them.
+ */
+export interface TastyDisplayResult {
+    members: TastyMember[];
+    truncated: boolean;
+    notices: string[];
+}
 export interface TastySymbol {
     getId(): string;
     getName(): string;
@@ -127,12 +139,20 @@ export interface TastyGraphApi {
     loadExtendsChain(symbol: TastySymbol): Promise<TastySymbol[]>;
     flattenInterfaceMembers(symbol: TastySymbol): Promise<TastyMember[]>;
     getDisplayMembers(symbol: TastySymbol): Promise<TastyMember[]>;
+    getDisplayResult(symbol: TastySymbol): Promise<TastyDisplayResult>;
     projectObjectLikeMembers(symbol: TastySymbol): Promise<TastyMember[] | undefined>;
     collectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]>;
 }
+/**
+ * Supplies members for a type parameter the walk cannot resolve. `displayMembersOf` reads a symbol's display members as
+ * part of the walk that asked: the walk's path and step budget carry into it, so a symbol that leads back to the reference
+ * ends at the cycle. The walk always passes it; a direct caller may omit it, and the public `getDisplayMembers()` then
+ * stands in. Calling the public `getDisplayMembers()` from inside a walk starts a new walk with its own budget.
+ */
 export type TastyTypeParameterMemberProjector = (input: {
     api: TastyApi;
     reference: RawTastyTypeReference;
+    displayMembersOf?: (symbol: TastySymbol) => Promise<TastyMember[]>;
 }) => Promise<TastyMember[] | undefined> | TastyMember[] | undefined;
 export interface TastyApi {
     ready(): Promise<void>;
