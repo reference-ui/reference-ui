@@ -197,7 +197,7 @@ function perTagDecls(): string[] {
   const lines: string[] = []
   for (const { dom: tag, jsx: name } of ELEMENT_ROSTER) {
     lines.push(
-      `export type ${name}Props = Omit<React.ComponentPropsWithoutRef<${JSON.stringify(tag)}>, StylePropName | 'css' | 'colorMode' | 'variant'> & StyleProps & { css?: PrimitiveCssProp; colorMode?: unknown; variant?: unknown }`,
+      `export type ${name}Props = Omit<React.ComponentPropsWithoutRef<${JSON.stringify(tag)}>, StylePropName | 'css' | 'colorMode' | 'variant'> & StyleProps & { css?: PrimitiveCssProp; colorMode?: 'light' | 'dark'; variant?: unknown }`,
       `export declare const ${name}: (props: ${name}Props & { ref?: React.Ref<React.ComponentRef<${JSON.stringify(tag)}>> }) => React.ReactNode`,
       ''
     )
@@ -282,7 +282,7 @@ function namedGraphLines(breakpointUnion: string): string[] {
     `  StylePropName | 'css' | 'colorMode' | 'variant'`,
     '> & StyleProps & {',
     '  css?: PrimitiveCssProp',
-    '  colorMode?: unknown',
+    "  colorMode?: 'light' | 'dark'",
     '  variant?: unknown',
     '}',
     'export declare function css(...styles: Array<CssStyles | CssStyles[]>): string',

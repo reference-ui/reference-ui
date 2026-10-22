@@ -230,9 +230,28 @@ describe('generateReactTypesSource tsc probe', () => {
     }
     expect(failure).toContain('TS2559')
   }, 150000)
+
+  it('types colorMode as light or dark on a primitive JSX element', () => {
+    const dir = join(
+      PACKAGE_ROOT,
+      'tests',
+      '.artifacts',
+      `__prim-color-mode-${process.pid}-${Date.now()}`
+    )
+    mkdirSync(dir, { recursive: true })
+    tempDirs.push(dir)
+    writeFileSync(join(dir, 'index.d.mts'), typesSource())
+    writeStyledStub(dir)
+    writeColorModeProbe(dir)
+    execFileSync(
+      process.execPath,
+      strictTscArgs(['index.d.mts', 'probe-color-mode.tsx'], ['--jsx', 'react-jsx']),
+      { cwd: dir, stdio: 'pipe', timeout: 120000 }
+    )
+  }, 150000)
 })
 
-function strictTscArgs(files: string[]): string[] {
+function strictTscArgs(files: string[], extra: string[] = []): string[] {
   const tsc = join(PACKAGE_ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
   return [
     tsc,
@@ -248,6 +267,7 @@ function strictTscArgs(files: string[]): string[] {
     'NodeNext',
     '--moduleResolution',
     'NodeNext',
+    ...extra,
     ...files,
   ]
 }
@@ -306,6 +326,20 @@ function writeArrayProbe(dir: string): void {
       '',
       `const arrayProps: DivProps = { css: [{ color: 'blue.300' }, { backgroundColor: 'green.300' }] }`,
       'export const arrayEl = createElement(Div, arrayProps)',
+      '',
+    ].join('\n')
+  )
+}
+
+function writeColorModeProbe(dir: string): void {
+  writeFileSync(
+    join(dir, 'probe-color-mode.tsx'),
+    [
+      `import { Div } from './index.mjs'`,
+      '',
+      `export const dark = <Div colorMode="dark" />`,
+      `// @ts-expect-error colorMode takes 'light' or 'dark' only`,
+      `export const blue = <Div colorMode="blue" />`,
       '',
     ].join('\n')
   )
