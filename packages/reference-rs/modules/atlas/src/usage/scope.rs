@@ -1,8 +1,9 @@
-//! Module-scope declarations of one source file: the names its functions, classes, variables
-//! (destructured ones included) and enums bind at the top level, exported or not.
+//! Module-scope declarations of one source file: the names it binds at the top level.
+//! Functions, classes, variables (destructured ones included) and enums count, exported or not.
 //! Takes a module's source and emits that name set, so the observation pass can tell a locally
 //! defined `Div` from the library primitive. Imports are left out because `ModuleInfo.imports`
-//! already records them, and declarations nested inside function bodies are not modeled.
+//! already records them, and declarations nested inside function bodies are not modeled. A module the nesting
+//! gate refuses declares no names.
 
 use crate::internal::ModuleInfo;
 use oxc_allocator::Allocator;
@@ -10,14 +11,16 @@ use oxc_ast::ast::{
     ArrayPattern, BindingIdentifier, BindingPattern, Declaration, ExportDefaultDeclarationKind,
     ObjectPattern, Statement, VariableDeclaration,
 };
-use oxc_parser::Parser;
+use shared::parse::parse_bounded;
 use oxc_span::SourceType;
 use std::collections::HashSet;
 
 pub(super) fn module_scope_declarations(module: &ModuleInfo) -> HashSet<String> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(&module.path).unwrap_or_else(|_| SourceType::tsx());
-    let parsed = Parser::new(&allocator, &module.content, source_type).parse();
+    let Ok(parsed) = parse_bounded(&allocator, &module.content, source_type) else {
+        return HashSet::new();
+    };
     let mut names = HashSet::new();
 
     for statement in parsed.program.body.iter() {

@@ -1,8 +1,8 @@
-//! Walks each source file's top-level statements and records what the file imports, declares and exports
-//! into a `ModuleInfo`. Collection is split by statement family: imports here, components in `components`,
+//! Walks each source file's top-level statements into a `ModuleInfo`.
+//! It records what the file imports, declares and exports. Collection is split by statement family: imports here, components in `components`,
 //! export statements in `exports`, and type shapes in `types`, all sharing one per-file `FileCtx` and one
 //! mutable `ModuleParseState`. `parse_modules` takes the discovered source files and returns the module map
-//! keyed by path.
+//! keyed by path; a file the nesting gate refuses is left out of that map.
 
 mod components;
 mod exports;
@@ -17,7 +17,7 @@ use oxc_ast::ast::{
     ExportAllDeclaration, Function, ImportDeclarationSpecifier, ImportOrExportKind, Statement,
     TSInterfaceDeclaration, TSTypeAliasDeclaration,
 };
-use oxc_parser::Parser;
+use shared::parse::parse_bounded;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -36,7 +36,7 @@ pub fn parse_modules(
 ) -> HashMap<PathBuf, ModuleInfo> {
     source_files
         .iter()
-        .map(|source_file| {
+        .filter_map(|source_file| {
             let display_source = package_name
                 .map(|name| name.to_string())
                 .unwrap_or_else(|| local_source_display(app_root.unwrap(), &source_file.path));
@@ -44,21 +44,22 @@ pub fn parse_modules(
                 .and_then(|root| source_file.path.strip_prefix(root).ok())
                 .map(path_to_posix);
 
-            (
-                source_file.path.clone(),
-                parse_module(source_file, &display_source, app_relative_path),
-            )
+            parse_module(source_file, &display_source, app_relative_path)
+                .map(|module| (source_file.path.clone(), module))
         })
         .collect()
 }
 
+/// Parses one file into its module record. `None` means the nesting gate refused the file: atlas has no parse-failure
+/// code, so the file is left out of the module map without a diagnostic.
 fn parse_module(
     source_file: &SourceFile,
     display_source: &str,
     app_relative_path: Option<String>,
-) -> ModuleInfo {
+) -> Option<ModuleInfo> {
     let allocator = Allocator::default();
-    let parsed = Parser::new(&allocator, &source_file.content, source_file.source_type).parse();
+    let parsed =
+        parse_bounded(&allocator, &source_file.content, source_file.source_type).ok()?;
     let mut state = ModuleParseState::default();
     let default_name = default_export_name(&source_file.path);
     let ctx = FileCtx {
@@ -80,7 +81,7 @@ fn parse_module(
         .map(|binding| (binding.local.clone(), binding.source.clone()))
         .collect::<HashMap<_, _>>();
 
-    ModuleInfo {
+    Some(ModuleInfo {
         path: source_file.path.clone(),
         content: source_file.content.clone(),
         display_source: display_source.to_string(),
@@ -92,7 +93,7 @@ fn parse_module(
         types: state.types,
         named_type_reexports: state.named_type_reexports,
         star_reexports: state.star_reexports,
-    }
+    })
 }
 
 /// What the file being read exposes to every collector: its path and display name, its app-relative

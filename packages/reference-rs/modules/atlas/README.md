@@ -22,6 +22,8 @@ Unresolved or unsupported inputs emit typed `ATL-*` diagnostics, never guessed d
 | `ATL-W-PACKAGE-SCAN-FAILED` | warning | resolved package unreadable; siblings kept |
 | `ATL-E-SCAN-FAILED` | error | discovery itself fails; analysis refused |
 
+Atlas has no parse-failure code. A source file nested deeper than 1,024 levels is refused by the nesting gate in `shared` before Oxc parses it, and it is skipped with no diagnostic: it contributes no components, props or call sites, and its siblings analyze normally.
+
 ## Invariants
 
 - Diagnostics over guesses: every unsupported input surfaces explicitly.

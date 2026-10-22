@@ -2,20 +2,23 @@
 //! It parses the module with oxc and walks the whole program with oxc's `Visit` trait, so JSX is found
 //! wherever the grammar allows it: class bodies, `new` arguments, `throw`, optional calls, template
 //! literals, default parameters and any other expression position. Occurrences come out in source
-//! pre-order (a parent before its attributes and children), which the usage and observe passes rely on.
+//! pre-order (a parent before its attributes and children), which the usage and observe passes rely on. A module the
+//! nesting gate refuses has no occurrences.
 
 use super::literals::{jsx_attribute_from_item, jsx_child_is_meaningful, jsx_name_to_string, slice_span};
 use crate::internal::{JsxOccurrence, ModuleInfo};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::JSXElement;
 use oxc_ast_visit::{walk, Visit};
-use oxc_parser::Parser;
+use shared::parse::parse_bounded;
 use oxc_span::{GetSpan, SourceType};
 
 pub(super) fn find_jsx_occurrences(module: &ModuleInfo) -> Vec<JsxOccurrence> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(&module.path).unwrap_or_else(|_| SourceType::tsx());
-    let parsed = Parser::new(&allocator, &module.content, source_type).parse();
+    let Ok(parsed) = parse_bounded(&allocator, &module.content, source_type) else {
+        return Vec::new();
+    };
     let mut collector = OccurrenceCollector {
         source: &module.content,
         occurrences: Vec::new(),
