@@ -228,3 +228,76 @@ fn plain_recipes_keep_every_authored_cell() {
         .collect();
     assert_eq!(values, vec!["sm", "lg"]);
 }
+
+#[test]
+fn a_slot_map_that_is_not_an_inline_object_refuses_the_definition() {
+    let res = compile_code(
+        r#"
+        import { recipe } from '@reference-ui/react';
+        const styles = { root: { display: 'flex' } };
+        recipe({ className: 'shared', slots: ['root'], base: styles });
+        "#,
+    );
+    assert_eq!(
+        slot_errors(&res),
+        vec!["recipe 'shared': a slot map must be an inline object keyed by slot name".to_string()]
+    );
+    assert!(res.runtime.recipes.is_empty());
+}
+
+#[test]
+fn an_undefined_variant_cell_refuses_the_definition() {
+    let res = compile_code(
+        r#"
+        import { recipe } from '@reference-ui/react';
+        recipe({ className: 'cell', slots: ['root'], variants: { size: { sm: undefined, lg: { root: { fontSize: '20px' } } } } });
+        "#,
+    );
+    assert_eq!(
+        slot_errors(&res),
+        vec!["recipe 'cell': a slot map must be an inline object keyed by slot name".to_string()]
+    );
+    assert!(res.runtime.recipes.is_empty());
+}
+
+#[test]
+fn a_compound_css_that_is_not_an_inline_object_refuses_the_definition() {
+    let res = compile_code(
+        r#"
+        import { recipe } from '@reference-ui/react';
+        const x = { root: { color: 'red' } };
+        recipe({ className: 'rule', slots: ['root'], base: { root: { display: 'flex' } }, variants: { size: { lg: { root: { padding: '24px' } } } }, compoundVariants: [{ size: 'lg', css: x }] });
+        "#,
+    );
+    assert_eq!(
+        slot_errors(&res),
+        vec!["recipe 'rule': a slot map must be an inline object keyed by slot name".to_string()]
+    );
+    assert!(res.runtime.recipes.is_empty());
+}
+
+#[test]
+fn a_compound_without_css_is_accepted_and_dropped() {
+    let res = compile_code(
+        r#"
+        import { recipe } from '@reference-ui/react';
+        recipe({ className: 'bare', slots: ['root'], base: { root: { display: 'flex' } }, variants: { size: { lg: { root: { padding: '24px' } } } }, compoundVariants: [{ size: 'lg' }] });
+        "#,
+    );
+    assert!(res.diagnostics.is_empty(), "{:?}", res.diagnostics);
+    assert!(table(&res, "__bare__root").compound_variants.is_empty());
+}
+
+#[test]
+fn wrapped_and_empty_slot_maps_are_accepted() {
+    let res = compile_code(
+        r#"
+        import { recipe } from '@reference-ui/react';
+        const wrapped = recipe({ className: 'wrapped', slots: ['root'], base: { root: { display: 'flex' } } as const, variants: { size: { sm: {} as const, lg: { root: { fontSize: '20px' } } } } });
+        wrapped({ size: 'lg' });
+        "#,
+    );
+    assert!(res.diagnostics.is_empty(), "{:?}", res.diagnostics);
+    table(&res, "__wrapped__root");
+    assert!(res.stylesheet.contains("wrapped__root__base"));
+}

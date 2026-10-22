@@ -75,9 +75,7 @@ fn slot_entry<'a, 'b>(val: &'b Expression<'a>, slot: &str) -> Option<&'b Express
         return None;
     };
     map.properties.iter().rev().find_map(|kind| match kind {
-        ObjectPropertyKind::ObjectProperty(prop)
-            if static_key(&prop.key).as_deref() == Some(slot) =>
-        {
+        ObjectPropertyKind::ObjectProperty(prop) if static_key_is(&prop.key, slot) => {
             Some(&prop.value)
         }
         _ => None,
@@ -291,6 +289,17 @@ pub(crate) fn static_key(key: &PropertyKey<'_>) -> Option<String> {
         PropertyKey::StringLiteral(lit) => Some(lit.value.to_string()),
         PropertyKey::NumericLiteral(lit) => Some(numeric_key(lit.value)),
         _ => None,
+    }
+}
+
+/// True when a property key spells `name`: the same answer as `static_key(key) == Some(name)`,
+/// checked without building the key string.
+pub(crate) fn static_key_is(key: &PropertyKey<'_>, name: &str) -> bool {
+    match key {
+        PropertyKey::StaticIdentifier(ident) => ident.name.as_str() == name,
+        PropertyKey::StringLiteral(lit) => lit.value.as_str() == name,
+        PropertyKey::NumericLiteral(lit) => numeric_key(lit.value) == name,
+        _ => false,
     }
 }
 

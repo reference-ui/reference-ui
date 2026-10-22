@@ -1,15 +1,16 @@
 //! Slotted `recipe()` definitions: the `slots` list, its slot-keyed style maps, and per-slot lowering.
 //! Takes a recipe object literal that carries `slots`, with its className, origin and call site, and
 //! emits one plain `Recipe` per slot under the stem `{className}__{slot}`, walked from that slot's
-//! entries in base, every variant value and every compound `css`. A malformed list, or a slot-map
-//! key the list does not name, refuses the whole definition with `ATM-E-RECIPE-SLOT`.
+//! entries in base, every variant value and every compound `css`. A malformed list, a slot map that is
+//! not an inline object, or a slot-map key the list does not name refuses the whole definition with
+//! `ATM-E-RECIPE-SLOT`.
 
 use oxc_ast::ast::{
     ArrayExpressionElement, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind,
 };
 use oxc_span::{GetSpan, Span};
 
-use super::walk::{static_key, unwrap_expression, walk_recipe_object};
+use super::walk::{static_key, static_key_is, unwrap_expression, walk_recipe_object};
 use super::{from_draft, located_error};
 use crate::diagnostics::{DiagnosticCode, DiagnosticLocation};
 use crate::extract::ExtractContext;
@@ -30,7 +31,7 @@ pub(super) fn find_slots_prop<'a, 'b>(
 ) -> Option<&'a ObjectProperty<'b>> {
     for kind in &obj.properties {
         if let ObjectPropertyKind::ObjectProperty(prop) = kind {
-            if static_key(&prop.key).as_deref() == Some("slots") {
+            if static_key_is(&prop.key, "slots") {
                 return Some(prop);
             }
         }
@@ -140,7 +141,8 @@ fn push_refusal(ctx: &mut ExtractContext<'_>, message: &str, span: Span) {
     ctx.diagnostics.push(diagnostic);
 }
 
-/// True when every slot map names only listed slots; each stray key is refused where it stands.
+/// True when every slot map is an inline object naming only listed slots. Each refusal is raised
+/// where it stands, so one definition can report several.
 fn slot_keys_known(
     def: &SlottedDefinition<'_, '_>,
     slots: &[String],
@@ -220,9 +222,12 @@ impl SlotKeyCheck<'_, '_> {
         }
     }
 
-    /// One slot map: every key must be a listed slot. A non-object map is left to the walk.
+    /// One slot map: an inline object whose keys are all listed slots. Any other value is refused
+    /// here, so a slot's CSS never disappears without a diagnostic.
     fn map(&mut self, value: &Expression<'_>) {
-        let Expression::ObjectExpression(map) = unwrap_expression(value) else {
+        let target = unwrap_expression(value);
+        let Expression::ObjectExpression(map) = target else {
+            self.refuse_not_object(target.span());
             return;
         };
         for kind in &map.properties {
@@ -248,6 +253,14 @@ impl SlotKeyCheck<'_, '_> {
             self.slots.join(", ")
         );
         self.refuse(&message, prop.key.span());
+    }
+
+    fn refuse_not_object(&mut self, span: Span) {
+        let message = format!(
+            "recipe '{}': a slot map must be an inline object keyed by slot name",
+            self.class_name
+        );
+        self.refuse(&message, span);
     }
 
     fn refuse_shape(&mut self, span: Span) {
