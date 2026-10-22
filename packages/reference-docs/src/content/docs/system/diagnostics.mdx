@@ -247,9 +247,14 @@ the code in any tooling you build.
 ### Components and files
 
 - `ATM-E-PARSE`: a file in `include` has a syntax error. Fix the syntax.
+  A file nested deeper than 1,024 levels fails with `nesting deeper than 1024
+  levels at line 3; split or flatten the deeply nested expression`. Split or
+  flatten the deeply nested expression that contains that line.
 - `STT-W-SKIPPED-FILE`: sync skipped a file while looking for components that
   pass style props on. The message says why. The rest of the files are still
-  read. Fix the file so it parses and can be read.
+  read. Fix the file so it parses and can be read. A file nested deeper than
+  1,024 levels gets a message that names the line and says to split or flatten
+  the deeply nested expression.
 - `STT-W-CLASS-COMPONENT`: a class component whose props take style props, like
   `class Card extends React.Component<CardProps>`. Sync skips it, so the style
   props passed to it get no CSS. Rewrite it as a function component.
@@ -317,7 +322,9 @@ After each sync, sync scans your TypeScript types in the background to build
 API reference documents. Its warnings carry the `[ref]` tag.
 
 - `TST-W-PARSE-ERROR`: a file has a syntax error. Sync keeps what it could
-  read. Fix the syntax.
+  read. Fix the syntax. A file nested deeper than 1,024 levels contributes no
+  declarations. The message names the line; split or flatten the deeply nested
+  expression.
 - `TST-W-UNRESOLVED-IMPORT`: an import or re-export path names a file that
   does not exist. Create the file or fix the path.
 - `TST-W-UNSUPPORTED-SYNTAX`: `declare global`, `import x = require()` or
