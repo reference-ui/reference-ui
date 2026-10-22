@@ -1,0 +1,104 @@
+[
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'slotVariants': 'variants' must be an inline object literal in a slotted recipe",
+    "file": "input/src/recipe.ts",
+    "line": 12,
+    "column": 13,
+    "span": {
+      "start": 432,
+      "end": 446
+    },
+    "help": [
+      "write variants inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'slotAxis': 'variants.size' must be an inline object literal in a slotted recipe",
+    "file": "input/src/recipe.ts",
+    "line": 18,
+    "column": 21,
+    "span": {
+      "start": 549,
+      "end": 554
+    },
+    "help": [
+      "write variants.size inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'slotSpread': 'variants.size' spreads a value; a slotted recipe writes each variant inline",
+    "file": "input/src/recipe.ts",
+    "line": 24,
+    "column": 26,
+    "span": {
+      "start": 668,
+      "end": 674
+    },
+    "help": [
+      "write variants.size inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'slotEntry': 'base.root' is not an object literal or a const object literal",
+    "file": "input/src/recipe.ts",
+    "line": 30,
+    "column": 17,
+    "span": {
+      "start": 811,
+      "end": 817
+    },
+    "help": [
+      "write base.root inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-SLOT",
+    "message": "recipe 'slotMap': a slot map must be an inline object keyed by slot name",
+    "file": "input/src/recipe.ts",
+    "line": 36,
+    "column": 9,
+    "span": {
+      "start": 908,
+      "end": 914
+    }
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'slotCompound': 'compoundVariants[0]' must be an inline object literal",
+    "file": "input/src/recipe.ts",
+    "line": 43,
+    "column": 22,
+    "span": {
+      "start": 1084,
+      "end": 1098
+    },
+    "help": [
+      "write compoundVariants[0] inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'slotSpreadCompound': 'compoundVariants[0]' spreads a value; write its predicates and css inline",
+    "file": "input/src/recipe.ts",
+    "line": 50,
+    "column": 24,
+    "span": {
+      "start": 1283,
+      "end": 1300
+    },
+    "help": [
+      "write compoundVariants[0] inline as an object literal"
+    ]
+  }
+]

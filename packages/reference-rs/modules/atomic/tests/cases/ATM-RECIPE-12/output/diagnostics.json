@@ -1,0 +1,167 @@
+[
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'byName': 'variants' is not an object literal or a const object literal",
+    "file": "input/src/recipe.ts",
+    "line": 8,
+    "column": 63,
+    "span": {
+      "start": 306,
+      "end": 312
+    },
+    "help": [
+      "write variants inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'byAxis': 'variants.size' is not an object literal or a const object literal",
+    "file": "input/src/recipe.ts",
+    "line": 10,
+    "column": 71,
+    "span": {
+      "start": 387,
+      "end": 392
+    },
+    "help": [
+      "write variants.size inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'spreadAxis': 'variants.size' spreads a value that is not an object literal or a const object literal",
+    "file": "input/src/recipe.ts",
+    "line": 14,
+    "column": 26,
+    "span": {
+      "start": 486,
+      "end": 492
+    },
+    "help": [
+      "write variants.size inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'byEntry': 'compoundVariants[1]' must be an inline object literal",
+    "file": "input/src/recipe.ts",
+    "line": 20,
+    "column": 64,
+    "span": {
+      "start": 693,
+      "end": 707
+    },
+    "help": [
+      "write compoundVariants[1] inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'byStyle': 'base' is not an object literal or a const object literal",
+    "file": "input/src/recipe.ts",
+    "line": 25,
+    "column": 9,
+    "span": {
+      "start": 778,
+      "end": 784
+    },
+    "help": [
+      "write base inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'byStyle': 'variants.size.sm' is not an object literal or a const object literal",
+    "file": "input/src/recipe.ts",
+    "line": 26,
+    "column": 27,
+    "span": {
+      "start": 812,
+      "end": 818
+    },
+    "help": [
+      "write variants.size.sm inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'byKey': 'variants' has a computed key; name each entry with a plain key",
+    "file": "input/src/recipe.ts",
+    "line": 33,
+    "column": 16,
+    "span": {
+      "start": 922,
+      "end": 925
+    },
+    "help": [
+      "name each entry of variants with a plain key"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'spreadEntry': 'compoundVariants[0]' spreads a value; write its predicates and css inline",
+    "file": "input/src/recipe.ts",
+    "line": 39,
+    "column": 24,
+    "span": {
+      "start": 1097,
+      "end": 1114
+    },
+    "help": [
+      "write compoundVariants[0] inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'dynamicItem': 'variants.size.sm' is not an object literal or a const object literal",
+    "file": "input/src/recipe.ts",
+    "line": 45,
+    "column": 81,
+    "span": {
+      "start": 1299,
+      "end": 1307
+    },
+    "help": [
+      "write variants.size.sm inline as an object literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'listCompound': 'compoundVariants' must be an inline array literal",
+    "file": "input/src/recipe.ts",
+    "line": 52,
+    "column": 21,
+    "span": {
+      "start": 1489,
+      "end": 1501
+    },
+    "help": [
+      "write compoundVariants inline as an array literal"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'spreadTop': 'variants' spreads a value that is not an object literal or a const object literal",
+    "file": "input/src/recipe.ts",
+    "line": 57,
+    "column": 74,
+    "span": {
+      "start": 1625,
+      "end": 1629
+    },
+    "help": [
+      "write variants inline as an object literal"
+    ]
+  }
+]

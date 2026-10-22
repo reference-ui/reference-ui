@@ -186,6 +186,21 @@ export const DEFAULT_ROWS: ReproRow[] = [
     },
   },
   {
+    code: 'ATM-E-RECIPE-FIELD',
+    severity: 'error',
+    channel: 'diagnostics',
+    configExtra: '',
+    files: {
+      'theme/recipe-field.ts': [
+        "import { recipe } from '@reference-ui/react'",
+        '',
+        'declare const sizes: Record<string, string>',
+        "export const r = recipe({ className: 'fieldr', variants: sizes })",
+        '',
+      ].join('\n'),
+    },
+  },
+  {
     code: 'ATM-E-RECIPE-CLASSNAME',
     severity: 'error',
     channel: 'diagnostics',

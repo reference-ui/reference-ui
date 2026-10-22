@@ -1,0 +1,25 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer recipes {
+  .\@reference-ui\/lib__chip__base { color: red; }
+  .\@reference-ui\/lib__chip_s_lg { font-size: 20px; }
+  .\@reference-ui\/lib__chip_s_sm { font-size: 12px; }
+  .\@reference-ui\/lib__chip_t_loud { color: blue; }
+  .\@reference-ui\/lib__badge_s_sm { font-size: 12px; }
+  .\@reference-ui\/lib__pill_t_loud { color: blue; }
+  .\@reference-ui\/lib__pill_c_loud { font-weight: 600; }
+  .\@reference-ui\/lib__card__root__base { display: flex; }
+  .\@reference-ui\/lib__card__root_s_sm { padding: 12px; }
+  .\@reference-ui\/lib__card__title__base { font-weight: 600; }
+  .\@reference-ui\/lib__lamp_s_sm { font-size: 12px; }
+}
+}

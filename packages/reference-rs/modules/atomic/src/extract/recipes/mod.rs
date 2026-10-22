@@ -3,7 +3,10 @@
 //! Extracts base styles, variant leaves, defaults, and multi-value compound predicates.
 //! Admits identity from the prop or from a `<Name>Recipe` binding (core parity);
 //! refuses dynamic or otherwise absent identity and enforces fail-closed compilation.
-//! A `slots` key lowers the call to one plain recipe per slot (`slots.rs`).
+//! A field the walker cannot read (a style value, variant map or compound that is neither an inline
+//! object nor a const object literal) refuses the whole definition with `ATM-E-RECIPE-FIELD`, and
+//! `source.rs` resolves the const references that do read. A `slots` key lowers the call to one plain
+//! recipe per slot (`slots.rs`).
 
 use oxc_ast::ast::{
     CallExpression, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind,
@@ -15,7 +18,11 @@ use crate::extract::ExtractContext;
 use crate::recipes::{Recipe, RecipeSlot};
 
 pub(crate) mod selection;
+mod compounds;
+mod slot_check;
 mod slots;
+mod source;
+mod variants;
 mod walk;
 
 /// Collect a live Reference `recipe(...)` call into `ctx.recipes`: one recipe, or one per slot.
@@ -57,7 +64,14 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     let location = call_location(ctx, call.span);
     let recipes = match slots::find_slots_prop(obj) {
         None => {
-            let draft = walk::walk_recipe_object(obj, origin.as_str(), None, ctx);
+            let site = walk::RecipeSite {
+                class_name: &class_name,
+                origin: origin.as_str(),
+                slot: None,
+            };
+            let Some(draft) = walk::walk_recipe_object(obj, site, ctx) else {
+                return;
+            };
             vec![from_draft(draft, class_name.clone(), None, location)]
         }
         Some(slots_prop) => {

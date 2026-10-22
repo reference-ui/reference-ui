@@ -191,6 +191,23 @@ the code in any tooling you build.
   - A slot map styles a name that `slots` does not list, like `display` in
     `base` of a recipe with `slots: ['root']`. Nest those styles under a listed
     slot, or add the name to `slots`.
+- `ATM-E-RECIPE-FIELD`: a recipe field the compiler cannot read. Sync fails on
+  the whole recipe, and the message names the field, like `variants.size` or
+  `compoundVariants[1]`. Write that field inline as an object literal. A
+  `base`, a variant value or a compound's `css` may also name a const object
+  literal, like `base: baseStyles`. Without `slots`, `variants` and an axis may
+  name one too.
+  - A field is neither, like `base: pick()` or `variants: sizes` where `sizes`
+    comes from a call. Write it inline.
+  - A spread brings in a value that is not a const object literal, like
+    `size: { ...common }` where `common` comes from a call. Write the entries
+    inline.
+  - A map key is computed, like `[key]:`. Name each entry with a plain key.
+  - A compound entry is not an inline object, like `compoundVariants: [shared]`,
+    or it spreads a value, like `{ ...rest, css: { … } }`. Write the compound
+    inline.
+  - A recipe with `slots` writes `variants`, each axis and each compound inline.
+    A slot entry, like `base: { root: rootStyles }`, may name a const object.
 - `TGN-W-INVALID-RECIPE-NAME`: a `className` that cannot form a TypeScript
   type name. The recipe is left out of the generated types. Rename it.
 - `TGN-W-DUPLICATE-RECIPE-STEM`: two recipe names form the same type name.

@@ -100,6 +100,7 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 | `ATM-E-PARSE` | default | `export function Broken( {` |
 | `ATM-E-DUPLICATE-RECIPE` | default | Two `recipe({ className: 'dup', … })` |
 | `ATM-E-RECIPE-SLOT` | default | `recipe({ className: 'c', slots: ['root'], base: { header: … } })`; or a slot map that is not an inline object, e.g. `base: shared` |
+| `ATM-E-RECIPE-FIELD` | default | `recipe({ className: 'c', variants: sizes })` where `sizes` is not a const object literal; or a compound entry that is not inline |
 | `ATM-E-UNKNOWN-TOKEN` | default | `css({ color: '{colors.nope}' })` |
 | `ATM-E-INVALID-BASE-SYSTEM` | default | Spec that fails contract validation |
 | `ATM-W-NON-OBJECT-CSS-ARG` | compiler | `css(fn())` |

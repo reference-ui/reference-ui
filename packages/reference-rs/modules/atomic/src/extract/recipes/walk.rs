@@ -1,17 +1,23 @@
 //! Recipe object walker: base styles, variant matrices, defaults, and compounds.
-//! Takes a validated recipe object literal, its origin and an optional slot, and
-//! emits a `RecipeDraft` of style wants. With a slot, every style position (base,
-//! each variant value, each compound `css`) reads only that slot's entry, and axes
-//! with no entry for the slot drop out. Identity refusal (className, spreads,
-//! non-object args) stays in `mod.rs`; this file only walks well-formed leaves.
+//! Takes a recipe object literal, its site (class name, origin, optional slot) and the extract
+//! context, and emits a `RecipeDraft` of style wants, or `None` once a field refused. A field is
+//! read from an inline object literal, or from a const object literal the scope table resolves
+//! (`source.rs`); any other value refuses the whole definition with `ATM-E-RECIPE-FIELD` at the
+//! value, naming the field. With a slot, every style position reads only that slot's entry.
 
 use indexmap::IndexMap;
-use oxc_ast::ast::{
-    ArrayExpression, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind, PropertyKey,
-};
+use oxc_ast::ast::{Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind, PropertyKey};
+use oxc_span::{GetSpan, Span};
 use smallvec::smallvec;
 
+use super::compounds::handle_recipe_compounds;
+use super::located_error;
+use super::source::{const_object, lower_const_style};
+use super::variants::handle_recipe_variants;
+use crate::atom::backing::OWN;
 use crate::atom::Want;
+use crate::diagnostics::{Diagnostic, DiagnosticCode, Policy};
+use crate::extract::expressions::object::lower::LowerSite;
 use crate::extract::expressions::walk_style_object;
 use crate::extract::ExtractContext;
 use crate::recipes::RecipeCompound;
@@ -25,61 +31,135 @@ pub(crate) struct RecipeDraft {
     pub(crate) compounds: Vec<RecipeCompound>,
 }
 
+/// Where one recipe walk runs: the class name its messages name, the origin its styles lower
+/// under, and the slot whose entries it reads (`None` for a plain recipe).
+#[derive(Clone, Copy)]
+pub(crate) struct RecipeSite<'a> {
+    pub(crate) class_name: &'a str,
+    pub(crate) origin: &'a str,
+    pub(crate) slot: Option<&'a str>,
+}
+
+/// Walk one recipe object into a draft, or `None` when any field refused. Every field is walked
+/// even after a refusal, so one definition reports each field it cannot read.
 pub(crate) fn walk_recipe_object(
     obj: &ObjectExpression<'_>,
-    origin: &str,
-    slot: Option<&str>,
+    site: RecipeSite<'_>,
     ctx: &mut ExtractContext<'_>,
-) -> RecipeDraft {
-    let mut draft = RecipeDraft::default();
+) -> Option<RecipeDraft> {
     let mut walk = RecipeWalk {
-        origin,
-        slot,
+        site,
         ctx,
-        draft: &mut draft,
+        draft: RecipeDraft::default(),
+        refused: false,
     };
     for prop_kind in &obj.properties {
         if let ObjectPropertyKind::ObjectProperty(prop) = prop_kind {
             handle_recipe_property(&mut walk, prop);
         }
     }
-    draft
+    (!walk.refused).then_some(walk.draft)
 }
 
-/// One walk over a recipe object: its origin, the slot it reads (`None` for a
-/// plain recipe), the extract context, and the draft it fills.
-struct RecipeWalk<'a, 'b> {
-    origin: &'a str,
-    slot: Option<&'a str>,
-    ctx: &'a mut ExtractContext<'b>,
-    draft: &'a mut RecipeDraft,
+/// One walk over a recipe object: its site, the extract context, the draft it fills, and whether
+/// a field has refused the definition.
+pub(super) struct RecipeWalk<'a, 'b> {
+    pub(super) site: RecipeSite<'a>,
+    pub(super) ctx: &'a mut ExtractContext<'b>,
+    pub(super) draft: RecipeDraft,
+    pub(super) refused: bool,
 }
 
 impl RecipeWalk<'_, '_> {
-    /// Wants for one style position: the whole object for a plain recipe, or
-    /// the slot's entry for a slotted one. `None` when that slot is absent.
-    fn style_at(&mut self, val: &Expression<'_>) -> Option<Vec<Want>> {
-        let target = match self.slot {
-            None => val,
-            Some(slot) => slot_entry(val, slot)?,
-        };
+    /// Wants for one style position, read at `field`: the whole value for a plain recipe, or the
+    /// slot's entry for a slotted one. `None` when that slot has no entry.
+    pub(super) fn style_at(&mut self, field: &str, val: &Expression<'_>) -> Option<Vec<Want>> {
         let mut wants = Vec::new();
-        walk_style_into(target, self.origin, self.ctx, &mut wants);
+        match self.site.slot {
+            None => self.style_into(field, val, &mut wants),
+            Some(slot) => {
+                let entry = slot_entry(val, slot)?;
+                let entry_field = format!("{field}.{slot}");
+                self.style_into(&entry_field, entry, &mut wants);
+            }
+        }
         Some(wants)
+    }
+
+    /// Lower one style value into `wants`: an inline object walks its leaves, a const object
+    /// literal lowers as `css(name)` would, and any other value refuses at `field`.
+    fn style_into(&mut self, field: &str, val: &Expression<'_>, wants: &mut Vec<Want>) {
+        let target = unwrap_expression(val);
+        if let Expression::ObjectExpression(obj) = target {
+            walk_style_into(obj, self.site.origin, self.ctx, wants);
+            return;
+        }
+        match const_object(self, target) {
+            Some((name, obj)) => {
+                let site = LowerSite {
+                    name: &name,
+                    when: &smallvec![],
+                    span: target.span(),
+                };
+                lower_const_style(self, obj, site, wants);
+            }
+            None => self.refuse_unreadable(field, val.span()),
+        }
+    }
+
+    /// Refuse the definition: a field that is neither an inline object nor a const object literal.
+    pub(super) fn refuse_unreadable(&mut self, field: &str, span: Span) {
+        let message = format!(
+            "recipe '{}': '{field}' is not an object literal or a const object literal",
+            self.site.class_name
+        );
+        self.refuse(span, message, inline_hint(field));
+    }
+
+    /// Refuse the definition: a map entry whose key is not a static name.
+    pub(super) fn refuse_computed(&mut self, field: &str, span: Span) {
+        let message = format!(
+            "recipe '{}': '{field}' has a computed key; name each entry with a plain key",
+            self.site.class_name
+        );
+        self.refuse(
+            span,
+            message,
+            format!("name each entry of {field} with a plain key"),
+        );
+    }
+
+    /// Refuse the definition: a spread that brings in no const object literal.
+    pub(super) fn refuse_spread(&mut self, field: &str, span: Span) {
+        let message = format!(
+            "recipe '{}': '{field}' spreads a value that is not an object literal or a const object literal",
+            self.site.class_name
+        );
+        self.refuse(span, message, inline_hint(field));
+    }
+
+    /// Push one refusal and mark the definition refused.
+    pub(super) fn refuse(&mut self, span: Span, message: String, help: String) {
+        let diagnostic = field_refusal(self.ctx, span, message, help);
+        self.ctx.diagnostics.push(diagnostic);
+        self.refused = true;
     }
 }
 
-/// The value a slot map gives `slot`; the last entry wins, as in an object literal.
-fn slot_entry<'a, 'b>(val: &'b Expression<'a>, slot: &str) -> Option<&'b Expression<'a>> {
-    let Expression::ObjectExpression(map) = unwrap_expression(val) else {
-        return None;
-    };
-    map.properties.iter().rev().find_map(|kind| match kind {
-        ObjectPropertyKind::ObjectProperty(prop) if static_key_is(&prop.key, slot) => {
-            Some(&prop.value)
-        }
-        _ => None,
-    })
+/// The `ATM-E-RECIPE-FIELD` refusal at a span, carrying its one fix hint.
+pub(super) fn field_refusal(
+    ctx: &ExtractContext<'_>,
+    span: Span,
+    message: String,
+    help: String,
+) -> Diagnostic {
+    let diagnostic = located_error(ctx, DiagnosticCode::RecipeField, &message, span);
+    Policy::attach_help(diagnostic, vec![help])
+}
+
+/// The fix hint for a field the walker cannot read: write it inline.
+pub(super) fn inline_hint(field: &str) -> String {
+    format!("write {field} inline as an object literal")
 }
 
 fn handle_recipe_property(walk: &mut RecipeWalk<'_, '_>, prop: &ObjectProperty<'_>) {
@@ -89,7 +169,7 @@ fn handle_recipe_property(walk: &mut RecipeWalk<'_, '_>, prop: &ObjectProperty<'
     match key.as_str() {
         "base" => handle_recipe_base(walk, &prop.value),
         "variants" => handle_recipe_variants(walk, &prop.value),
-        "defaultVariants" => handle_recipe_defaults(&prop.value, walk.draft),
+        "defaultVariants" => handle_recipe_defaults(&prop.value, &mut walk.draft),
         "compoundVariants" => handle_recipe_compounds(walk, &prop.value),
         _ => {}
     }
@@ -97,7 +177,7 @@ fn handle_recipe_property(walk: &mut RecipeWalk<'_, '_>, prop: &ObjectProperty<'
 
 /// Wants for the base block: the whole object, or the slot's entry when slotted.
 fn handle_recipe_base(walk: &mut RecipeWalk<'_, '_>, val: &Expression<'_>) {
-    if let Some(wants) = walk.style_at(val) {
+    if let Some(wants) = walk.style_at("base", val) {
         walk.draft.base.extend(wants);
     }
 }
@@ -119,140 +199,19 @@ fn handle_recipe_defaults(val: &Expression<'_>, draft: &mut RecipeDraft) {
     }
 }
 
+/// Lower an inline style object into `wants` under the origin, in its own family scope.
 fn walk_style_into(
-    val: &Expression<'_>,
+    obj: &ObjectExpression<'_>,
     origin: &str,
     ctx: &mut ExtractContext<'_>,
     wants: &mut Vec<Want>,
 ) {
-    let Expression::ObjectExpression(obj) = unwrap_expression(val) else {
-        return;
-    };
     // One style block, one family scope: bare weights in this block resolve
     // against the block's own font, never the call site's.
     let wants_at = wants.len();
-    let mut obj_ctx = ctx.object_walk_into(Some(origin), &mut *wants, &crate::atom::backing::OWN);
+    let mut obj_ctx = ctx.object_walk_into(Some(origin), &mut *wants, &OWN);
     walk_style_object(&mut obj_ctx, obj, &smallvec![]);
     scope::apply_to_wants(&mut wants[wants_at..]);
-}
-
-fn handle_recipe_variants(walk: &mut RecipeWalk<'_, '_>, val: &Expression<'_>) {
-    let Expression::ObjectExpression(variants_obj) = unwrap_expression(val) else {
-        return;
-    };
-    for group_kind in &variants_obj.properties {
-        let ObjectPropertyKind::ObjectProperty(group_prop) = group_kind else {
-            continue;
-        };
-        let Some(group_name) = static_key(&group_prop.key) else {
-            continue;
-        };
-        let Expression::ObjectExpression(items_obj) = unwrap_expression(&group_prop.value) else {
-            continue;
-        };
-        walk_variant_items(walk, items_obj, &group_name);
-    }
-}
-
-fn walk_variant_items(
-    walk: &mut RecipeWalk<'_, '_>,
-    items_obj: &ObjectExpression<'_>,
-    group_name: &str,
-) {
-    let mut items = IndexMap::new();
-    for item_kind in &items_obj.properties {
-        let ObjectPropertyKind::ObjectProperty(item_prop) = item_kind else {
-            continue;
-        };
-        let Some(value_name) = static_key(&item_prop.key) else {
-            continue;
-        };
-        if let Some(wants) = walk.style_at(&item_prop.value) {
-            items.insert(value_name, wants);
-        }
-    }
-    // A slot keeps only the axes it styles; a plain recipe keeps every authored axis.
-    if walk.slot.is_none() || !items.is_empty() {
-        walk.draft.variants.insert(group_name.to_string(), items);
-    }
-}
-
-fn handle_recipe_compounds(walk: &mut RecipeWalk<'_, '_>, val: &Expression<'_>) {
-    let Expression::ArrayExpression(arr) = unwrap_expression(val) else {
-        return;
-    };
-    walk_compound_variants(walk, arr);
-}
-
-fn walk_compound_variants(walk: &mut RecipeWalk<'_, '_>, arr: &ArrayExpression<'_>) {
-    for elem in &arr.elements {
-        let Some(expr) = elem.as_expression() else {
-            continue;
-        };
-        let Expression::ObjectExpression(item_obj) = unwrap_expression(expr) else {
-            continue;
-        };
-        if let Some(compound) = extract_compound(walk, item_obj) {
-            walk.draft.compounds.push(compound);
-        }
-    }
-}
-
-fn extract_compound(
-    walk: &mut RecipeWalk<'_, '_>,
-    item_obj: &ObjectExpression<'_>,
-) -> Option<RecipeCompound> {
-    let mut predicates = IndexMap::new();
-    let mut wants = Vec::new();
-    for prop_kind in &item_obj.properties {
-        let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
-            continue;
-        };
-        let Some(key) = static_key(&prop.key) else {
-            continue;
-        };
-        if key == "css" {
-            if let Some(css) = walk.style_at(&prop.value) {
-                wants.extend(css);
-            }
-            continue;
-        }
-        extract_compound_predicate(&prop.value, key, &mut predicates);
-    }
-    if wants.is_empty() || predicates.is_empty() {
-        return None;
-    }
-    Some(RecipeCompound { predicates, wants })
-}
-
-fn extract_compound_predicate(
-    val: &Expression<'_>,
-    key: String,
-    predicates: &mut IndexMap<String, Vec<String>>,
-) {
-    let unwrapped = unwrap_expression(val);
-    if let Expression::ArrayExpression(arr) = unwrapped {
-        let values = extract_predicate_array(arr);
-        if !values.is_empty() {
-            predicates.insert(key, values);
-        }
-        return;
-    }
-    if let Some(s) = normalized_value(unwrapped) {
-        predicates.insert(key, vec![s]);
-    }
-}
-
-fn extract_predicate_array(arr: &ArrayExpression<'_>) -> Vec<String> {
-    let mut values = Vec::new();
-    for el in &arr.elements {
-        if let Some(expr) = el.as_expression() {
-            if let Some(s) = normalized_value(expr) {
-                values.push(s);
-            }
-        }
-    }
-    values
 }
 
 fn unwrap_paren<'a, 'b>(expr: &'b Expression<'a>) -> Option<&'b Expression<'a>> {
@@ -281,6 +240,22 @@ pub(crate) fn unwrap_expression<'a, 'b>(mut expr: &'b Expression<'a>) -> &'b Exp
         expr = inner;
     }
     expr
+}
+
+/// The value a slot map gives `slot`; the last entry wins, as in an object literal.
+pub(super) fn slot_entry<'a, 'b>(
+    val: &'b Expression<'a>,
+    slot: &str,
+) -> Option<&'b Expression<'a>> {
+    let Expression::ObjectExpression(map) = unwrap_expression(val) else {
+        return None;
+    };
+    map.properties.iter().rev().find_map(|kind| match kind {
+        ObjectPropertyKind::ObjectProperty(prop) if static_key_is(&prop.key, slot) => {
+            Some(&prop.value)
+        }
+        _ => None,
+    })
 }
 
 pub(crate) fn static_key(key: &PropertyKey<'_>) -> Option<String> {
@@ -318,7 +293,7 @@ fn static_template_str(lit: &oxc_ast::ast::TemplateLiteral<'_>) -> Option<String
     lit.quasis.first().map(|q| q.value.raw.to_string())
 }
 
-fn normalized_value(expr: &Expression<'_>) -> Option<String> {
+pub(super) fn normalized_value(expr: &Expression<'_>) -> Option<String> {
     let unwrapped = unwrap_expression(expr);
     match unwrapped {
         Expression::StringLiteral(lit) => Some(lit.value.to_string()),

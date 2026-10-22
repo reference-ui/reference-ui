@@ -129,6 +129,7 @@ grows an info level.
 | `ATM-E-PARSE` | The source failed to parse; compile continues | `modules/atomic/src/stream.rs` |
 | `ATM-E-DUPLICATE-RECIPE` | Two recipes claim one className, or one class stem (a plain `card__root` beside slot `root` of `card`), within a system | `modules/atomic/src/recipes/identity.rs` |
 | `ATM-E-RECIPE-SLOT` | A malformed `slots` list, a slot-keyed style map naming a slot the list does not, or a slot map that is not an inline object | `modules/atomic/src/extract/recipes/slots.rs` |
+| `ATM-E-RECIPE-FIELD` | A recipe field the walker cannot read: a style value, variant map or compound that is neither an inline object nor a const object literal, an unreadable spread or computed key, or a slotted recipe's variant map or compound entry that is not inline | `modules/atomic/src/extract/recipes/walk.rs` |
 | `ATM-E-UNKNOWN-TOKEN` | Explicit `{path}` reference that names no token | `modules/atomic/src/resolve/tokens/mod.rs` |
 | `ATM-E-INVALID-BASE-SYSTEM` | The baseSystem spec failed contract validation | `modules/atomic/native.rs` |
 | `ATM-W-NON-OBJECT-CSS-ARG` | A `css()` argument, merge-list element, or conditional arm is not a static style object | `modules/atomic/src/extract/css/mod.rs` |

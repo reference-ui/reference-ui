@@ -175,12 +175,18 @@ pub enum DiagnosticCode {
     /// naming a slot the list does not, or a slot map that is not an inline object.
     /// The whole definition is refused.
     RecipeSlot,
+    /// `extract/recipes/walk` and `source`: a recipe field the walker cannot read statically. A
+    /// style value, variant map or compound that is neither an inline object nor a const object
+    /// literal, a spread that brings in no const object literal, a computed map key, or a slotted
+    /// recipe's variant map or compound entry that is not inline. The whole definition is refused,
+    /// with the field named and the fix hint "write <field> inline as an object literal".
+    RecipeField,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 56] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 57] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -297,6 +303,7 @@ const CODE_TABLE: [(DiagnosticCode, &str); 56] = [
     (DiagnosticCode::UnbracedTokenRef, "ATM-W-UNBRACED-TOKEN-REF"),
     (DiagnosticCode::ExternalUnbacked, "ATM-W-EXTERNAL-UNBACKED"),
     (DiagnosticCode::RecipeSlot, "ATM-E-RECIPE-SLOT"),
+    (DiagnosticCode::RecipeField, "ATM-E-RECIPE-FIELD"),
 ];
 
 // hints.test.ts reads the negative fixture `ATM-W-NOPE` out of this file, so the refusal

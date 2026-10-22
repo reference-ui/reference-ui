@@ -3,14 +3,17 @@
 //! emits one plain `Recipe` per slot under the stem `{className}__{slot}`, walked from that slot's
 //! entries in base, every variant value and every compound `css`. A malformed list, a slot map that is
 //! not an inline object, or a slot-map key the list does not name refuses the whole definition with
-//! `ATM-E-RECIPE-SLOT`.
+//! `ATM-E-RECIPE-SLOT`. A slotted recipe also takes its `variants` maps and compound entries inline: a
+//! named or spread map, or a compound that is not an inline object, refuses with `ATM-E-RECIPE-FIELD`,
+//! as does a slot entry the walk cannot read.
 
 use oxc_ast::ast::{
     ArrayExpressionElement, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind,
 };
 use oxc_span::{GetSpan, Span};
 
-use super::walk::{static_key, static_key_is, unwrap_expression, walk_recipe_object};
+use super::slot_check::SlotKeyCheck;
+use super::walk::{static_key_is, unwrap_expression, walk_recipe_object, RecipeSite};
 use super::{from_draft, located_error};
 use crate::diagnostics::{DiagnosticCode, DiagnosticLocation};
 use crate::extract::ExtractContext;
@@ -40,7 +43,8 @@ pub(super) fn find_slots_prop<'a, 'b>(
 }
 
 /// Validate one slotted definition, then lower one plain recipe per slot in list order.
-/// `None` once any refusal is pushed: a definition with a slot error lowers nothing.
+/// `None` once any refusal is pushed: a definition with a refused field lowers nothing, and every
+/// slot is walked so one definition reports each refusal it has.
 pub(super) fn lower(
     def: &SlottedDefinition<'_, '_>,
     ctx: &mut ExtractContext<'_>,
@@ -49,23 +53,36 @@ pub(super) fn lower(
     if !slot_keys_known(def, &slots, ctx) {
         return None;
     }
-    Some(
-        slots
-            .iter()
-            .map(|slot| lower_slot(def, slot, ctx))
-            .collect(),
-    )
+    let lowered: Vec<Option<Recipe>> = slots
+        .iter()
+        .map(|slot| lower_slot(def, slot, ctx))
+        .collect();
+    lowered.into_iter().collect()
 }
 
-/// One slot's recipe: the walk reads only this slot's entries.
-fn lower_slot(def: &SlottedDefinition<'_, '_>, slot: &str, ctx: &mut ExtractContext<'_>) -> Recipe {
-    let draft = walk_recipe_object(def.obj, def.origin, Some(slot), ctx);
+/// One slot's recipe: the walk reads only this slot's entries. `None` when a field refused.
+fn lower_slot(
+    def: &SlottedDefinition<'_, '_>,
+    slot: &str,
+    ctx: &mut ExtractContext<'_>,
+) -> Option<Recipe> {
+    let site = RecipeSite {
+        class_name: def.class_name,
+        origin: def.origin,
+        slot: Some(slot),
+    };
+    let draft = walk_recipe_object(def.obj, site, ctx)?;
     let identity = RecipeSlot {
         recipe: def.class_name.to_string(),
         name: slot.to_string(),
     };
     let stem = name::slot_class_name(def.class_name, slot);
-    from_draft(draft, stem, Some(identity), def.location.clone())
+    Some(from_draft(
+        draft,
+        stem,
+        Some(identity),
+        def.location.clone(),
+    ))
 }
 
 /// Read the `slots` list: an inline, non-empty array of distinct string literals with no whitespace.
@@ -136,13 +153,14 @@ fn slot_name(element: &ArrayExpressionElement<'_>) -> Option<String> {
 }
 
 /// Push one `ATM-E-RECIPE-SLOT` refusal at a span.
-fn push_refusal(ctx: &mut ExtractContext<'_>, message: &str, span: Span) {
+pub(super) fn push_refusal(ctx: &mut ExtractContext<'_>, message: &str, span: Span) {
     let diagnostic = located_error(ctx, DiagnosticCode::RecipeSlot, message, span);
     ctx.diagnostics.push(diagnostic);
 }
 
-/// True when every slot map is an inline object naming only listed slots. Each refusal is raised
-/// where it stands, so one definition can report several.
+/// True when every slot map is an inline object naming only listed slots, and every variant map and
+/// compound entry is written inline. Each refusal is raised where it stands, so one definition can
+/// report several.
 fn slot_keys_known(
     def: &SlottedDefinition<'_, '_>,
     slots: &[String],
@@ -160,119 +178,4 @@ fn slot_keys_known(
         }
     }
     check.clean
-}
-
-/// The slot-key walk: which slots are listed, where refusals go, and whether any fired.
-struct SlotKeyCheck<'a, 'b> {
-    class_name: &'a str,
-    slots: &'a [String],
-    ctx: &'a mut ExtractContext<'b>,
-    clean: bool,
-}
-
-impl SlotKeyCheck<'_, '_> {
-    /// Route one recipe-object field to the slot-keyed value it carries, if any.
-    fn field(&mut self, prop: &ObjectProperty<'_>) {
-        match static_key(&prop.key).as_deref() {
-            Some("base") => self.map(&prop.value),
-            Some("variants") => self.variants(&prop.value),
-            Some("compoundVariants") => self.compounds(&prop.value),
-            _ => {}
-        }
-    }
-
-    /// Each variant value is a slot map.
-    fn variants(&mut self, value: &Expression<'_>) {
-        let Expression::ObjectExpression(axes) = unwrap_expression(value) else {
-            return;
-        };
-        for axis in &axes.properties {
-            let ObjectPropertyKind::ObjectProperty(axis) = axis else {
-                continue;
-            };
-            let Expression::ObjectExpression(options) = unwrap_expression(&axis.value) else {
-                continue;
-            };
-            for option in &options.properties {
-                if let ObjectPropertyKind::ObjectProperty(option) = option {
-                    self.map(&option.value);
-                }
-            }
-        }
-    }
-
-    /// Each compound's `css` is a slot map.
-    fn compounds(&mut self, value: &Expression<'_>) {
-        let Expression::ArrayExpression(list) = unwrap_expression(value) else {
-            return;
-        };
-        for element in &list.elements {
-            let Some(Expression::ObjectExpression(entry)) =
-                element.as_expression().map(unwrap_expression)
-            else {
-                continue;
-            };
-            for kind in &entry.properties {
-                if let ObjectPropertyKind::ObjectProperty(prop) = kind {
-                    if static_key(&prop.key).as_deref() == Some("css") {
-                        self.map(&prop.value);
-                    }
-                }
-            }
-        }
-    }
-
-    /// One slot map: an inline object whose keys are all listed slots. Any other value is refused
-    /// here, so a slot's CSS never disappears without a diagnostic.
-    fn map(&mut self, value: &Expression<'_>) {
-        let target = unwrap_expression(value);
-        let Expression::ObjectExpression(map) = target else {
-            self.refuse_not_object(target.span());
-            return;
-        };
-        for kind in &map.properties {
-            match kind {
-                ObjectPropertyKind::SpreadProperty(spread) => self.refuse_shape(spread.span),
-                ObjectPropertyKind::ObjectProperty(prop) => self.key(prop),
-            }
-        }
-    }
-
-    fn key(&mut self, prop: &ObjectProperty<'_>) {
-        let Some(slot) = static_key(&prop.key) else {
-            self.refuse_shape(prop.key.span());
-            return;
-        };
-        if self.slots.contains(&slot) {
-            return;
-        }
-        let message = format!(
-            "recipe '{}' styles unknown slot '{}'; its slots are: {}",
-            self.class_name,
-            slot,
-            self.slots.join(", ")
-        );
-        self.refuse(&message, prop.key.span());
-    }
-
-    fn refuse_not_object(&mut self, span: Span) {
-        let message = format!(
-            "recipe '{}': a slot map must be an inline object keyed by slot name",
-            self.class_name
-        );
-        self.refuse(&message, span);
-    }
-
-    fn refuse_shape(&mut self, span: Span) {
-        let message = format!(
-            "recipe '{}': a slot map takes slot names as plain keys, not spreads or computed keys",
-            self.class_name
-        );
-        self.refuse(&message, span);
-    }
-
-    fn refuse(&mut self, message: &str, span: Span) {
-        push_refusal(self.ctx, message, span);
-        self.clean = false;
-    }
 }
