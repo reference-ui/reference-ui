@@ -18,8 +18,8 @@ Pages compile on up to four worker threads, so the whole MDX pass over the docs 
 
 ## Collection check
 
-Every `.mdx` page under `src/content` must be listed in the built docs collection (`src/collections/.content-collections/generated`). content-collections drops a page whose frontmatter does not parse and prints nothing for it, so the built output is the only place that drop shows. `docs/collection` names each page the output leaves out. When the output is missing or unreadable, the finding says to run sync. The check runs on every invocation, with or without path arguments. `sync` fails on the same drop, naming the page, because `src/collections/docs.ts` checks the build's documents.
+Every `.mdx` page under `src/content` must reach the docs collection. The check builds that collection in-process, from the app's config (`src/collections/content-collections.ts`), into a scratch directory under the package's `node_modules/.cache/docs-gate`, and compares the built documents with the pages on disk. It never reads an earlier build, so a stale output from `sync` cannot pass it. `sync` still writes the app's own output for Vite; the gate does not read it.
 
-Unit tests run with `pnpm --filter @reference-ui/reference-docs run quality:test`.
+content-collections drops a page whose frontmatter does not parse and prints nothing for it, so `docs/collection` names each page the build leaves out. When the build fails and no page accounts for the failure, the finding carries the build's first error line, so a config that does not load fails the gate. The check runs on every invocation, with or without path arguments, and a build takes 30 to 150 ms. The gate runs from the package directory, because the collection's drop guard in `src/collections/docs.ts` resolves its paths from the working directory.
 
 Unit tests run with `pnpm --filter @reference-ui/reference-docs run quality:test`.

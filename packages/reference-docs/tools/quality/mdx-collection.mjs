@@ -1,49 +1,81 @@
-// Collection check of the docs gate. It takes the docs package directory and emits one finding for
-// each .mdx page under src/content that the built docs collection does not list, or one finding when
-// that collection has not been built. content-collections drops a page whose frontmatter does not
-// parse and says nothing about it, so the generated output is the only place such a page shows up.
+// Collection check of the docs gate. It takes the docs package directory and builds the docs collection
+// in-process from the app's own config, into a scratch directory, so it never reads an earlier sync's
+// output. It emits one finding for each .mdx page under src/content that the build leaves out, or one
+// finding when the build fails and no page explains it. content-collections drops a page whose
+// frontmatter does not parse and reports nothing for it, so the built documents are the only place that
+// drop shows.
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { createBuilder } from '@content-collections/core'
 import { walk } from './walk.mjs'
 
+const HERE = path.dirname(fileURLToPath(import.meta.url))
 const MDX_EXTS = new Set(['.mdx'])
-const GENERATED_INDEX = path.join('src', 'collections', '.content-collections', 'generated', 'index.js')
-const SYNC = 'run pnpm --filter @reference-ui/reference-docs run sync'
+const CONFIG = path.join('src', 'collections', 'content-collections.ts')
+// Scratch builds live in the package's own node_modules. The bundled config imports
+// @content-collections/core and zod by bare name, and Node resolves those from where the bundle is written.
+const SCRATCH_ROOT = path.join(HERE, '..', '..', 'node_modules', '.cache', 'docs-gate')
+const NOT_LISTED =
+  'not in the docs collection, so its route shows Not found; its frontmatter does not parse or a field is invalid'
 
-/** Findings for the pages the built docs collection leaves out, or for a collection not yet built. */
+/** Findings for the .mdx pages the docs collection leaves out, or for a build that fails and names no page. */
 export async function collectionFindings({ docsDir }) {
-  const indexFile = path.join(docsDir, GENERATED_INDEX)
-  const built = await builtPaths(docsDir, indexFile)
-  if (!built) {
-    return [
-      {
-        file: indexFile,
-        line: 1,
-        ruleId: 'docs/collection',
-        severity: 2,
-        message: `the built docs collection is missing or unreadable; ${SYNC}`,
-      },
-    ]
+  const configFile = path.join(docsDir, CONFIG)
+  await mkdir(SCRATCH_ROOT, { recursive: true })
+  // Its type makes the generated index load as ESM, since Node's package lookup stops at node_modules.
+  await writeFile(path.join(SCRATCH_ROOT, 'package.json'), '{ "type": "module" }\n')
+  const scratch = await mkdtemp(path.join(SCRATCH_ROOT, 'run-'))
+  try {
+    const outputDir = path.join(scratch, 'generated')
+    const build = await buildCollection(configFile, scratch, outputDir)
+    const built = await builtPaths(docsDir, outputDir)
+    if (built) {
+      const missing = await unlistedPages(docsDir, built)
+      // A build that fails after writing its output, with pages missing, failed on those pages: the
+      // page findings say which, so the build's own error would only repeat them.
+      if (missing.length || !build.failed) return missing
+    }
+    return [buildFinding(configFile, build)]
+  } finally {
+    await rm(scratch, { recursive: true, force: true })
   }
-  const pages = new Set()
-  await walk(path.join(docsDir, 'src/content'), MDX_EXTS, pages)
-  return [...pages]
-    .sort()
-    .filter(file => !built.has(file))
-    .map(file => ({
-      file,
-      line: 1,
-      ruleId: 'docs/collection',
-      severity: 2,
-      message: `not in the built docs collection, so its route shows Not found; ${SYNC}, then fix any frontmatter it reports`,
-    }))
 }
 
-/** Absolute page paths the built collection lists, or `null` when the generated index cannot be loaded. */
-async function builtPaths(docsDir, indexFile) {
+/** Runs the collection build into `outputDir`. `failed` says whether it threw, and `error` is what it threw. */
+async function buildCollection(configFile, scratch, outputDir) {
+  try {
+    const builder = await createBuilder(configFile, {
+      configName: 'collection-config.mjs',
+      cacheDir: path.join(scratch, 'cache'),
+      outputDir,
+    })
+    await builder.build()
+    return { failed: false }
+  } catch (error) {
+    return { failed: true, error }
+  }
+}
+
+/** One finding for the build as a whole, named by its first error line. */
+function buildFinding(file, build) {
+  const detail = build.failed
+    ? String(build.error?.message ?? build.error).split('\n')[0]
+    : 'its output could not be read'
+  return {
+    file,
+    line: 1,
+    ruleId: 'docs/collection',
+    severity: 2,
+    message: `the docs collection did not build: ${detail}`,
+  }
+}
+
+/** Absolute page paths the build lists, or `null` when its generated index cannot be loaded. */
+async function builtPaths(docsDir, outputDir) {
   let generated
   try {
-    generated = await import(pathToFileURL(indexFile).href)
+    generated = await import(pathToFileURL(path.join(outputDir, 'index.js')).href)
   } catch {
     return null
   }
@@ -55,4 +87,14 @@ async function builtPaths(docsDir, indexFile) {
       .filter(doc => typeof doc?.path === 'string')
       .map(doc => path.resolve(collectionsDir, doc.path))
   )
+}
+
+/** One finding for each .mdx page under src/content whose path is not in `built`. */
+async function unlistedPages(docsDir, built) {
+  const pages = new Set()
+  await walk(path.join(docsDir, 'src/content'), MDX_EXTS, pages)
+  return [...pages]
+    .sort()
+    .filter(file => !built.has(file))
+    .map(file => ({ file, line: 1, ruleId: 'docs/collection', severity: 2, message: NOT_LISTED }))
 }

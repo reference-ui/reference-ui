@@ -1,8 +1,10 @@
 // Unit tests for the MDX tier and the collection check of the docs gate. It takes each check's module
-// and fixture pages written to a temporary docs tree, and asserts the findings by rule and line. The
-// compile tests run the app's real pipeline, so they take a few seconds. Run with
+// and fixture pages written to a temporary docs tree, with a collection config in the app's shape for the
+// collection check to build, and asserts the findings by rule and line. The compile tests run the app's
+// real pipeline, so they take a few seconds. Run with
 // `pnpm --filter @reference-ui/reference-docs run quality:test`.
 import assert from 'node:assert/strict'
+import { existsSync } from 'node:fs'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -35,13 +37,45 @@ async function fixtureSite(files) {
   return { docsDir, dir }
 }
 
-/** Writes a generated docs collection listing `paths`, in the shape content-collections emits. */
+/** Writes an earlier build's output into the app's output directory, listing `paths` in the shape content-collections emits. */
 async function builtCollection(docsDir, paths) {
   const dir = path.join(docsDir, 'src/collections/.content-collections/generated')
   await mkdir(dir, { recursive: true })
   const docs = paths.map(p => ({ title: 'T', section: 'G', order: 1, slug: 's', description: 'd', path: p }))
   await writeFile(path.join(dir, 'allDocs.js'), `export default ${JSON.stringify(docs)}\n`)
   await writeFile(path.join(dir, 'index.js'), 'import allDocs from "./allDocs.js";\nexport { allDocs };\n')
+}
+
+/**
+ * Writes the docs collection config in the app's shape: its paths, parser and schema. `guard` adds a
+ * drop guard that throws after the build has written its output, as docs.ts does. `broken` makes the
+ * config import a file that is not there.
+ */
+async function fixtureConfig(docsDir, { guard = false, broken = false } = {}) {
+  const dir = path.join(docsDir, 'src/collections')
+  await mkdir(dir, { recursive: true })
+  const lines = [
+    broken ? "import './not-there.ts'" : null,
+    "import { defineCollection, defineConfig } from '@content-collections/core'",
+    "import { z } from 'zod'",
+    'const docs = defineCollection({',
+    "  name: 'docs',",
+    "  directory: '../content/docs',",
+    "  include: '**/*.mdx',",
+    "  parser: 'frontmatter-only',",
+    '  schema: z.object({',
+    '    title: z.string(),',
+    '    section: z.string(),',
+    '    order: z.number(),',
+    '    slug: z.string(),',
+    '    description: z.string(),',
+    '  }),',
+    `  transform: ({ _meta, ...doc }) => ({ ...doc, path: \`../content/docs/\${_meta.filePath}\` }),`,
+    guard ? "  onSuccess: () => { throw new Error('a page was dropped') }," : null,
+    '})',
+    'export default defineConfig({ content: [docs] })',
+  ]
+  await writeFile(path.join(dir, 'content-collections.ts'), `${lines.filter(Boolean).join('\n')}\n`)
 }
 
 describe('frontmatter', () => {
@@ -340,22 +374,62 @@ describe('the MDX tier on a temporary docs tree', () => {
 })
 
 describe('the collection check', () => {
-  it('names each page the built collection leaves out, and only those', async () => {
-    const { docsDir } = await fixtureSite({ 'kept.mdx': PAGE(withSlug('kept')), 'dropped.mdx': PAGE(withSlug('dropped')) })
-    await builtCollection(docsDir, ['../content/docs/kept.mdx'])
+  // The frontmatter's description has an unquoted colon, so content-collections drops the page.
+  const DROPPED = PAGE(VALID.replace('slug: page', 'slug: dropped').replace('A page.', 'Foo: bar'))
+  const CONFIG_FILE = docsDir => path.join(docsDir, 'src/collections/content-collections.ts')
+
+  it('names the page the build drops, and only that page', async () => {
+    const { docsDir } = await fixtureSite({ 'kept.mdx': PAGE(withSlug('kept')), 'dropped.mdx': DROPPED })
+    await fixtureConfig(docsDir)
     const found = await collectionFindings({ docsDir })
     assert.deepEqual(found.map(f => [path.basename(f.file), f.line, f.ruleId]), [['dropped.mdx', 1, 'docs/collection']])
+    assert.doesNotMatch(found[0].message, /sync/)
   })
 
-  it('is clean when the built collection lists every page', async () => {
+  it('is clean when the build lists every page, and writes nothing into the app', async () => {
     const { docsDir } = await fixtureSite({ 'kept.mdx': PAGE(withSlug('kept')) })
-    await builtCollection(docsDir, ['../content/docs/kept.mdx'])
+    await fixtureConfig(docsDir)
     assert.deepEqual(await collectionFindings({ docsDir }), [])
+    assert.equal(existsSync(path.join(docsDir, 'src/collections/.content-collections')), false)
   })
 
-  it('asks for a sync when the collection has not been built', async () => {
+  it('names a dropped page, and does not repeat the build error that comes with it', async () => {
+    const { docsDir } = await fixtureSite({ 'kept.mdx': PAGE(withSlug('kept')), 'dropped.mdx': DROPPED })
+    await fixtureConfig(docsDir, { guard: true })
+    const found = await collectionFindings({ docsDir })
+    assert.deepEqual(found.map(f => [path.basename(f.file), f.ruleId]), [['dropped.mdx', 'docs/collection']])
+  })
+
+  it('reports a build error that names no page, with its first line', async () => {
     const { docsDir } = await fixtureSite({ 'kept.mdx': PAGE(withSlug('kept')) })
-    const [found] = await collectionFindings({ docsDir })
-    assert.match(found.message, /missing or unreadable; run pnpm --filter .+ run sync$/)
+    await fixtureConfig(docsDir, { guard: true })
+    assert.deepEqual(await collectionFindings({ docsDir }), [
+      {
+        file: CONFIG_FILE(docsDir),
+        line: 1,
+        ruleId: 'docs/collection',
+        severity: 2,
+        message: 'the docs collection did not build: a page was dropped',
+      },
+    ])
+  })
+
+  it('reports a config that does not load, rather than passing', async () => {
+    // esbuild prints the unresolved import on stderr; a real run shows that line too.
+    const { docsDir } = await fixtureSite({ 'kept.mdx': PAGE(withSlug('kept')) })
+    await fixtureConfig(docsDir, { broken: true })
+    const found = await collectionFindings({ docsDir })
+    assert.equal(found.length, 1)
+    assert.equal(found[0].file, CONFIG_FILE(docsDir))
+    assert.match(found[0].message, /^the docs collection did not build: /)
+  })
+
+  it('reads this run, not an earlier build left in the app output', async () => {
+    const { docsDir } = await fixtureSite({ 'kept.mdx': PAGE(withSlug('kept')), 'dropped.mdx': DROPPED })
+    await builtCollection(docsDir, ['../content/docs/kept.mdx', '../content/docs/dropped.mdx'])
+    await fixtureConfig(docsDir)
+    const found = await collectionFindings({ docsDir })
+    assert.deepEqual(found.map(f => path.basename(f.file)), ['dropped.mdx'])
+    assert.ok(existsSync(path.join(docsDir, 'src/collections/.content-collections/generated/index.js')))
   })
 })

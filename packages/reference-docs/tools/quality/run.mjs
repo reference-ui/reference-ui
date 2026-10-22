@@ -232,6 +232,9 @@ async function main() {
     console.log('usage: pnpm agentdocs q [paths...]')
     return 0
   }
+  // The collection's drop guard (src/collections/docs.ts) resolves its directories from the working
+  // directory, as `pnpm sync` does from the package. The paths above are already absolute.
+  process.chdir(DOCS_DIR)
   const files = await collect(paths)
   const texts = await readTexts(files)
   const [biome, tsc, mdx, collection] = await Promise.all([

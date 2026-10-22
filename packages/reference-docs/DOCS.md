@@ -57,7 +57,7 @@ Flat and quiet, in the spirit of shadcn/ui:
 - content-collections drops a page whose frontmatter does not parse, and says
   nothing about it. So `sync` fails when a page is missing from the built
   documents, naming it, and the gate's `docs/collection` check finds the same
-  gap in the generated output.
+  gap by building the collection itself.
 - `src/collections/` owns schema, transforms, and slug-to-module lookup.
 - Vite owns MDX module loading; content-collections owns metadata only.
 
