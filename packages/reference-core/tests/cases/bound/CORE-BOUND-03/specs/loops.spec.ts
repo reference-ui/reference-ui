@@ -61,7 +61,7 @@ function syncLeg(label: string, dir: string): string {
   const output = `${run.stdout}${run.stderr}`;
   assert.doesNotMatch(
     output,
-    /TST-E-SCAN-FAILED|Build failed/,
+    /TST-E-|tasty build failed/i,
     `${label}: ref sync prints no tasty build failure, got: ${output}`
   );
   return readFileSync(path.join(dir, '.reference-ui', 'styled', 'styles.css'), 'utf8');
