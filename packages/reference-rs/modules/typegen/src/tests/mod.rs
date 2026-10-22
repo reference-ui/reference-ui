@@ -11,6 +11,7 @@ use std::fs;
 use std::path::PathBuf;
 
 mod boundary;
+mod breakpoints;
 mod diagnostics;
 mod fixtures;
 mod fonts;

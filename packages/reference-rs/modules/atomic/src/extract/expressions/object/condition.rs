@@ -11,9 +11,8 @@ use smallvec::SmallVec;
 
 use super::{walk_style_object, ObjectWalk};
 use crate::diagnostics::DiagnosticCode;
-use crate::resolve::conditions::is_breakpoint_range_key;
 use crate::resolve::conditions::pseudoselectors::has_parent_reference;
-use base_system::BreakpointScale;
+use base_system::{is_breakpoint_range_key, BreakpointScale};
 use canon::is_condition_prop;
 
 pub(crate) fn is_condition_key(key: &str, breakpoints: &BreakpointScale) -> bool {
@@ -92,7 +91,9 @@ fn emit_condition_dead_arms(ctx: &mut ObjectWalk<'_>, arms: &[crate::extract::fo
 
 #[cfg(test)]
 mod tests {
+    use crate::resolve::conditions::{lower_when, LoweredWhen};
     use crate::{compile, CompileRequest, VirtualSource};
+    use base_system::BreakpointScale;
 
     fn compile_logs(code: &str) -> crate::CompileResult {
         let req = CompileRequest {
@@ -104,28 +105,76 @@ mod tests {
         compile(&req).expect("compile succeeds")
     }
 
+    /// The literals typegen prints as `BreakpointKey` for `system`.
+    fn typegen_breakpoint_keys(system: &crate::BaseSystem) -> Vec<String> {
+        let dts = typegen::emit_dts(system);
+        let union = dts
+            .lines()
+            .find_map(|line| line.strip_prefix("export type BreakpointKey = "))
+            .expect("typegen prints BreakpointKey");
+        union
+            .trim_end_matches(';')
+            .split('|')
+            .map(|lit| lit.trim().trim_matches(['"', '\''].as_slice()).to_string())
+            .collect()
+    }
+
     /// Every `BreakpointKey` typegen prints for the lib fixture (`2xl`
     /// included) is a condition key here, so typed keys never fall to the
     /// unknown-property gate.
     #[test]
     fn typegen_breakpoint_keys_are_condition_keys() {
         let system = crate::BaseSystem::lib_fixture();
-        let dts = typegen::emit_dts(system);
-        let union = dts
-            .lines()
-            .find_map(|line| line.strip_prefix("export type BreakpointKey = "))
-            .expect("typegen prints BreakpointKey");
-        let keys: Vec<&str> = union
-            .trim_end_matches(';')
-            .split('|')
-            .map(|lit| lit.trim().trim_matches(['"', '\''].as_slice()))
-            .collect();
-        assert!(keys.contains(&"2xlOnly") && keys.contains(&"xlTo2xl"), "{keys:?}");
-        for key in keys {
+        let keys = typegen_breakpoint_keys(system);
+        assert!(
+            keys.iter().any(|k| k == "2xlOnly") && keys.iter().any(|k| k == "xlTo2xl"),
+            "{keys:?}"
+        );
+        for key in &keys {
             assert!(
                 super::is_condition_key(key, system.breakpoints()),
                 "{key} is a typed breakpoint key"
             );
+        }
+    }
+
+    /// Custom scales whose names contain `To`, end in `Down`, or make a
+    /// reversed pair: every range key typegen prints must be a condition key
+    /// to extract and must lower to a range in resolve. Widths are declared,
+    /// so only the name shape can make a printed key fail.
+    #[test]
+    fn typegen_custom_range_keys_are_read_as_ranges() {
+        let scales: [&[(&str, &str)]; 3] = [
+            &[("xTo", "600"), ("y", "900")],
+            &[("tob", "300"), ("a", "400"), ("aTo", "500"), ("b", "900")],
+            &[("sm", "640"), ("wideDown", "1000"), ("lg", "1024")],
+        ];
+        let disagreements: Vec<String> =
+            scales.iter().flat_map(|pairs| refusals_in(pairs)).collect();
+        assert!(disagreements.is_empty(), "{}", disagreements.join("\n"));
+    }
+
+    /// The printed range keys for one custom scale that extract or resolve refuses.
+    fn refusals_in(pairs: &[(&str, &str)]) -> Vec<String> {
+        let system = crate::BaseSystem {
+            breakpoints: BreakpointScale::from_named_widths(pairs.iter().copied()),
+            ..crate::BaseSystem::lib_fixture().clone()
+        };
+        typegen_breakpoint_keys(&system)
+            .into_iter()
+            .filter(|key| key.as_str() != "base" && !system.breakpoints().names().contains(key))
+            .filter_map(|key| refusal(&key, &system).map(|why| format!("{key} ({pairs:?}): {why}")))
+            .collect()
+    }
+
+    /// Why extract or resolve refuses a printed key, or `None` when both read it.
+    fn refusal(key: &str, system: &crate::BaseSystem) -> Option<&'static str> {
+        if !super::is_condition_key(key, system.breakpoints()) {
+            Some("extract reads no breakpoint")
+        } else if matches!(lower_when(key, system), LoweredWhen::Known(_)) {
+            None
+        } else {
+            Some("resolve does not lower it")
         }
     }
 

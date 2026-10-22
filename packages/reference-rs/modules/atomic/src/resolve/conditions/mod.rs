@@ -3,9 +3,9 @@
 //! segment and the wrap together. Named `_` keys ask `BaseSystem` first; presets
 //! remain only for keys the utterance does not list. Named breakpoint tokens
 //! lower to `@container (min-width: Npx)` from the scale. Unknown keys return
-//! `LoweredWhen::Unknown` so resolve can warn and drop the want. Extraction and
-//! resolve share one breakpoint range shape, so a key is a range only when its
-//! parts are scale names.
+//! `LoweredWhen::Unknown` so resolve can warn and drop the want. Extraction,
+//! resolve and typegen share one breakpoint range shape from `base_system`, so a
+//! key is a range only when its parts are scale names.
 
 pub mod pseudoprops;
 pub mod pseudoselectors;
@@ -16,7 +16,7 @@ use crate::diagnostics::{
     DeclarationDetail, DiagnosticCode, DiagnosticFact, DiagnosticLocation, DiagnosticSink,
     DiagnosticsSession, Policy, ResolveDetail, ResolveOutcome,
 };
-use base_system::{BaseSystem, BreakpointScale};
+use base_system::{range_shape, BaseSystem, RangeShape};
 
 /// Result of parsing one authored condition string.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -126,39 +126,7 @@ pub fn breakpoint_media_query(key: &str, system: &BaseSystem) -> Option<String> 
     }
 }
 
-/// Syntactic split of a range key; suffix arms never retry as a `To` split.
-enum RangeShape<'a> {
-    Down(&'a str),
-    Only(&'a str),
-    Between(&'a str, &'a str),
-}
-
-fn range_shape(raw: &str) -> Option<RangeShape<'_>> {
-    if let Some(bp) = raw.strip_suffix("Down") {
-        return Some(RangeShape::Down(bp));
-    }
-    if let Some(bp) = raw.strip_suffix("Only") {
-        return Some(RangeShape::Only(bp));
-    }
-    raw.split_once("To")
-        .map(|(from, to)| RangeShape::Between(from, to))
-}
-
-/// True when `raw` has range shape over scale names: `Down`/`Only` stems match
-/// exactly, `To` sides fold ASCII case (mirrors `js/namer/when.ts`). Order,
-/// `base` and width checks stay in `breakpoint_range`.
-pub(crate) fn is_breakpoint_range_key(raw: &str, scale: &BreakpointScale) -> bool {
-    let names = scale.names();
-    match range_shape(raw) {
-        Some(RangeShape::Down(bp) | RangeShape::Only(bp)) => names.iter().any(|n| n == bp),
-        Some(RangeShape::Between(from, to)) => {
-            names.iter().any(|n| n.eq_ignore_ascii_case(from))
-                && names.iter().any(|n| n.eq_ignore_ascii_case(to))
-        }
-        None => false,
-    }
-}
-
+/// Order, `base` and width checks for a range; the name shape is base_system's.
 fn breakpoint_range(raw: &str, system: &BaseSystem) -> Option<When> {
     match range_shape(raw)? {
         RangeShape::Down(bp) => breakpoint_down(raw, bp, system),

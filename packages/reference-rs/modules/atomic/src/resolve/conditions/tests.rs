@@ -11,6 +11,7 @@ use crate::atom::{AtomSet, AtomValue, Want, WhenKind};
 use crate::diagnostics::DiagnosticLocation;
 use crate::resolve::{resolve_want_with, ResolveSession};
 use crate::stylesheet;
+use base_system::is_breakpoint_range_key;
 use smallvec::smallvec;
 
 fn known(raw: &str, system: &BaseSystem) -> When {

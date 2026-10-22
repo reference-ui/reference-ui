@@ -1,5 +1,4 @@
-//! Portable design-system definition consumed after TypeScript has evaluated
-//! `tokens()`, `font()`, `keyframes()`, and `globalCss()` into an `EvaluatedSystemSpec`.
+//! Portable design-system definition, the evaluated output of TypeScript's spec builders.
 //! Atomic queries whether a name is a token, which wrap `_hover` uses, which
 //! font/breakpoint/keyframe tables apply, and which `staticCss` utilities to pre-emit.
 //! `lib_fixture()` builds the lib fixture via public `from_spec` with `profile: "reference-ui"`.
@@ -7,6 +6,7 @@
 //! `extends` is carried on the wire but not resolved here: composition lives in Core.
 //! `jsxOwned` rides the same wire: the props each published component keeps for itself.
 
+mod breakpoint_range;
 mod breakpoints;
 mod condition_map;
 mod conditions;
@@ -28,6 +28,7 @@ use std::sync::OnceLock;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
+pub use breakpoint_range::{is_breakpoint_range_key, range_shape, RangeShape};
 pub use breakpoints::BreakpointScale;
 pub use condition_map::ConditionMap;
 pub use fonts::{FontDefinition, FontFaceDefinition, FontScale};

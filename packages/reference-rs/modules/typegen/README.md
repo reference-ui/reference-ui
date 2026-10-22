@@ -36,7 +36,8 @@ become a quoted `FontRegistry` whose weight keys are dump map keys (`bold`),
 not CSS numbers (`700`). A dump that declares breakpoints plus color or spacing
 tokens also prints `StyleConditionKey` (named conditions), `BreakpointKey`
 (`base`, bare scale names such as `md`, and their `Down` / `Only` / `To`
-ranges, never `@md`), `StylePropValue<T>`, discriminated
+ranges, never `@md`; a range prints only where atomic reads it back as its
+pair), `StylePropValue<T>`, discriminated
 `FontProps`, `StyleProps = FontProps & { … }` with dialect `container` /
 recursive `r`, and recursive `SystemStyleObject` (condition and breakpoint keys plus
 `&${string}` selectors). Radius keys from canon (`borderRadius` and other
