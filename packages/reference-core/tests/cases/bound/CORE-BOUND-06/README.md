@@ -9,9 +9,9 @@ each of the two directories (`a` and `b`) of every level of `src/a/lattice/n0` t
 - The baseline has no links. It writes the file the loop reaches out at the path the loop gives it: `src/a/up/x.ts` is a
   real copy of `src/x.ts`. `ref sync` must exit 0 under 10 s.
 - The linked project adds `src/a/up -> ..`, which points back at `src/`, so `src/x.ts` is in scope only as
-  `src/a/up/x.ts`. It also links every clique directory to the other six, and every lattice directory to both directories
-  of the level below. `ref sync` must exit 0 under 10 s too, and its `styled/styles.css` must be byte-identical to the
-  baseline's.
+  `src/a/up/x.ts`. It also links every clique directory to the other six, and every lattice level but the last to both directories
+  of the level below. `ref sync` must exit 0 under 10 s too, and its `.reference-ui/styled/styles.css` must be
+  byte-identical to the baseline's.
 
 The loop-only file is the positive half: a walk that cuts the loop-closing link never lists `src/a/up/x.ts`, so the
 equality fails. A walk that follows every link path again multiplies its work and fails the time budget. Both children
