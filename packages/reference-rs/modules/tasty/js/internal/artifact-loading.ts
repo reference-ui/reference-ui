@@ -1,17 +1,17 @@
 /**
  * Artifact path resolution and module importing for the runtime.
- * Resolves artifact paths and specifiers and imports artifact modules. Each file import gets a
- * fresh query, so a rebuilt artifact is read again instead of the cached module.
+ * Resolves artifact paths and specifiers and imports artifact modules. Each file import carries a
+ * hash of the file's bytes as its query, so a rebuilt artifact is read again while an unchanged one
+ * reuses the module Node already holds: Node keeps every module record for the life of the process,
+ * and a fresh query per import grew a long watch by every manifest it ever loaded.
  */
 import { wrapRuntimeError } from './runtime-errors.js'
 
 export type ArtifactImporter = (artifactPath: string) => Promise<unknown>
 
-let artifactImportVersion = 0
-
 export async function defaultArtifactImporter(artifactPath: string): Promise<unknown> {
   const specifier = await resolveArtifactSpecifier(artifactPath)
-  return import(/* @vite-ignore */ withFreshFileSpecifier(specifier))
+  return import(/* @vite-ignore */ await withContentFileSpecifier(specifier))
 }
 
 export async function resolveArtifactPath(
@@ -41,13 +41,21 @@ export async function resolveArtifactSpecifier(pathOrSpecifier: string): Promise
   return pathToFileURL(pathOrSpecifier).href
 }
 
-function withFreshFileSpecifier(specifier: string): string {
+// An unreadable file keeps its plain specifier, so the import reports the missing artifact itself.
+async function withContentFileSpecifier(specifier: string): Promise<string> {
   if (!specifier.startsWith('file:')) {
     return specifier
   }
 
   const url = new URL(specifier)
-  url.searchParams.set('tastyv', String(++artifactImportVersion))
+  const [{ readFile }, { createHash }] = await Promise.all([import('node:fs/promises'), import('node:crypto')])
+  let bytes: Uint8Array
+  try {
+    bytes = await readFile(url)
+  } catch {
+    return specifier
+  }
+  url.searchParams.set('tastyv', createHash('sha256').update(bytes).digest('hex').slice(0, 16))
   return url.href
 }
 
