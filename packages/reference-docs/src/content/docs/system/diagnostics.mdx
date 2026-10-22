@@ -183,6 +183,9 @@ the code in any tooling you build.
   - A name is not a quoted string, is empty, or contains whitespace, like `''`
     or `'top row'`. Use a plain name, like `'title'`.
   - A name is listed twice. Remove the repeat.
+  - A slot map is not an inline object, like `base: styles` or
+    `sm: undefined`. Write it inline, keyed by slot name, or write `{}` when it
+    styles nothing.
   - A slot map has a spread, like `...shared`, or a computed key, like
     `[key]:`. Write each slot as a plain key, like `root: { … }`.
   - A slot map styles a name that `slots` does not list, like `display` in
