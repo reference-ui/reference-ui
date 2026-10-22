@@ -9,7 +9,8 @@ import { pidAlive } from './session.ts'
 
 // An older writer build may still own a pid-less temp: sweep only once it is this old.
 const LEGACY_TEMP_SWEEP_MS = 5 * 60_000
-// A config or fragment evaluation finishes well inside this; older scratch was stranded by a killed run.
+// A config evaluation (the one writer of scratch; fragments run in memory) finishes well inside this;
+// older scratch was stranded by a killed run or by a build whose fragment evaluation still wrote temp files.
 const SCRATCH_SWEEP_MS = 60_000
 
 export function isUnder(path: string, root: string): boolean {

@@ -209,13 +209,16 @@ function evaluationFilename(cwd: string): string {
 }
 
 // The joined IIFEs run as one classic script, never an ES module: Node keeps every module record
-// for the life of the process, so a module per sync leaked the whole script on each watch resync,
-// while a script's code is collected once nothing references it. The function wrapper gives the
-// script the module's strict mode and keeps its declarations out of the global scope, and dynamic
-// import() still resolves through the main loader. The prefix shares line 1, so line numbers hold.
+// for the life of the process, so a module per sync leaked the whole script on each watch resync.
+// An unchanged script hits V8's compilation cache and keeps nothing new; a changed one stays in that
+// cache until V8 ages it out, which is bounded, not permanent. The function wrapper gives the script
+// the module's strict mode and keeps its declarations out of the global scope, and dynamic import()
+// still resolves through the main loader. The prefix shares line 1, so line numbers hold. With
+// displayErrors off, a thrown error carries no source-line header, as it did from the module.
 function runEvaluationScript(cwd: string, script: string): void {
   runInThisContext(`(function () { 'use strict'; ${script}\n})()`, {
     filename: evaluationFilename(cwd),
+    displayErrors: false,
     importModuleDynamically: vmConstants.USE_MAIN_CONTEXT_DEFAULT_LOADER,
   })
 }
