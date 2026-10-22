@@ -1,0 +1,1 @@
+{"id": "CORE-SYNC-18", "name": "a sync root spelled with a doubled slash paints the include's class, as the plain path does", "sync": true}

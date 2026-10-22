@@ -1,10 +1,10 @@
 // Sync: the module that regenerates the Core generated folder.
-// It takes a project root and emits a fresh folder from config plus fragments.
+// It takes a project root in any spelling and emits a fresh folder from config plus fragments.
 // Serial by construction: fragments, one native compile, publish. A function.
 
 import { writeFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import { compileNative } from '../native/compile.ts'
 import type {
@@ -272,7 +272,7 @@ function yieldToEventLoop(): Promise<void> {
 }
 
 /**
- * Regenerate the `.reference-ui/` folder for the project at cwd. Acquires
+ * Regenerate the `.reference-ui/` folder for the project at dir. Acquires
  * the session lock first, drops any stage a killed run stranded, then
  * evaluates fragments once, compiles the spec natively, and assembles the
  * result into the nested stage dir — the live folder keeps serving the
@@ -287,7 +287,10 @@ function yieldToEventLoop(): Promise<void> {
  * cover throws SyncCoveredByWatchError before any write. The lock releases in
  * the finally, after one event-loop turn that lets a queued stop signal land.
  */
-export async function sync(cwd: string, options: SyncOptions = {}): Promise<SyncResult> {
+export async function sync(dir: string, options: SyncOptions = {}): Promise<SyncResult> {
+  // Resolved once, at the entry: the engine's include matcher strips the root by literal prefix, while
+  // fast-glob returns normalized paths, so a `//` spelling would match nothing and drop every file.
+  const cwd = resolve(dir)
   markPhase('syncStart')
   const loaded = await loadUserConfigWithDependencies(cwd)
   const config = loaded.config
