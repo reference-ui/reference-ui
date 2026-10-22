@@ -124,20 +124,15 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
       predates wave 1). Investigator running; fix + a bounded-heap watch test to follow.
 - [ ] Bounded walkers wave 2: parse-depth guard (F2), symlink-safe walks (F5), corpus test (T2), boundary smoke (T5).
 - [ ] Bounded walkers wave 3: named errors for cyclic/deep token trees (F8), include brace cap (F9), expression-walker depth budgets (F3).
-- [ ] Small fixes:
-  - tasty resolver reports `INSTALL.md?raw` imports as unresolved (strip query suffixes).
-  - Verify `pnpm agentrs q` thresholds vs AGENTS.md section 4 (cook saw file 1500 / complexity 60 / args 12 vs 500/15/5).
-  - Stale SPEC rows: core tests/cases/global/SPEC.md:64 (@media in globals) and :61 (@position-try is authorable via globalCss).
-  - lib book sync warns `accent`/`bg` unknown colour in Switch.tail.test.tsx:30,34.
-  - Folded JSX spreads warn on readOnly/onPointerDown (fold/call_lower.rs ignores JsxAttributes).
-  - typegen emits custom-scale range keys extract rejects (filter breakpoints.rs through range_shape).
-  - Structural unknown-property fact instead of message parsing (ExtractDetail variant).
-  - styletrace tests need gitignored fixtures/sync-root/.reference-ui: generate it in test setup so fresh worktrees pass.
-  - vendor-rust-tasty-dts.mjs fails on ./index.js specifiers (vendored tasty + styletrace d.ts stale; core types displayMembersOf locally).
-  - style-prop-reference.mdx compiles past Babel's 500 KB deopt line.
-  - `pnpm agentdocs q` lints no .mdx.
-  - A third-party tasty hook calling public getDisplayMembers() starts a fresh walk (document or guard).
-  - Docs: "a recipe nothing calls emits no CSS" goes in troubleshooting (ruling).
+- [x] Small fixes landed 2026-10-22 (ff to a6c19efc4, 46 commits; items 1-25, xhigh review + 7 fixes). Gate: 1685 Rust,
+      353 cases, core vt 1105, docs/lib/book sync 0 warnings, MDX now gated. Highlights: typed @reference-ui/system
+      (token typos error; recipe exported; extendSystem stays core-only); sync-time system alias is its own barrel
+      (baseSystem in a theme file -> named error); getRhythm sync crash fixed; ATM-E-RECIPE-FIELD (no silent recipe
+      skips, compounds never widened); StyleTrace +23 lib components (rest re-destructure); `//` root; webpack5 leg on
+      chain-t6 + reference-rs packaging fix; agentrs q at AGENTS.md limits; chain-t8 retired (validator rule stands).
+      Rulings: styletrace fixture is a committed stand-in, not generated; colorMode 'light'|'dark'.
+      Open: dist-freshness.test.ts flake (wave 2); recipe predicate imported from another file has no case;
+      surface/index.ts header stale; `.content-collections` not ignored by the watcher (needs the Rust list in sources.rs).
 - [x] Docs from map.md (2026-10-22): nested sidebar section > group > page, 288px (6d786c095, e62a72731); all 9 P1–P3
       pages landed (b59c4b673 … 079dc46f4, 7e14bd98a). Rulings: groups sort with pages by `order`; no sub-section icons
       (indent + rule reads cleaner); docs-only commits gate on agentdocs q + real docs sync + clean render.
