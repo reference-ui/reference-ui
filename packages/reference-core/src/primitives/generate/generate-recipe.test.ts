@@ -2,7 +2,7 @@
 // They bake a system with one recipe, then run strict tsc over a wrapper probe that splits its props with splitVariantProps.
 // The probe passes only when rest keeps the caller's other props (union members included) and drops the axis keys, when props with no axis
 // key, generic wrappers or a recipe with no variants are accepted, when boolean, numeric and responsive values type-check (recipe breakpoints
-// only), when a bare RecipeRuntimeFn splits into Partial halves, when a wrong value is rejected, and that a recipe with `slots` returns one class string and one raw object per slot, typed by slot name.
+// only), when a bare RecipeRuntimeFn splits into Partial halves, when a wrong value is rejected, that a generic wrapper over RecipeRuntimeFn<T> reads its call as a string, and that a recipe with `slots` returns one class string and one raw object per slot, typed by slot name.
 
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
@@ -21,7 +21,7 @@ afterEach(() => {
 
 const WRAPPER_PROBE = [
   "import type { ReactNode } from 'react'",
-  "import { recipe, type RecipeRuntimeFn } from './index.mjs'",
+  "import { recipe, type RecipeConfig, type RecipeRuntimeFn } from './index.mjs'",
   "const card = recipe({ className: 'card', variants: { tone: { quiet: {}, loud: {} } } })",
   "type CardProps = { tone?: 'quiet' | 'loud'; className?: string; children?: ReactNode; id?: string }",
   'export function wrapper(props: CardProps) {',
@@ -75,6 +75,7 @@ const WRAPPER_PROBE = [
   '  const [variants, rest] = card.splitVariantProps(props)',
   '  return [card(variants), rest]',
   '}',
+  "export function genericRecipeWrapper<T extends RecipeConfig>(fn: RecipeRuntimeFn<T>): string { const c: string = fn(); return c }",
   'export function bare(fn: RecipeRuntimeFn, props: { tone?: string; id?: string }) {',
   '  const [variants, rest] = fn.splitVariantProps(props)',
   '  const tone: string | undefined = variants.tone',
