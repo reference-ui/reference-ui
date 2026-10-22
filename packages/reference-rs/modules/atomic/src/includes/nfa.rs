@@ -22,6 +22,7 @@ pub(super) fn advance(tokens: &[Token], start: &[u32], text: &str) -> Vec<u32> {
 }
 
 /// True when the reached set contains the position past the last token.
+#[cfg(test)]
 pub(super) fn accepts(tokens: &[Token], positions: &[u32]) -> bool {
     positions
         .iter()

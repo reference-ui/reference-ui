@@ -42,7 +42,7 @@ fn write_symlink_tree(name: &str) -> (std::path::PathBuf, String) {
 #[cfg(unix)]
 #[test]
 fn symlinks_keep_stat_verdicts_on_both_walks() {
-    let (root, root_str) = write_symlink_tree("symlinks");
+    let (_root, root_str) = write_symlink_tree("symlinks");
     let scanned = sorted(gather(&CompileRequest {
         root_dir: Some(root_str.clone()),
         ..Default::default()
