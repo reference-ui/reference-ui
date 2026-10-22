@@ -12,6 +12,7 @@
  * 6. Clippy #[allow]/#[expect] is banned. Fix the architecture; do not silence lints.
  * 7. File headers: 2–6 sentences describing what the file does. Thin one-liners warn; essays fail.
  * 8. Clippy Integration: Ingests clippy JSON diagnostics when --clippy is passed.
+ * 9. Nesting gate: `Parser::new(` in production Rust only in modules/shared/src/parse.rs; test code is exempt.
  */
 
 import fs from 'node:fs'
@@ -87,6 +88,69 @@ export function checkClippyAllows(content) {
     }
   }
   return violations
+}
+
+/**
+ * The nesting gate. Production Rust parses through `shared::parse`, which refuses a source nested past the bound before
+ * Oxc sees it; a bare `Parser::new(` anywhere else would bypass that gate. Test code is exempt: a `tests` directory, a
+ * `tests.rs` or `*_tests.rs` file, a file its parent declares `#[cfg(test)] mod <name>;`, and each inline `#[cfg(test)]`
+ * module. `modules/shared/src/parse.rs` is the one production owner of `Parser::new`.
+ */
+const NESTING_GATE_OWNER = /\/modules\/shared\/src\/parse\.rs$/
+const PARSER_NEW_MESSAGE =
+  'Parser::new outside the nesting gate. Parse through shared::parse::parse_bounded so the depth pre-scan runs before Oxc; test code is exempt.'
+
+export function parserNewViolations(filePath, content) {
+  const normalized = filePath.replace(/\\/g, '/')
+  if (NESTING_GATE_OWNER.test(normalized) || isTestOnlyRustFile(normalized)) return []
+  const production = stripCfgTestModules(cleanRustCode(content))
+  return [...production.matchAll(/\bParser::new\s*\(/g)].map((match) => ({
+    line: production.slice(0, match.index).split('\n').length,
+    message: PARSER_NEW_MESSAGE,
+  }))
+}
+
+function isTestOnlyRustFile(normalized) {
+  const base = path.posix.basename(normalized)
+  if (normalized.split('/').includes('tests')) return true
+  if (base === 'tests.rs' || base.endsWith('_tests.rs')) return true
+  return isDeclaredCfgTestModule(normalized)
+}
+
+/** True when the file's parent `mod.rs` declares it `#[cfg(test)] mod <stem>;`, so the whole file is test-only. */
+function isDeclaredCfgTestModule(normalized) {
+  const stem = path.posix.basename(normalized, '.rs')
+  let parent
+  try {
+    parent = fs.readFileSync(path.posix.join(path.posix.dirname(normalized), 'mod.rs'), 'utf-8')
+  } catch {
+    return false
+  }
+  return new RegExp(`#\\[cfg\\(test\\)\\]\\s*(?:pub(?:\\([^)]*\\))?\\s+)?mod\\s+${stem}\\s*;`).test(parent)
+}
+
+/** Blanks every inline `#[cfg(test)] mod <name> { ... }` block, keeping newlines so line numbers stay true. */
+function stripCfgTestModules(cleaned) {
+  const out = cleaned.split('')
+  const opener = /#\[cfg\(test\)\]\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+\w+\s*\{/g
+  let match
+  while ((match = opener.exec(cleaned)) !== null) {
+    const close = matchingBrace(cleaned, match.index + match[0].length - 1)
+    for (let i = match.index; i <= close; i++) {
+      if (out[i] !== '\n') out[i] = ' '
+    }
+    opener.lastIndex = close + 1
+  }
+  return out.join('')
+}
+
+function matchingBrace(source, open) {
+  let depth = 0
+  for (let i = open; i < source.length; i++) {
+    if (source[i] === '{') depth++
+    else if (source[i] === '}' && --depth === 0) return i
+  }
+  return source.length - 1
 }
 
 function splitTopLevelParams(src) {
@@ -1097,6 +1161,18 @@ export async function inspectFiles(files, options = {}) {
           severity: 'error',
           line: allow.line,
           message: allow.message,
+        })
+        totalViolations++
+      }
+    }
+
+    if (isRust) {
+      for (const parse of parserNewViolations(filePath, content)) {
+        fileIssues.push({
+          type: 'PARSER_NEW_OUTSIDE_GATE',
+          severity: 'error',
+          line: parse.line,
+          message: parse.message,
         })
         totalViolations++
       }
