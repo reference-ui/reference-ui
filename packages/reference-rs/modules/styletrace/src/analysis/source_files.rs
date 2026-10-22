@@ -4,8 +4,8 @@
 //! rules can evolve without adding more branching to the analyzer itself. Styletrace
 //! has no include scope: a symlinked directory is entered once per real target, a link
 //! back to an ancestor is cut, and a file is listed once, under its real path when one
-//! exists, else under the first alias the walk reaches, so the listing matches what the
-//! compiler reads.
+//! exists, else under the first alias in name order, the same representative the atomic walk
+//! picks, so the listing matches what the compiler reads.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -54,14 +54,19 @@ fn collect_source_files(
             current_dir.display()
         )))
     })?;
+    let mut listed = Vec::new();
     for entry in entries {
-        let entry = entry.map_err(|error| {
+        listed.push(entry.map_err(|error| {
             StyleTraceError::new(scan_failed(format!(
                 "failed to read dir entry in {}: {error}",
                 current_dir.display()
             )))
-        })?;
-        visit_entry(&entry, canon, via_link, walk)?;
+        })?);
+    }
+    // Name order, the order atomic's walk visits entries in, so the first alias is the same path in both walks.
+    listed.sort_by_key(fs::DirEntry::file_name);
+    for entry in &listed {
+        visit_entry(entry, canon, via_link, walk)?;
     }
     Ok(())
 }
@@ -174,5 +179,26 @@ mod tests {
         assert!(found.iter().all(|path| !path.to_string_lossy().starts_with(r"\\?\")), "{found:?}");
         assert!(found.iter().any(|path| path.ends_with("src/a.tsx")), "{found:?}");
         std::fs::remove_dir_all(&dir).expect("cleanup");
+    }
+
+    /// Eight links to one directory outside the root, created out of name order: the file is listed once, under the alias
+    /// that sorts first (`l0`), the same representative the atomic walk picks. This filesystem lists them unsorted, so the
+    /// walk must sort to pick `l0`. Unix-only, since the test creates symlinks.
+    #[cfg(unix)]
+    #[test]
+    fn aliases_of_one_file_choose_the_first_in_name_order() {
+        let base = std::env::temp_dir().join(format!("styletrace-alias-order-{}", std::process::id()));
+        let root = base.join("proj");
+        let outside = base.join("outside");
+        std::fs::create_dir_all(&outside).expect("outside");
+        std::fs::write(outside.join("x.ts"), "export const x = 1;\n").expect("outside file");
+        for name in ["l5", "l2", "l7", "l0", "l3", "l6", "l1", "l4"] {
+            std::fs::create_dir_all(root.join(name)).expect("alias dir");
+            std::os::unix::fs::symlink(&outside, root.join(name).join("shared")).expect("alias link");
+        }
+        let found = discover_source_files(&root).expect("discovery");
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].ends_with("l0/shared/x.ts"), "{found:?}");
+        std::fs::remove_dir_all(&base).expect("cleanup");
     }
 }

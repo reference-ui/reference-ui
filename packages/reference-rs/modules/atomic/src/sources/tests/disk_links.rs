@@ -308,3 +308,25 @@ fn canonical_roots_carry_no_verbatim_prefix() {
     assert!(canonical.join("src/a.ts").is_file(), "{}", canonical.display());
     std::fs::remove_dir_all(&root).unwrap();
 }
+
+/// Eight links to one directory outside the root, created out of name order: the file is listed once, under the alias that
+/// sorts first (`l0`), the same representative the styletrace walk picks.
+#[cfg(unix)]
+#[test]
+fn aliases_of_one_file_choose_the_first_in_name_order() {
+    let root = temp_root("alias-order");
+    let outside = temp_root("alias-order-outside");
+    write_files(&outside, &[("x.ts", "export const x = 1;\n")]);
+    for name in ["l5", "l2", "l7", "l0", "l3", "l6", "l1", "l4"] {
+        std::fs::create_dir_all(root.join(name)).unwrap();
+        std::os::unix::fs::symlink(&outside, root.join(name).join("shared")).unwrap();
+    }
+    let root_str = root.to_string_lossy().to_string();
+    let scanned = gather(&CompileRequest {
+        root_dir: Some(root_str.clone()),
+        ..Default::default()
+    });
+    assert_eq!(listed_paths(&scanned), [format!("{root_str}/l0/shared/x.ts")]);
+    std::fs::remove_dir_all(&root).unwrap();
+    std::fs::remove_dir_all(&outside).unwrap();
+}
