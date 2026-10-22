@@ -1,6 +1,6 @@
 //! Derives the prop bindings a component reads from its props parameter and its top-level body.
 //! It takes the first formal parameter, the body statements and the wrapper props, and emits a `PropBindings` that names the props object, destructured locals and rest spreads.
-//! The body scan is one-hop and additive: it stops at the first rebinding or shadowing of the props identifier.
+//! The body scan is one-hop and additive: it stops at the first rebinding or shadowing of the props identifier. An object-pattern parameter's rest binding is that identifier when the rest carries StyleProps.
 
 use super::super::context::ParserContext;
 use super::resolve::{resolve_owned_prop_names, resolve_style_props_from_type_annotation};
@@ -46,6 +46,20 @@ pub fn parse_prop_bindings(
     let pattern_source = slice_span(ctx.source, param.pattern.span()).trim();
     if pattern_source.starts_with('{') {
         parse_object_bindings(pattern_source, ctx, &resolved_style_props, &mut bindings);
+        // A carrying rest is the props object for the body, so a body re-destructure of it forwards too.
+        let carrying_rest = parse_object_pattern_rest(pattern_source)
+            .filter(|rest| bindings.spread_bindings.contains(rest));
+        if let Some(rest_binding) = carrying_rest {
+            collect_body_destructure_bindings(
+                body_statements,
+                BodyBindingScan {
+                    props_name: &rest_binding,
+                    ctx,
+                    resolved_style_props: &resolved_style_props,
+                    bindings: &mut bindings,
+                },
+            );
+        }
         return Ok(bindings);
     }
 
@@ -79,8 +93,9 @@ struct BodyBindingScan<'a, 'b, 'c> {
 }
 
 /// Collects one-hop body bindings (`const { x } = props`,
-/// `const { a, ...rest } = props`) sourced directly on the props parameter
-/// identifier. Top-level statements only; the scan halts at the first
+/// `const { a, ...rest } = props`) sourced directly on the props identifier:
+/// the parameter itself, or the carrying rest of an object-pattern parameter.
+/// Top-level statements only; the scan halts at the first
 /// rebinding or shadowing of `props` (or a collected local) rather than
 /// chasing it. Additive only: names are gained, never removed.
 fn collect_body_destructure_bindings(

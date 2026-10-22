@@ -1,0 +1,1 @@
+{"id": "STT-WRAP-15", "name": "A rest binding re-destructured in the body still forwards StyleProps to a primitive, in forwardRef and plain components"}
