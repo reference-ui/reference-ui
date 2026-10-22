@@ -1,37 +1,48 @@
 //! Walks the include globs under the scan root and keeps the TypeScript sources the walk reaches.
-//! It emits them as sorted root-relative file ids. The walk follows symlinks, so a link whose target is gone is skipped
-//! instead of failing the whole scan: the CSS side already drops it, and the sync names the link once. A link that closes
-//! a loop is cut the same way the atomic walk cuts it: its target is an ancestor already on the walk path, so its files
-//! are listed through that path. Any other walk error still fails the scan.
+//! It emits them as sorted root-relative file ids, one per real file: a file reached through several paths is listed under
+//! its real path when one is in scope, else under its first alias in walk order, the rule the atomic walk applies too.
+//! The walk follows symlinks, so a link whose target is gone is skipped instead of failing the whole scan, and a link that
+//! closes a loop is cut the same way the atomic walk cuts it. Any other walk error still fails the scan.
 
-use std::collections::BTreeSet;
-use std::path::Path;
+use std::collections::{BTreeSet, HashMap};
+use std::ffi::OsStr;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 use globwalk::{GlobWalkerBuilder, WalkError};
 
 use crate::diagnostics::scan_failed;
 use crate::scanner::paths::{is_external_file_id, path_to_unix};
 
-pub(super) fn discover_file_ids(
-    root_dir: &Path,
-    include: &[String],
-) -> Result<Vec<String>, String> {
+/// One kept file: its root-relative id, and whether the walk reached it by a real path (no link between the root and its parent).
+struct Candidate {
+    file_id: String,
+    real: bool,
+}
+
+/// The sorted root-relative ids of the in-scope sources, one per real file. Entries are visited in name order per directory,
+/// so the first alias in walk order is the same one the atomic walk lists.
+pub(super) fn discover_file_ids(root_dir: &Path, include: &[String]) -> Result<Vec<String>, String> {
     let walker = build_glob_walker(root_dir, include)?;
-    walker
-        .into_iter()
-        .try_fold(BTreeSet::new(), |mut file_ids, entry| {
-            let Some(entry) = walked_entry(entry)? else {
-                return Ok(file_ids);
-            };
-            if is_supported_source_entry(&entry) {
-                let file_id = normalized_file_id(root_dir, entry.path())?;
-                if !is_external_file_id(&file_id) {
-                    file_ids.insert(file_id);
-                }
-            }
-            Ok(file_ids)
-        })
-        .map(|file_ids| file_ids.into_iter().collect())
+    let root = canonical_or_self(root_dir);
+    let mut parents: HashMap<PathBuf, PathBuf> = HashMap::new();
+    let mut chosen: HashMap<PathBuf, Candidate> = HashMap::new();
+    for entry in walker {
+        let Some(entry) = walked_entry(entry)? else {
+            continue;
+        };
+        if !is_supported_source_entry(&entry) {
+            continue;
+        }
+        let file_id = normalized_file_id(root_dir, entry.path())?;
+        if is_external_file_id(&file_id) {
+            continue;
+        }
+        let (identity, real) = identity_of(&root, root_dir, entry.path(), &mut parents);
+        offer(&mut chosen, identity, Candidate { file_id, real });
+    }
+    let file_ids: BTreeSet<String> = chosen.into_values().map(|candidate| candidate.file_id).collect();
+    Ok(file_ids.into_iter().collect())
 }
 
 /// The walk step's entry, or `None` for an entry the walk cuts: a dangling symlink, or a link that closes a loop.
@@ -62,9 +73,44 @@ fn is_dangling_link(err: &WalkError) -> bool {
         && std::fs::symlink_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink())
 }
 
+/// The identity of one kept file: its canonical parent directory joined with its name, which a real path and a link alias
+/// resolve to alike. The flag says whether the parent is reached by a real path, meaning no link sits between the root and it.
+fn identity_of(
+    root: &Path,
+    root_dir: &Path,
+    path: &Path,
+    parents: &mut HashMap<PathBuf, PathBuf>,
+) -> (PathBuf, bool) {
+    let parent = path.parent().unwrap_or(root_dir);
+    let canon_parent = parents
+        .entry(parent.to_path_buf())
+        .or_insert_with(|| canonical_or_self(parent))
+        .clone();
+    let real = parent
+        .strip_prefix(root_dir)
+        .is_ok_and(|relative| canon_parent == root.join(relative));
+    let name = path.file_name().unwrap_or(OsStr::new(""));
+    (canon_parent.join(name), real)
+}
+
+/// Keeps one candidate per identity: a real path replaces an alias, and otherwise the first alias in walk order stays.
+fn offer(chosen: &mut HashMap<PathBuf, Candidate>, identity: PathBuf, candidate: Candidate) {
+    let keep_current = chosen
+        .get(&identity)
+        .is_some_and(|current| current.real || !candidate.real);
+    if !keep_current {
+        chosen.insert(identity, candidate);
+    }
+}
+
+fn canonical_or_self(path: &Path) -> PathBuf {
+    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+}
+
 fn build_glob_walker(root_dir: &Path, include: &[String]) -> Result<globwalk::GlobWalker, String> {
     GlobWalkerBuilder::from_patterns(root_dir, include)
         .follow_links(true)
+        .sort_by(|left, right| left.file_name().cmp(right.file_name()))
         .build()
         .map_err(|err| scan_failed(format!("failed to build glob walker: {err}")))
 }
