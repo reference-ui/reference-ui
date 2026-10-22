@@ -1,1 +1,1 @@
-{"id": "CORE-WATCH-32", "name": "forty resyncs of an unchanged project that extends a sizable system retain under 10 MB of heap", "sync": true}
+{"id": "CORE-WATCH-32", "name": "forty resyncs of an unchanged project that extends a sizable system retain under 3 MB of heap", "sync": true}

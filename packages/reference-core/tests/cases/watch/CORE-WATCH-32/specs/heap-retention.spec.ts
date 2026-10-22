@@ -1,8 +1,9 @@
 // heap-retention.spec.ts — spec for CORE-WATCH-32, the watch heap-retention case. Takes { case } from the
-// runner with the world synced standalone. It syncs the big upstream, points the world at it, then spawns a
-// real `ref sync --watch` under --expose-gc with heap-probe.cjs preloaded, and drives resyncs of the unchanged
-// project with SIGUSR2 pokes, each waiting for its probe sample. Post-GC heap growth from the last warm-up
-// resync to the last poke must stay under the budget. Emits nothing on success; throws naming the growth.
+// runner with the world synced standalone. It syncs the big upstream (a large config module), points the world
+// at it, writes a large literal local fragment (a large fragment script), then spawns a real `ref sync --watch`
+// under --expose-gc with heap-probe.cjs preloaded and drives resyncs of the unchanged project with SIGUSR2
+// pokes, each waiting for its probe sample. Post-GC heap growth from the last warm-up resync to the last poke
+// must stay under the budget, which a per-resync module of either kind overruns. Throws naming the growth.
 import { spawn, type ChildProcess } from 'node:child_process'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
@@ -11,6 +12,7 @@ import path from 'node:path'
 import type { CoreCase } from '../../../../shared/cases.ts'
 import type { SpecPage } from '../../../../shared/page.ts'
 import { sync } from '../../../../../src/sync/index.ts'
+import { removeLiteralFragment, writeLiteralFragment } from './literal-fragment.ts'
 
 interface SpecInput {
   page: SpecPage
@@ -24,7 +26,7 @@ interface Sample {
 
 const WARMUP = 5
 const POKES = 40
-const BUDGET_MB = 10
+const BUDGET_MB = 3
 const BIG_BASE = '../upstreams/big/.reference-ui/system/baseSystem.mjs'
 const MB = 1024 * 1024
 
@@ -117,6 +119,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   const canonical = fs.readFileSync(configPath, 'utf8')
   await sync(path.join(c.dir, 'upstreams', 'big'))
   fs.writeFileSync(configPath, toExtendedConfig(canonical), 'utf8')
+  writeLiteralFragment(c.worldDir)
   try {
     await sync(c.worldDir)
     const { warm, last } = await measureRetention(c)
@@ -127,6 +130,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
     )
     assert.ok(growthMb < BUDGET_MB, `${POKES} resyncs of an unchanged project retained ${growthMb.toFixed(1)} MB (budget ${BUDGET_MB} MB)`)
   } finally {
+    removeLiteralFragment(c.worldDir)
     fs.writeFileSync(configPath, canonical, 'utf8')
     await sync(c.worldDir)
   }
