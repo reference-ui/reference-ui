@@ -17,7 +17,6 @@ const card = recipe({
       display: 'flex',
       flexDirection: 'column',
       borderRadius: 'md',
-      bg: 'slate.500/strong',
       '&:hover > [data-slot="title"]': { textDecoration: 'underline' },
     },
     title: { margin: '0', fontWeight: '600' },

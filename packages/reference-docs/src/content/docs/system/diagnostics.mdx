@@ -174,9 +174,20 @@ the code in any tooling you build.
 - `ATM-E-DUPLICATE-RECIPE`: two recipes in one system share a `className`, or a
   `className` matches a slot of another recipe, like `card__root` beside a
   `card` recipe with a `root` slot. Rename one.
-- `ATM-E-RECIPE-SLOT`: a recipe's `slots` is not an inline list of distinct
-  names, or `base`, a variant value or a compound's `css` names a slot that
-  `slots` does not list. Fix the key or add the slot.
+- `ATM-E-RECIPE-SLOT`: a recipe with `slots` breaks one of the rules below.
+  Sync fails on the whole recipe. A slot map is the object under `base`, under
+  a variant value, or under a compound's `css`.
+  - `slots` is not written inline, like `slots: names`. Write the array of
+    names inside the `recipe()` call.
+  - `slots` is empty. List at least one name.
+  - A name is not a quoted string, is empty, or contains whitespace, like `''`
+    or `'top row'`. Use a plain name, like `'title'`.
+  - A name is listed twice. Remove the repeat.
+  - A slot map has a spread, like `...shared`, or a computed key, like
+    `[key]:`. Write each slot as a plain key, like `root: { … }`.
+  - A slot map styles a name that `slots` does not list, like `display` in
+    `base` of a recipe with `slots: ['root']`. Nest those styles under a listed
+    slot, or add the name to `slots`.
 - `TGN-W-INVALID-RECIPE-NAME`: a `className` that cannot form a TypeScript
   type name. The recipe is left out of the generated types. Rename it.
 - `TGN-W-DUPLICATE-RECIPE-STEM`: two recipe names form the same type name.

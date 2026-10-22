@@ -143,7 +143,9 @@ compoundVariants: [{ size: 'lg', css: { title: { letterSpacing: '0.02em' } } }]
 
 Each slot compiles as its own recipe, named `card__root`, `card__title` and
 `card__body`. Sync fails on a key that `slots` does not list, and on another
-recipe whose `className` is one of those names.
+recipe whose `className` is one of those names. It also fails when two recipes
+compile the same name: a `card` recipe with slot `a__b` and a `card__a` recipe
+with slot `b` both compile `card__a__b`.
 
 ## Helpers
 
