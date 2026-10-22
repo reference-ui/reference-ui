@@ -3,3 +3,4 @@
 Each case gives Core an input that once crashed or ran away, and proves it ends inside its budget. A child process runs the real work, so a signal or an overrun is a named failure, not a dead worker.
 
 - `CORE-BOUND-05` — a real ref sync of 70 files and one file at 2,000 nesting exits 0 with no signal, inside 10 s, and its stylesheet has both colours.
+- `CORE-BOUND-03` — a src tree with two self-linked directories and a linked sibling syncs in under 10 s with the CSS of the same tree written out with no links.
