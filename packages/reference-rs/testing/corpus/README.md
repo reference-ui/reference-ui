@@ -38,6 +38,8 @@ Styletrace probes take about 50 ms each in a child, and the reference-lib probe 
 
 The budgets are fixed ceilings sitting roughly five to ten times those numbers: 15 s per tasty corpus, 150 ms per symbol, 5 s per styletrace probe, and 15 s for atlas. Each child also gets a kill timeout (60 s for tasty and atlas, 30 s for styletrace) that ends the run before the budget is judged.
 
+Suite budget: under 15 s of test time; measured 8.8–12.4 s on 2026-10-22.
+
 ## Running it
 
 `pnpm agentrs v corpus` runs this project alone. `pnpm agentrs t` runs every vitest project, so it includes this one through the root `vitest.config.ts`. The whole suite takes about 9 s of test time.
