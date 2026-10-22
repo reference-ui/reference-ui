@@ -12,7 +12,7 @@ export interface TracedBinding {
     name: string;
 }
 export type { StyletraceDiagnostic };
-export type StyletraceDiagnosticCode = 'STT-W-SKIPPED-FILE' | 'STT-E-SCAN-FAILED' | 'STT-E-UNRESOLVED-SURFACE';
+export type StyletraceDiagnosticCode = 'STT-W-SKIPPED-FILE' | 'STT-E-SCAN-FAILED' | 'STT-E-UNRESOLVED-SURFACE' | 'STT-W-CLASS-COMPONENT' | 'STT-W-UNRESOLVED-HOC-ARGUMENT' | 'STT-W-TYPE-EXPANSION-LIMIT';
 export interface StyletraceDetailedResult {
     bindings: TracedBinding[];
     diagnostics: StyletraceDiagnostic[];
