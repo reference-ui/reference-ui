@@ -167,11 +167,12 @@ describe('fragments prepare flow', () => {
     const { getFragmentBootstrapImportMap } = await import('./bootstrap.ts')
 
     const authorEntry = join(import.meta.dirname, '..', '..', 'index.ts')
+    const systemEntry = join(import.meta.dirname, 'system-alias.ts')
     const reactEntry = join(import.meta.dirname, '..', '..', 'entry', 'react-unbound.ts')
     expect(getFragmentBootstrapImportMap()).toEqual({
       '@reference-ui/core': authorEntry,
       '@reference-ui/core/config': authorEntry,
-      '@reference-ui/system': authorEntry,
+      '@reference-ui/system': systemEntry,
       '@reference-ui/cli/config': authorEntry,
       '@reference-ui/react': reactEntry,
     })
