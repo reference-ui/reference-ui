@@ -1,0 +1,1 @@
+{"id": "CORE-BOUND-06", "name": "a src tree with a 7-directory link clique, a 16-level link lattice and a file reached only through a loop-closing link syncs in under 10 s with the CSS of the same tree written out with no links", "sync": false}

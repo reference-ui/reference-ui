@@ -1,5 +1,5 @@
 //! Symlink walk tests over a temp tree.
-//! Loops end at the link that closes them, links into and out of the include scope list their files once, shared targets are claimed once, and links under engine-ignored directories are never walked. Each test builds real links, gathers through `gather`, and compares the listed paths. Compiled only under `cfg(test)` as a child of `sources::tests`; every test here is unix-only because links need symlink privileges.
+//! A loop ends once a link's directory and include state repeat, so each link is walked once per state it reaches; links into and out of the include scope list their files once, shared targets are claimed once, and links under engine-ignored directories are never walked. Each test builds real links, gathers through `gather`, and compares the listed paths. Compiled only under `cfg(test)` as a child of `sources::tests`; every test here is unix-only because links need symlink privileges.
 
 use super::{sorted, temp_root};
 use crate::sources::gather::gather;
@@ -132,8 +132,8 @@ fn linked_sibling_in_scope_is_listed_once_under_its_real_path() {
     assert_eq!(listed_paths(&scanned), [format!("{root_str}/src/a/x.ts")]);
 }
 
-/// Two directories that link back to the root: the walk ends at each link that closes a loop, and the
-/// real sources are listed once.
+/// Two directories that link back to the root: each link is walked once per state it reaches, so the walk ends,
+/// and the real sources are listed once under their real path.
 #[cfg(unix)]
 #[test]
 fn self_linked_directories_end_the_walk_at_the_link_that_closes_them() {

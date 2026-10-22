@@ -50,7 +50,7 @@ describe('listProjectFiles', () => {
     ])
   })
 
-  it('ends a loop of self-linked directories at the link that closes it', () => {
+  it('ends a loop of self-linked directories once each directory and glob state is walked', () => {
     const root = tempRoot()
     writeFiles(root, { 'src/app.ts': 'export const a = 1\n' })
     symlinkSync('.', join(root, 'src', 'loopA'))
