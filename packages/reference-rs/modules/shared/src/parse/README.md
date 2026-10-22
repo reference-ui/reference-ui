@@ -2,7 +2,7 @@
 
 The internals of the nesting gate. Its public API is in the parent `parse.rs`, which owns the one production `Parser::new`
 call in reference-rs. This page says what the gate is for, how it counts, which limits it keeps and why they sit where they do,
-and what it leaves alone.
+how a source is screened once, and what the gate leaves alone.
 
 ## What the gate is for
 
@@ -55,6 +55,15 @@ hostile source cannot make the scan quadratic.
 
 A count of opener bytes sits in front of the whole gate: a source with no more than 1,024 `(`, `[`, `{` and `<` cannot reach any
 limit, because every counted level and every open construct comes from one of those bytes, so it skips the scan.
+
+## Screening once
+
+A caller that reads a source and parses it later should not scan it twice. `ScreenedSource::screen` runs the gate once and keeps
+the verdict beside the text it owns, and `parse_screened` then parses the stored text or returns the stored refusal, with no scan.
+The verdict is a field of that value, so nothing is keyed or looked up across calls. `ScreenedSource::empty` runs no gate, because
+an empty text cannot be refused. `parse_bounded` stays for text that is parsed once and never read again. `gate_runs` counts every
+`check_nesting` call in the process, so a test can check that a read was screened exactly once. The counter is process-wide, so a
+test that reads a delta runs alone in its own process, as `shared/tests/gate_runs.rs` does.
 
 ## What it leaves alone
 

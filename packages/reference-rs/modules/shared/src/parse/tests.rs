@@ -2,7 +2,8 @@
 //! They pin the limit and the line it reports, what the scan skips (strings, comments, template text), how TypeScript
 //! generics count against plain JavaScript, that comparisons never accumulate depth, and the Oxc failure shape of a
 //! refusal. A source within the bound must reach Oxc unchanged. The submodules hold the JSX rules, the regex rule, unclosed
-//! `<`, the raw net and the measurements, which run only when `SHARED_MEASURE_OUT` names a file.
+//! `<`, the raw net, the screened sources that carry their verdict to the parse, and the measurements, which run only when
+//! `SHARED_MEASURE_OUT` names a file.
 
 use oxc_allocator::Allocator;
 use oxc_span::SourceType;
@@ -17,6 +18,7 @@ mod jsx;
 mod measure;
 mod raw;
 mod regex;
+mod screened;
 mod unclosed;
 
 fn ts() -> SourceType {

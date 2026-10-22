@@ -6,12 +6,16 @@
 //! pre-scan lives in `parse/scan.rs` and the files beside it, and this file is the one place that calls `Parser::new`.
 //! Two wider limits back the scan up, so a construct it misreads cannot let a pathological file through: no more than
 //! `MAX_OPEN` constructs open at once, and no more than `MAX_RAW` brackets deep in a count that reads every byte as code.
+//! `ScreenedSource` holds a source's text with the verdict the gate gave it, so a source read once is screened once: `screen`
+//! runs the gate, and `parse_screened` parses the stored text or returns the stored refusal without a second scan.
 //! `parse/README.md` says what the gate is for and what it leaves alone, including input crafted to defeat the lexer.
 
 mod scan;
 
 #[cfg(test)]
 mod tests;
+
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use oxc_allocator::Allocator;
 use oxc_parser::{Parser, ParserReturn};
@@ -30,6 +34,10 @@ const MAX_OPEN: usize = 8 * MAX_NESTING;
 /// The deepest raw bracket nesting a source may reach. The raw count reads every `(`, `[` and `{` as a bracket, strings,
 /// comments and JSX text included, so it needs no lexing rule to be right. It backs the scan up and is eight times the limit.
 const MAX_RAW: usize = 8 * MAX_NESTING;
+
+/// Every gate run this process has made, read by `gate_runs`. `check_nesting` adds one per call, so `parse_bounded` and
+/// `ScreenedSource::screen` both count.
+static GATE_RUNS: AtomicU64 = AtomicU64::new(0);
 
 /// A source the pre-scan refused: the depth it reached and the 1-based line where the limit was crossed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -59,10 +67,80 @@ pub fn parse_bounded<'a>(
     Ok(Parser::new(allocator, source, source_type).parse())
 }
 
+/// A source's text with the gate's verdict: `screen` runs the gate once and keeps the verdict beside the text, so every later
+/// parse reads the verdict instead of scanning again. `empty` runs no gate, because "" cannot be refused.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScreenedSource {
+    text: String,
+    source_type: SourceType,
+    verdict: Result<(), NestingRefusal>,
+}
+
+impl ScreenedSource {
+    /// Holds `text` with the verdict of one `check_nesting` run.
+    pub fn screen(text: String, source_type: SourceType) -> Self {
+        let verdict = check_nesting(&text, source_type);
+        Self {
+            text,
+            source_type,
+            verdict,
+        }
+    }
+
+    /// The empty source, which no bound refuses, so it costs no gate run.
+    pub fn empty(source_type: SourceType) -> Self {
+        Self {
+            text: String::new(),
+            source_type,
+            verdict: Ok(()),
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.text
+    }
+
+    pub fn source_type(&self) -> SourceType {
+        self.source_type
+    }
+
+    /// The refusal the gate gave this source, or `None` when it passed.
+    pub fn refusal(&self) -> Option<NestingRefusal> {
+        self.verdict.err()
+    }
+}
+
+impl std::ops::Deref for ScreenedSource {
+    type Target = str;
+
+    fn deref(&self) -> &str {
+        &self.text
+    }
+}
+
+/// Oxc's parse of a passed source, or the stored refusal for a refused one. It never scans.
+pub fn parse_screened<'a>(
+    allocator: &'a Allocator,
+    source: &'a ScreenedSource,
+) -> Result<ParserReturn<'a>, NestingRefusal> {
+    if let Some(refusal) = source.refusal() {
+        return Err(refusal);
+    }
+    Ok(Parser::new(allocator, &source.text, source.source_type).parse())
+}
+
+/// The gate runs this process has made, one per `check_nesting` call, read `Relaxed`. A test that compares deltas must be the
+/// only gate caller in its process, since other threads' gate runs land in the same window (`shared/tests/gate_runs.rs`).
+#[doc(hidden)]
+pub fn gate_runs() -> u64 {
+    GATE_RUNS.load(Ordering::Relaxed)
+}
+
 /// The gate's verdict: Ok when `source` is within every bound, the refusal otherwise. It skips the scan for a source with
 /// no more than `MAX_NESTING` opener bytes, because every counted level and every frame on the stack comes from one
 /// opener byte (`(`, `[`, `{` or `<`), so such a source cannot reach a limit. It gives the same verdict as `scan_nesting`.
 pub fn check_nesting(source: &str, source_type: SourceType) -> Result<(), NestingRefusal> {
+    GATE_RUNS.fetch_add(1, Ordering::Relaxed);
     if !scan::can_refuse(source.as_bytes()) {
         return Ok(());
     }
