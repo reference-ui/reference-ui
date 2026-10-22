@@ -1,12 +1,14 @@
-//! Dangling, looping and linked-sibling symlinks under the scan include.
+//! Dangling, looping, linked-sibling and import-through-alias symlinks under the scan include.
 //! The walk skips a link whose target is gone and cuts a link that closes a loop, so one such link cannot fail the types
 //! build. A linked sibling is listed once under its representative path: its real path when one is in scope, else its
-//! first alias in walk order. Each test builds a temp tree and drives `scan_workspace` or `scan_typescript_bundle`.
+//! first alias in walk order. A relative import through a link alias resolves like any other relative import.
+//! Each test builds a temp tree and drives `scan_workspace` or `scan_typescript_bundle`.
 
 use std::os::unix::fs::symlink;
 
 use super::super::scan_workspace;
 use crate::tests::fixtures::TempDir;
+use crate::model::TypeRef;
 use crate::{scan_typescript_bundle, ScanRequest};
 
 #[test]
@@ -121,4 +123,46 @@ fn a_linked_sibling_symbol_carries_the_real_path_as_its_file_id() {
         .map(|symbol| symbol.file_id.as_str())
         .collect();
     assert_eq!(color_files, ["lib/colors.ts"]);
+}
+
+#[test]
+fn a_relative_import_through_a_link_alias_resolves_to_its_target() {
+    let root = TempDir::new("scanner-bundle-link-alias-import");
+    root.write("lib/b.ts", "export interface B { b: number }\n");
+    root.write("lib/a.ts", "import type { B } from './b';\nexport interface A { value: B }\n");
+    root.write("src/app.ts", "export interface App { a: number }\n");
+    symlink("../lib", root.path().join("src/linked")).expect("linked dir");
+
+    let bundle = scan_typescript_bundle(&ScanRequest {
+        root_dir: root.path().to_path_buf(),
+        include: vec!["src/**/*.ts".to_string()],
+    })
+    .expect("scan should complete");
+
+    let symbol = |name: &str, file_id: &str| {
+        bundle
+            .symbols
+            .values()
+            .find(|symbol| symbol.name == name && symbol.file_id == file_id)
+            .unwrap_or_else(|| panic!("{name} listed under {file_id}: {:?}", bundle.symbols.keys()))
+    };
+    let b = symbol("B", "src/linked/b.ts");
+    let a = symbol("A", "src/linked/a.ts");
+    let value = a
+        .defined_members
+        .iter()
+        .find(|member| member.name == "value")
+        .expect("A has a value member");
+    match value.type_ref.as_ref() {
+        Some(TypeRef::Reference { name, target_id, .. }) => {
+            assert_eq!(name, "B");
+            assert_eq!(
+                target_id.as_deref(),
+                Some(b.id.as_str()),
+                "B must resolve to its own symbol, not stay unresolved or external"
+            );
+        }
+        other => panic!("expected a reference to B, got {other:?}"),
+    }
+    assert!(bundle.diagnostics.is_empty(), "{:?}", bundle.diagnostics);
 }
