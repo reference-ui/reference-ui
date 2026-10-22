@@ -1,12 +1,15 @@
 // Project file listing under the native walk's symlink rule. It takes a project root, the include globs and the ignore globs,
 // and emits the matching files as absolute paths: real paths first, in walk order, then the link aliases. One sorted walk per
-// scope enters every real directory under its own path and each symlinked directory once per real target, never back into an
-// ancestor, and keeps each file its include globs match. The walk is the Rust walk's own order, so both sides enter the same
-// links and list the same files; a scope outside the root (`../shared/**`, an absolute glob) walks its own base the same way.
+// scope enters every real directory under its own path, and a symlinked directory only when it admits a file of its target that
+// no earlier admitted link admitted; it never enters an ancestor. Directories the Rust walk prunes by name (dist, build, ...) are
+// pruned here too, so both sides enter the same links and list the same files. A scope outside the root (`../shared/**`, an
+// absolute glob) walks its own base the same way.
 
-import { readdirSync, realpathSync, statSync, type Dirent } from 'node:fs'
+import { realpathSync, type Dirent } from 'node:fs'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import picomatch from 'picomatch'
+import { NATIVE_IGNORE_DIRS } from '../../constants.ts'
+import { coverageAdmission, kindOf, linkOnceAdmission, sortedEntries, type Admission, type KeepFn } from './project-admission.ts'
 
 /** One directory the walk enters: its canonical path, and whether a link carried the walk to it. */
 interface PlannedDir {
@@ -20,6 +23,8 @@ export interface PlannedFile {
   rel: string
   identity: string
   viaLink: boolean
+  /** Under an engine-ignored directory: matched as the fragment scan always matched it, and listed last. */
+  engine: boolean
 }
 
 /** The walk of one root: the directories entered, the links entered and refused, and the files kept, in walk order. */
@@ -28,7 +33,7 @@ export interface ProjectPlan {
   dirs: Map<string, PlannedDir>
   /** Entered directory links: alias path to the canonical target the walk enters through it. */
   links: Map<string, string>
-  /** Refused directory links: alias paths that close a loop or repeat an entered target. */
+  /** Refused directory links: alias paths the walk does not enter, because of a loop or because no admitted link needed them. */
   refused: string[]
   files: PlannedFile[]
 }
@@ -37,16 +42,18 @@ export interface ProjectPlan {
 interface Scope {
   base: string
   prefix: string
-  keep: (rel: string, alias: string) => boolean
+  keep: KeepFn
 }
 
-/** One directory the walk is entering: its alias path, its paths relative to the root and to its scope base, its canonical path, and the link flag. */
+/** One directory the walk is entering: its alias path, its paths relative to the root and to its scope base, its canonical path, and its link and engine flags. */
 interface DirFrame {
   alias: string
   rel: string
   local: string | undefined
   canon: string
   viaLink: boolean
+  /** Inside an engine-ignored directory: the Rust walk never enters it, so no link there is admitted. */
+  engine: boolean
 }
 
 /** One entry of a directory the walk is reading: its alias path and its paths relative to the root and to its scope base. */
@@ -60,28 +67,35 @@ interface EntryRef {
 interface WalkState {
   ignored: (relativePath: string) => boolean
   keep: Scope['keep']
+  admit: Admission
   plan: ProjectPlan
-  linked: Set<string>
 }
 
 /**
- * Walks `cwd` with the ignore globs applied to every path, as fast-glob applies them: a matched directory is not entered.
- * Only the include globs `include` keep files; with none, the plan carries the links alone.
+ * Walks `cwd` with the ignore globs applied to every path, as fast-glob applies them, and the engine-ignored directory names the
+ * Rust walk prunes. With include globs a link is admitted by the files it adds to its target; with `owns`, the first link whose
+ * relative path `owns` accepts takes its target; with neither, the first link takes it.
  */
-export function planProjectWalk(cwd: string, ignore: readonly string[], include: readonly string[] = []): ProjectPlan {
+export function planProjectWalk(
+  cwd: string,
+  ignore: readonly string[],
+  include: readonly string[] = [],
+  owns?: (rel: string) => boolean,
+): ProjectPlan {
   const root = resolve(cwd)
   const plan: ProjectPlan = { root, dirs: new Map(), links: new Map(), refused: [], files: [] }
   const ignored = ignoreMatcher(ignore)
   for (const scope of scopesOf(root, include)) {
-    const state: WalkState = { ignored, keep: scope.keep, plan, linked: new Set() }
+    const admit = admissionFor(scope, include, ignored, owns)
     const canon = canonicalOrSelf(scope.base)
     const local = scope.prefix === '' ? undefined : ''
-    planDir({ alias: scope.base, rel: scope.prefix, local, canon, viaLink: false }, state)
+    const frame: DirFrame = { alias: scope.base, rel: scope.prefix, local, canon, viaLink: false, engine: false }
+    planDir(frame, { ignored, keep: scope.keep, admit, plan })
   }
   return plan
 }
 
-/** The files `include` reaches under `cwd`, each identity once, real paths first. Absolute paths, in walk order. */
+/** The files `include` reaches under `cwd`, one per real file, with the symlink rule applied. Absolute paths: real paths first. */
 export function listProjectFiles(cwd: string, include: readonly string[], ignore: readonly string[]): string[] {
   if (!include.some((pattern) => !isNegated(pattern))) return []
   const negated = include.filter(isNegated).map((pattern) => pattern.slice(1))
@@ -94,17 +108,23 @@ export function listPlannedFiles(plan: ProjectPlan, include: readonly string[]):
   return listedFiles(plan.files.filter((file) => keep(file.rel, file.alias)))
 }
 
+// Real paths first, then link aliases, then files under engine-ignored directories: a walked path always decides a file's representative.
 function listedFiles(files: readonly PlannedFile[]): string[] {
   const claimed = new Set<string>()
   const listed: string[] = []
-  for (const viaLink of [false, true]) {
+  for (const tier of [0, 1, 2]) {
     for (const file of files) {
-      if (file.viaLink !== viaLink || claimed.has(file.identity)) continue
+      if (tierOf(file) !== tier || claimed.has(file.identity)) continue
       claimed.add(file.identity)
       listed.push(file.alias)
     }
   }
   return listed
+}
+
+function tierOf(file: PlannedFile): number {
+  if (file.engine) return 2
+  return file.viaLink ? 1 : 0
 }
 
 // The root scope always walks, so every link is decided over the whole tree; each outside base walks on its own, as its own tree.
@@ -120,6 +140,17 @@ function scopesOf(root: string, include: readonly string[]): Scope[] {
   return scopes
 }
 
+function admissionFor(
+  scope: Scope,
+  include: readonly string[],
+  ignored: (relativePath: string) => boolean,
+  owns: ((rel: string) => boolean) | undefined,
+): Admission {
+  if (owns !== undefined) return linkOnceAdmission(owns)
+  if (include.length > 0) return coverageAdmission(scope.keep, ignored)
+  return linkOnceAdmission(() => true)
+}
+
 function planDir(frame: DirFrame, state: WalkState): void {
   state.plan.dirs.set(frame.alias, { canon: frame.canon, viaLink: frame.viaLink })
   for (const entry of sortedEntries(frame.alias)) planEntry(entry, frame, state)
@@ -129,17 +160,20 @@ function planDir(frame: DirFrame, state: WalkState): void {
 function planEntry(entry: Dirent, frame: DirFrame, state: WalkState): void {
   const child = childOf(entry.name, frame)
   if (entry.isDirectory()) {
-    planSubdir(child, joinPath(frame.canon, entry.name), frame.viaLink, state)
+    planSubdir(child, joinPath(frame.canon, entry.name), frame, state)
   } else if (entry.isSymbolicLink()) {
-    planLink(child, frame.canon, frame.viaLink, state)
+    planLink(child, frame, state)
   } else {
-    keepFile(child, frame.canon, frame.viaLink, state)
+    keepFile(child, frame, state)
   }
 }
 
-function planSubdir(child: EntryRef, canon: string, viaLink: boolean, state: WalkState): void {
+// An engine-ignored directory is still walked for its real files, which the fragment scan matches on this side; the Rust walk
+// prunes it, so no link inside it is admitted.
+function planSubdir(child: EntryRef, canon: string, frame: DirFrame, state: WalkState): void {
   if (isIgnored(child, state)) return
-  planDir({ ...child, canon, viaLink }, state)
+  const engine = frame.engine || NATIVE_IGNORE_DIRS.has(basename(child.alias))
+  planDir({ ...child, canon, viaLink: frame.viaLink, engine }, state)
 }
 
 function childOf(name: string, frame: DirFrame): EntryRef {
@@ -162,59 +196,32 @@ function isIgnored(entry: EntryRef, state: WalkState): boolean {
 }
 
 // The identity is the canonical directory holding the entry joined with its name: computed only for a kept file.
-function keepFile(entry: EntryRef, canon: string, viaLink: boolean, state: WalkState): void {
+function keepFile(entry: EntryRef, frame: DirFrame, state: WalkState): void {
   if (isIgnored(entry, state) || !state.keep(entry.rel, entry.alias)) return
-  const identity = join(canon, basename(entry.alias))
-  state.plan.files.push({ alias: entry.alias, rel: entry.rel, identity, viaLink })
+  const identity = join(frame.canon, basename(entry.alias))
+  state.plan.files.push({ alias: entry.alias, rel: entry.rel, identity, viaLink: frame.viaLink, engine: frame.engine })
 }
 
 // A link to a file is kept as a file of its own, as the Rust walk keeps it; a dangling link is dropped, as fast-glob drops it.
-function planLink(entry: EntryRef, canon: string, viaLink: boolean, state: WalkState): void {
-  if (isIgnored(entry, state)) return
+function planLink(entry: EntryRef, frame: DirFrame, state: WalkState): void {
+  if (frame.engine || isIgnored(entry, state)) return
   const kind = kindOf(entry.alias)
   if (kind === undefined) return
   if (kind === 'file') {
-    keepFile(entry, canon, viaLink, state)
+    keepFile(entry, frame, state)
     return
   }
-  planDirLink(entry, canon, realpathSync(entry.alias), state)
+  if (NATIVE_IGNORE_DIRS.has(basename(entry.alias))) return
+  planDirLink(entry, frame.canon, realpathSync(entry.alias), state)
 }
 
 function planDirLink(entry: EntryRef, canon: string, target: string, state: WalkState): void {
-  if (isSameOrAncestor(target, canon) || state.linked.has(target)) {
+  if (isSameOrAncestor(target, canon) || !state.admit.admit(entry.alias, entry.rel, target)) {
     state.plan.refused.push(entry.alias)
     return
   }
-  state.linked.add(target)
   state.plan.links.set(entry.alias, target)
-  planDir({ ...entry, canon: target, viaLink: true }, state)
-}
-
-// Entries are sorted by name bytes, the order the Rust walk sorts its entries in, so both sides enter the same first path.
-function sortedEntries(dir: string): Dirent[] {
-  let entries: Dirent[]
-  try {
-    entries = readdirSync(dir, { withFileTypes: true })
-  } catch {
-    return []
-  }
-  return entries.sort(compareEntries)
-}
-
-function compareEntries(a: Dirent, b: Dirent): number {
-  if (PRINTABLE_ASCII.test(a.name) && PRINTABLE_ASCII.test(b.name)) return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
-  return Buffer.compare(Buffer.from(a.name, 'utf8'), Buffer.from(b.name, 'utf8'))
-}
-
-// Printable ASCII names compare as strings, where UTF-16 order is byte order; any other name compares by bytes.
-const PRINTABLE_ASCII = /^[ -~]*$/
-
-function kindOf(alias: string): 'file' | 'directory' | undefined {
-  try {
-    return statSync(alias).isDirectory() ? 'directory' : 'file'
-  } catch {
-    return undefined
-  }
+  planDir({ ...entry, canon: target, viaLink: true, engine: false }, state)
 }
 
 function canonicalOrSelf(path: string): string {
@@ -266,4 +273,3 @@ function ignoreMatcher(ignore: readonly string[]): (relativePath: string) => boo
   if (ignore.length === 0) return () => false
   return picomatch(ignore.map(normalizePattern), { dot: true })
 }
-

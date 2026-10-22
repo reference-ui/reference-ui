@@ -188,12 +188,11 @@ function dirGlobsOf(include: string[]): string[] {
 // Every symlinked directory the include globs reach, empty or not. A file walk cannot find a link with no match yet,
 // so a directory-only walk does: each real target is subscribed, and maps back to its link so a new file there resyncs.
 function scanSymlinkedDirs(watchRoot: string, include: string[], snapshot: MatchSnapshot): void {
+  // The first link whose directory the globs reach owns its target, so an out-of-scope link never hides an in-scope one.
   const inDirScope = picomatch(dirGlobsOf(include), { dot: true })
-  const plan = planProjectWalk(watchRoot, [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS])
+  const plan = planProjectWalk(watchRoot, [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS], [], (rel) => inDirScope(rel))
   for (const [alias, real] of plan.links) {
-    const relativeDir = toPosix(relative(plan.root, alias))
-    if (!inDirScope(relativeDir)) continue
-    snapshot.targetDirs.set(real, relativeDir)
+    snapshot.targetDirs.set(real, toPosix(relative(plan.root, alias)))
     snapshot.linkDirs.push(real)
   }
 }

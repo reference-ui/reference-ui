@@ -14,10 +14,12 @@ import type { NativeDiagnostic } from '../native/contract.ts'
 
 /** The positive include patterns that match no file under cwd. Negations never count. The walk is planned once for all. */
 export function deadIncludePatterns(cwd: string, include: readonly string[]): string[] {
-  const positive = include.filter((pattern) => !pattern.startsWith('!'))
-  if (positive.length === 0) return []
-  const plan = planProjectWalk(cwd, RETENTION_EXCLUDE, positive)
-  return positive.filter((pattern) => listPlannedFiles(plan, [pattern]).length === 0)
+  return include.filter((pattern) => !pattern.startsWith('!') && !patternMatchesAFile(cwd, pattern))
+}
+
+// Each pattern gets its own walk: a link is admitted by the files its own pattern adds, so one shared walk could hide them.
+function patternMatchesAFile(cwd: string, pattern: string): boolean {
+  return listPlannedFiles(planProjectWalk(cwd, RETENTION_EXCLUDE, [pattern]), [pattern]).length > 0
 }
 
 /** The dangling symlinks the include globs reach, as cwd-relative link paths. Negations subtract. */

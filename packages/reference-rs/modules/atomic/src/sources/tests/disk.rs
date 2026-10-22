@@ -282,3 +282,83 @@ fn union_backfill_does_not_relist_a_provided_file_under_a_link() {
     assert_eq!(listed_paths(&merged), [format!("{root_str}/src/a/x.ts")]);
     std::fs::remove_dir_all(&root).unwrap();
 }
+
+/// Two links to one external target: the link the include rejects (`lib/shared`, walked first) must not own the
+/// target, or the in-scope link (`src/shared`) would list nothing. A target's file is listed under the first link
+/// that admits it, so `x.ts` lists once, under `src/shared`.
+#[cfg(unix)]
+#[test]
+fn an_out_of_scope_link_does_not_shadow_an_in_scope_link_to_the_same_target() {
+    let root = temp_root("shadow");
+    let outside = temp_root("shadow-outside");
+    write_files(&outside, &[("x.ts", "export const x = 1;\n")]);
+    write_files(
+        &root,
+        &[("src/app.ts", "export const a = 1;\n"), ("lib/keep.ts", "export const k = 1;\n")],
+    );
+    std::os::unix::fs::symlink(&outside, root.join("lib/shared")).unwrap();
+    std::os::unix::fs::symlink(&outside, root.join("src/shared")).unwrap();
+    let root_str = root.to_string_lossy().to_string();
+    let scanned = gather(&CompileRequest {
+        root_dir: Some(root_str.clone()),
+        include: Some(vec!["src/**/*.ts".to_string()]),
+        ..Default::default()
+    });
+    assert_eq!(
+        listed_paths(&scanned),
+        [format!("{root_str}/src/app.ts"), format!("{root_str}/src/shared/x.ts")]
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+    std::fs::remove_dir_all(&outside).unwrap();
+}
+
+/// Two in-scope links to one external target admit different files of it: each link lists the file its own pattern
+/// admits, so `x.ts` lists under `src/a/shared` and `y.ts` under `src/b/shared`.
+#[cfg(unix)]
+#[test]
+fn two_in_scope_links_each_list_the_files_they_admit() {
+    let root = temp_root("partial");
+    let outside = temp_root("partial-outside");
+    write_files(&outside, &[("x.ts", "export const x = 1;\n"), ("y.ts", "export const y = 2;\n")]);
+    write_files(&root, &[("src/a/keep.ts", "export const k = 1;\n")]);
+    std::fs::create_dir_all(root.join("src/b")).unwrap();
+    std::os::unix::fs::symlink(&outside, root.join("src/a/shared")).unwrap();
+    std::os::unix::fs::symlink(&outside, root.join("src/b/shared")).unwrap();
+    let root_str = root.to_string_lossy().to_string();
+    let scanned = gather(&CompileRequest {
+        root_dir: Some(root_str.clone()),
+        include: Some(vec!["src/a/**/x.ts".to_string(), "src/b/**/y.ts".to_string()]),
+        ..Default::default()
+    });
+    assert_eq!(
+        listed_paths(&scanned),
+        [format!("{root_str}/src/a/shared/x.ts"), format!("{root_str}/src/b/shared/y.ts")]
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+    std::fs::remove_dir_all(&outside).unwrap();
+}
+
+/// A link under an engine-ignored directory is never walked: `dist/alias` reaches the same outside target as
+/// `src/alias`, but only the in-scope link lists its file.
+#[cfg(unix)]
+#[test]
+fn a_link_under_an_engine_ignored_directory_is_never_walked() {
+    let root = temp_root("engine-link");
+    let outside = temp_root("engine-link-outside");
+    write_files(&outside, &[("x.ts", "export const x = 1;\n")]);
+    write_files(&root, &[("src/app.ts", "export const a = 1;\n"), ("dist/keep.ts", "export const k = 1;\n")]);
+    std::os::unix::fs::symlink(&outside, root.join("dist/alias")).unwrap();
+    std::os::unix::fs::symlink(&outside, root.join("src/alias")).unwrap();
+    let root_str = root.to_string_lossy().to_string();
+    let scanned = gather(&CompileRequest {
+        root_dir: Some(root_str.clone()),
+        include: Some(vec!["**/*.ts".to_string()]),
+        ..Default::default()
+    });
+    assert_eq!(
+        listed_paths(&scanned),
+        [format!("{root_str}/src/alias/x.ts"), format!("{root_str}/src/app.ts")]
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+    std::fs::remove_dir_all(&outside).unwrap();
+}
