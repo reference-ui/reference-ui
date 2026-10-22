@@ -58,6 +58,15 @@ by `projectionBudgetWarning` and listed in the shared registry. A missing scan r
 in the shared registry; codes a golden pins are
 wire contract.
 
+## Projection hooks
+
+A type parameter the walk cannot resolve is answered by the projection hook the caller supplies when it creates the api
+(`projectTypeParameterMembers`). The walk gives the hook a `displayMembersOf` that reads a symbol's display members inside
+the walk that asked, so that read carries the walk's path and step budget, and a cycle that returns to the reference ends
+at the symbol it revisits. A hook must use the `displayMembersOf` it is given, never the public `getDisplayMembers()`: the
+public call starts a fresh walk with an empty path and a new budget, so nothing cuts the cycle where the outer walk met it,
+and the walk can run without end.
+
 ## Open gaps
 
 Unproven at case level; each names its gap:

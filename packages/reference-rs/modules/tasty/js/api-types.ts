@@ -194,6 +194,9 @@ export interface TastyGraphApi {
  * part of the walk that asked: the walk's path and step budget carry into it, so a symbol that leads back to the reference
  * ends at the cycle. The walk always passes it; a direct caller may omit it, and the public `getDisplayMembers()` then
  * stands in. Calling the public `getDisplayMembers()` from inside a walk starts a new walk with its own budget.
+ * A hook must read the `displayMembersOf` it is given, never the public `getDisplayMembers()`. The public call starts a
+ * fresh walk with an empty path and a new step budget, so a cycle back through the reference is not cut where the outer
+ * walk met it, and the walk can run without end.
  */
 export type TastyTypeParameterMemberProjector = (input: {
   api: TastyApi
