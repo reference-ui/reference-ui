@@ -156,7 +156,7 @@ Several runs can work on `packages/reference-rs` at the same time, from agent se
 
 The runner is mapped to `pnpm agentrs` (with shortcuts `pnpm agent:rs` and `pnpm rs`). All commands support ergonomic single-letter aliases.
 
-A fresh worktree needs `pnpm agentrs b` and `node packages/reference-core/tools/ensure-dist.mjs` from the root, then `node ../reference-core/dist/bin/ref.js sync` run inside `packages/reference-icons` and again inside `packages/reference-lib`, before the suites go green; `pnpm dev:docs` also needs `pnpm --filter @reference-ui/lib run build`.
+In a fresh worktree, run `pnpm bootstrap` from the root before the suites go green: core's unit suite, atomic's real-tree surface test and `pnpm dev:docs` depend on the synced and built outputs it writes.
 
 ```bash
 # 1. Environment health, toolchain, and CPU gate locks:
