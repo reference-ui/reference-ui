@@ -126,7 +126,7 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
       fails if either fix is reverted. xhigh review: land after small fixes (done). Behaviour change accepted: a config
       that reads env/files at load time is evaluated once per bundle per process.
 - [ ] Bounded walkers wave 2: parse-depth guard (F2), symlink-safe walks (F5), corpus test (T2), boundary smoke (T5).
-- [ ] Bounded walkers wave 3: named errors for cyclic/deep token trees (F8), include brace cap (F9), expression-walker depth budgets (F3).
+- [ ] Bounded walkers wave 3 (deferred to next session, owner wrap-up 2026-10-22): named errors for cyclic/deep token trees (F8), include brace cap (F9), expression-walker depth budgets (F3).
       Also wave 3 (orchestrator rulings 2026-10-22, for owner review): one-shot `ref sync` exits 1 whenever tasty's
       build fails (today exit 0/1 depends on a race; sync.ts already intends 1; cost: a CSS-only user fails on a types
       error); watch reports it and keeps running. Owner scope (2026-10-22): wave 3 is small local fixes only
