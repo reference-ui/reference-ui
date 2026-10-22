@@ -128,4 +128,36 @@ describe('slot projection', () => {
       compoundVariants: [],
     })
   })
+
+  it('skips a variant option with no styles for the slot instead of throwing', () => {
+    const config = { className: 'x', slots: ['root'], variants: { s: { a: undefined as never } } }
+    expect(projectSlot(config, 'root')).toEqual({ className: 'x__root', variants: {} })
+  })
+
+  it('skips a compound with no css instead of throwing', () => {
+    const config = { className: 'x', slots: ['root'], compoundVariants: [{ s: 'a' } as never] }
+    expect(projectSlot(config, 'root')).toEqual({ className: 'x__root', compoundVariants: [] })
+  })
+
+  it('reads only own keys, so a slot named constructor takes no prototype entry', () => {
+    const config = {
+      className: 'x',
+      slots: ['constructor'],
+      base: {},
+      variants: { s: { a: { root: { color: 'red' } }, b: { constructor: { color: 'blue' } } } },
+    }
+    const projected = projectSlot(config, 'constructor')
+    expect(projected).not.toHaveProperty('base')
+    expect(projected).toEqual({ className: 'x__constructor', variants: { s: { b: { color: 'blue' } } } })
+  })
+
+  it('constructs a recipe from a config with a styleless option and a css-less compound', () => {
+    const config = {
+      className: 'x',
+      slots: ['root'],
+      variants: { s: { a: undefined as never } },
+      compoundVariants: [{ s: 'a' } as never],
+    }
+    expect(() => recipe(config)).not.toThrow()
+  })
 })

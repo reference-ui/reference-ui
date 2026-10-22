@@ -39,7 +39,7 @@ export function projectSlot(config: SlottedRecipeConfig, slot: string): RecipeCo
   const projected: RecipeConfig = {
     className: named ? slotClassName(config.className, slot) : config.className,
   }
-  const base = config.base?.[slot]
+  const base = ownSlotStyles(config.base, slot)
   if (base !== undefined) projected.base = base
   if (config.variants !== undefined) projected.variants = projectVariants(config.variants, slot)
   if (config.defaultVariants !== undefined) projected.defaultVariants = config.defaultVariants
@@ -47,6 +47,17 @@ export function projectSlot(config: SlottedRecipeConfig, slot: string): RecipeCo
     projected.compoundVariants = projectCompounds(config.compoundVariants, slot)
   }
   return projected
+}
+
+/**
+ * One slot's entry in an authored styles map. Only an own key names a slot, so a slot called
+ * `constructor` reads nothing from Object.prototype, and an absent map names no slot.
+ */
+function ownSlotStyles(
+  styles: RecipeSlotStyles | undefined,
+  slot: string
+): SystemStyleObject | undefined {
+  return styles && Object.hasOwn(styles, slot) ? styles[slot] : undefined
 }
 
 function projectVariants(
@@ -57,7 +68,7 @@ function projectVariants(
   for (const [axis, options] of Object.entries(variants)) {
     const cells: Record<string, SystemStyleObject> = {}
     for (const [value, styles] of Object.entries(options)) {
-      const cell = styles[slot]
+      const cell = ownSlotStyles(styles, slot)
       if (cell !== undefined) cells[value] = cell
     }
     if (Object.keys(cells).length > 0) projected[axis] = cells
@@ -71,7 +82,7 @@ function projectCompounds(
 ): RecipeCompoundConfig[] {
   const projected: RecipeCompoundConfig[] = []
   for (const { css, ...predicates } of compounds) {
-    const cell = css[slot]
+    const cell = ownSlotStyles(css, slot)
     if (cell !== undefined) projected.push({ ...predicates, css: cell })
   }
   return projected
