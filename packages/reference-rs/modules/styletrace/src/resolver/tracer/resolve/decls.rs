@@ -12,7 +12,7 @@ use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{BoundTypeExpr, TypeDeclaration, TypeEnv, TypeExpr};
 
 use super::super::context::TraceContext;
-use super::super::guard::{Entry, ExpansionSite, GuardCut, TracePass};
+use super::super::guard::{CutSite, Entry, ExpansionSite, TracePass};
 use super::super::reach::cut_reach;
 use super::literals::resolve_literal_names_into;
 use super::{resolve_prop_names_into, take_or_extend};
@@ -90,13 +90,13 @@ fn admit_expansion(
         Entry::Run => true,
         Entry::Repeat => false,
         Entry::Cut(reason) => {
-            let cut = GuardCut {
-                reason,
-                name: declaration.name().to_string(),
-                module: module_path.to_path_buf(),
-            };
             let reach = cut_reach(ctx, module_path, declaration, reference.args);
-            ctx.session.note_cut(cut, reach);
+            let site = CutSite {
+                reason,
+                name: declaration.name(),
+                module: module_path,
+            };
+            ctx.session.note_cut(site, reach);
             false
         }
     }

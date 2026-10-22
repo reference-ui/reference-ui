@@ -14,6 +14,7 @@ use std::rc::Rc;
 
 use rustc_hash::{FxHashMap, FxHashSet};
 
+use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{TypeDeclaration, TypeEnv, TypeExpr};
 
 use super::context::{is_surface_type_name, TraceContext};
@@ -59,13 +60,18 @@ impl Reach {
     }
 }
 
-/// Session-wide memo of what each bound parameter's argument reaches. A binding's reach depends only on its
-/// argument and the scope that wrote it, so each binding is walked once per trace. The memo holds each scope
-/// it is keyed on, so the address of a key's scope cannot be reused by a different scope while the memo lives.
+/// Session-wide memo: what each bound parameter's argument reaches, and how each named declaration resolves.
+/// A binding's reach depends only on its argument and the scope that wrote it, so each binding is walked once
+/// per trace, and a declaration resolves once for every walk that names it. The memo holds each scope it is
+/// keyed on, so a scope's address cannot be reused by another scope while the memo lives.
 #[derive(Default)]
 pub struct ReachMemo {
-    bindings: FxHashMap<(usize, String), MemoEntry>,
+    bindings: FxHashMap<usize, FxHashMap<String, MemoEntry>>,
+    decls: FxHashMap<PathBuf, FxHashMap<String, Option<Rc<ResolvedDecl>>>>,
 }
+
+/// A named declaration as the walk resolves it: the module that declares it, and the declaration.
+type ResolvedDecl = (PathBuf, TypeDeclaration);
 
 struct MemoEntry {
     _scope: TypeEnv,
@@ -141,11 +147,12 @@ struct Scope<'s> {
     skip: &'s [String],
 }
 
-/// One reach walk. Declarations are keyed by module, name and scope, so each is read once per scope.
+/// One reach walk. A declaration is read once per walk and scope. Both keys are addresses of values that
+/// outlive the walk (memoised declarations and scopes, or the refused declaration held by the caller).
 struct Walk<'c, 'a> {
     ctx: &'c mut TraceContext<'a>,
     reach: Reach,
-    seen_decls: BTreeSet<(PathBuf, String, usize)>,
+    seen_decls: FxHashSet<(usize, usize)>,
 }
 
 impl<'c, 'a> Walk<'c, 'a> {
@@ -153,7 +160,7 @@ impl<'c, 'a> Walk<'c, 'a> {
         Self {
             ctx,
             reach: Reach::default(),
-            seen_decls: BTreeSet::new(),
+            seen_decls: FxHashSet::default(),
         }
     }
 }
@@ -199,8 +206,15 @@ impl Walk<'_, '_> {
     /// The memoised reach of the argument that `name` binds in `scope`. The first request walks the argument
     /// in its own scope from a fresh declaration set, so the memo holds the argument's whole reach.
     fn binding_reach(&mut self, scope: &TypeEnv, name: &str) -> Rc<Reach> {
-        let key = (env_key(scope), name.to_string());
-        if let Some(entry) = self.ctx.session.reach_memo.bindings.get(&key) {
+        let scope_key = env_key(scope);
+        if let Some(entry) = self
+            .ctx
+            .session
+            .reach_memo
+            .bindings
+            .get(&scope_key)
+            .and_then(|names| names.get(name))
+        {
             return Rc::clone(&entry.reach);
         }
         let Some(bound) = scope.get(name) else {
@@ -212,33 +226,66 @@ impl Walk<'_, '_> {
             skip: &[],
         };
         let reach = Rc::new(walk_fresh(self.ctx, &bound.expr, at));
-        self.ctx.session.reach_memo.bindings.insert(
-            key,
-            MemoEntry {
-                _scope: Rc::clone(scope),
-                reach: Rc::clone(&reach),
-            },
-        );
+        self.ctx
+            .session
+            .reach_memo
+            .bindings
+            .entry(scope_key)
+            .or_default()
+            .insert(
+                name.to_string(),
+                MemoEntry {
+                    _scope: Rc::clone(scope),
+                    reach: Rc::clone(&reach),
+                },
+            );
         reach
     }
 
     /// Resolve a named declaration the way the tracer does. A module that fails to load leaves its
     /// names unknown, so the reach is unbounded.
     fn declaration(&mut self, name: &str, at: Scope<'_>) {
-        match self.ctx.resolve_declaration(at.module, name) {
-            Ok(Some((module, declaration))) => self.visit_decl(&module, &declaration, at.env),
+        match self.resolved(at.module, name) {
+            Ok(Some(found)) => {
+                let (module, declaration) = &*found;
+                self.visit_decl(module, declaration, at.env);
+            }
             Ok(None) => {}
             Err(_) => self.reach.unbounded = true,
         }
     }
 
+    /// The declaration `name` names from `module`, resolved once per session. A resolution is fixed by the
+    /// module graph, so every walk that names it shares one copy instead of cloning its own.
+    fn resolved(
+        &mut self,
+        module: &Path,
+        name: &str,
+    ) -> Result<Option<Rc<ResolvedDecl>>, StyleTraceError> {
+        if let Some(known) = self
+            .ctx
+            .session
+            .reach_memo
+            .decls
+            .get(module)
+            .and_then(|names| names.get(name))
+        {
+            return Ok(known.clone());
+        }
+        let resolved = self.ctx.resolve_declaration(module, name)?.map(Rc::new);
+        self.ctx
+            .session
+            .reach_memo
+            .decls
+            .entry(module.to_path_buf())
+            .or_default()
+            .insert(name.to_string(), resolved.clone());
+        Ok(resolved)
+    }
+
     /// A declaration's own props, then the references its body makes; its type parameters are skipped.
     fn visit_decl(&mut self, module: &Path, declaration: &TypeDeclaration, env: &TypeEnv) {
-        let key = (
-            module.to_path_buf(),
-            declaration.name().to_string(),
-            env_key(env),
-        );
+        let key = (declaration as *const TypeDeclaration as usize, env_key(env));
         if !self.seen_decls.insert(key) {
             return;
         }

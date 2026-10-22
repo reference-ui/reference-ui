@@ -9,6 +9,7 @@
 
 use std::path::{Path, PathBuf};
 
+use super::reach::Reach;
 use crate::resolver::model::{BoundTypeExpr, TypeEnv, TypeExpr};
 
 /// Deepest chain of nested declaration expansions; real type graphs stay far below it.
@@ -45,6 +46,43 @@ pub struct GuardCut {
     pub reason: CutReason,
     pub name: String,
     pub module: PathBuf,
+}
+
+/// A distinct limit cut of one session and the names its refused expansions could reach.
+pub struct CutRecord {
+    pub cut: GuardCut,
+    pub reach: Reach,
+}
+
+/// The declaration a limit refused, borrowed from the walk that refused it: the limit it hit, its name and the
+/// module that declares it.
+#[derive(Clone, Copy)]
+pub struct CutSite<'a> {
+    pub reason: CutReason,
+    pub name: &'a str,
+    pub module: &'a Path,
+}
+
+/// Record a limit cut with the names its refused expansion could reach. A repeat of the same cut (same limit,
+/// declaration and module) folds into the first record, so the records stay one per cut. The names are only
+/// copied when the cut is new, since most refusals repeat an earlier cut.
+pub fn record_cut(records: &mut Vec<CutRecord>, site: CutSite<'_>, reach: Reach) {
+    let existing = records.iter_mut().find(|record| {
+        record.cut.reason == site.reason
+            && record.cut.name == site.name
+            && record.cut.module.as_path() == site.module
+    });
+    match existing {
+        Some(record) => record.reach.absorb(reach),
+        None => records.push(CutRecord {
+            cut: GuardCut {
+                reason: site.reason,
+                name: site.name.to_string(),
+                module: site.module.to_path_buf(),
+            },
+            reach,
+        }),
+    }
 }
 
 /// The guard's answer for one expansion request.

@@ -19,18 +19,12 @@ use crate::resolver::model::{
     ParsedModule, TypeAliasDecl, TypeDeclaration, TypeEnv, TypeExpr,
 };
 use crate::resolver::parser::parse_module;
-use super::guard::{ExpansionGuard, GuardCut};
+use super::guard::{record_cut, CutRecord, CutSite, ExpansionGuard, GuardCut};
 use super::reach::{Reach, ReachMemo};
 use crate::resolver::path::{
     is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
     resolve_specifier,
 };
-
-/// A distinct limit cut of one session and the names its refused expansions could reach.
-pub struct CutRecord {
-    pub cut: GuardCut,
-    pub reach: Reach,
-}
 
 pub struct TraceSession {
     pub sync_root: PathBuf,
@@ -66,13 +60,9 @@ impl TraceSession {
         }
     }
 
-    /// Record a limit cut with the names its refused expansion could reach. A repeat of the same cut
-    /// (same limit, declaration and module) folds into the first record, so the record stays one per cut.
-    pub fn note_cut(&mut self, cut: GuardCut, reach: Reach) {
-        match self.cuts.iter_mut().find(|record| record.cut == cut) {
-            Some(record) => record.reach.absorb(reach),
-            None => self.cuts.push(CutRecord { cut, reach }),
-        }
+    /// Record a limit cut with the names its refused expansion could reach (see `record_cut`).
+    pub fn note_cut(&mut self, site: CutSite<'_>, reach: Reach) {
+        record_cut(&mut self.cuts, site, reach);
     }
 
     /// The cuts that hid a name from the walk's result: each one whose reach is not covered by `traced`.
