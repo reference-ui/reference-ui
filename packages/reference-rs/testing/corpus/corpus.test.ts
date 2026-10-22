@@ -1,7 +1,7 @@
 /**
  * Corpus termination suite for reference-rs. Runs the three walkers over real trees: the tasty display walk over every
- * symbol of each declaration corpus, a styletrace probe per corpus that imports and wraps the corpus's exported
- * components, and the atlas analysis of reference-lib. Every run goes through runIsolated in its own child process, so a
+ * symbol of each declaration corpus, a styletrace probe for each corpus with importable exports (it imports and wraps
+ * them), and the atlas analysis of reference-lib. Every run goes through runIsolated in its own child process, so a
  * hang or a crash ends as a reported outcome, and fails when a run ends by signal or timeout, exceeds its budget, reports
  * a walk limit (a truncated display, a runtime notice, a type-expansion guard), or resolves to too few symbols or
  * components. Corpus roots come from the installed packages, so a moved or emptied tree fails instead of passing.
