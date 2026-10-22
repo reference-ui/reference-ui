@@ -3,8 +3,8 @@
 //! are not code. A `<` opens an element only where an expression can start and only when a tag header follows it; a
 //! comparison, a TypeScript generic (`foo<T>()`) and an arrow generic (`<T,>(x) => x`, `<T extends U>`) are not tags, and a
 //! string or comment that mentions `<` is skipped before any `<` in it is read. JSX text cannot hold a `>` or a `}`, so an
-//! element that meets one was never an element, as in the function type `<T>(x: T) => T`: it ends there, and a `}` also
-//! closes the brace around it. JSX attribute strings take no escapes, as JSX attribute strings do.
+//! element that meets one was never an element, as in the function type `<T>(x: T) => T`: `scan/rescan.rs` drops it and reads
+//! its text again as code. JSX attribute strings take no escapes, as JSX attribute strings do.
 
 use super::literals::count_newlines;
 use super::{Open, Scan};
@@ -49,12 +49,14 @@ impl Scan<'_> {
         fragment: bool,
         next: usize,
     ) -> Result<usize, NestingRefusal> {
-        let line = self.line;
-        if fragment {
-            return self.open_soft(Open::JsxChildren, line, next);
-        }
+        let kind = if fragment {
+            Open::JsxChildren
+        } else {
+            Open::JsxTag
+        };
+        let opened = self.open_soft(kind, at, next);
         self.line += count_newlines(&self.src[at..next]);
-        self.open_soft(Open::JsxTag, line, next)
+        opened
     }
 
     /// One byte inside a start tag: an attribute string, a comment, the `/>` or `>` that ends the tag, an attribute
@@ -102,23 +104,13 @@ impl Scan<'_> {
     }
 
     /// One byte among JSX children. A `{` opens an expression container, and a `<` either opens a child element or, when
-    /// it starts `</`, closes this one. A `}` closes down to the nearest brace and a `>` ends the element, since neither
-    /// can be JSX text; the `>` is read again as code. The only other special byte is a newline; every other byte is text.
-    pub(super) fn jsx_children(
-        &mut self,
-        at: usize,
-        template: &mut bool,
-    ) -> Result<usize, NestingRefusal> {
+    /// it starts `</`, closes this one. A `}` or a `>` cannot be JSX text, so it proves the element was never one, and the
+    /// scan reads it again, as code when code surrounds the element. The only other special byte is a newline; every
+    /// other byte is text.
+    pub(super) fn jsx_children(&mut self, at: usize) -> Result<usize, NestingRefusal> {
         match self.src[at] {
             b'{' => self.open_hard(Open::Brace, at + 1),
-            b'}' => {
-                self.close_brace_into(template);
-                Ok(at + 1)
-            }
-            b'>' => {
-                self.drop_top();
-                Ok(at)
-            }
+            b'}' | b'>' => Ok(self.end_misread_element(at)),
             b'<' if self.byte_at(at + 1) == Some(b'/') => self.close_jsx_element(at),
             b'<' => self.jsx_child_element(at),
             _ => {
@@ -130,6 +122,9 @@ impl Scan<'_> {
 
     /// A `<` that starts an element, as a child or as an attribute value. Anything that is not a tag header is text.
     fn jsx_child_element(&mut self, at: usize) -> Result<usize, NestingRefusal> {
+        if self.is_proven(at) {
+            return Ok(at + 1);
+        }
         match self.element_header(at) {
             Some((fragment, next)) => self.open_element(at, fragment, next),
             None => Ok(at + 1),

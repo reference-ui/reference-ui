@@ -152,9 +152,21 @@ fn code(rng: &mut Rng, tsx: bool, budget: usize) -> Piece {
     }
 }
 
-/// Generic function types and call signatures, which TSX first reads as elements. TSX does not read the parentheses
-/// of the misread text before the `>` or `}` that ends it, so the interface is two levels deep in TypeScript and one in TSX.
+/// Generic function types and call signatures, which TSX first reads as elements. The scan reads that text again as code once
+/// a `>` or `}` shows it was never an element, so the interface is two levels deep in TypeScript and in TSX.
 const SIGNATURES: &str = "type G = <T>(x: T) => T;\ninterface I { <U>(y: U): U }\n";
+
+/// Whole statements that read a slash one way or the other, with the depth each holds. A regex after the head of an `if`, a
+/// division after an object literal and a name that is also a keyword all sit beside the nests, and a slash read the wrong way
+/// would let a quote in a regex swallow the lines after it.
+const SLASH_STATEMENTS: [(&str, usize); 6] = [
+    ("if (x) /\"/.test(s);\n", 1),
+    ("while (y) /'/g.test(s);\n", 1),
+    ("x = {} / 2 / 3;\n", 1),
+    ("let of = 1; z = of / 2 / 4;\n", 0),
+    ("function f() {}\n/[\"']/.test(s);\n", 1),
+    ("a = b\n/ 2 / c;\n", 0),
+];
 
 fn source(rng: &mut Rng, tsx: bool) -> Piece {
     let mut text = String::new();
@@ -162,7 +174,12 @@ fn source(rng: &mut Rng, tsx: bool) -> Piece {
     for _ in 0..1 + rng.below(4) {
         if rng.below(3) == 0 {
             text.push_str(SIGNATURES);
-            depth = depth.max(if tsx { 1 } else { 2 });
+            depth = depth.max(2);
+        }
+        if rng.below(2) == 0 {
+            let (statement, held) = SLASH_STATEMENTS[rng.below(SLASH_STATEMENTS.len())];
+            text.push_str(statement);
+            depth = depth.max(held);
         }
         let budget = 2 + rng.below(9);
         let piece = code(rng, tsx, budget);

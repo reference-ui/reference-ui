@@ -4,20 +4,24 @@
 //! of the construct whose nesting crossed the limit. A bracket or a template `${` counts the moment it opens. A TypeScript
 //! generic `<` and a JSX element are guesses, so they count only once their closer is seen, and a comparison, a shift or a
 //! misread tag that never closes counts for nothing. Strings, regex literals, template text and comments are opaque runs.
-//! `scan/stack.rs` holds the stack and that rule, `scan/jsx.rs` the element rules, `scan/expression.rs` the test for where an
-//! expression starts, `scan/literals.rs` and `scan/regex.rs` the skipped runs, and `scan/raw.rs` the bracket count that backs
-//! the scan up. This is a bound, not a lexer: a real-code survey checks that no ordinary file comes near the limit, and the
-//! two wider limits catch what a misreading lets through.
+//! `scan/stack.rs` holds the stack and that rule, `scan/jsx.rs` the element rules, `scan/rescan.rs` the second pass over text a
+//! misread element swallowed, `scan/expression.rs` the test for where an expression starts, `scan/literals.rs` and
+//! `scan/regex.rs` the skipped runs, and `scan/raw.rs` the bracket count that backs the scan up. This is a bound, not a lexer:
+//! a real-code survey checks that no ordinary file comes near the limit, and the two wider limits catch what a misreading
+//! lets through.
 
 use std::cell::Cell;
+use std::collections::HashSet;
 
 mod expression;
 mod jsx;
 mod literals;
 mod raw;
 mod regex;
+mod rescan;
 mod stack;
 
+use expression::Behind;
 #[cfg(test)]
 pub(super) use raw::peak as raw_peak;
 pub(super) use raw::{can_refuse, check_raw};
@@ -106,7 +110,8 @@ enum Mode {
 }
 
 /// The scan's state: the open constructs, how many of each kind are open (so a closer with no opener of its kind
-/// costs nothing), the current line, the deepest counted nesting so far, and the lookahead still allowed.
+/// costs nothing), the current line, the deepest counted nesting so far, what lies just behind the scan, the `<` offsets
+/// already proven not to open an element, and the lookahead still allowed.
 pub(super) struct Scan<'s> {
     src: &'s [u8],
     typescript: bool,
@@ -117,7 +122,8 @@ pub(super) struct Scan<'s> {
     deepest: usize,
     #[cfg(test)]
     peak: usize,
-    trivia: (usize, usize),
+    behind: Behind,
+    proven: HashSet<usize>,
     lookahead: Cell<usize>,
 }
 
@@ -133,28 +139,35 @@ impl<'s> Scan<'s> {
             deepest: 0,
             #[cfg(test)]
             peak: 0,
-            trivia: (0, 0),
+            behind: Behind::default(),
+            proven: HashSet::new(),
             lookahead: Cell::new(src.len().saturating_mul(LOOKAHEAD_PER_BYTE) + LOOKAHEAD_FLOOR),
         }
     }
 
     /// Scans the whole source and returns the deepest nesting, or the first refusal. The mode is read once per special
-    /// byte; the bytes between two special bytes take one table check each and move on.
+    /// byte; the bytes between two special bytes take one table check each and move on. An element still open at the end
+    /// was never one, so its text is scanned again as code before the scan finishes.
     pub(super) fn run(&mut self) -> Result<usize, NestingRefusal> {
         let src = self.src;
         let mut template = false;
         let mut at = 0;
-        while at < src.len() {
-            let mode = self.mode(template);
-            let table = special(mode);
-            while at < src.len() && !table[src[at] as usize] {
-                at += 1;
+        loop {
+            while at < src.len() {
+                let mode = self.mode(template);
+                let table = special(mode);
+                while at < src.len() && !table[src[at] as usize] {
+                    at += 1;
+                }
+                if at < src.len() {
+                    at = self.step(at, mode, &mut template)?;
+                }
             }
-            if at < src.len() {
-                at = self.step(at, mode, &mut template)?;
+            match self.misread_at_end(template) {
+                Some(resume) => at = resume,
+                None => return Ok(self.deepest),
             }
         }
-        Ok(self.deepest)
     }
 
     /// The most constructs the stack held at once, counted or not; the survey reports it beside the depth.
@@ -186,7 +199,7 @@ impl<'s> Scan<'s> {
             Mode::Code => self.code(at, template),
             Mode::Template => self.template(at, template),
             Mode::JsxTag => self.jsx_tag(at),
-            Mode::JsxChildren => self.jsx_children(at, template),
+            Mode::JsxChildren => self.jsx_children(at),
         }
     }
 
@@ -204,7 +217,7 @@ impl<'s> Scan<'s> {
                 Ok(at + 1)
             }
             b'}' => {
-                self.close_brace_into(template);
+                self.close_brace_into(template, at);
                 Ok(at + 1)
             }
             b'\n' => {
@@ -215,9 +228,9 @@ impl<'s> Scan<'s> {
         }
     }
 
-    /// Closes a brace or template expression; a template expression resumes the template's text.
-    fn close_brace_into(&mut self, template: &mut bool) {
-        if self.close_brace() {
+    /// Closes a brace or template expression with the `}` at `at`; a template expression resumes the template's text.
+    fn close_brace_into(&mut self, template: &mut bool, at: usize) {
+        if self.close_brace(at) {
             *template = true;
         }
     }
@@ -233,13 +246,13 @@ impl<'s> Scan<'s> {
     /// A `<` in code opens a JSX element where an expression can start, and a TypeScript generic right after an
     /// identifier. Anything else is a comparison, and counts for nothing. Either one is only a guess until it closes.
     fn code_less_than(&mut self, at: usize) -> Result<usize, NestingRefusal> {
-        if self.jsx && self.starts_expression(at) {
+        if self.jsx && self.starts_expression(at) && !self.is_proven(at) {
             if let Some((fragment, next)) = self.element_header(at) {
                 return self.open_element(at, fragment, next);
             }
         }
         if self.opens_generic(at) {
-            return self.open_soft(Open::Angle, self.line, at + 1);
+            return self.open_soft(Open::Angle, at, at + 1);
         }
         Ok(at + 1)
     }
@@ -248,7 +261,13 @@ impl<'s> Scan<'s> {
     /// comparison left open.
     fn close_or_drop(&mut self, byte: u8, at: usize) -> Result<usize, NestingRefusal> {
         match byte {
-            b')' | b']' => self.close(bracket_kind(byte)),
+            b')' => {
+                let opened = self.close(Open::Paren);
+                self.note_paren(at, opened);
+            }
+            b']' => {
+                self.close(Open::Bracket);
+            }
             b'>' => self.close_angle_unless_arrow(at)?,
             b';' => self.drop_angles(),
             _ => {}

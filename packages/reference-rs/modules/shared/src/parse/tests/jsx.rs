@@ -204,9 +204,9 @@ fn a_generic_function_type_repeated_adds_no_depth() {
     );
     assert_eq!(scan_nesting(&alias, tsx()), Ok(2));
     let member = "interface A { map: <U>(fn: (t: string) => U) => U[] }\n".repeat(3000);
-    assert_eq!(scan_nesting(&member, tsx()), Ok(2));
+    assert_eq!(scan_nesting(&member, tsx()), Ok(3));
     let signature = "type C = { <T>(x: T): T };\n".repeat(3000);
-    assert_eq!(scan_nesting(&signature, tsx()), Ok(1));
+    assert_eq!(scan_nesting(&signature, tsx()), Ok(2));
 }
 
 #[test]
@@ -258,4 +258,69 @@ fn type_arguments_that_never_close_cannot_make_the_scan_quadratic() {
         "the scan took {:?}",
         started.elapsed()
     );
+}
+
+#[test]
+fn an_element_that_met_a_stray_closing_brace_is_scanned_again_as_code() {
+    let source = format!(
+        "interface I {{ <T>(a: {}string{}): T }}\n",
+        "(')' | ".repeat(DEEP),
+        ")".repeat(DEEP)
+    );
+    assert_eq!(scan_nesting(&source, tsx()), refused_at(1));
+}
+
+#[test]
+fn an_element_still_open_at_the_end_was_never_one() {
+    let source = format!(
+        "type F = <T>(a: {}string{}",
+        "(')' | ".repeat(DEEP),
+        ")".repeat(DEEP)
+    );
+    assert_eq!(scan_nesting(&source, tsx()), refused_at(1));
+}
+
+#[test]
+fn nested_misread_elements_are_scanned_again_once_each() {
+    let source = format!(
+        "type F = {}string{} => T;\n",
+        "<T>(a: ".repeat(2000),
+        ")".repeat(2000)
+    );
+    let started = std::time::Instant::now();
+    assert_eq!(scan_nesting(&source, tsx()), refused_at(1));
+    assert!(
+        started.elapsed() < std::time::Duration::from_secs(5),
+        "the scan took {:?}",
+        started.elapsed()
+    );
+}
+
+#[test]
+fn a_misread_element_scanned_again_keeps_its_line_numbers() {
+    // The first parenthesis is on line 1 and each later line opens one more, so the 1,025th is on line 1025.
+    let source = format!(
+        "type F = <T>(a:\n{}string{}) => T;\n",
+        "(')' |\n".repeat(DEEP),
+        ")".repeat(DEEP)
+    );
+    assert_eq!(scan_nesting(&source, tsx()), refused_at(1025));
+}
+
+#[test]
+fn code_that_tsx_first_reads_as_an_element_reads_like_typescript_once_it_is_scanned_again() {
+    let lines = [
+        "type F = <T>(x: T) => T;",
+        "interface I { map: <U>(fn: (t: string) => U) => U[] }",
+        "type C = { <T>(x: T): T };",
+        "declare const f: <U>(fn: (t: string) => U) => U[];",
+    ];
+    for line in lines {
+        let source = format!("{line}\n").repeat(3000);
+        assert_eq!(
+            scan_nesting(&source, tsx()),
+            scan_nesting(&source, ts()),
+            "{line}"
+        );
+    }
 }

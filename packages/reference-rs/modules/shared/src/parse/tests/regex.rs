@@ -87,6 +87,85 @@ fn a_keyword_used_as_a_property_name_does_not_start_an_expression() {
 }
 
 #[test]
+fn a_slash_after_the_head_of_if_while_for_or_with_is_a_regex() {
+    let heads = [
+        "if (x)",
+        "while (x)",
+        "for (;;)",
+        "with (o)",
+        "else if (x)",
+        "if (f(a, [b]))",
+        "if (x) /* c */",
+        "if (x)\n",
+    ];
+    for head in heads {
+        let source = format!("{head} /\"/.test(s); {};\n", parens(DEEP));
+        let line = if head.ends_with('\n') { 2 } else { 1 };
+        assert_eq!(
+            scan_nesting(&source, ts()),
+            refused_at(line),
+            "after {head:?}"
+        );
+    }
+}
+
+#[test]
+fn a_slash_after_any_other_parenthesis_is_a_division() {
+    let deep = parens(DEEP);
+    for before in ["f(x)", "(a + b)", "iff (x)", "a.if (x)", "if (x) y(z)"] {
+        let source = format!("{before} / {deep} / b;\n");
+        assert_eq!(
+            scan_nesting(&source, ts()),
+            refused_at(1),
+            "after {before:?}"
+        );
+    }
+}
+
+#[test]
+fn of_is_an_identifier_not_a_keyword_that_takes_an_operand() {
+    let source = format!("const of = 4;\nx = of / {} / 1;\n", parens(DEEP));
+    assert_eq!(scan_nesting(&source, ts()), refused_at(2));
+}
+
+#[test]
+fn a_slash_after_an_object_literal_is_a_division_and_after_a_block_a_regex() {
+    let deep = parens(DEEP);
+    for object in [
+        "x = {}",
+        "x = { a: 1 }",
+        "y = z ? 1 : {}",
+        "export default {}",
+        "return {}",
+        "throw {}",
+    ] {
+        let source = format!("{object} / {deep} / b;\n");
+        assert_eq!(
+            scan_nesting(&source, ts()),
+            refused_at(1),
+            "after {object:?}"
+        );
+    }
+    let blocks = [
+        "if (x) {}",
+        "function f() {}",
+        "else {}",
+        "try {}",
+        "class A {}",
+        "x = () => {}",
+        ";{}",
+    ];
+    for block in blocks {
+        let source = format!("{block}\n/\"/.test(s); {deep};\n");
+        assert_eq!(
+            scan_nesting(&source, ts()),
+            refused_at(2),
+            "after {block:?}"
+        );
+    }
+}
+
+#[test]
 fn a_slash_with_no_closing_slash_on_its_line_is_not_a_regex() {
     let source = format!("x = /\n{};\n", parens(DEEP));
     assert_eq!(scan_nesting(&source, ts()), refused_at(2));

@@ -9,12 +9,13 @@
 use super::{NestingRefusal, Open, Scan};
 use crate::parse::{MAX_NESTING, MAX_OPEN};
 
-/// One open construct: its kind, the line it opened on, and the deepest nesting that has closed inside it so far.
+/// One open construct: its kind, the line and byte offset it opened at, and the deepest nesting that has closed inside it so far.
 #[derive(Clone, Copy)]
 pub(super) struct Frame {
     pub(super) open: Open,
-    line: u32,
-    inner: u32,
+    pub(super) line: u32,
+    pub(super) at: u32,
+    pub(super) inner: u32,
 }
 
 impl Scan<'_> {
@@ -30,9 +31,11 @@ impl Scan<'_> {
             .sum()
     }
 
-    /// Opens a bracket or a template expression. It counts at once, and the refusal names the line it opened on.
+    /// Opens a bracket or a template expression, which ends at `next`. It counts at once, and the refusal names the line it
+    /// opened on.
     pub(super) fn open_hard(&mut self, open: Open, next: usize) -> Result<usize, NestingRefusal> {
-        self.push(open, self.line)?;
+        let width = if open == Open::TemplateExpr { 2 } else { 1 };
+        self.push(open, next - width)?;
         let levels = self.hard();
         self.deepest = self.deepest.max(levels);
         if levels > MAX_NESTING {
@@ -44,21 +47,24 @@ impl Scan<'_> {
         Ok(next)
     }
 
-    /// Opens a generic or a JSX element on `line`. It counts only if its closer is seen.
+    /// Opens a generic or a JSX element whose `<` is at `at`. It counts only if its closer is seen.
     pub(super) fn open_soft(
         &mut self,
         open: Open,
-        line: u32,
+        at: usize,
         next: usize,
     ) -> Result<usize, NestingRefusal> {
-        self.push(open, line)?;
+        self.push(open, at)?;
         Ok(next)
     }
 
-    fn push(&mut self, open: Open, line: u32) -> Result<(), NestingRefusal> {
+    /// Pushes a frame for the construct that starts at `at`, on the current line.
+    fn push(&mut self, open: Open, at: usize) -> Result<(), NestingRefusal> {
+        let line = self.line;
         self.stack.push(Frame {
             open,
             line,
+            at: at as u32,
             inner: 0,
         });
         self.counts[open.index()] += 1;
@@ -76,14 +82,14 @@ impl Scan<'_> {
     }
 
     /// Removes the top frame, keeping the counts exact.
-    fn take_top(&mut self) -> Option<Frame> {
+    pub(super) fn take_top(&mut self) -> Option<Frame> {
         let frame = self.stack.pop()?;
         self.counts[frame.open.index()] -= 1;
         Some(frame)
     }
 
     /// Hands the nesting that closed inside a frame to the frame beneath it.
-    fn carry(&mut self, depth: u32) {
+    pub(super) fn carry(&mut self, depth: u32) {
         if let Some(parent) = self.stack.last_mut() {
             parent.inner = parent.inner.max(depth);
         }
@@ -125,33 +131,40 @@ impl Scan<'_> {
         }
     }
 
-    /// Pops down to and including the topmost opener of `open`'s kind; a closer with no such opener is ignored.
-    pub(super) fn close(&mut self, open: Open) {
+    /// Pops down to and including the topmost opener of `open`'s kind and returns where that opener was; a closer with no
+    /// such opener is ignored.
+    pub(super) fn close(&mut self, open: Open) -> Option<usize> {
         if self.counts[open.index()] == 0 {
-            return;
+            return None;
         }
-        if let Some(pos) = self.stack.iter().rposition(|frame| frame.open == open) {
-            self.truncate_to(pos);
-        }
+        let pos = self.stack.iter().rposition(|frame| frame.open == open)?;
+        let opened = self.stack[pos].at as usize;
+        self.truncate_to(pos);
+        Some(opened)
     }
 
-    /// Closes the topmost brace or template expression. Returns true when that was a template expression, so the
-    /// caller resumes the template's text.
-    pub(super) fn close_brace(&mut self) -> bool {
+    /// The position of the topmost brace or template expression on the stack, if there is one.
+    fn topmost_brace(&self) -> Option<usize> {
         let braces = self.counts[Open::Brace.index()] + self.counts[Open::TemplateExpr.index()];
         if braces == 0 {
-            return false;
+            return None;
         }
-        let Some(pos) = self
-            .stack
+        self.stack
             .iter()
             .rposition(|frame| matches!(frame.open, Open::Brace | Open::TemplateExpr))
-        else {
+    }
+
+    /// Closes the topmost brace or template expression with the `}` at `at`. Returns true when that was a template
+    /// expression, so the caller resumes the template's text.
+    pub(super) fn close_brace(&mut self, at: usize) -> bool {
+        let Some(pos) = self.topmost_brace() else {
+            self.note_brace(at, None);
             return false;
         };
-        let template = self.stack[pos].open == Open::TemplateExpr;
+        let frame = self.stack[pos];
         self.truncate_to(pos);
-        template
+        self.note_brace(at, (frame.open == Open::Brace).then_some(frame.at as usize));
+        frame.open == Open::TemplateExpr
     }
 
     /// Changes the kind of the frame on top, a change of kind with no change of depth.

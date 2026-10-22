@@ -12,6 +12,7 @@ use super::{
 };
 
 mod generated;
+mod holes;
 mod jsx;
 mod measure;
 mod raw;
