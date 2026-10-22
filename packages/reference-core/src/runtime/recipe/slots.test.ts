@@ -160,4 +160,25 @@ describe('slot projection', () => {
     }
     expect(() => recipe(config)).not.toThrow()
   })
+
+  it('writes an authored __proto__ axis or value as an own key, not a prototype', () => {
+    const config = {
+      className: 'x',
+      slots: ['root'],
+      variants: JSON.parse('{"__proto__": {"a": {"root": {"color": "red"}}}}'),
+    }
+    const variants = projectSlot(config, 'root').variants
+    expect(Object.keys(variants ?? {})).toEqual(['__proto__'])
+    expect(Object.getOwnPropertyDescriptor(variants, '__proto__')?.value).toEqual({
+      a: { color: 'red' },
+    })
+    expect(({} as Record<string, unknown>).a).toBeUndefined()
+
+    const byValue = {
+      className: 'x',
+      slots: ['root'],
+      variants: JSON.parse('{"s": {"__proto__": {"root": {"color": "blue"}}}}'),
+    }
+    expect(Object.keys(projectSlot(byValue, 'root').variants?.s ?? {})).toEqual(['__proto__'])
+  })
 })

@@ -64,9 +64,10 @@ function projectVariants(
   variants: Record<string, Record<string, RecipeSlotStyles>>,
   slot: string
 ): Record<string, Record<string, SystemStyleObject>> {
-  const projected: Record<string, Record<string, SystemStyleObject>> = {}
+  // Null-prototype records: an authored `__proto__` name must become a key, not set a prototype.
+  const projected: Record<string, Record<string, SystemStyleObject>> = Object.create(null)
   for (const [axis, options] of Object.entries(variants)) {
-    const cells: Record<string, SystemStyleObject> = {}
+    const cells: Record<string, SystemStyleObject> = Object.create(null)
     for (const [value, styles] of Object.entries(options)) {
       const cell = ownSlotStyles(styles, slot)
       if (cell !== undefined) cells[value] = cell
