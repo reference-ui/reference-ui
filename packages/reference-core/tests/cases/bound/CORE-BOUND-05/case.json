@@ -1,0 +1,1 @@
+{"id": "CORE-BOUND-05", "name": "a real ref sync of 70 files and one file at 2,000 nesting exits 0 with no signal, inside 10 s, and its stylesheet has both colours", "sync": false}
