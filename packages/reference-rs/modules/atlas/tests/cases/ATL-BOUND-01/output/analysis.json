@@ -1,0 +1,31 @@
+{
+  "caseName": "ATL-BOUND-01",
+  "analyses": {
+    "default": [
+      {
+        "name": "Button",
+        "interface": {
+          "name": "ButtonProps",
+          "source": "./components/Button.tsx"
+        },
+        "source": "./components/Button.tsx",
+        "count": 0,
+        "props": [
+          {
+            "name": "variant",
+            "count": 0,
+            "usage": "unused",
+            "values": {
+              "ghost": "unused",
+              "solid": "unused"
+            }
+          }
+        ],
+        "usage": "unused",
+        "examples": [],
+        "usedWith": {}
+      }
+    ],
+    "withIncludes": {}
+  }
+}
