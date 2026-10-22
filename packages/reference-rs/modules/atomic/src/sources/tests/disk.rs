@@ -80,9 +80,11 @@ fn write_symlink_tree(name: &str) -> (std::path::PathBuf, String) {
     (root, root_str)
 }
 
-/// Links keep stat-everything verdicts on both walks: linked dirs
-/// descend, linked files carry target bytes, dangling links drop, and
-/// the union backfill completes a provided subset to the same set.
+/// Links keep stat-everything verdicts on both walks: a linked file carries
+/// target bytes, dangling links drop, and the union backfill completes a
+/// provided subset to the same set. A linked directory whose target is also
+/// a real directory in the tree lists the shared file once, under the real
+/// path, so `src/linkdir/a.ts` is not listed beside `src/real/a.ts`.
 #[cfg(unix)]
 #[test]
 fn symlinks_keep_stat_verdicts_on_both_walks() {
@@ -98,7 +100,6 @@ fn symlinks_keep_stat_verdicts_on_both_walks() {
     assert_eq!(
         paths,
         [
-            format!("{root_str}/src/linkdir/a.ts"),
             format!("{root_str}/src/linkfile.ts"),
             format!("{root_str}/src/real/a.ts"),
         ]
@@ -160,4 +161,124 @@ fn files_without_root_keep_legacy_semantics() {
             .collect(),
     );
     assert_eq!(gathered, expected);
+}
+
+/// Writes each `(relative path, content)` pair under `root`, creating the parent folders.
+#[cfg(unix)]
+fn write_files(root: &std::path::Path, files: &[(&str, &str)]) {
+    for (rel, content) in files {
+        let path = root.join(rel);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, content).unwrap();
+    }
+}
+
+/// The listed paths in walk-independent order, for comparisons that name each file once.
+#[cfg(unix)]
+fn listed_paths(sources: &[(String, String)]) -> Vec<String> {
+    sorted(sources.to_vec()).into_iter().map(|(path, _)| path).collect()
+}
+
+/// A linked sibling outside the include scope: `lib/` is a real directory the scope rejects, so its
+/// colour reaches the list only through `src/palette`, once.
+#[cfg(unix)]
+#[test]
+fn linked_sibling_outside_scope_is_listed_once_through_its_link() {
+    let root = temp_root("sibling-out");
+    write_files(&root, &[("src/app.ts", "export const a = 1;\n"), ("lib/colors.ts", "export const c = 2;\n")]);
+    std::os::unix::fs::symlink(root.join("lib"), root.join("src/palette")).unwrap();
+    let root_str = root.to_string_lossy().to_string();
+    let scanned = gather(&CompileRequest {
+        root_dir: Some(root_str.clone()),
+        include: Some(vec!["src/**/*.ts".to_string()]),
+        ..Default::default()
+    });
+    assert_eq!(
+        listed_paths(&scanned),
+        [format!("{root_str}/src/app.ts"), format!("{root_str}/src/palette/colors.ts")]
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+/// A linked sibling inside the scope: the real path lists the file, and the link to it lists nothing.
+#[cfg(unix)]
+#[test]
+fn linked_sibling_in_scope_is_listed_once_under_its_real_path() {
+    let root = temp_root("sibling-in");
+    write_files(&root, &[("src/a/x.ts", "export const x = 1;\n")]);
+    std::os::unix::fs::symlink(root.join("src/a"), root.join("src/b")).unwrap();
+    let root_str = root.to_string_lossy().to_string();
+    let scanned = gather(&CompileRequest {
+        root_dir: Some(root_str.clone()),
+        include: Some(vec!["src/**/*.ts".to_string()]),
+        ..Default::default()
+    });
+    assert_eq!(listed_paths(&scanned), [format!("{root_str}/src/a/x.ts")]);
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+/// Two directories that link back to the root: the walk ends at each link that closes a loop, and the
+/// real sources are listed once.
+#[cfg(unix)]
+#[test]
+fn self_linked_directories_end_the_walk_at_the_link_that_closes_them() {
+    let root = temp_root("loops");
+    write_files(&root, &[("src/app.ts", "export const a = 1;\n")]);
+    std::os::unix::fs::symlink(".", root.join("src/loopA")).unwrap();
+    std::os::unix::fs::symlink(".", root.join("src/loopB")).unwrap();
+    let root_str = root.to_string_lossy().to_string();
+    let scanned = gather(&CompileRequest {
+        root_dir: Some(root_str.clone()),
+        include: Some(vec!["src/**/*.ts".to_string()]),
+        ..Default::default()
+    });
+    assert_eq!(listed_paths(&scanned), [format!("{root_str}/src/app.ts")]);
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+/// Two links to one directory outside the project: the first link in walk order enters it, the second
+/// is skipped, so the shared file is listed once under the first link.
+#[cfg(unix)]
+#[test]
+fn two_links_to_one_target_list_its_files_once() {
+    let root = temp_root("two-links");
+    let outside = temp_root("two-links-outside");
+    write_files(&outside, &[("x.ts", "export const x = 1;\n")]);
+    write_files(&root, &[("src/keep.ts", "export const k = 1;\n")]);
+    std::os::unix::fs::symlink(&outside, root.join("src/one")).unwrap();
+    std::os::unix::fs::symlink(&outside, root.join("src/two")).unwrap();
+    let root_str = root.to_string_lossy().to_string();
+    let scanned = gather(&CompileRequest {
+        root_dir: Some(root_str.clone()),
+        include: Some(vec!["src/**/*.ts".to_string()]),
+        ..Default::default()
+    });
+    assert_eq!(
+        listed_paths(&scanned),
+        [format!("{root_str}/src/keep.ts"), format!("{root_str}/src/one/x.ts")]
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+    std::fs::remove_dir_all(&outside).unwrap();
+}
+
+/// The union backfill claims a provided file's identity before the walk, so a second path to the same
+/// file on disk is not appended beside the provided one.
+#[cfg(unix)]
+#[test]
+fn union_backfill_does_not_relist_a_provided_file_under_a_link() {
+    let root = temp_root("union-alias");
+    write_files(&root, &[("src/a/x.ts", "export const x = 1;\n")]);
+    std::os::unix::fs::symlink(root.join("src/a"), root.join("src/b")).unwrap();
+    let root_str = root.to_string_lossy().to_string();
+    let provided = vec![VirtualSource {
+        path: format!("{root_str}/src/a/x.ts"),
+        content: "export const x = 1;\n".to_string(),
+    }];
+    let merged = gather(&CompileRequest {
+        root_dir: Some(root_str.clone()),
+        files: Some(provided),
+        ..Default::default()
+    });
+    assert_eq!(listed_paths(&merged), [format!("{root_str}/src/a/x.ts")]);
+    std::fs::remove_dir_all(&root).unwrap();
 }

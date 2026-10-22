@@ -8,10 +8,10 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 import { sep } from 'node:path'
-import fg from 'fast-glob'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import { RETENTION_EXCLUDE } from '../../constants.ts'
 import type { ScannedSource } from './scanner.ts'
+import { listProjectFiles } from './project-files.ts'
 
 export { FRAGMENT_IMPORT_NEEDLES as NEEDLES } from '../../constants.ts'
 
@@ -147,14 +147,9 @@ export function writeTree(root: string, files: Array<[string, string | Buffer]>)
   }
 }
 
-/** Test-side fg enumeration: the exact glob call both scanners share. */
+/** Test-side enumeration: the listing both scanners share, under the walk's symlink rule. */
 export function enumerateCandidates(root: string, include: string[]): string[] {
-  return fg.sync(include, {
-    cwd: root,
-    absolute: true,
-    ignore: RETENTION_EXCLUDE,
-    dot: true,
-  })
+  return listProjectFiles(root, include, RETENTION_EXCLUDE)
 }
 
 export function fnv1a64(bytes: Buffer): string {

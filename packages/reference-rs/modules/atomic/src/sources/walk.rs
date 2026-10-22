@@ -1,10 +1,15 @@
-//! Disk walk for source discovery: sorted directory entries with the readdir type riding free,
-//! the fixed ignore set, and the extension gate. Takes a directory and an include matcher and
-//! emits the in-scope `(path, content)` pairs in walk order. Symlinks and unknown types fall back
-//! to a stat so every verdict matches the plain walk, and the predicates here are shared with the
-//! union backfill and the native scan gate so they cannot drift apart.
+//! Disk walk for source discovery: sorted directory entries with the readdir type riding free, the
+//! fixed ignore set, and the extension gate, in one traversal shared by the collecting scan and the
+//! union backfill. Takes a root, an include matcher and the canonical identities already claimed, and
+//! emits the in-scope `(path, content)` pairs in walk order. A symlinked directory is entered once per
+//! real target and never back into an ancestor, so a loop ends at the link that closes it; a file
+//! reached through two paths is emitted once, under the first in-scope path in walk order. The
+//! predicates here are shared with the native scan gate so they cannot drift apart.
 
+use std::fs;
 use std::path::{Path, PathBuf};
+
+use rustc_hash::FxHashSet;
 
 use crate::includes::FileMatcher;
 
@@ -69,29 +74,131 @@ pub(super) fn entry_is_dir(file_type: Option<&std::fs::FileType>, path: &Path) -
     }
 }
 
-/// Recursively collect supported sources under `dir`, skipping fixed ignores.
-/// The include scope is a pure path predicate, so it runs before the read:
-/// out-of-scope files cost a match, never I/O.
+/// Recursively collect supported sources under `dir`, skipping fixed ignores. Nothing is claimed up
+/// front, so the first in-scope path to each file wins, a real path ahead of a link alias.
 pub(super) fn scan_dir(dir: &Path, matcher: &FileMatcher, acc: &mut Vec<(String, String)>) {
+    walk_tree(dir, matcher, FxHashSet::default(), acc);
+}
+
+/// The one traversal behind the collecting scan and the union backfill. `claimed` holds the canonical
+/// identities the caller already provides, so the walk never reads a file the list carries under
+/// another path. Link aliases wait until the real tree is done, so a file listed under its real path is
+/// never listed again through a link.
+pub(super) fn walk_tree(
+    root: &Path,
+    matcher: &FileMatcher,
+    claimed: FxHashSet<PathBuf>,
+    acc: &mut Vec<(String, String)>,
+) {
+    let mut walk = WalkCtx {
+        matcher,
+        claimed,
+        linked: FxHashSet::default(),
+        deferred: Vec::new(),
+        acc,
+    };
+    walk_dir(root, &canonical_or_self(root), false, &mut walk);
+    drain_deferred(&mut walk);
+}
+
+/// The canonical form of `path`, or `path` itself when it cannot be resolved, so a missing root walks
+/// nothing.
+pub(super) fn canonical_or_self(path: &Path) -> PathBuf {
+    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+}
+
+/// The state of one traversal: the scope, the identities claimed so far, the link targets already
+/// entered, the link-alias files waiting for the real tree, and the output.
+struct WalkCtx<'w, 'a> {
+    matcher: &'w FileMatcher<'a>,
+    claimed: FxHashSet<PathBuf>,
+    linked: FxHashSet<PathBuf>,
+    deferred: Vec<(PathBuf, PathBuf)>,
+    acc: &'w mut Vec<(String, String)>,
+}
+
+/// Walks one directory whose canonical path is `canon`, in name order. `via_link` says whether the
+/// alias this directory is reached by runs through a symlink. Subdirectories are entered under their own
+/// names; files are read when in scope and unclaimed.
+fn walk_dir(dir: &Path, canon: &Path, via_link: bool, walk: &mut WalkCtx) {
     for entry in sorted_entries(dir) {
-        handle_dir_entry(&entry, matcher, acc);
+        if !entry_is_dir(entry.file_type.as_ref(), &entry.path) {
+            take_file(&entry.path, canon, via_link, walk);
+        } else if is_kept_dir(&entry.path) {
+            enter_dir(&entry, canon, via_link, walk);
+        }
     }
 }
 
-/// Descend into kept directories, read supported in-scope source files.
-fn handle_dir_entry(entry: &WalkEntry, matcher: &FileMatcher, acc: &mut Vec<(String, String)>) {
-    let path = &entry.path;
-    if entry_is_dir(entry.file_type.as_ref(), path) {
-        if is_kept_dir(path) {
-            scan_dir(path, matcher, acc);
+/// Descends into one kept directory when `child_canon` allows it. Anything reached through a symlink
+/// carries `via_link` into its whole subtree.
+fn enter_dir(entry: &WalkEntry, canon: &Path, via_link: bool, walk: &mut WalkCtx) {
+    let link = is_symlink(entry);
+    if let Some(child) = child_canon(entry, canon, link, walk) {
+        walk_dir(&entry.path, &child, via_link || link, walk);
+    }
+}
+
+/// The canonical directory a walk enters for one kept directory entry, or None when the walk must not
+/// enter it. A real directory sits canonically under its parent, so its path is the parent's joined with
+/// its name and costs no syscall. A symlink is resolved once: a target that is an ancestor of the
+/// directory holding the link is a loop and is cut, and a target an earlier link already entered is
+/// skipped, so every link target is walked once.
+fn child_canon(entry: &WalkEntry, canon: &Path, link: bool, walk: &mut WalkCtx) -> Option<PathBuf> {
+    if !link {
+        return entry.path.file_name().map(|name| canon.join(name));
+    }
+    let target = fs::canonicalize(&entry.path).ok()?;
+    if canon.starts_with(&target) || !walk.linked.insert(target.clone()) {
+        return None;
+    }
+    Some(target)
+}
+
+/// True when the entry is itself a symbolic link. A type the readdir did not report costs one lstat.
+fn is_symlink(entry: &WalkEntry) -> bool {
+    match &entry.file_type {
+        Some(known) => known.is_symlink(),
+        None => fs::symlink_metadata(&entry.path).is_ok_and(|meta| meta.file_type().is_symlink()),
+    }
+}
+
+/// Handles one supported source inside the include scope. The scope is a pure path predicate, so an
+/// out-of-scope alias costs a match and claims nothing. A real path claims and reads at once; a link
+/// alias is only queued, and reads at the end if no real path listed the same file.
+fn take_file(path: &Path, canon: &Path, via_link: bool, walk: &mut WalkCtx) {
+    if !is_supported_extension(path) {
+        return;
+    }
+    let path_str = path.to_string_lossy();
+    if !walk.matcher.matches_file(&path_str) {
+        return;
+    }
+    let Some(name) = path.file_name() else {
+        return;
+    };
+    let identity = canon.join(name);
+    if via_link {
+        walk.deferred.push((identity, path.to_path_buf()));
+    } else if walk.claimed.insert(identity) {
+        read_into(path, walk.acc);
+    }
+}
+
+/// Lists the queued link aliases in walk order: the first one for each identity that no real path
+/// claimed is read, and the rest of that identity are skipped by the same claim.
+fn drain_deferred(walk: &mut WalkCtx) {
+    for (identity, path) in std::mem::take(&mut walk.deferred) {
+        if walk.claimed.insert(identity) {
+            read_into(&path, walk.acc);
         }
-    } else if is_supported_extension(path) {
-        let path_str = path.to_string_lossy();
-        if matcher.matches_file(&path_str) {
-            if let Ok(content) = std::fs::read_to_string(path) {
-                acc.push((path_str.to_string(), content));
-            }
-        }
+    }
+}
+
+/// Reads one listed source and appends it; an unreadable file is dropped, as the walk always did.
+fn read_into(path: &Path, acc: &mut Vec<(String, String)>) {
+    if let Ok(content) = fs::read_to_string(path) {
+        acc.push((path.to_string_lossy().into_owned(), content));
     }
 }
 

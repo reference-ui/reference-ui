@@ -3,10 +3,10 @@
 
 import { readFileSync } from 'node:fs'
 import { extname } from 'node:path'
-import fg from 'fast-glob'
 import type { ScanOptions } from '../types.ts'
 import { RETENTION_EXCLUDE } from '../../constants.ts'
 import { candidateScanFlags, isMatchable, isRetainable, scanPrefixFor } from './classify.ts'
+import { listProjectFiles } from './project-files.ts'
 
 export { RETENTION_EXCLUDE }
 
@@ -94,14 +94,9 @@ export async function scanFragmentSources(options: ScanOptions): Promise<Fragmen
   // matches a bare function name (see splitScan).
   const mdxPatterns = createMdxImportPatterns(importFrom)
 
-  // Retention glob: dotfiles included (dot:true), node_modules pruned.
-  // fg.sync: the async walker regressed the warm-cache scan.
-  const candidates = fg.sync(include, {
-    cwd,
-    absolute: true,
-    ignore: exclude,
-    dot: true,
-  })
+  // Retention glob: dotfiles included (dot:true), node_modules pruned. The listing applies the walk's symlink rule,
+  // so a loop of links cannot hang the scan and a file reached twice is listed once.
+  const candidates = listProjectFiles(cwd, include, exclude)
 
   // Match-before-filter: read every candidate, match over the
   // JS-bundleable successes, retain the IGNORE/extension-filtered subset.

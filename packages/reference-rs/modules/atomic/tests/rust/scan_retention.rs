@@ -298,22 +298,24 @@ fn write_symlink_tree(root: &std::path::Path) -> (String, Vec<String>) {
     std::os::unix::fs::symlink(root.join("src/real"), root.join("src/linkdir")).unwrap();
     std::os::unix::fs::symlink(root.join("src/real/a.ts"), root.join("src/linkfile.ts")).unwrap();
     std::os::unix::fs::symlink(root.join("src/missing.ts"), root.join("src/dangling.ts")).unwrap();
-    let paths = ["src/real/a.ts", "src/linkdir/a.ts", "src/linkfile.ts", "src/dangling.ts"]
+    // The enumerator lists a file once, under its real path when one exists, so the link alias
+    // `src/linkdir/a.ts` is not in the candidate list; the dangling link is listed and dropped.
+    let paths = ["src/real/a.ts", "src/linkfile.ts", "src/dangling.ts"]
         .iter()
         .map(|rel| root.join(rel).to_string_lossy().to_string())
         .collect();
     (root.to_string_lossy().to_string(), paths)
 }
 
-/// (19b) Link verdicts match on all three arms: linked dirs descend, linked
-/// files carry target bytes, dangling links drop, and token equals files.
+/// (19b) Link verdicts match on all three arms: a linked file carries target bytes, a dangling link
+/// drops, a linked directory's file is listed once under its real path, and token equals files.
 #[cfg(unix)]
 #[test]
 fn collect_token_matches_files_and_disk_on_the_symlink_tree() {
     let root = temp_root("symlinks");
     let (root_str, paths) = write_symlink_tree(&root);
     let response = scan_tree(&root_str, &paths, "css");
-    assert_eq!(response.retained_count, 3);
+    assert_eq!(response.retained_count, 2);
     let token = response.retention_token.unwrap();
     let from_token = compile_with(Some(root_str.clone()), None, Some(token));
     let from_files = compile_with(Some(root_str.clone()), Some(read_virtual(&paths)), None);

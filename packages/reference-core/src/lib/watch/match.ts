@@ -5,13 +5,15 @@
 // include globs and emits predicates over relative paths, root sets, and
 // snapshots. The engine never reads .gitignore: its walk is fast-glob with
 // dot:true and node_modules pruned, then the native directory ignores, so every
-// predicate here mirrors that walk and nothing more.
+// predicate here mirrors that walk and nothing more. Enumeration goes through the
+// shared project listing, so a symlink loop cannot hang a resync and each linked
+// directory is followed once, the same rule the sync walk applies.
 
 import { realpathSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
-import fg from 'fast-glob'
 import picomatch from 'picomatch'
 import { NATIVE_IGNORE_DIRS, RETENTION_EXCLUDE } from '../../collect/constants.ts'
+import { listProjectFiles, planProjectWalk } from '../../collect/lib/scan/project-files.ts'
 
 export type IncludeMatcher = (relativePath: string) => boolean
 
@@ -159,9 +161,9 @@ function realTargetOf(absolute: string): string | undefined {
 // above every match, plus the real targets of matches reached through a link.
 export function scanMatches(watchRoot: string, include: string[]): MatchSnapshot {
   const snapshot: MatchSnapshot = { dirs: new Set(), links: new Map(), linkDirs: [], targetDirs: new Map() }
-  const found = fg.sync(include, { cwd: watchRoot, dot: true, ignore: [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS] })
+  const found = listProjectFiles(watchRoot, include, [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS])
   for (const entry of found) {
-    const relativePath = toPosix(entry)
+    const relativePath = toPosix(relative(watchRoot, entry))
     for (const dir of ancestorsOf(relativePath)) snapshot.dirs.add(dir)
     const real = realTargetOf(join(watchRoot, relativePath))
     if (real === undefined) continue
@@ -186,16 +188,11 @@ function dirGlobsOf(include: string[]): string[] {
 // Every symlinked directory the include globs reach, empty or not. A file walk cannot find a link with no match yet,
 // so a directory-only walk does: each real target is subscribed, and maps back to its link so a new file there resyncs.
 function scanSymlinkedDirs(watchRoot: string, include: string[], snapshot: MatchSnapshot): void {
-  const dirs = fg.sync(dirGlobsOf(include), {
-    cwd: watchRoot,
-    dot: true,
-    onlyDirectories: true,
-    ignore: [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS],
-  })
-  for (const entry of dirs) {
-    const relativeDir = toPosix(entry)
-    const real = realTargetOf(join(watchRoot, relativeDir))
-    if (real === undefined) continue
+  const inDirScope = picomatch(dirGlobsOf(include), { dot: true })
+  const plan = planProjectWalk(watchRoot, [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS])
+  for (const [alias, real] of plan.links) {
+    const relativeDir = toPosix(relative(plan.root, alias))
+    if (!inDirScope(relativeDir)) continue
     snapshot.targetDirs.set(real, relativeDir)
     snapshot.linkDirs.push(real)
   }
@@ -207,8 +204,9 @@ function scanSymlinkedDirs(watchRoot: string, include: string[], snapshot: Match
 // it runs inside the parcel callback, where a throw would take the process down.
 export function dirHoldsMatch(watchRoot: string, relativeDir: string, isMatch: IncludeMatcher): boolean {
   try {
-    const found = fg.sync('**/*', { cwd: join(watchRoot, relativeDir), dot: true, ignore: ENGINE_IGNORE_GLOBS })
-    return found.some((entry) => isMatch(`${relativeDir}/${toPosix(entry)}`))
+    const subtree = join(watchRoot, relativeDir)
+    const found = listProjectFiles(subtree, ['**/*'], ENGINE_IGNORE_GLOBS)
+    return found.some((entry) => isMatch(`${relativeDir}/${toPosix(relative(subtree, entry))}`))
   } catch {
     return false
   }

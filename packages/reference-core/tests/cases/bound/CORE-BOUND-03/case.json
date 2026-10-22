@@ -1,0 +1,1 @@
+{"id": "CORE-BOUND-03", "name": "a src tree with two self-linked directories and a linked sibling syncs in under 10 s with the CSS of the same tree written out with no links", "sync": false}

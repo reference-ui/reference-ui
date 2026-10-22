@@ -1,17 +1,18 @@
 //! Union backfill: completes a provided `files` list or a drained retention with the in-scope disk
-//! paths it misses. Takes the scope matcher, the set of already-listed paths and the output
-//! accumulator, and walks the root with the same traversal and gates as the collecting scan. Provided
-//! bytes always win on collision, so only missing paths are read from disk. The `BACKFILL_WALKS`
-//! counter records each completed walk for the test-only completeness telemetry.
+//! paths it misses. Takes the scope matcher and the provided sources, claims the canonical identity of
+//! each provided file before the walk, and appends only the disk files no claim covers, so a file the
+//! list carries under one path is never read again under another. Provided bytes always win on
+//! collision. The `BACKFILL_WALKS` counter records each completed walk for the test-only completeness
+//! telemetry.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use rustc_hash::FxHashSet;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::includes::FileMatcher;
 
-use super::walk::{entry_is_dir, is_kept_dir, is_supported_extension, sorted_entries, WalkEntry};
+use super::walk::{canonical_or_self, walk_tree};
 
 /// Union backfill walks completed this process (token path plus the legacy
 /// `files` union). Skipped walks never increment: a complete retention
@@ -26,52 +27,30 @@ pub(super) fn backfill_walks() -> u64 {
     BACKFILL_WALKS.load(Ordering::SeqCst)
 }
 
-/// Count one union walk, then run it from `root`. The counter moves before the walk so a walk that
-/// reads nothing still shows up in the telemetry.
-pub(super) fn walk_root(root: &Path, backfill: &mut Backfill) {
+/// Count one union walk, then run it from `root`, appending to `acc` the disk sources it does not
+/// already carry. The counter moves before the walk so a walk that reads nothing still shows up in the
+/// telemetry.
+pub(super) fn walk_root(root: &Path, matcher: &FileMatcher, acc: &mut Vec<(String, String)>) {
     BACKFILL_WALKS.fetch_add(1, Ordering::SeqCst);
-    backfill_dir(root, backfill);
+    let claimed = claims_of(acc);
+    walk_tree(root, matcher, claimed, acc);
 }
 
-/// Union-fill state: the scope matcher, the listed-path set, and the output.
-pub(super) struct Backfill<'a> {
-    pub(super) matcher: &'a FileMatcher<'a>,
-    pub(super) known: &'a mut FxHashSet<String>,
-    pub(super) acc: &'a mut Vec<(String, String)>,
-}
-
-/// Backfill walk over `dir`: same traversal, IGNORE set, extension gate,
-/// and scope predicate as the collecting scan, so every path the scan
-/// would read is visited, and only unlisted ones read from disk.
-fn backfill_dir(dir: &Path, backfill: &mut Backfill) {
-    for entry in sorted_entries(dir) {
-        handle_backfill_entry(&entry, backfill);
+/// The canonical identity of each provided source: its parent directory's canonical path joined with
+/// the file name. Each parent resolves once, so a long list costs one resolve per directory, not per
+/// file.
+fn claims_of(provided: &[(String, String)]) -> FxHashSet<PathBuf> {
+    let mut parents: FxHashMap<&Path, PathBuf> = FxHashMap::default();
+    let mut claims = FxHashSet::default();
+    for (path, _) in provided {
+        let path = Path::new(path);
+        let (Some(parent), Some(name)) = (path.parent(), path.file_name()) else {
+            continue;
+        };
+        let canon = parents
+            .entry(parent)
+            .or_insert_with(|| canonical_or_self(parent));
+        claims.insert(canon.join(name));
     }
-}
-
-/// Descend into kept directories; read supported in-scope files the
-/// provided list misses, skipping listed paths before any string is built.
-fn handle_backfill_entry(entry: &WalkEntry, backfill: &mut Backfill) {
-    let path = &entry.path;
-    if entry_is_dir(entry.file_type.as_ref(), path) {
-        if is_kept_dir(path) {
-            backfill_dir(path, backfill);
-        }
-        return;
-    }
-    if !is_supported_extension(path) {
-        return;
-    }
-    let path_str = path.to_string_lossy();
-    if !backfill.matcher.matches_file(&path_str) {
-        return;
-    }
-    let known_key: &str = &path_str;
-    if backfill.known.contains(known_key) {
-        return;
-    }
-    if let Ok(content) = std::fs::read_to_string(path) {
-        backfill.known.insert(path_str.to_string());
-        backfill.acc.push((path_str.to_string(), content));
-    }
+    claims
 }

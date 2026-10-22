@@ -9,13 +9,15 @@ import { lstatSync, readlinkSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import fg from 'fast-glob'
 import { RETENTION_EXCLUDE } from '../collect/constants.ts'
+import { listPlannedFiles, planProjectWalk } from '../collect/lib/scan/project-files.ts'
 import type { NativeDiagnostic } from '../native/contract.ts'
 
-/** The positive include patterns that match no file under cwd. Negations never count. */
+/** The positive include patterns that match no file under cwd. Negations never count. The walk is planned once for all. */
 export function deadIncludePatterns(cwd: string, include: readonly string[]): string[] {
-  return include.filter(
-    (pattern) => !pattern.startsWith('!') && fg.sync(pattern, { cwd, ignore: RETENTION_EXCLUDE, dot: true }).length === 0
-  )
+  const positive = include.filter((pattern) => !pattern.startsWith('!'))
+  if (positive.length === 0) return []
+  const plan = planProjectWalk(cwd, RETENTION_EXCLUDE, positive)
+  return positive.filter((pattern) => listPlannedFiles(plan, [pattern]).length === 0)
 }
 
 /** The dangling symlinks the include globs reach, as cwd-relative link paths. Negations subtract. */

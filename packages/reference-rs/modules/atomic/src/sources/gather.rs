@@ -5,12 +5,10 @@
 
 use std::path::Path;
 
-use rustc_hash::FxHashSet;
-
 use crate::includes::{FileMatcher, IncludeScope};
 use crate::{CompileRequest, VirtualSource};
 
-use super::backfill::{walk_root, Backfill};
+use super::backfill::walk_root;
 use super::walk::scan_dir;
 
 /// Provided `files` union-filled from disk when present, otherwise the
@@ -47,9 +45,9 @@ fn filter_virtual_sources(files: &[VirtualSource], matcher: &FileMatcher) -> Vec
 /// equality holds by construction whatever glob engine built the list. With
 /// no root the walk has nowhere to go and this is exactly the legacy
 /// provided filter, so files-only callers keep byte-identical semantics.
-/// The known-check runs inside the walk, so already-listed paths cost a
-/// hash probe and never a transient path string; missing paths still read
-/// from disk in walk order exactly as the two-phase walk did.
+/// The walk claims each provided file's canonical identity first, so a
+/// listed file reached again under another path (a symlinked alias) is never
+/// read twice; missing paths still read from disk in walk order.
 fn union_sources(
     files: &[VirtualSource],
     root: Option<&str>,
@@ -59,12 +57,6 @@ fn union_sources(
     let Some(root_dir) = root else {
         return provided;
     };
-    let mut known: FxHashSet<String> = provided.iter().map(|(path, _)| path.clone()).collect();
-    let mut backfill = Backfill {
-        matcher,
-        known: &mut known,
-        acc: &mut provided,
-    };
-    walk_root(Path::new(root_dir), &mut backfill);
+    walk_root(Path::new(root_dir), matcher, &mut provided);
     provided
 }

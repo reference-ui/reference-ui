@@ -276,16 +276,12 @@ describe('native scan symlinks', () => {
         const ts = await scanFragmentSources(options)
         const native = await scanFragmentSourcesNative(options)
         try {
-          // fg skips the dangling link on both paths; the linked dir and
-          // file verify with the target bytes on both sides.
+          // The listing drops the dangling link on both paths; the linked file verifies with the target
+          // bytes on both sides, and the linked dir's file is listed once, under its real path.
           expect(native.matches).toEqual(ts.matches)
-          expect(asRelative(root, native.matches)).toEqual([
-            'src/linkdir/a.ts',
-            'src/linkfile.ts',
-            'src/real/a.ts',
-          ])
-          expect(native.retention.count).toBe(3)
-          expect(ts.scannedSources.length).toBe(3)
+          expect(asRelative(root, native.matches)).toEqual(['src/linkfile.ts', 'src/real/a.ts'])
+          expect(native.retention.count).toBe(2)
+          expect(ts.scannedSources.length).toBe(2)
           const mod = await atomic()
           const explicit = [
             join(root, 'src/real/a.ts'),

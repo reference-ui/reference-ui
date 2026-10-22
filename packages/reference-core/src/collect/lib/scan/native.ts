@@ -4,7 +4,6 @@
 // splitScan confirms the needle-hits, so match order and selection never drift.
 
 import { sep } from 'node:path'
-import fg from 'fast-glob'
 import {
   RETENTION_EXCLUDE,
   createFunctionPatterns,
@@ -15,6 +14,7 @@ import {
   type DiscoveryPattern,
   type ScannedSource,
 } from './scanner.ts'
+import { listProjectFiles } from './project-files.ts'
 import type { ScanOptions } from '../types.ts'
 
 /**
@@ -180,14 +180,9 @@ export function isCompleteWalkInclude(include: string[], exclude: string[]): boo
 async function scanNative(options: ScanOptions, retain: boolean): Promise<FragmentScanNative> {
   const { include, exclude = RETENTION_EXCLUDE, cwd = process.cwd() } = options
   const patterns = discoveryPatternsOf(options)
-  // Retention glob: dotfiles included (dot:true), node_modules pruned.
-  // fg.sync: the async walker regressed the warm-cache scan.
-  const candidates = fg.sync(include, {
-    cwd,
-    absolute: true,
-    ignore: exclude,
-    dot: true,
-  })
+  // Retention glob: dotfiles included (dot:true), node_modules pruned. The listing applies the walk's symlink rule,
+  // so the native scan sees the same candidate set the compile walk would.
+  const candidates = listProjectFiles(cwd, include, exclude)
   const native = await loadScanModule()
   if (native === null) {
     // Rare path (no addon, or the hatch forced TS): the full TS scan, which

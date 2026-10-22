@@ -6,12 +6,10 @@
 
 use std::path::Path;
 
-use rustc_hash::FxHashSet;
-
 use crate::includes::IncludeScope;
 use crate::CompileRequest;
 
-use super::backfill::{walk_root, Backfill};
+use super::backfill::walk_root;
 use super::gather::gather;
 
 /// How one token-path compile settled the union backfill question: the
@@ -99,13 +97,7 @@ fn collect_drained(
         provided.sort_unstable_by(|a, b| a.0.cmp(&b.0));
         return (provided, BackfillOutcome::Skipped);
     }
-    let mut known: FxHashSet<String> = provided.iter().map(|(path, _)| path.clone()).collect();
-    let mut backfill = Backfill {
-        matcher: &matcher,
-        known: &mut known,
-        acc: &mut provided,
-    };
-    walk_root(Path::new(root_dir), &mut backfill);
+    walk_root(Path::new(root_dir), &matcher, &mut provided);
     provided.sort_unstable_by(|a, b| a.0.cmp(&b.0));
     (provided, BackfillOutcome::Walked)
 }
