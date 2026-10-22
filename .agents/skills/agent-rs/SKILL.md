@@ -156,6 +156,8 @@ Several runs can work on `packages/reference-rs` at the same time, from agent se
 
 The runner is mapped to `pnpm agentrs` (with shortcuts `pnpm agent:rs` and `pnpm rs`). All commands support ergonomic single-letter aliases.
 
+A fresh worktree needs `pnpm agentrs b` and `node packages/reference-core/tools/ensure-dist.mjs` from the root, then `node ../reference-core/dist/bin/ref.js sync` run inside `packages/reference-icons` and again inside `packages/reference-lib`, before the suites go green; `pnpm dev:docs` also needs `pnpm --filter @reference-ui/lib run build`.
+
 ```bash
 # 1. Environment health, toolchain, and CPU gate locks:
 pnpm agentrs s                                               # alias: status
