@@ -36,8 +36,9 @@ window (about 10 s); the bound covers config evaluation only — a
 fragment or tasty pass that never settles is bounded by LC-58's stuck
 line and SIGINT exit alone.
 
-Thirty-one cases carry the group (CORE-WATCH-01 to 31); CORE-WATCH-32 and
-up are unassigned.
+Thirty-two cases carry the group (CORE-WATCH-01 to 32); CORE-WATCH-33 and
+up are unassigned. CORE-WATCH-32 bounds the heap a long watch keeps: forty
+resyncs of an unchanged project must retain under 10 MB.
 
 No webpack dual-consumption leg: Core has no webpack target.
 
@@ -46,4 +47,4 @@ No webpack dual-consumption leg: Core has no webpack target.
 The shared commit-world helper carries the temp-world harness the WATCH-19..23 commit specs share: spawned `ref` CLI,
 commit pause-point driver, folder snapshots, and disposal.
 
-> Search terms: watch lifecycle, watch paint loop, live edit repaint, file mutation paint, watch resync paint, session lock, staged publish, atomic commit, debounce, watch scope, stop signals, types refresh, onResync, P-watch-1, watch port, covered one-shot, watch-state, lock contention, recycled pid, stopping watch, commit rollback, break-lock, file in the way, SIGTERM mid-commit, include glob warning, json failure array, boot edit, dropped events, wedged sync, LC-01, CORE-SYNC-14, CORE-CLI-02
+> Search terms: watch lifecycle, watch paint loop, live edit repaint, file mutation paint, watch resync paint, session lock, staged publish, atomic commit, debounce, watch scope, stop signals, types refresh, onResync, P-watch-1, watch port, covered one-shot, watch-state, lock contention, recycled pid, stopping watch, commit rollback, break-lock, file in the way, SIGTERM mid-commit, include glob warning, json failure array, boot edit, dropped events, wedged sync, LC-01, CORE-SYNC-14, CORE-CLI-02, heap retention, module cache leak
