@@ -1,6 +1,8 @@
 //! Static reach of a refused expansion: the prop names it could add, found without expanding it.
 //! The walk follows the references the tracer would, from the refused declaration, its arguments
 //! and the bindings in scope, reading each declaration and binding once per scope.
+//! The reach of a binding is memoised for the session, keyed by the scope that binds it, and a cut shares
+//! it as a part rather than copying its names, so a cut costs its own body and arguments, not the chain above.
 //! It ends on recursive generics whose arguments grow: each declaration is read once per scope, and the
 //! scopes are only the bindings the trace already holds, so no new scope is ever made.
 //! A cut is lossless when every reached name is already traced; a declaration that fails to load
@@ -10,14 +12,18 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use rustc_hash::{FxHashMap, FxHashSet};
+
 use crate::resolver::model::{TypeDeclaration, TypeEnv, TypeExpr};
 
 use super::context::{is_surface_type_name, TraceContext};
 
-/// The names one refused expansion could contribute, or that its reach could not be bounded.
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+/// What one refused expansion could contribute: the names its own walk read, the shared reach of each
+/// binding it read through the session memo, and whether any declaration in it failed to load.
+#[derive(Debug, Default, Clone)]
 pub struct Reach {
     names: BTreeSet<String>,
+    parts: Vec<Rc<Reach>>,
     unbounded: bool,
 }
 
@@ -26,12 +32,44 @@ impl Reach {
     pub fn absorb(&mut self, other: Reach) {
         self.unbounded |= other.unbounded;
         self.names.extend(other.names);
+        self.parts.extend(other.parts);
     }
 
-    /// True when the refused expansion could add no name the trace does not already hold.
+    /// True when the refused expansion could add no name the trace does not already hold. A part shared
+    /// by several walks is checked once, so the check costs the size of the reach, not of each walk.
     pub fn covered_by(&self, traced: &BTreeSet<String>) -> bool {
-        !self.unbounded && self.names.is_subset(traced)
+        let mut checked = FxHashSet::default();
+        self.covered_within(traced, &mut checked)
     }
+
+    fn covered_within(
+        &self,
+        traced: &BTreeSet<String>,
+        checked: &mut FxHashSet<*const Reach>,
+    ) -> bool {
+        if self.unbounded || !self.names.is_subset(traced) {
+            return false;
+        }
+        for part in &self.parts {
+            if checked.insert(Rc::as_ptr(part)) && !part.covered_within(traced, checked) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+/// Session-wide memo of what each bound parameter's argument reaches. A binding's reach depends only on its
+/// argument and the scope that wrote it, so each binding is walked once per trace. The memo holds each scope
+/// it is keyed on, so the address of a key's scope cannot be reused by a different scope while the memo lives.
+#[derive(Default)]
+pub struct ReachMemo {
+    bindings: FxHashMap<(usize, String), MemoEntry>,
+}
+
+struct MemoEntry {
+    _scope: TypeEnv,
+    reach: Rc<Reach>,
 }
 
 /// The names a refused expansion could contribute: its own declaration, the arguments written at the
@@ -45,12 +83,7 @@ pub(super) fn cut_reach(
 ) -> Reach {
     let caller = ctx.module_path;
     let env = ctx.env;
-    let mut walk = Walk {
-        ctx,
-        reach: Reach::default(),
-        seen_decls: BTreeSet::new(),
-        seen_bindings: BTreeSet::new(),
-    };
+    let mut walk = Walk::new(ctx);
     walk.visit_decl(module, declaration, env);
     for arg in args {
         walk.expr(
@@ -108,12 +141,21 @@ struct Scope<'s> {
     skip: &'s [String],
 }
 
-/// One reach walk. Declarations are keyed by module, name and scope; bindings by scope and name.
+/// One reach walk. Declarations are keyed by module, name and scope, so each is read once per scope.
 struct Walk<'c, 'a> {
     ctx: &'c mut TraceContext<'a>,
     reach: Reach,
     seen_decls: BTreeSet<(PathBuf, String, usize)>,
-    seen_bindings: BTreeSet<(usize, String)>,
+}
+
+impl<'c, 'a> Walk<'c, 'a> {
+    fn new(ctx: &'c mut TraceContext<'a>) -> Self {
+        Self {
+            ctx,
+            reach: Reach::default(),
+            seen_decls: BTreeSet::new(),
+        }
+    }
 }
 
 impl Walk<'_, '_> {
@@ -134,7 +176,8 @@ impl Walk<'_, '_> {
     }
 
     /// A named reference: surface names are pruned when the trace asks for it, arguments are read where
-    /// they are written, and a parameter of the declaration being read is left to its argument.
+    /// they are written, and a parameter of the declaration being read is left to its argument. A name the
+    /// scope binds shares that binding's memoised reach.
     fn reference(&mut self, name: &str, args: &[TypeExpr], at: Scope<'_>) {
         if self.ctx.session.prune_surface && is_surface_type_name(name) {
             return;
@@ -145,23 +188,38 @@ impl Walk<'_, '_> {
         if at.skip.iter().any(|param| param.as_str() == name) {
             return;
         }
-        if let Some(bound) = at.env.get(name) {
-            if self
-                .seen_bindings
-                .insert((env_key(at.env), name.to_string()))
-            {
-                self.expr(
-                    &bound.expr,
-                    Scope {
-                        module: &bound.module_path,
-                        env: &bound.env,
-                        skip: &[],
-                    },
-                );
-            }
+        if at.env.contains_key(name) {
+            let part = self.binding_reach(at.env, name);
+            self.reach.parts.push(part);
             return;
         }
         self.declaration(name, at);
+    }
+
+    /// The memoised reach of the argument that `name` binds in `scope`. The first request walks the argument
+    /// in its own scope from a fresh declaration set, so the memo holds the argument's whole reach.
+    fn binding_reach(&mut self, scope: &TypeEnv, name: &str) -> Rc<Reach> {
+        let key = (env_key(scope), name.to_string());
+        if let Some(entry) = self.ctx.session.reach_memo.bindings.get(&key) {
+            return Rc::clone(&entry.reach);
+        }
+        let Some(bound) = scope.get(name) else {
+            return Rc::new(Reach::default());
+        };
+        let at = Scope {
+            module: &bound.module_path,
+            env: &bound.env,
+            skip: &[],
+        };
+        let reach = Rc::new(walk_fresh(self.ctx, &bound.expr, at));
+        self.ctx.session.reach_memo.bindings.insert(
+            key,
+            MemoEntry {
+                _scope: Rc::clone(scope),
+                reach: Rc::clone(&reach),
+            },
+        );
+        reach
     }
 
     /// Resolve a named declaration the way the tracer does. A module that fails to load leaves its
@@ -206,6 +264,13 @@ impl Walk<'_, '_> {
             }
         }
     }
+}
+
+/// Walk one expression from a fresh declaration set, so the reach it returns is complete on its own.
+fn walk_fresh(ctx: &mut TraceContext<'_>, expr: &TypeExpr, at: Scope<'_>) -> Reach {
+    let mut walk = Walk::new(ctx);
+    walk.expr(expr, at);
+    walk.reach
 }
 
 /// Identity of a scope: bindings are shared behind one pointer, so the address names the scope.

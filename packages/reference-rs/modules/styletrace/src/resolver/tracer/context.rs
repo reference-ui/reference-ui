@@ -20,7 +20,7 @@ use crate::resolver::model::{
 };
 use crate::resolver::parser::parse_module;
 use super::guard::{ExpansionGuard, GuardCut};
-use super::reach::Reach;
+use super::reach::{Reach, ReachMemo};
 use crate::resolver::path::{
     is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
     resolve_specifier,
@@ -48,6 +48,8 @@ pub struct TraceSession {
     pub guard: ExpansionGuard,
     /// Every distinct limit cut of the session, in the order the walk first met it.
     pub cuts: Vec<CutRecord>,
+    /// Reach of each bound argument, shared by every cut that reads it.
+    pub reach_memo: ReachMemo,
 }
 
 impl TraceSession {
@@ -60,6 +62,7 @@ impl TraceSession {
             prune_surface: false,
             guard: ExpansionGuard::default(),
             cuts: Vec::new(),
+            reach_memo: ReachMemo::default(),
         }
     }
 
