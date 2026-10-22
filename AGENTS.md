@@ -94,7 +94,7 @@ text with `npx playwright trace open <trace.zip>` then `errors` / `actions` /
 pnpm agent status
 
 # 1. Fast native Playwright for one kept matrix suite (runs unthrottled PRI 46, with port 4173 cleanup, queue locks, and exit pass signals):
-pnpm agent pw chain/T8                 # matrix/tests/chain/T8
+pnpm agent pw chain/T6                 # matrix/tests/chain/T6
 
 # Native Vitest (unit tests):
 pnpm agent vt packages/reference-mcp   # MCP server unit tests

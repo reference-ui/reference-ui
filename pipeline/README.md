@@ -16,7 +16,7 @@ pnpm setup:local -- --dry-run   # print without executing
 ```sh
 pnpm pipeline build            # build public packages, pack, load into local Verdaccio
 pnpm pipeline test             # matrix fanout across React × bundler (see matrix README)
-pnpm pipeline test --packages=@matrix/chain-t8 --react=react19
+pnpm pipeline test --packages=@matrix/chain-t6 --react=react19
 pnpm pipeline setup --sync     # regenerate pipeline-managed matrix fixture files
 pnpm pipeline registry start   # run the managed Verdaccio registry (inspection/debugging)
 pnpm pipeline release          # publish staged release tarballs to npm (root alias: pnpm release)

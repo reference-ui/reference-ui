@@ -28,7 +28,7 @@ case, being added to CORE-LAYERS-03 or CORE-LAYERS-14. The load-time
 named rejection is pinned by CORE-LAYERS-14 through a real `ref sync`.
 BAS-LAYER-01..04 are
 not proven here: their rule needs passing `base_system` unit tests, and
-that module has no layers input yet. Matrix `chain-t2` and `chain-t8`
+that module has no layers input yet. Matrix `chain-t2` and `chain-t6`
 remain secondary proof for bundler and runtime spread; these cases are
 the primary layers proof.
 

@@ -273,7 +273,7 @@ export function listMatrixPackageDefinitions(packageNames?: readonly string[]): 
   }
 
   // No matrix.json at this level — treat the directory as a group container
-  // and descend recursively (e.g. matrix/tests/chain/T2, matrix/tests/chain/T8).
+  // and descend recursively (e.g. matrix/tests/chain/T2, matrix/tests/chain/T6).
   const collectFromDir = (dir: string): MatrixPackageDefinition[] => {
     if (existsSync(matrixConfigPath(dir))) {
       if (!shouldParseDir(dir)) {

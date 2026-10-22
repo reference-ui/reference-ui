@@ -37,14 +37,13 @@ Ordering: composition is bucketed, never interleaved. Upstream CSS
 assembles `extends` first, then `layers`; the top-level `@layer` prelude
 reads upstream names first, then the local system layer, which is always
 present and always last. T9 asserts the prelude order on a 2-extends /
-2-layers mix. A same-library-in-both-buckets line is allow-and-document
-(T8, coded): the package may appear in both buckets, upstream CSS is not
-deduped, the extends-side fragment is adopted and the layers side adds
-the CSS again.
+2-layers mix. A system named in both `extends` and `layers` is rejected at
+load, and the error names it: `extends` already includes everything
+`layers` gives. CORE-LAYERS-14 pins that through a real `ref sync`.
 
 ## The kept gate
 
-Fifteen suites stay, each installing from packed tarballs via the staged
+Fourteen suites stay, each installing from packed tarballs via the staged
 registry with setup in a virgin container on every run, so each one
 re-proves the install dimension. Everything provable natively lives in
 Core cases or Rust seam tests instead.
@@ -56,7 +55,6 @@ Core cases or Rust seam tests instead.
 | `@matrix/chain-t3` | Hybrid: `extends` and `layers` at one boundary. |
 | `@matrix/chain-t6` | Transitive extend: the app extends only the outer package, which republishes its base. Declares `vite7` and `webpack5`, the only kept suite with a webpack leg. |
 | `@matrix/chain-t7` | Diamond: two upstreams sharing one base, both extended. |
-| `@matrix/chain-t8` | Policy proof: the same upstream in `extends` and `layers` at once (coded allow-and-document). |
 | `@matrix/chain-t9` | Full mix: 2 extends + 2 layers with the `@layer` prelude order asserted. |
 | `@matrix/chain-t10` | Extend chain plus an app-level layered library; layered tokens must not leak. |
 | `@matrix/chain-t11` | Parallel extend chains: two independent transitive paths at one boundary. |
@@ -70,7 +68,7 @@ Core cases or Rust seam tests instead.
 Still uncovered: T4 (parallel extends) and T5 (parallel layers) have no
 tiers, and depth-3 chains have no tier. The mixed tiers (T3/T9/T10/T12/
 T13/T16/T17/T18) exercise `layers` legs in combination; T2 is the
-isolated single-mode proof. `chain-t2` and `chain-t8` double as secondary
+isolated single-mode proof. `chain-t2` and `chain-t6` double as secondary
 Core proof for bundler and runtime spread.
 
 Run the gate, one package at a time:
@@ -81,7 +79,6 @@ pnpm agent test --packages=@matrix/chain-t2
 pnpm agent test --packages=@matrix/chain-t3
 pnpm agent test --packages=@matrix/chain-t6 --full   # runs the vite7 and webpack5 legs; a plain run is vite7 only
 pnpm agent test --packages=@matrix/chain-t7
-pnpm agent test --packages=@matrix/chain-t8
 pnpm agent test --packages=@matrix/chain-t9
 pnpm agent test --packages=@matrix/chain-t10
 pnpm agent test --packages=@matrix/chain-t11

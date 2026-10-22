@@ -129,10 +129,10 @@ describe('matrix execution plan', () => {
   it('plans the kept chain-gate packages', () => {
     // Filtered: unfiltered fanout over the live tree is sensitive to a half-finished migration
     // (the retired watch suite still sits in the tree until it is deleted). The kept gate exists in both trees.
-    const names = planMatrixExecution({ packageNames: ['@matrix/chain-t2', '@matrix/chain-t8', '@matrix/mcp'] }).jobs.map(job => job.package.workspacePackage.name)
+    const names = planMatrixExecution({ packageNames: ['@matrix/chain-t2', '@matrix/chain-t6', '@matrix/mcp'] }).jobs.map(job => job.package.workspacePackage.name)
 
     assert.equal(names.includes('@matrix/chain-t2'), true)
-    assert.equal(names.includes('@matrix/chain-t8'), true)
+    assert.equal(names.includes('@matrix/chain-t6'), true)
     assert.equal(names.includes('@matrix/mcp'), true)
   })
 
