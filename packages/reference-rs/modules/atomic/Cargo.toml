@@ -73,5 +73,9 @@ name = "scan_retention"
 path = "tests/rust/scan_retention.rs"
 
 [[test]]
+name = "screen_once"
+path = "tests/rust/screen_once.rs"
+
+[[test]]
 name = "serializer_parity"
 path = "tests/rust/serializer_parity.rs"
