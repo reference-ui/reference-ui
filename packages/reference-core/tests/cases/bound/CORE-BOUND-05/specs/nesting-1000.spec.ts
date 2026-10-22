@@ -1,8 +1,8 @@
-// nesting-1000.spec.ts — the sync side of CORE-BOUND-05: a real ref sync of 71 files with one file nested 1,000 levels, just
-// inside the gate. It takes { case } from the runner and syncs a temp copy of the committed world, owned by this spec, through
-// the spawned bin under a 10 s kill budget. Oxc parses src/deep.ts, so the child must end with no signal and exit 0 inside the
-// budget, and the published stylesheet must carry the blue of the small files and the red of the deep value. Emits nothing on
-// success; throws naming the failed leg on failure. The temp copy is removed in a finally.
+// nesting-1000.spec.ts — the sync side of CORE-BOUND-05, nested 1,000 levels, just inside the gate.
+// It syncs 71 files, one of them nested 1,000 levels, through the spawned bin under a 10 s kill budget. It takes { case }
+// from the runner and syncs a temp copy that it owns. Oxc parses src/deep.ts, so the child must end with no signal and exit 0
+// inside the budget, and the published stylesheet must carry the blue of the small files and the red of the deep value.
+// Emits nothing on success; throws naming the failed leg on failure. The temp copy is removed in a finally.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, rmSync } from 'node:fs';
