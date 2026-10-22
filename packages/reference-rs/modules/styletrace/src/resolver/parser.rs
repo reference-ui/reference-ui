@@ -2,7 +2,8 @@
 //!
 //! This root walks the module's top-level statements and records imports, re-exports, `export *` sources and
 //! declarations. Type lowering lives in `parser/type_expr.rs` and the shared text helpers in `parser/names.rs`.
-//! It takes a path and its source text, and emits a `ParsedModule`, or a parse error when oxc reports any.
+//! It takes a path and its source text, and emits a `ParsedModule`, or a parse error when oxc reports any or the
+//! nesting gate refuses the source before oxc parses it.
 
 mod names;
 mod type_expr;
@@ -16,7 +17,7 @@ use oxc_ast::ast::{
     Declaration, ExportNamedDeclaration, ImportDeclaration, ImportDeclarationSpecifier,
     ImportOrExportKind, Statement, TSInterfaceDeclaration, TSTypeAliasDeclaration,
 };
-use oxc_parser::Parser;
+use shared::parse::parse_bounded;
 use oxc_span::{GetSpan, SourceType};
 
 use super::error::StyleTraceError;
@@ -35,7 +36,8 @@ struct ParseContext<'a> {
 pub(super) fn parse_module(path: &Path, source: &str) -> Result<ParsedModule, StyleTraceError> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
-    let parsed = Parser::new(&allocator, source, source_type).parse();
+    let parsed = parse_bounded(&allocator, source, source_type)
+        .map_err(|refusal| StyleTraceError::new(refusal.message()))?;
 
     if !parsed.errors.is_empty() {
         return Err(StyleTraceError::new(format!(

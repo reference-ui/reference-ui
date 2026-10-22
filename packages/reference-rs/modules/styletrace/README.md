@@ -13,6 +13,8 @@
 
 Entries that fail to parse or read yield one `STT-W-SKIPPED-FILE` each and siblings still trace; an unreadable source root or a declaration root with no StyleProps entrypoint refuses the request with a coded throw, never an outcome diagnostic. Codes are wire contract: never rename, never remove. Meanings and raise sites live in the shared registry.
 
+A source nested deeper than 1,024 levels is refused by the nesting gate in `shared` before Oxc parses it, and it is skipped the same way: one `STT-W-SKIPPED-FILE` names the file with `StyleTrace: nesting deeper than 1024 levels at line L` as its message, and its siblings still trace.
+
 | Code | Severity | Trigger |
 | ---- | -------- | ------- |
 | `STT-W-SKIPPED-FILE` | warning | one file unreadable or unparsable; siblings kept |

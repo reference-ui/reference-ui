@@ -25,7 +25,7 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     ExportAllDeclaration, ImportOrExportKind, Program, Statement,
 };
-use oxc_parser::Parser;
+use shared::parse::parse_bounded;
 use oxc_span::{GetSpan, SourceType};
 
 use crate::analysis::model::{
@@ -80,7 +80,8 @@ pub(super) fn parse_trace_module(
     // for every extension, so a file the main phase accepts never fails
     // the trace re-parse (C1 keep-alive soundness).
     let source_type = SourceType::from_path(path).unwrap_or_default().with_typescript(true);
-    let parsed = Parser::new(&allocator, &source, source_type).parse();
+    let parsed = parse_bounded(&allocator, &source, source_type)
+        .map_err(|refusal| StyleTraceError::new(refusal.message()))?;
     if !parsed.errors.is_empty() {
         return Err(StyleTraceError::new(format!(
             "failed to parse {}: {} parse error(s)",
