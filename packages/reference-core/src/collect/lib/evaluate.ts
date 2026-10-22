@@ -1,10 +1,8 @@
 // Scan, bundle, and evaluate-once runner for Core fragments.
 // It takes a project root plus config and emits the evaluated system spec.
 
-import { randomBytes } from 'node:crypto'
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { constants as vmConstants, runInThisContext } from 'node:vm'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import type { ReferenceUIConfig } from '../../config/types.ts'
 import { fragmentNodesOf, linearizeFragmentNodes } from '../../system/base/fragments.ts'
@@ -205,12 +203,21 @@ function createEvaluationScript(
     .join('\n')
 }
 
-function evaluationTempPath(cwd: string): string {
-  return join(
-    getOutDirPath(cwd),
-    'tmp',
-    `fragments-eval-${Date.now()}-${randomBytes(6).toString('hex')}.mjs`
-  )
+// The name stack traces give the evaluation script. Nothing is written there: the script runs in memory.
+function evaluationFilename(cwd: string): string {
+  return join(getOutDirPath(cwd), 'tmp', 'fragments-eval.js')
+}
+
+// The joined IIFEs run as one classic script, never an ES module: Node keeps every module record
+// for the life of the process, so a module per sync leaked the whole script on each watch resync,
+// while a script's code is collected once nothing references it. The function wrapper gives the
+// script the module's strict mode and keeps its declarations out of the global scope, and dynamic
+// import() still resolves through the main loader. The prefix shares line 1, so line numbers hold.
+function runEvaluationScript(cwd: string, script: string): void {
+  runInThisContext(`(function () { 'use strict'; ${script}\n})()`, {
+    filename: evaluationFilename(cwd),
+    importModuleDynamically: vmConstants.USE_MAIN_CONTEXT_DEFAULT_LOADER,
+  })
 }
 
 async function executeEvaluationScript(
@@ -218,19 +225,17 @@ async function executeEvaluationScript(
   collectors: EvaluateCollector[],
   script: string
 ): Promise<CollectedBucket[]> {
-  const tempPath = evaluationTempPath(cwd)
   try {
-    mkdirSync(join(getOutDirPath(cwd), 'tmp'), { recursive: true })
     for (const collector of collectors) collector.init()
-    writeFileSync(tempPath, script, 'utf-8')
-    await import(pathToFileURL(tempPath).href)
+    runEvaluationScript(cwd, script)
+    // The module import resolved only after the microtasks its evaluation queued; drain them the same way.
+    await new Promise(resolve => setImmediate(resolve))
     return collectors.map(collector => ({
       name: collector.config.name,
       fragments: collector.getFragments(),
     }))
   } finally {
     for (const collector of collectors) collector.cleanup()
-    rmSync(tempPath, { force: true })
   }
 }
 

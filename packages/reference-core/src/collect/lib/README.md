@@ -15,7 +15,8 @@ which throws a named error on first read, because the system being
 built has no published form yet.
 Preparation gathers upstream portable bundles, local IIFEs, and the
 retention ref; evaluation runs the whole assembly exactly once as a
-single Node script with upstream bundles first (the `globalCss`
+single Node `vm` script (never a module, which Node would keep for
+the life of a watch) with upstream bundles first (the `globalCss`
 collector suppressed, since upstream global CSS ships through the
 streams merge) and local bundles after, each source-tagged.
 Merging resolves later-wins with recursive objects, wholesale arrays,
