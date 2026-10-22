@@ -175,13 +175,10 @@ fn lane_start_refused_at_every_size_names_the_floor() {
             .map(|err| err.to_string())
     });
     match refusal {
-        Some(text) => assert!(text.contains("last stack tried: 8 MiB"), "{text}"),
+        Some(text) => assert!(text.contains("last stack tried: 16 MiB"), "{text}"),
         None => panic!("every start was refused, yet a lane started"),
     }
-    assert_eq!(
-        take_spawn_attempts(),
-        [64 << 20, 32 << 20, 16 << 20, 8 << 20]
-    );
+    assert_eq!(take_spawn_attempts(), [64 << 20, 32 << 20, 16 << 20]);
 }
 
 #[test]

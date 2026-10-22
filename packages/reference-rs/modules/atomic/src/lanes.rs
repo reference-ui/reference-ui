@@ -19,8 +19,9 @@ use std::thread::{Builder, Scope, ScopedJoinHandle};
 /// Stack for each spawned lane: deep input recursion stays inside its lane instead of overflowing the 2 MiB default.
 pub(crate) const LANE_STACK: usize = 64 << 20;
 
-/// Smallest stack a refused lane start retries at. Halving stops here, so a start refused at this size panics.
-const LANE_STACK_FLOOR: usize = 8 << 20;
+/// Smallest stack a refused lane start retries at. Halving stops here, so a start refused at this size panics. It is 16 MiB
+/// because the nesting gate's backstops allow 8,192 levels, which Oxc needs up to 16 MiB to recurse through.
+const LANE_STACK_FLOOR: usize = 16 << 20;
 
 /// Styling files below this count never leave the caller (front phase).
 pub(crate) const FRONT_SERIAL_BELOW: usize = 64;

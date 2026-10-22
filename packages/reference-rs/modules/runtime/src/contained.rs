@@ -15,8 +15,9 @@ use napi::{Error, Result};
 /// Stack reserved for one export call. It is virtual memory, committed only as deep recursion touches it.
 pub const NATIVE_STACK: usize = 256 << 20;
 
-/// Smallest stack a refused start retries at. Halving stops here, so a start refused at this size is reported.
-const STACK_FLOOR: usize = 8 << 20;
+/// Smallest stack a refused start retries at. Halving stops here, so a start refused at this size is reported. It is 16 MiB
+/// because the nesting gate's backstops allow 8,192 levels, which Oxc needs up to 16 MiB to recurse through.
+const STACK_FLOOR: usize = 16 << 20;
 
 /// Runs `body` on a new thread with `stack` bytes of stack and joins it before returning. A panic in the
 /// body becomes `native panic in <name>: <payload>`; a thread the OS refuses to start is retried smaller
@@ -201,14 +202,14 @@ mod tests {
         match run("probe", NATIVE_STACK, || Ok(7u8)) {
             Ok(value) => panic!("a refused start ran the body: {value}"),
             Err(err) => assert!(
-                err.reason.contains("last stack tried: 8 MiB"),
+                err.reason.contains("last stack tried: 16 MiB"),
                 "{}",
                 err.reason
             ),
         }
         assert_eq!(
             take_spawn_attempts(),
-            [256 * MIB, 128 * MIB, 64 * MIB, 32 * MIB, 16 * MIB, 8 * MIB]
+            [256 * MIB, 128 * MIB, 64 * MIB, 32 * MIB, 16 * MIB]
         );
     }
 
