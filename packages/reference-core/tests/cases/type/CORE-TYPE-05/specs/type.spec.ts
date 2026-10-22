@@ -20,10 +20,10 @@ interface SpecInput {
 const MAX_LINES = 40;
 
 // A fragment file against the generated system entry: config plus every
-// authoring call. Materialized into a temp dir at spec time because it cannot
-// live in the repo: the harness pre-run typecheck resolves
-// @reference-ui/system to the stable surface, whose wide shapes (one-argument
-// font) differ from the generated signatures.
+// authoring call. Materialized into a temp dir at spec time so the repo never
+// carries it: the pre-run typecheck resolves @reference-ui/system to the stable
+// surface, so a fragment checked there would prove the surface, not the generated
+// entry this case is about.
 const FRAGMENT = `import {
   baseSystem,
   defineConfig,
@@ -37,7 +37,7 @@ const FRAGMENT = `import {
 export default defineConfig({ name: 'core-type-frag', include: ['src/**/*.{js,ts,tsx}'] })
 
 tokens({ colors: { brand: { value: '#7c3aed' } } })
-font('sans', { value: 'Inter, sans-serif', weights: { bold: '700' } })
+font('sans', { value: 'Inter, sans-serif', fontFace: { src: 'url(/fonts/inter.woff2)' }, weights: { bold: '700' } })
 keyframes({ fade: { from: { opacity: '0' }, to: { opacity: '1' } } })
 globalCss({ body: { margin: '0' } })
 const one: string = getRhythm(2)

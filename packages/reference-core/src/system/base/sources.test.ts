@@ -155,7 +155,6 @@ export interface ReferenceTokenLeaf {
   light?: unknown
   dark?: unknown
   description?: string
-  [key: string]: unknown
 }
 export interface ReferenceTokenConfig {
   [key: string]: ReferenceTokenLeaf | ReferenceTokenConfig
@@ -297,9 +296,9 @@ const PROBE_TSCONFIG = {
 
 // The probe reads the emitted entry as system.d.mts. The drift lines pin each
 // emitted authoring type to core's own, in both directions; the calls below
-// check that valid shapes pass and that a wrong font weight, a missing fontFace
-// and a wrong keyframe value fail. TokenConfig is not probed for typos: core's leaf
-// keeps an index signature, so an unknown leaf key is still a valid leaf.
+// check that valid shapes pass and that a misspelled token leaf key, a wrong font
+// weight, a missing fontFace and a wrong keyframe value fail. ReferenceTokenLeaf
+// names its keys and has no index signature, so an unknown leaf key is an error.
 const AUTHORING_PROBE = [
   "import { font, globalCss, keyframes, tokens } from './system.mjs'",
   "import type { FontOptions, GlobalCssConfig, KeyframesConfig, TokenConfig } from './system.mjs'",
@@ -326,6 +325,8 @@ const AUTHORING_PROBE = [
   "font('sans', { value: 'Inter', weights: { bold: '700' } })",
   '// @ts-expect-error opacity must be a string or a number',
   "keyframes({ fade: { from: { opacity: true } } })",
+  '// @ts-expect-error valu is not a token leaf key',
+  "tokens({ colors: { brand: { valu: '#f00' } } })",
 ]
 
 describe('system entry authoring types under strict tsc', () => {

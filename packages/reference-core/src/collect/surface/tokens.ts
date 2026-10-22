@@ -8,7 +8,6 @@ export interface ReferenceTokenLeaf {
   light?: unknown
   dark?: unknown
   description?: string
-  [key: string]: unknown
 }
 
 export interface ReferenceTokenConfig {

@@ -87,14 +87,12 @@ export function systemEntrySource(): string {
 
 // Core's authoring types for the four calls, copied from collect/surface. The
 // generated package depends on nothing, so the entry carries its own copies.
-// ReferenceTokenLeaf keeps core's index signature, so an unknown leaf key is still a valid leaf.
 const AUTHORING_TYPES = [
   'export interface ReferenceTokenLeaf {',
   '  value?: unknown',
   '  light?: unknown',
   '  dark?: unknown',
   '  description?: string',
-  '  [key: string]: unknown',
   '}',
   'export interface ReferenceTokenConfig {',
   '  [key: string]: ReferenceTokenLeaf | ReferenceTokenConfig',
