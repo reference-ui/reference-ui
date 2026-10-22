@@ -3,11 +3,13 @@
  * A row names an export and an input (malformed JSON, a 200-deep JSON document, an empty string, or a root that does not exist).
  * The child loads the addon through the dist's getReferenceNative and calls the export inside a try/catch, so the outcome is a JS Error or a string payload.
  * A signal, a timeout, a non-zero exit, a missing export or a non-Error throw fails the row, and the message names the export and the input.
+ * Each row first waits briefly for dist/index.mjs, which a concurrent build:js removes while it renames outputs in; a child that still
+ * cannot load it fails and names that build.
  */
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { runIsolated } from '../../../testing/isolated.js'
 import type { IsolatedRun } from '../../../testing/isolated.js'
@@ -38,6 +40,12 @@ interface Row {
 }
 
 const TIMEOUT_MS = 10_000
+const DIST_WAIT_MS = 2_000
+const DIST_RETRY_MS = 20
+// build:js rewrites packages/reference-rs/dist in place: build-bundle removes the old outputs, then renames the new ones in.
+const CONCURRENT_BUILD_HINT =
+  'build:js rewrites packages/reference-rs/dist in place (build-bundle removes the old outputs, then renames the new ones in), so a build that runs at the same time leaves dist/index.mjs absent. Rerun once no other build:js is running.'
+const SLEEP_CELL = new Int32Array(new SharedArrayBuffer(4))
 const MALFORMED_JSON = '{"unterminated": [1, 2'
 // Two 200-level shapes. Each export's parser stops at a different point (recursion limit, type mismatch or missing field),
 // so an array nest and an object nest are both needed to reach the deep path.
@@ -116,8 +124,31 @@ function stderrTail(run: IsolatedRun<unknown>): string {
 function childFailure(run: IsolatedRun<ProbeOutcome>): string {
   if (run.timedOut) return `timed out and was killed after ${run.ms} ms`
   if (run.signal !== null) return `ended by signal ${run.signal}${stderrTail(run)}`
+  if (missingDistIndex(run)) return `${DIST_INDEX} was missing when the child loaded it; ${CONCURRENT_BUILD_HINT}`
   if (run.status !== 0) return `exited with status ${run.status}${stderrTail(run)}`
   return 'exited 0 without writing an outcome'
+}
+
+/** The child failed to import dist/index.mjs: the probe loads the addon through it, so the file was absent at that moment. */
+function missingDistIndex(run: IsolatedRun<ProbeOutcome>): boolean {
+  return run.status !== 0 && run.stderr.includes(DIST_INDEX) && /ERR_MODULE_NOT_FOUND|Cannot find module/.test(run.stderr)
+}
+
+function sleepMs(ms: number): void {
+  Atomics.wait(SLEEP_CELL, 0, 0, ms)
+}
+
+/**
+ * Returns once `file` exists. A build:js removes dist/index.mjs for a moment while it renames the new outputs in, so a row
+ * that finds the file absent waits for it to return; a file still missing after the budget fails with the cause named.
+ */
+function awaitFile(file: string, budgetMs: number): void {
+  for (let waited = 0; !fs.existsSync(file); waited += DIST_RETRY_MS) {
+    if (waited >= budgetMs) {
+      throw new Error(`${file} is still missing after waiting up to ${budgetMs} ms; ${CONCURRENT_BUILD_HINT}`)
+    }
+    sleepMs(DIST_RETRY_MS)
+  }
 }
 
 /** Why a written outcome is not a boundary pass, or null when the export threw a JS Error or returned a string. */
@@ -157,6 +188,7 @@ describe('native boundary smoke', () => {
   for (const row of ROWS) {
     it(`${row.export} with ${row.input}`, () => {
       if (!scratch) throw new Error('the scratch directory was not created')
+      awaitFile(DIST_INDEX, DIST_WAIT_MS)
       const run = runIsolated<ProbeOutcome>({
         module: scratch.probe,
         fn: 'probe',
@@ -166,4 +198,39 @@ describe('native boundary smoke', () => {
       assertBoundary(row, run)
     })
   }
+})
+
+describe('the failure messages and the dist wait', () => {
+  it('names a dist/index.mjs that was missing when the child loaded it as a concurrent build', () => {
+    const run: IsolatedRun<ProbeOutcome> = {
+      result: undefined,
+      signal: null,
+      status: 1,
+      ms: 41,
+      timedOut: false,
+      stderr: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '${DIST_INDEX}' imported from /tmp/probe.mjs`,
+    }
+    const message = childFailure(run)
+    expect(message).toContain(DIST_INDEX)
+    expect(message).toContain('build:js')
+    expect(message).not.toContain('exited with status')
+  })
+
+  it('keeps the exit status and stderr for any other non-zero exit', () => {
+    const run: IsolatedRun<ProbeOutcome> = {
+      result: undefined,
+      signal: null,
+      status: 1,
+      ms: 41,
+      timedOut: false,
+      stderr: 'SyntaxError: boom',
+    }
+    expect(childFailure(run)).toBe('exited with status 1; stderr: SyntaxError: boom')
+  })
+
+  it('returns at once for a file that exists, and gives up with the cause named for one that stays missing', () => {
+    expect(() => awaitFile(fileURLToPath(import.meta.url), 0)).not.toThrow()
+    const missing = path.join(os.tmpdir(), `contained-missing-${process.pid}-${Date.now()}`)
+    expect(() => awaitFile(missing, 30)).toThrow(/is still missing after waiting up to 30 ms.*build:js/)
+  })
 })
