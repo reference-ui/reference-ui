@@ -30,7 +30,8 @@ The letter after the prefix gives the severity.
 
 The prefix names the part of sync that raised the code: `ATM` for the style
 compiler, `TGN` for the generated types, `TST` for the API reference build,
-and `BSS` for your config and the systems you extend.
+`STT` for the component scan, and `BSS` for your config and the systems you
+extend.
 
 ## Where they appear
 
@@ -261,6 +262,10 @@ the code in any tooling you build.
   into an argument that names no component, like the result of a call. Sync
   skips the component it creates, so its style props get no CSS. Pass a
   component by name in that argument.
+- `STT-E-SCAN-FAILED`: sync cannot read a folder in the source tree it scans,
+  so it refuses the style trace and fails. The message names the folder and
+  the OS error. Make the folder readable, or fix the path if it does not
+  exist.
 - `STT-E-UNRESOLVED-SURFACE`: sync cannot build the StyleProps surface it
   traces against, so it refuses the trace and fails. There are two causes,
   and the message says which one applies. If sync finds no sync root, no
