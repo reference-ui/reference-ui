@@ -108,6 +108,8 @@ describe('managed bundlers', () => {
         "            loader: 'ts-loader',",
         '            options: {',
         '              transpileOnly: true,',
+        '              // typescript 7 has no JS compiler API, so ts-loader compiles through the 6.x alias.',
+        "              compiler: require.resolve('typescript-6'),",
         '            },',
         '          },',
         '        },',

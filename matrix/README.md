@@ -1,8 +1,8 @@
 # Reference UI Matrix
 
-Consumer-style proving ground for what local tests and a single environment
-cannot cover: multi-package `extends`/`layers` topologies and the MCP tool
-surface, each run across bundlers and React runtimes by the Dagger pipeline.
+Consumer-style proving ground for multi-package `extends`/`layers` topologies and the MCP surface.
+It proves what local tests and a single environment cannot cover, run across bundlers and React
+runtimes by the Dagger pipeline.
 
 The shared `@fixtures/*` packages are the packed dependencies the suites
 consume. The chain suites (T1–T18) are each a small app with a UI-config
@@ -54,7 +54,7 @@ Core cases or Rust seam tests instead.
 | `@matrix/chain-t1` | Single extend: one upstream contributes fragment + tokens/types + portable CSS. |
 | `@matrix/chain-t2` | Single layer: portable CSS only, no token/type adoption. Sole single-mode `layers` prover. |
 | `@matrix/chain-t3` | Hybrid: `extends` and `layers` at one boundary. |
-| `@matrix/chain-t6` | Transitive extend: the app extends only the outer package, which republishes its base. |
+| `@matrix/chain-t6` | Transitive extend: the app extends only the outer package, which republishes its base. Declares `vite7` and `webpack5`, the only kept suite with a webpack leg. |
 | `@matrix/chain-t7` | Diamond: two upstreams sharing one base, both extended. |
 | `@matrix/chain-t8` | Policy proof: the same upstream in `extends` and `layers` at once (coded allow-and-document). |
 | `@matrix/chain-t9` | Full mix: 2 extends + 2 layers with the `@layer` prelude order asserted. |
@@ -79,7 +79,7 @@ Run the gate, one package at a time:
 pnpm agent test --packages=@matrix/chain-t1
 pnpm agent test --packages=@matrix/chain-t2
 pnpm agent test --packages=@matrix/chain-t3
-pnpm agent test --packages=@matrix/chain-t6
+pnpm agent test --packages=@matrix/chain-t6 --full   # runs the vite7 and webpack5 legs; a plain run is vite7 only
 pnpm agent test --packages=@matrix/chain-t7
 pnpm agent test --packages=@matrix/chain-t8
 pnpm agent test --packages=@matrix/chain-t9

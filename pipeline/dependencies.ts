@@ -39,12 +39,14 @@ export const MANAGED_VITE7_DEV_DEPENDENCIES = {
 	vite: '^7.3.5',
 } as const
 
-// Webpack 5 surface for full-mode / webpack matrix consumers.
+// Webpack 5 surface for full-mode / webpack matrix consumers. ts-loader needs the TypeScript JS
+// compiler API, which typescript 7 dropped, so it compiles through the 6.x alias below.
 export const MANAGED_WEBPACK5_DEV_DEPENDENCIES = {
 	'css-loader': '^7.1.2',
 	'html-webpack-plugin': '^5.6.3',
 	'style-loader': '^4.0.0',
 	'ts-loader': '^9.5.2',
+	'typescript-6': 'npm:typescript@6.0.3',
 	webpack: '^5.98.0',
 	'webpack-cli': '^6.0.1',
 	'webpack-dev-server': '^5.2.6',

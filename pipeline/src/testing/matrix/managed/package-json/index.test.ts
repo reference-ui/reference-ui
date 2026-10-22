@@ -183,6 +183,7 @@ describe('createMatrixConsumerPackageJson', () => {
       'html-webpack-plugin': '^5.6.3',
       'style-loader': '^4.0.0',
       'ts-loader': '^9.5.2',
+      'typescript-6': 'npm:typescript@6.0.3',
       webpack: '^5.98.0',
       'webpack-cli': '^6.0.1',
       'webpack-dev-server': '^5.2.6',
