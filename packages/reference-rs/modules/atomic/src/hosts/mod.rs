@@ -57,7 +57,7 @@ pub struct ResolvedHosts {
 /// The inputs `resolve` reads beside the request: the compile's collected sources, the main-phase
 /// parse failures by source index, and the programs the main phase already parsed, by path.
 pub struct ResolveInputs<'a> {
-    pub sources: &'a [(String, String)],
+    pub sources: &'a [crate::Source],
     pub failed: &'a [bool],
     pub programs: &'a FxHashMap<PathBuf, &'a Program<'a>>,
 }
@@ -143,7 +143,8 @@ pub(crate) fn owned_wire(
 /// Caller hosts plus traced names for one compile.
 pub fn collect_hosts(request: &CompileRequest) -> FxHashSet<String> {
     let mut session = DiagnosticsSession::new();
-    let sources = crate::sources::collect(request);
+    // The trace takes screened sources; this path parses nothing, so the verdict itself is never read here.
+    let sources = crate::screen_sources(crate::sources::collect(request));
     // No parse runs on this path, so no failure signal exists: every
     // source counts as parsed-clean and the trace gate applies fully.
     let failed = vec![false; sources.len()];
@@ -223,7 +224,7 @@ pub(crate) fn resolve_prepared(
 /// Folded modules plus the surface they were folded against.
 pub(crate) struct PreparedTrace<'a> {
     pub request: &'a CompileRequest,
-    pub sources: &'a [(String, String)],
+    pub sources: &'a [crate::Source],
     pub failed: &'a [bool],
     pub surface: &'a StyleSurface,
     pub modules: BTreeMap<PathBuf, TraceModule>,
@@ -240,7 +241,7 @@ struct TraceOpen<'a> {
 /// Open the trace when a root and at least one entry exist.
 fn open_trace<'a>(
     request: &'a CompileRequest,
-    sources: &'a [(String, String)],
+    sources: &'a [crate::Source],
     failed: &[bool],
 ) -> Option<TraceOpen<'a>> {
     let root = request.root_dir.as_deref()?;
@@ -251,7 +252,7 @@ fn open_trace<'a>(
     let package_root = request.declaration_root.as_deref().unwrap_or(root);
     let staged = sources
         .iter()
-        .map(|(path, content)| (PathBuf::from(path), content.as_str()))
+        .map(|(path, source)| (PathBuf::from(path), source.as_str()))
         .collect();
     Some(TraceOpen {
         root,

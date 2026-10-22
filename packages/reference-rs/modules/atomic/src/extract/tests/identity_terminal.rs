@@ -128,16 +128,17 @@ fn reused_programs_answer_like_fresh_parses() {
     .iter()
     .map(|(path, content)| ((*path).to_string(), (*content).to_string()))
     .collect();
+    let owned = crate::screen_sources(owned);
     // Main-phase options (crate `parse_source`): TS on for every extension.
     let allocators: Vec<Allocator> = owned.iter().map(|_| Allocator::default()).collect();
     let parsed: Vec<_> = owned
         .iter()
         .zip(allocators.iter())
-        .map(|((path, content), allocator)| {
+        .map(|((path, source), allocator)| {
             let source_type = SourceType::from_path(Path::new(path))
                 .unwrap_or_default()
                 .with_typescript(true);
-            Parser::new(allocator, content, source_type).parse()
+            Parser::new(allocator, source.as_str(), source_type).parse()
         })
         .collect();
     // Every unpanicked position reuses its program; the broken file stays

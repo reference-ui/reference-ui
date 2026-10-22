@@ -23,7 +23,7 @@ use crate::lanes::{self, spawn_lane, PoolGuard};
 use crate::phase_gate::{CoordGate, LaneFailure, LaneGate, PhaseCmd, Stage};
 use crate::phase_lane::{self, OwnedFile, RecordIn};
 use crate::stream::SourceSlot;
-use crate::{streaming_candidate, string_skip, BreakpointScale, CompileRequest};
+use crate::{streaming_candidate, string_skip, BreakpointScale, CompileRequest, Source};
 
 /// Cross-file answers published after the owned fold, before the walk.
 #[derive(Clone)]
@@ -38,7 +38,7 @@ pub(crate) struct Published {
 /// Inputs every lane borrows. The coordinator alone holds the sinks.
 pub(crate) struct Shared<'a> {
     pub request: &'a CompileRequest,
-    pub sources: &'a [(String, String)],
+    pub sources: &'a [Source],
     pub streamed: &'a [bool],
     pub files: &'a [Mutex<OwnedFile>],
     pub published: &'a Mutex<Option<Arc<Published>>>,
@@ -63,13 +63,13 @@ const _: fn() = || {
 /// coordinator panic is caught into an error after the lanes release and join.
 pub(crate) fn run(
     request: &CompileRequest,
-    sources: &[(String, String)],
+    sources: &[Source],
     mut sinks: super::CompileSinks<'_>,
     guard: &PoolGuard,
 ) -> Result<(Vec<usize>, ResolvedHosts), String> {
     let streamed: Vec<bool> = sources
         .iter()
-        .map(|(_, content)| streaming_candidate(content))
+        .map(|(_, source)| streaming_candidate(source.as_str()))
         .collect();
     let mut slots: Vec<SourceSlot> = streamed.iter().copied().map(SourceSlot::new).collect();
     let files: Vec<Mutex<OwnedFile>> = (0..sources.len())
@@ -233,17 +233,17 @@ fn stage_streamed(shared: &Shared<'_>, shard: &[usize]) {
         if !shared.streamed[index] {
             continue;
         }
-        let (path, content) = &shared.sources[index];
+        let (path, source) = &shared.sources[index];
         #[cfg(test)]
-        crate::phase_gate::panic_marker(content, "p0a-panic-record");
+        crate::phase_gate::panic_marker(source.as_str(), "p0a-panic-record");
         let allocator = Allocator::default();
-        let parsed = crate::parse_source(path, content, &allocator);
+        let parsed = crate::parse_source(source, &allocator);
         let mut file = phase_lane::lock(&shared.files[index]);
         phase_lane::record(
             &mut file,
             &RecordIn {
                 path,
-                content,
+                content: source.as_str(),
                 parsed: &parsed,
                 harvest: false,
                 trace_root: shared.trace_root,
@@ -264,27 +264,24 @@ fn parse_retained<'alloc>(
     indices
         .iter()
         .zip(allocators.iter())
-        .map(|(&index, allocator)| {
-            let (path, content) = &shared.sources[index];
-            crate::parse_source(path, content, allocator)
-        })
+        .map(|(&index, allocator)| crate::parse_source(&shared.sources[index].1, allocator))
         .collect()
 }
 
 /// Fold retained parses into their slots, including the harvest pool.
 fn record_retained(shared: &Shared<'_>, indices: &[usize], parsed: &[ParserReturn<'_>]) {
     for (&index, parsed) in indices.iter().zip(parsed.iter()) {
-        let (path, content) = &shared.sources[index];
+        let (path, source) = &shared.sources[index];
         #[cfg(test)]
-        crate::phase_gate::panic_marker(content, "p0a-panic-record");
+        crate::phase_gate::panic_marker(source.as_str(), "p0a-panic-record");
         let mut file = phase_lane::lock(&shared.files[index]);
         phase_lane::record(
             &mut file,
             &RecordIn {
                 path,
-                content,
+                content: source.as_str(),
                 parsed,
-                harvest: !string_skip(content),
+                harvest: !string_skip(source.as_str()),
                 trace_root: shared.trace_root,
                 surface: shared.surface,
             },

@@ -44,7 +44,7 @@ pub(crate) struct StylingFile<'p> {
 /// Each source's styling file by index (`None` for every other source): the
 /// identity walk runs once per file, before analysis, as it does on the lanes.
 pub(crate) fn styling_files<'p>(
-    sources: &[(String, String)],
+    sources: &[crate::Source],
     parsed: &'p [oxc_parser::ParserReturn<'p>],
     slots: &[SourceSlot],
     identity: &IdentityGraph<'_>,
@@ -52,8 +52,8 @@ pub(crate) fn styling_files<'p>(
     sources
         .iter()
         .enumerate()
-        .map(|(index, (path, content))| {
-            let program = styling_program(slots, parsed, index, content)?;
+        .map(|(index, (path, source))| {
+            let program = styling_program(slots, parsed, index, source.as_str())?;
             let bindings = collect_bindings_with_identity(program, path, identity);
             Some(StylingFile { program, bindings })
         })
@@ -64,12 +64,12 @@ pub(crate) fn styling_files<'p>(
 /// for small compiles and as the one-thread behavior.
 pub(crate) fn extract_all(
     session: &mut ParseSession<'_>,
-    sources: &[(String, String)],
+    sources: &[crate::Source],
     files: &[Option<StylingFile<'_>>],
 ) {
-    for ((path, content), file) in sources.iter().zip(files) {
+    for ((path, source), file) in sources.iter().zip(files) {
         if let Some(file) = file {
-            extract_parsed_program(session, path, content, file);
+            extract_parsed_program(session, path, source.as_str(), file);
         }
     }
 }

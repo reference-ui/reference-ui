@@ -1,5 +1,5 @@
-//! The origin chase of the value graph: turns an import binding into the value its declaring file
-//! exports. `value_of` memoizes each origin read and refuses cycles, while `refined_file` refines a
+//! The origin chase of the value graph: turns an import binding into its declaring file's export.
+//! `value_of` memoizes each origin read and refuses cycles, while `refined_file` refines a
 //! file on first use by collecting its scope table against its own resolved imports. Streamed files
 //! refine by transient re-parse, and the finished table answers exports through `table_value`,
 //! `init_export`, and `descriptor_export`, falling back to the file's literal bag for externals.
@@ -98,23 +98,24 @@ impl<'s> ValueGraph<'s> {
         RefineState::Ready
     }
 
-    /// Refine one streamed file by transient re-parse of its staged bytes
-    /// through the identical on-demand path retained files use. Imported
-    /// streamed files are rare (dead utils have no importers), so the
-    /// re-parse costs nothing in practice; unimported ones never re-parse.
+    /// Refine one streamed file by transient re-parse of its staged text
+    /// through the identical on-demand path retained files use. The text
+    /// carries the verdict it was screened with, so the re-parse never scans
+    /// again. Imported streamed files are rare (dead utils have no importers),
+    /// so the re-parse costs nothing in practice; unimported ones never re-parse.
     /// Bytes parsed clean at staging and parsing is deterministic, so a
     /// panicked re-parse is unreachable; it reads as external regardless.
     fn refine_streamed(&mut self, file: &ModuleKey) -> RefineState {
-        let Some(content) = self.fs.content(file) else {
+        let Some(source) = self.fs.screened(file) else {
             return RefineState::External;
         };
         let allocator = Allocator::default();
-        let ret = crate::parse_source(file.as_str(), content, &allocator);
+        let ret = crate::parse_source(source, &allocator);
         if ret.panicked {
             return RefineState::External;
         }
         self.refining.insert(file.clone());
-        let refined = self.collect_origin(file, &ret.program, content);
+        let refined = self.collect_origin(file, &ret.program, source.as_str());
         self.refining.remove(file);
         self.refined.insert(file.clone(), refined);
         RefineState::Ready

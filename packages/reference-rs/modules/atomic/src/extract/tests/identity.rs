@@ -14,7 +14,7 @@ pub(super) fn graph(sources: &[(&str, &str)]) -> IdentityGraph<'static> {
         .map(|(path, content)| ((*path).to_string(), (*content).to_string()))
         .collect();
     // The graph borrows; leak the vec into a box so the borrow outlives the call.
-    let boxed = Box::leak(Box::new(owned));
+    let boxed = Box::leak(Box::new(crate::screen_sources(owned)));
     IdentityGraph::new(boxed)
 }
 

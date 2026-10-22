@@ -1,9 +1,9 @@
-//! The parse phase of one compile: indexes the request's sources, runs the serial
-//! parse, analyze, extract and harvest walks into the compile sinks, and reports the
-//! resolved hosts that assembly publishes. It also partitions the result's channels
-//! once proof has read the facts, so the default and backchannel outputs split cleanly.
-//! Takes the request, the in-memory sources and the sinks; emits the unpanicked source
-//! index and the traced hosts.
+//! The parse phase of one compile: parses, walks and harvests the sources into the compile sinks.
+//! It indexes the request's sources, runs the serial walks, and reports the resolved hosts that
+//! assembly publishes. It also partitions the result's channels once proof has read the facts,
+//! so the default and backchannel outputs split cleanly.
+//! Takes the request, the screened sources and the sinks; emits the unpanicked source index and
+//! the traced hosts.
 
 use oxc_parser::ParserReturn;
 
@@ -14,12 +14,12 @@ use super::*;
 /// catalog) plus the resolved hosts assembly names as traced.
 pub(super) fn run_parse_phase(
     request: &CompileRequest,
-    sources: &[(String, String)],
+    sources: &[Source],
     sinks: CompileSinks<'_>,
 ) -> Result<(Vec<usize>, hosts::ResolvedHosts), String> {
     let styling = sources
         .iter()
-        .filter(|(_, content)| !styling_skip(content))
+        .filter(|(_, source)| !styling_skip(source.as_str()))
         .count();
     if let Some(guard) = Lanes::Auto.guard(WorkKind::FrontFiles, styling) {
         return phase_parallel::run(request, sources, sinks, &guard);
@@ -32,7 +32,7 @@ pub(super) fn run_parse_phase(
 /// its own signature.
 struct ParseView<'a> {
     request: &'a CompileRequest,
-    sources: &'a [(String, String)],
+    sources: &'a [Source],
     parsed: &'a [ParserReturn<'a>],
     slots: &'a [stream::SourceSlot],
     retained: &'a [usize],
@@ -47,7 +47,7 @@ struct ParseView<'a> {
 /// harvest over the shared parses. Returns the unpanicked source index and the hosts.
 fn run_parse_serial(
     request: &CompileRequest,
-    sources: &[(String, String)],
+    sources: &[Source],
     sinks: CompileSinks<'_>,
 ) -> (Vec<usize>, hosts::ResolvedHosts) {
     // Retained parses live for this phase; streamed files parse transiently in the
@@ -119,10 +119,10 @@ fn run_parse_serial(
 }
 
 /// Slot per source, with the streaming gate decided from the bytes alone.
-fn initial_slots(sources: &[(String, String)]) -> Vec<stream::SourceSlot> {
+fn initial_slots(sources: &[Source]) -> Vec<stream::SourceSlot> {
     sources
         .iter()
-        .map(|(_, content)| stream::SourceSlot::new(streaming_candidate(content)))
+        .map(|(_, source)| stream::SourceSlot::new(streaming_candidate(source.as_str())))
         .collect()
 }
 
@@ -139,14 +139,14 @@ fn retained_allocators(retained: &[usize]) -> Vec<Allocator> {
 
 /// Parses every retained source into its own arena, in retained order.
 fn parse_retained<'a>(
-    sources: &'a [(String, String)],
+    sources: &'a [Source],
     retained: &[usize],
     allocators: &'a [Allocator],
 ) -> Vec<ParserReturn<'a>> {
     retained
         .iter()
         .zip(allocators.iter())
-        .map(|(&i, allocator)| parse_source(&sources[i].0, &sources[i].1, allocator))
+        .map(|(&i, allocator)| parse_source(&sources[i].1, allocator))
         .collect()
 }
 
@@ -165,7 +165,7 @@ fn link_parsed(
 /// Ordered constants pass over the parses: merges project constants and stages the
 /// streamed files, which parse transiently inside the pass.
 fn merge_constants(
-    sources: &[(String, String)],
+    sources: &[Source],
     parsed: &[ParserReturn<'_>],
     slots: &mut [stream::SourceSlot],
 ) -> (extract::constants::LocalConstants, stream::TransientOut) {
@@ -210,17 +210,18 @@ fn analyze_parse(
 ) {
     #[cfg(feature = "alloc-trace")]
     let _analysis = crate::alloc_trace::PhaseGuard::enter("analysis");
-    // Streamed programs are shared from one empty parse the content gate provably skips;
-    // so are empty bindings, for every source that is no styling file.
+    // Streamed programs are shared from one empty source: "" cannot be refused, so it costs no gate run.
+    // So are empty bindings, for every source that is no styling file.
+    let dummy_source = ScreenedSource::empty(source_type_of("streamed.ts"));
     let dummy_allocator = Allocator::default();
-    let dummy = parse_source("streamed.ts", "", &dummy_allocator);
+    let dummy = parse_source(&dummy_source, &dummy_allocator);
     let no_bindings = extract::ExtractBindings::default();
     let analyzed: Vec<diagnostics::analysis::AnalyzedSource<'_>> = view
         .sources
         .iter()
         .enumerate()
         .filter(|(i, _)| !view.slots[*i].panicked)
-        .map(|(i, (path, content))| {
+        .map(|(i, (path, source))| {
             let program = match view.slots[i].parsed {
                 Some(position) if !view.slots[i].streamed => &view.parsed[position].program,
                 _ => &dummy.program,
@@ -230,7 +231,7 @@ fn analyze_parse(
                 .map_or(&no_bindings, |file| &file.bindings);
             diagnostics::analysis::AnalyzedSource {
                 path,
-                content,
+                content: source.as_str(),
                 program,
                 bindings,
             }
@@ -269,7 +270,7 @@ fn harvest_walk(view: &ParseView<'_>, sinks: CompileSinks<'_>) -> extract::harve
     let skip_harvest: Vec<bool> = view
         .retained
         .iter()
-        .map(|&i| string_skip(&view.sources[i].1))
+        .map(|&i| string_skip(view.sources[i].1.as_str()))
         .collect();
     let pool = extract::harvest::collect_pool(view.parsed, &skip_harvest);
     extract::harvest::mint(extract::harvest::MintCtx {

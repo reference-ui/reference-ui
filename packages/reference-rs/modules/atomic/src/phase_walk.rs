@@ -24,7 +24,7 @@ pub(crate) fn store_refs(shared: &Shared<'_>, indices: &[usize], parsed: &[Parse
         return;
     };
     for (&index, parsed) in indices.iter().zip(parsed.iter()) {
-        let content = &shared.sources[index].1;
+        let content = shared.sources[index].1.as_str();
         if parsed.panicked || styling_skip(content) || phase_lane::lock(&shared.files[index]).panicked {
             continue;
         }
@@ -39,8 +39,8 @@ pub(crate) fn store_refs(shared: &Shared<'_>, indices: &[usize], parsed: &[Parse
 /// `ValueGraph` holds `Rc`, so it is `!Send`; only the coordinator builds and borrows it.
 pub(crate) fn resolve_all(shared: &Shared<'_>, graph: &mut ValueGraph<'_>) {
     for index in 0..shared.sources.len() {
-        let (path, content) = &shared.sources[index];
-        if shared.streamed[index] || styling_skip(content) {
+        let (path, source) = &shared.sources[index];
+        if shared.streamed[index] || styling_skip(source.as_str()) {
             continue;
         }
         let (panicked, refs) = {
@@ -104,7 +104,8 @@ fn walk_one(env: &WalkEnv<'_>, index: usize, parsed: &ParserReturn<'_>) {
     if parsed.panicked {
         return;
     }
-    let (path, content) = &shared.sources[index];
+    let (path, source) = &shared.sources[index];
+    let content = source.as_str();
     if styling_skip(content) {
         return;
     }

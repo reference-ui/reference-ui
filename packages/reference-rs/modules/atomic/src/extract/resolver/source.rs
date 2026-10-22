@@ -1,9 +1,9 @@
-//! The atomic side of the shared module graph: an in-memory-first filesystem
-//! over the compile sources with disk fallback, plus the loader that serves
-//! staged source records and parses externals once on demand. Sources keep
-//! their lexical keys (never disk-canonicalized) so one file is one record;
-//! externally resolved targets parse into values-only entries with literal
-//! bags and no descriptors, exactly as the old externals sweep did.
+//! The atomic side of the module graph: memory answers compile sources, disk answers the rest.
+//! Its loader serves staged source records and parses externals once on demand. Sources keep
+//! their lexical keys (never disk-canonicalized) so one file is one record; externally resolved
+//! targets parse into values-only entries with literal bags and no descriptors, exactly as the old
+//! externals sweep did. A staged source parses from the verdict it carried into the compile, and a
+//! disk external is screened once, when it is read.
 
 use std::rc::Rc;
 
@@ -12,15 +12,17 @@ use rustc_hash::FxHashMap;
 use module_graph::{DiskFs, FileSystem, Loader, ModuleKey, ModuleRecord, ProbeMemo};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
+use shared::parse::ScreenedSource;
 
 use super::super::constants::{collect_local_constants, LocalConstants};
+use crate::{source_type_of, Source};
 
 /// Compile sources over disk: memory answers sources, disk answers the rest.
 /// `tsconfig` manifests and `node_modules` targets resolve through the disk
 /// arm, while every staged source holds its lexical key for stable identity.
 #[derive(Debug)]
 pub struct AtomicFs<'s> {
-    sources: &'s [(String, String)],
+    sources: &'s [Source],
     index: FxHashMap<String, usize>,
     disk: DiskFs,
     memo: ProbeMemo,
@@ -28,7 +30,7 @@ pub struct AtomicFs<'s> {
 
 impl<'s> AtomicFs<'s> {
     /// An fs over the compile sources, indexed by normalized key.
-    pub fn new(sources: &'s [(String, String)]) -> Self {
+    pub fn new(sources: &'s [Source]) -> Self {
         let mut index = FxHashMap::default();
         for (position, (path, _)) in sources.iter().enumerate() {
             index
@@ -49,11 +51,16 @@ impl<'s> AtomicFs<'s> {
         self.content(&key)
     }
 
-    /// The staged content for a module key, when it is a source.
+    /// The staged text for a module key, when it is a source.
     pub(crate) fn content(&self, key: &ModuleKey) -> Option<&'s str> {
-        let sources: &'s [(String, String)] = self.sources;
+        self.screened(key).map(ScreenedSource::as_str)
+    }
+
+    /// The staged source for a module key, with the verdict it carried into the compile.
+    pub(crate) fn screened(&self, key: &ModuleKey) -> Option<&'s ScreenedSource> {
+        let sources: &'s [Source] = self.sources;
         let position = self.index.get(key.as_str())?;
-        Some(sources[*position].1.as_str())
+        Some(&sources[*position].1)
     }
 }
 
@@ -177,23 +184,30 @@ impl Loader for AtomicLoader<'_> {
             }
             return Some(record);
         }
-        let content = self.fs.read_to_string(key.as_str())?;
-        let (record, bag) = parse_record(key.as_str(), &content)?;
+        // A staged source parses from its carried verdict; an external is screened once, as it is read.
+        let (record, bag) = match self.fs.screened(key) {
+            Some(source) => parse_record(key.as_str(), source)?,
+            None => {
+                let content = self.fs.read_to_string(key.as_str())?;
+                let source = ScreenedSource::screen(content, source_type_of(key.as_str()));
+                parse_record(key.as_str(), &source)?
+            }
+        };
         self.values.insert(key.clone(), bag);
         Some(record)
     }
 }
 
-/// Parse one external target into its record and literal bag; unreadable or
-/// unparseable targets stay absent, leaving their importers on the refusal.
-fn parse_record(path: &str, content: &str) -> Option<(ModuleRecord, LocalConstants)> {
+/// Parse one target into its record and literal bag; unreadable or unparseable
+/// targets stay absent, leaving their importers on the refusal.
+fn parse_record(path: &str, source: &ScreenedSource) -> Option<(ModuleRecord, LocalConstants)> {
     let allocator = Allocator::default();
-    let ret = crate::parse_source(path, content, &allocator);
+    let ret = crate::parse_source(source, &allocator);
     if ret.panicked {
         return None;
     }
     let record = ModuleRecord::collect(&ret.program);
-    let bag = collect_local_constants(&ret.program, path, Some(content));
+    let bag = collect_local_constants(&ret.program, path, Some(source.as_str()));
     Some((record, bag))
 }
 
@@ -206,7 +220,7 @@ mod tests {
     /// An fs over two staged sources plus the disk arm.
     fn fs() -> AtomicFs<'static> {
         // Leaked once per test process: the fs borrows sources by contract.
-        let sources: &'static [(String, String)] = Box::leak(Box::new(vec![
+        let sources: &'static [Source] = Box::leak(Box::new(crate::screen_sources(vec![
             (
                 "/p/src/app.ts".to_string(),
                 "import { b } from './b';".to_string(),
@@ -215,7 +229,7 @@ mod tests {
                 "/p/src/b.ts".to_string(),
                 "export const b = 'red';".to_string(),
             ),
-        ]));
+        ])));
         AtomicFs::new(sources)
     }
 

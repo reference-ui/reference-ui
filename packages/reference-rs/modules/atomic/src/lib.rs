@@ -59,8 +59,8 @@ use oxc_ast::ast::Program;
 use oxc_diagnostics::OxcDiagnostic;
 use oxc_parser::ParserReturn;
 use oxc_span::{SourceType, Span};
-use shared::parse::NestingRefusal;
-use std::path::{Path, PathBuf};
+use shared::parse::{NestingRefusal, ScreenedSource};
+use std::path::PathBuf;
 
 use std::collections::BTreeMap;
 
@@ -110,6 +110,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         Ok(collected) => collected,
         Err((code, message)) => return Ok(token_rejection(code, message)),
     };
+    let sources = screen_sources(sources);
     #[cfg(feature = "alloc-trace")]
     drop(_collect);
     let system = &request.base_system;
@@ -225,22 +226,41 @@ pub(crate) fn streaming_candidate(content: &str) -> bool {
     styling_skip(content) && string_skip(content)
 }
 
-/// Parse one source: JSX follows the extension (`.tsx` on, `.ts` off),
+/// One collected source: its path, and its text with the nesting gate's verdict.
+/// The gate ran once when the compile screened the source, and every parse reads that verdict.
+pub type Source = (String, ScreenedSource);
+
+/// The type every parse of `path` uses: the extension's type, with TypeScript on.
+/// Screening and parsing both call this, so a carried verdict matches the parse that reads it.
+pub(crate) fn source_type_of(path: &str) -> SourceType {
+    SourceType::from_path(path)
+        .unwrap_or_default()
+        .with_typescript(true)
+}
+
+/// Screens each collected source once: the gate runs here, and the verdict travels with the text.
+/// Each path and text moves into its element, so no source text is copied.
+pub(crate) fn screen_sources(pairs: Vec<(String, String)>) -> Vec<Source> {
+    pairs
+        .into_iter()
+        .map(|(path, content)| {
+            let screened = ScreenedSource::screen(content, source_type_of(&path));
+            (path, screened)
+        })
+        .collect()
+}
+
+/// Parse one screened source: JSX follows the extension (`.tsx` on, `.ts` off),
 /// so `.ts`-only `<T>` assertions parse only when JSX is off.
-/// Shared with the resolver's streamed refinement, which re-parses the same
-/// bytes the staging pass already screened. A source nested past the
-/// nesting gate is never handed to Oxc; it comes back as a failed parse.
+/// The verdict travels with the text, so this never scans. A source the gate
+/// refused is never handed to Oxc; it comes back as a failed parse.
 pub(crate) fn parse_source<'a>(
-    path: &str,
-    content: &'a str,
+    source: &'a ScreenedSource,
     allocator: &'a Allocator,
 ) -> ParserReturn<'a> {
-    let source_type = SourceType::from_path(Path::new(path))
-        .unwrap_or_default()
-        .with_typescript(true);
-    match shared::parse::parse_bounded(allocator, content, source_type) {
+    match shared::parse::parse_screened(allocator, source) {
         Ok(parsed) => parsed,
-        Err(refusal) => refused_parse(allocator, content, source_type, refusal),
+        Err(refusal) => refused_parse(allocator, source.as_str(), source.source_type(), refusal),
     }
 }
 

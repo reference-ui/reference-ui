@@ -15,6 +15,7 @@ use crate::extract::resolver::{StreamedSource, ValueGraph};
 use crate::hosts::{self, PreparedTrace};
 use crate::phase_lane;
 use crate::phase_parallel::{lock_published, Published, Shared};
+use crate::Source;
 
 use module_graph::ModuleKey;
 
@@ -24,8 +25,8 @@ pub(crate) fn publish(
     sinks: &mut super::CompileSinks<'_>,
 ) -> (Arc<LocalConstants>, Vec<StreamedSource>) {
     #[cfg(test)]
-    for (_, content) in shared.sources {
-        crate::phase_gate::panic_marker(content, "p0a-panic-publish");
+    for (_, source) in shared.sources {
+        crate::phase_gate::panic_marker(source.as_str(), "p0a-panic-publish");
     }
     let mut project = LocalConstants::new();
     let mut staged = Vec::new();
@@ -116,7 +117,7 @@ fn fold_index(shared: &Shared<'_>, index: usize, project: &mut LocalConstants) -
 
 /// Value graph over owned records. Origins refine by re-parse; no program is stored.
 pub(crate) fn build_graph<'a>(
-    sources: &'a [(String, String)],
+    sources: &'a [Source],
     streamed: Vec<StreamedSource>,
     constants: &'a LocalConstants,
 ) -> ValueGraph<'a> {

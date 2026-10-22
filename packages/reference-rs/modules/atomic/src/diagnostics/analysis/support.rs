@@ -107,7 +107,7 @@ pub(crate) fn analyze_installed(
 ) -> Vec<DiagnosticFact> {
     app.write("src/test.tsx", source);
     let path = app.path("src/test.tsx");
-    let sources = vec![(path.clone(), source.to_string())];
+    let sources = crate::screen_sources(vec![(path.clone(), source.to_string())]);
     let graph = crate::extract::identity::IdentityGraph::new(&sources);
     let allocator = oxc_allocator::Allocator::default();
     let program = parse_for_test(&allocator, source);

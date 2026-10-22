@@ -54,7 +54,7 @@ pub(super) struct AliasMemo {
 /// The compile sources over disk: sources answer from memory and keep their
 /// lexical key, every other path probes and canonicalizes on disk.
 struct ProjectFs<'g> {
-    sources: &'g [(String, String)],
+    sources: &'g [crate::Source],
     index: &'g FxHashMap<String, usize>,
     probes: &'g ProbeMemo,
 }
@@ -69,7 +69,7 @@ impl ProjectFs<'_> {
 impl FileSystem for ProjectFs<'_> {
     fn read_to_string(&self, path: &str) -> Option<String> {
         if let Some(position) = self.position(path) {
-            return Some(self.sources[position].1.clone());
+            return Some(self.sources[position].1.as_str().to_string());
         }
         self.probes
             .read_to_string(path, |probed| DiskFs.read_to_string(probed))

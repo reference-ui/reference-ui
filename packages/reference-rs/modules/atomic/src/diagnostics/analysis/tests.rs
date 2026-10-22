@@ -1,6 +1,6 @@
-//! Pins the analysis entry point: an empty input predicts nothing, source ids follow input order,
-//! compile-time analysis drops panicked sources, an end-to-end fixture predicts both the style
-//! and JSX surfaces, and package-bound tags predict what extraction compiles on both walks.
+//! Pins the analysis entry point: empty input, source ids, panicked sources, and both surfaces.
+//! The end-to-end fixture predicts the style and JSX surfaces, and package-bound tags predict what
+//! extraction compiles on both walks.
 //! Helpers parse fixture sources in place so each test names the contract it checks.
 
 use super::support::{analyze_source, parse_for_test};
@@ -76,8 +76,11 @@ fn sources_keep_input_order_as_source_ids() {
 #[test]
 fn for_compile_filters_panicked_sources() {
     let allocator = oxc_allocator::Allocator::default();
-    let sources = vec![("a.ts".to_string(), "css({ color: 'red' })".to_string())];
-    let parsed = vec![parse_raw(&allocator, &sources[0].1)];
+    let sources = crate::screen_sources(vec![(
+        "a.ts".to_string(),
+        "css({ color: 'red' })".to_string(),
+    )]);
+    let parsed = vec![parse_raw(&allocator, sources[0].1.as_str())];
     let hosts = ResolvedHosts {
         traced: Vec::new(),
         configured: Vec::new(),

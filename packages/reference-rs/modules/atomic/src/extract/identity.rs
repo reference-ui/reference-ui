@@ -20,6 +20,7 @@ use rustc_hash::{FxHashMap, FxHashSet};
 
 use super::bindings::is_reference_package;
 use super::identity_map::{collect_map, parse_export_map, ExportMap, NamedTarget};
+use crate::Source;
 
 mod alias;
 mod origin;
@@ -60,7 +61,7 @@ fn enter(visited: &mut Visited, query: &Query) -> bool {
 
 /// Project file index plus memoized export maps: everything the identity walk reads.
 pub struct IdentityGraph<'s> {
-    sources: &'s [(String, String)],
+    sources: &'s [Source],
     index: FxHashMap<String, usize>,
     memo: RefCell<FxHashMap<String, Option<Arc<ExportMap>>>>,
     /// Retained programs by source position; a hit reuses the main-phase
@@ -73,14 +74,14 @@ pub struct IdentityGraph<'s> {
 
 impl<'s> IdentityGraph<'s> {
     /// Index project sources by normalized path; export maps parse lazily.
-    pub fn new(sources: &'s [(String, String)]) -> Self {
+    pub fn new(sources: &'s [Source]) -> Self {
         Self::build(sources, None)
     }
 
     /// Index with retained-program reuse: positions present in `programs`
     /// fold the main-phase program; every other position parses bytes.
     pub fn with_programs(
-        sources: &'s [(String, String)],
+        sources: &'s [Source],
         programs: &'s FxHashMap<usize, &'s Program<'s>>,
     ) -> Self {
         Self::build(sources, Some(programs))
@@ -90,7 +91,7 @@ impl<'s> IdentityGraph<'s> {
     /// A present entry is the file's surface; `None` is a failed parse.
     /// Missing paths still parse from bytes, so external hops are unchanged.
     pub(crate) fn from_shared(
-        sources: &'s [(String, String)],
+        sources: &'s [Source],
         maps: &[Option<Arc<ExportMap>>],
     ) -> Self {
         let mut graph = Self::build(sources, None);
@@ -106,7 +107,7 @@ impl<'s> IdentityGraph<'s> {
 
     /// Index project sources by normalized path with an optional program map.
     fn build(
-        sources: &'s [(String, String)],
+        sources: &'s [Source],
         programs: Option<&'s FxHashMap<usize, &'s Program<'s>>>,
     ) -> Self {
         let mut index = FxHashMap::default();
@@ -324,8 +325,8 @@ impl<'s> IdentityGraph<'s> {
         if let Some(program) = self.programs.and_then(|maps| maps.get(&position).copied()) {
             return Some(collect_map(program));
         }
-        let (file_path, content) = &self.sources[position];
-        parse_export_map(content, file_path)
+        let (_, source) = &self.sources[position];
+        parse_export_map(source)
     }
 
     /// Resolve a relative specifier against the project sources. Bare and

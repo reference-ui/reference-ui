@@ -47,7 +47,7 @@ pub struct AnalysisInput<'a> {
 /// The borrowed compile inputs analysis walks: collected sources, their
 /// parses, and each file's collected bindings, in matching order.
 pub struct CompileParse<'a> {
-    pub sources: &'a [(String, String)],
+    pub sources: &'a [crate::Source],
     pub parsed: &'a [oxc_parser::ParserReturn<'a>],
     pub bindings: &'a [ExtractBindings],
 }
@@ -87,9 +87,9 @@ impl<'a> AnalysisInput<'a> {
             .zip(parse.parsed.iter())
             .zip(parse.bindings.iter())
             .filter(|((_, ret), _)| !ret.panicked)
-            .map(|(((path, content), ret), bindings)| AnalyzedSource {
+            .map(|(((path, source), ret), bindings)| AnalyzedSource {
                 path,
-                content,
+                content: source.as_str(),
                 program: &ret.program,
                 bindings,
             })

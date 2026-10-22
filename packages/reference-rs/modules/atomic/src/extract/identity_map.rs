@@ -9,6 +9,7 @@
 //! skipped, matching the direct-Reference pass in `bindings.rs`.
 
 use oxc_allocator::Allocator;
+use shared::parse::ScreenedSource;
 use oxc_ast::ast::{
     ArrayPattern, BindingIdentifier, BindingPattern, Declaration, ExportAllDeclaration,
     ExportDefaultDeclaration, ExportDefaultDeclarationKind, ExportNamedDeclaration,
@@ -68,10 +69,10 @@ impl ExportMap {
     }
 }
 
-/// Parse one file's export surface; a panicked parse, a refused nesting included, is an opaque dead end.
-pub(crate) fn parse_export_map(content: &str, path: &str) -> Option<ExportMap> {
+/// Parse one file's export surface from its screened text; a panicked parse, a refused nesting included, is an opaque dead end.
+pub(crate) fn parse_export_map(source: &ScreenedSource) -> Option<ExportMap> {
     let allocator = Allocator::default();
-    let parsed = crate::parse_source(path, content, &allocator);
+    let parsed = crate::parse_source(source, &allocator);
     if parsed.panicked {
         return None;
     }

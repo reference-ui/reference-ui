@@ -13,7 +13,7 @@ use crate::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::extract::constants::{self, LocalConstants};
 use diagnostics::ByteSpan;
 use crate::extract::resolver::{RetainedSource, StreamedSource};
-use crate::parse_source;
+use crate::{parse_source, Source};
 
 /// Per-source parse slot: retained programs index the shared parse vec,
 /// streamed files carry only flags (programs never co-resident).
@@ -49,7 +49,7 @@ pub(crate) struct TransientOut {
 /// merges its constants at its position, and stages its record+bag before
 /// its program+allocator drop. Retained files merge from the shared parse.
 pub(crate) fn merge_constants_ordered(
-    sources: &[(String, String)],
+    sources: &[Source],
     parsed: &[ParserReturn<'_>],
     slots: &mut [SourceSlot],
     project: &mut LocalConstants,
@@ -82,7 +82,7 @@ pub(crate) fn replay_parse_error(err: &OxcDiagnostic) -> (String, Option<u32>) {
 
 /// Context for the ordered constants walk: shared inputs plus accumulators.
 struct ConstantsWalk<'a> {
-    sources: &'a [(String, String)],
+    sources: &'a [Source],
     parsed: &'a [ParserReturn<'a>],
     slots: &'a mut [SourceSlot],
     project: &'a mut LocalConstants,
@@ -109,7 +109,7 @@ impl ConstantsWalk<'_> {
         let Some(position) = self.slots[index].parsed else {
             return;
         };
-        let (path, content) = &self.sources[index];
+        let (path, source) = &self.sources[index];
         self.errors[index] = self.parsed[position]
             .errors
             .iter()
@@ -121,7 +121,7 @@ impl ConstantsWalk<'_> {
         let file_constants = constants::collect_local_constants(
             &self.parsed[position].program,
             path,
-            Some(content.as_str()),
+            Some(source.as_str()),
         );
         self.project.merge(&file_constants);
     }
@@ -130,16 +130,15 @@ impl ConstantsWalk<'_> {
     /// panicked flag, and (when it parsed) merge its constants plus stage
     /// its record+bag before program+allocator drop.
     fn stage_streamed(&mut self, index: usize) {
-        let (path, content) = &self.sources[index];
+        let (path, source) = &self.sources[index];
         let allocator = Allocator::default();
-        let ret = parse_source(path, content, &allocator);
+        let ret = parse_source(source, &allocator);
         self.slots[index].panicked = ret.panicked;
         self.errors[index] = ret.errors.iter().map(replay_parse_error).collect();
         if ret.panicked {
             return;
         }
-        let bag =
-            constants::collect_local_constants(&ret.program, path, Some(content.as_str()));
+        let bag = constants::collect_local_constants(&ret.program, path, Some(source.as_str()));
         self.project.merge(&bag);
         self.staged
             .push(StreamedSource::with_bag(&ret.program, path, bag));
@@ -150,7 +149,7 @@ impl ConstantsWalk<'_> {
 /// Panicked files stay out, so imports targeting them refuse like any
 /// unresolvable specifier.
 pub(crate) fn live_retained_sources<'a>(
-    sources: &'a [(String, String)],
+    sources: &'a [Source],
     parsed: &'a [ParserReturn<'a>],
     retained: &[usize],
     slots: &[SourceSlot],
@@ -182,13 +181,13 @@ pub(crate) fn unpanicked_index(slots: &[SourceSlot]) -> Vec<usize> {
 /// Report every source's parse errors, in source order, from the replayed
 /// pairs the constants pass recorded for retained and streamed alike.
 pub(crate) fn report_parse_errors(
-    sources: &[(String, String)],
+    sources: &[Source],
     errors: &[Vec<(String, Option<u32>)>],
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    for ((path, content), file_errors) in sources.iter().zip(errors.iter()) {
+    for ((path, source), file_errors) in sources.iter().zip(errors.iter()) {
         for replay in file_errors {
-            push_parse_error(diagnostics, path, content, replay);
+            push_parse_error(diagnostics, path, source.as_str(), replay);
         }
     }
 }

@@ -24,7 +24,7 @@ mod values;
 /// takes two arguments.
 #[cfg(test)]
 struct GraphInputs<'s, 'r> {
-    sources: &'s [(String, String)],
+    sources: &'s [crate::Source],
     retained: &'r [RetainedSource<'s>],
     streamed: Vec<StreamedSource>,
     project: &'s LocalConstants,
@@ -33,7 +33,7 @@ struct GraphInputs<'s, 'r> {
 #[cfg(test)]
 impl<'s, 'r> GraphInputs<'s, 'r> {
     fn new(
-        sources: &'s [(String, String)],
+        sources: &'s [crate::Source],
         retained: &'r [RetainedSource<'s>],
         streamed: Vec<StreamedSource>,
         project: &'s LocalConstants,
@@ -139,7 +139,7 @@ impl<'s> ValueGraph<'s> {
     /// streamed bytes through the identical path. Unparseable sources stay
     /// out, so imports targeting them refuse like any unresolvable specifier.
     pub(crate) fn new(
-        sources: &'s [(String, String)],
+        sources: &'s [crate::Source],
         retained: &[RetainedSource<'s>],
         streamed: Vec<StreamedSource>,
         project: &'s LocalConstants,

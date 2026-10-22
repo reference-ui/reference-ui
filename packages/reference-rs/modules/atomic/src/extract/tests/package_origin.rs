@@ -80,7 +80,7 @@ impl Repo {
     }
 
     /// The include set as compile sources, read from disk.
-    fn sources(&self) -> &'static [(String, String)] {
+    fn sources(&self) -> &'static [crate::Source] {
         let files = ["apps/web/src/App.tsx", "packages/ui/src/index.ts", "packages/ui/src/Card.tsx"];
         let owned: Vec<(String, String)> = files
             .iter()
@@ -90,7 +90,7 @@ impl Repo {
                 (path, content)
             })
             .collect();
-        Box::leak(Box::new(owned))
+        Box::leak(Box::new(crate::screen_sources(owned)))
     }
 
     /// Where `imported` from `specifier` ends, as `App.tsx` imports it.

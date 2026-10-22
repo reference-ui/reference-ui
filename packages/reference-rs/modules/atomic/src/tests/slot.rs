@@ -9,14 +9,18 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::Mutex;
 
 use oxc_allocator::Allocator;
+use shared::parse::ScreenedSource;
 
 use crate::phase_lane::{self, OwnedFile, RecordIn, RecordStage, SlotState};
+use crate::Source;
 
-/// One styling source for record tests.
-fn styling_source() -> (String, String) {
+/// One styling source for record tests, screened the way a compile screens its collected sources.
+fn styling_source() -> Source {
+    let content =
+        "import { css } from '@reference-ui/react';\nexport const a = css({ color: 'red' });\n";
     (
         "src/a.ts".to_string(),
-        "import { css } from '@reference-ui/react';\nexport const a = css({ color: 'red' });\n".to_string(),
+        ScreenedSource::screen(content.to_string(), crate::source_type_of("src/a.ts")),
     )
 }
 
@@ -36,14 +40,14 @@ fn blank_is_empty_and_refuses() {
 #[test]
 fn record_success_completes() {
     let alloc = Allocator::default();
-    let (path, content) = styling_source();
-    let parsed = crate::parse_source(&path, &content, &alloc);
+    let (path, source) = styling_source();
+    let parsed = crate::parse_source(&source, &alloc);
     assert!(!parsed.panicked);
     let surface = crate::hosts::engine_surface();
     let mut file = OwnedFile::blank();
     phase_lane::record(
         &mut file,
-        &RecordIn { path: &path, content: &content, parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
+        &RecordIn { path: &path, content: source.as_str(), parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
     );
     assert_eq!(file.state, SlotState::Complete);
     assert!(file.is_mergeable());
@@ -55,14 +59,14 @@ fn record_success_completes() {
 #[test]
 fn record_panicked_fails_fast() {
     let alloc = Allocator::default();
-    let (path, content) = styling_source();
-    let mut parsed = crate::parse_source(&path, &content, &alloc);
+    let (path, source) = styling_source();
+    let mut parsed = crate::parse_source(&source, &alloc);
     parsed.panicked = true;
     let surface = crate::hosts::engine_surface();
     let mut file = OwnedFile::blank();
     phase_lane::record(
         &mut file,
-        &RecordIn { path: &path, content: &content, parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
+        &RecordIn { path: &path, content: source.as_str(), parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
     );
     assert_eq!(file.state, SlotState::ParserPanicked);
     assert!(file.panicked);
@@ -75,8 +79,8 @@ fn record_panicked_fails_fast() {
 #[test]
 fn panic_at_each_stage_leaves_partial() {
     let alloc = Allocator::default();
-    let (path, content) = styling_source();
-    let parsed = crate::parse_source(&path, &content, &alloc);
+    let (path, source) = styling_source();
+    let parsed = crate::parse_source(&source, &alloc);
     let surface = crate::hosts::engine_surface();
     for stage in RecordStage::all() {
         let mut file = OwnedFile::blank();
@@ -84,7 +88,7 @@ fn panic_at_each_stage_leaves_partial() {
         let outcome = catch_unwind(AssertUnwindSafe(|| {
             phase_lane::record(
                 &mut file,
-                &RecordIn { path: &path, content: &content, parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
+                &RecordIn { path: &path, content: source.as_str(), parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
             );
         }));
         phase_lane::set_panic_at_stage(None);
@@ -99,8 +103,8 @@ fn panic_at_each_stage_leaves_partial() {
 #[test]
 fn poisoned_lock_reclaims_with_diagnostic() {
     let alloc = Allocator::default();
-    let (path, content) = styling_source();
-    let parsed = crate::parse_source(&path, &content, &alloc);
+    let (path, source) = styling_source();
+    let parsed = crate::parse_source(&source, &alloc);
     let surface = crate::hosts::engine_surface();
     for stage in RecordStage::all() {
         let mutex = Mutex::new(OwnedFile::blank());
@@ -109,7 +113,7 @@ fn poisoned_lock_reclaims_with_diagnostic() {
             let mut guard = mutex.lock().unwrap();
             phase_lane::record(
                 &mut guard,
-                &RecordIn { path: &path, content: &content, parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
+                &RecordIn { path: &path, content: source.as_str(), parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
             );
         }));
         phase_lane::set_panic_at_stage(None);
@@ -153,15 +157,15 @@ fn poison_reuse_stays_failed_once() {
 #[test]
 fn poison_after_complete_refuses() {
     let alloc = Allocator::default();
-    let (path, content) = styling_source();
-    let parsed = crate::parse_source(&path, &content, &alloc);
+    let (path, source) = styling_source();
+    let parsed = crate::parse_source(&source, &alloc);
     let surface = crate::hosts::engine_surface();
     let mutex = Mutex::new(OwnedFile::blank());
     {
         let mut guard = mutex.lock().unwrap();
         phase_lane::record(
             &mut guard,
-            &RecordIn { path: &path, content: &content, parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
+            &RecordIn { path: &path, content: source.as_str(), parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
         );
         assert!(guard.is_mergeable());
     }
@@ -184,13 +188,13 @@ fn all_panicked_inputs_refuse() {
     for index in 0..3 {
         let alloc = Allocator::default();
         let path = format!("src/p{index}.ts");
-        let content = "export const x = 1;\n".to_string();
-        let mut parsed = crate::parse_source(&path, &content, &alloc);
+        let source = ScreenedSource::screen("export const x = 1;\n".to_string(), crate::source_type_of(&path));
+        let mut parsed = crate::parse_source(&source, &alloc);
         parsed.panicked = true;
         let mut file = OwnedFile::blank();
         phase_lane::record(
             &mut file,
-            &RecordIn { path: &path, content: &content, parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
+            &RecordIn { path: &path, content: source.as_str(), parsed: &parsed, harvest: true, trace_root: None, surface: &surface },
         );
         files.push(file);
     }
@@ -210,7 +214,7 @@ fn empty_parallel_run_is_vacant() {
         base_system: crate::BaseSystem::lib_fixture().clone(),
         ..crate::CompileRequest::default()
     };
-    let sources: Vec<(String, String)> = Vec::new();
+    let sources: Vec<Source> = Vec::new();
     let mut wants = Vec::new();
     let mut recipes = Vec::new();
     let mut diagnostics = Vec::new();
@@ -244,7 +248,10 @@ fn empty_parallel_run_is_vacant() {
 fn refused_errors_report_as_diagnostics() {
     let mut file = OwnedFile::blank();
     file.ensure_mergeable();
-    let sources = vec![("src/a.ts".to_string(), "export const x = 1;\n".to_string())];
+    let sources = crate::screen_sources(vec![(
+        "src/a.ts".to_string(),
+        "export const x = 1;\n".to_string(),
+    )]);
     let errors = vec![file.errors.clone()];
     let mut diagnostics = Vec::new();
     crate::stream::report_parse_errors(&sources, &errors, &mut diagnostics);

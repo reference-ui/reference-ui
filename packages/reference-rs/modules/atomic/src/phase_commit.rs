@@ -72,7 +72,7 @@ fn commit_outputs(shared: &Shared<'_>, sinks: &mut super::CompileSinks<'_>) {
 fn harvest_pool(shared: &Shared<'_>) -> crate::extract::harvest::HarvestPool {
     let mut pool = crate::extract::harvest::HarvestPool::default();
     for (index, file) in shared.files.iter().enumerate() {
-        if shared.streamed[index] || string_skip(&shared.sources[index].1) {
+        if shared.streamed[index] || string_skip(shared.sources[index].1.as_str()) {
             continue;
         }
         let mut file = phase_lane::lock(file);

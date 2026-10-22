@@ -195,20 +195,21 @@ fn parse_errors_survive_the_gate() {
 
 /// Analyze inline sources through `for_compile`, optionally panicking one.
 fn analyze_with_panic(contents: &[&str], panicked: Option<usize>) -> Vec<DiagnosticFact> {
-    let sources: Vec<(String, String)> = contents
+    let pairs: Vec<(String, String)> = contents
         .iter()
         .enumerate()
         .map(|(index, content)| (format!("f{index}.ts"), content.to_string()))
         .collect();
+    let sources = crate::screen_sources(pairs);
     let allocators: Vec<Allocator> = sources.iter().map(|_| Allocator::default()).collect();
     let mut parsed: Vec<oxc_parser::ParserReturn<'_>> = sources
         .iter()
         .zip(allocators.iter())
-        .map(|((path, content), allocator)| {
+        .map(|((path, source), allocator)| {
             let source_type = SourceType::from_path(std::path::Path::new(path))
                 .unwrap_or_default()
                 .with_typescript(true);
-            Parser::new(allocator, content, source_type).parse()
+            Parser::new(allocator, source.as_str(), source_type).parse()
         })
         .collect();
     if let Some(index) = panicked {

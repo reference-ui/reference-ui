@@ -123,9 +123,9 @@ fn force_unstage_matches_census_matches_full_staging() {
         .collect();
     sources.push((
         "/v/tsconfig.json".to_string(),
-        "{\"compilerOptions\": {\"baseUrl\": \".\", \"paths\": {\"@/*\": [\"src/*\"]}}}"
-            .to_string(),
+        r#"{"compilerOptions": {"baseUrl": ".", "paths": {"@/*": ["src/*"]}}}"#.to_string(),
     ));
+    let sources = crate::screen_sources(sources);
     let allocators: Vec<Allocator> = files.iter().map(|_| Allocator::default()).collect();
     let parsed: Vec<_> = files
         .iter()
@@ -250,10 +250,10 @@ fn nested_import_pinned_to_fallback_identical() {
         // by construction (nothing stages, nothing refines).
         return;
     }
-    let sources = vec![
+    let sources = crate::screen_sources(vec![
         ("/v/src/nested.ts".to_string(), content.to_string()),
         ("/v/src/base.ts".to_string(), base.to_string()),
-    ];
+    ]);
     let project = LocalConstants::new();
     let refs: Vec<ImportRef> = scope::collect(&ret.program, &project)
         .import_refs()
@@ -291,7 +291,7 @@ fn assert_nested_import_unstages(nested: &Program<'_>, base: &Program<'_>) {
 /// The visitor binds the nested import: an unstaged walk start, served by
 /// the fallback on the census and empty arms, so all three plans must agree.
 fn assert_nested_import_plans_agree(
-    sources: &[(String, String)],
+    sources: &[crate::Source],
     nested: &Program<'_>,
     base: &Program<'_>,
     refs: &[ImportRef],

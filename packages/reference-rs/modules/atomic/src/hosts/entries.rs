@@ -12,12 +12,12 @@ use std::path::{Path, PathBuf};
 /// styletrace re-parse; the staged map still serves edge-target reads.
 /// Main-phase parse failures keep their entry regardless: the trace
 /// re-parse fails identically and the located warning survives (C1).
-pub(crate) fn entry_paths(sources: &[(String, String)], failed: &[bool]) -> Vec<PathBuf> {
+pub(crate) fn entry_paths(sources: &[crate::Source], failed: &[bool]) -> Vec<PathBuf> {
     sources
         .iter()
         .enumerate()
-        .filter(|(index, (_, content))| {
-            failed.get(*index).copied().unwrap_or(false) || !trace_skip(content)
+        .filter(|(index, (_, source))| {
+            failed.get(*index).copied().unwrap_or(false) || !trace_skip(source.as_str())
         })
         .map(|(_, (path, _))| PathBuf::from(path))
         // Trace walks the disk import graph, so virtual-only sources skip here, silently.
@@ -102,14 +102,14 @@ mod tests {
         let live = dir.join("live.tsx");
         fs::write(&dead, DEAD).expect("write dead");
         fs::write(&live, "import { Div } from '@reference-ui/react'\n").expect("write live");
-        let sources = vec![
+        let sources = crate::screen_sources(vec![
             (dead.to_string_lossy().to_string(), DEAD.to_string()),
             (
                 live.to_string_lossy().to_string(),
                 "import { Div } from '@reference-ui/react'\n".to_string(),
             ),
             ("src/virtual.ts".to_string(), "import { x } from 'y'\n".to_string()),
-        ];
+        ]);
         let entries = entry_paths(&sources, &[false, false, false]);
         assert_eq!(entries, vec![live]);
         fs::remove_dir_all(&dir).expect("cleanup");
@@ -125,7 +125,7 @@ mod tests {
         fs::create_dir_all(&dir).expect("scratch dir");
         let path = dir.join("Broken.tsx");
         fs::write(&path, broken).expect("write broken");
-        let sources = vec![(path.to_string_lossy().to_string(), broken.to_string())];
+        let sources = crate::screen_sources(vec![(path.to_string_lossy().to_string(), broken.to_string())]);
         assert!(entry_paths(&sources, &[false]).is_empty());
         assert_eq!(entry_paths(&sources, &[true]), vec![path]);
         fs::remove_dir_all(&dir).expect("cleanup");
