@@ -3,13 +3,15 @@
  * verdict reads into a temporary package root, breaks exactly one of them, and checks that the reason names that part.
  * The copy writes its own native and bundle stamps from its own files, so it is fresh by construction even while other
  * work edits this checkout, and a stale verdict can only come from the change the case made. The native addon binary is
- * a placeholder in the copy: the gate reads its stamp, never the binary. The last describe block pins the cached path:
- * a marker for the dist as it stands is used without recomputing, and a marker whose dist has since changed is ignored.
+ * a placeholder in the copy: the gate reads its stamp, never the binary. The copy walks only the native inputs the native
+ * stamp hashes and never enters a test-temp directory, and a file that a concurrent test or build removes mid-copy is left
+ * out or replaced by a placeholder. The last describe blocks pin the cached path, and the copy's own walk.
  */
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type { Dirent, Stats } from 'node:fs'
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest'
 import {
   assertRsDistFresh,
@@ -21,6 +23,8 @@ import {
 } from './dist-freshness.js'
 import {
   hashNativeInputs,
+  isHashedFile,
+  NATIVE_INPUT_ROOTS,
   nativeBinaryFileName,
   nativeStampFileName,
 } from '../modules/runtime/js/shared/native-inputs.js'
@@ -28,8 +32,12 @@ import { getReferenceNativeTriple } from '../modules/runtime/js/shared/targets.j
 import { BUNDLE_STAMP_FILE, digestFile } from '../scripts/bundle-stamp.mjs'
 
 const PACKAGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const ROOT_FILES = ['Cargo.toml', 'Cargo.lock', 'package.json', 'tsconfig.json']
-const ROOT_DIRS = ['contracts', 'scripts']
+const STAMP_READ_ATTEMPTS = 40
+const STAMP_RETRY_MS = 25
+// Directories that hold no native input: test scratch, build output and dependencies. Other work creates and removes
+// files in them while a test runs, and no hashed input lives under one of these names or under a hidden directory.
+const NON_INPUT_DIR_NAMES = new Set(['node_modules', 'target', 'dist'])
+const SLEEP_CELL = new Int32Array(new SharedArrayBuffer(4))
 const copies: string[] = []
 
 interface StampPaths {
@@ -45,19 +53,123 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
-/** The paths the checkout's bundle stamp covers. Only the paths are read; the copy computes its own digests. */
+/**
+ * The paths the checkout's bundle stamp covers. Only the paths are read; the copy computes its own digests. A build
+ * rewrites the stamp in place, so a read that lands mid-write is retried.
+ */
 function bundlePaths(): StampPaths {
-  const stamp = JSON.parse(fs.readFileSync(path.join(PACKAGE_DIR, 'dist', BUNDLE_STAMP_FILE), 'utf8')) as {
-    inputs: Record<string, string>
-    outputs: Record<string, string>
-  }
+  const stamp = readStampWhenWhole(path.join(PACKAGE_DIR, 'dist', BUNDLE_STAMP_FILE))
   return { inputs: Object.keys(stamp.inputs), outputs: Object.keys(stamp.outputs) }
 }
 
-function copyFile(rel: string, root: string): void {
+interface RecordedStamp {
+  inputs: Record<string, string>
+  outputs: Record<string, string>
+}
+
+function readStampWhenWhole(file: string): RecordedStamp {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return JSON.parse(fs.readFileSync(file, 'utf8')) as RecordedStamp
+    } catch (error) {
+      if (attempt >= STAMP_READ_ATTEMPTS) throw error
+      sleepMs(STAMP_RETRY_MS)
+    }
+  }
+}
+
+function sleepMs(ms: number): void {
+  Atomics.wait(SLEEP_CELL, 0, 0, ms)
+}
+
+/**
+ * Copies one file of the checkout into the copy. A file that a concurrent build or edit removed gets a placeholder
+ * instead: the stamps are computed from the copy's own files, so only the path has to exist there.
+ */
+function copyFile(rel: string, root: string, from: string = PACKAGE_DIR): void {
   const target = path.join(root, rel)
   fs.mkdirSync(path.dirname(target), { recursive: true })
-  fs.copyFileSync(path.join(PACKAGE_DIR, rel), target)
+  try {
+    fs.copyFileSync(path.join(from, rel), target)
+  } catch (error) {
+    if (!isMissing(error)) throw error
+    fs.writeFileSync(target, `placeholder for ${rel}\n`)
+  }
+}
+
+/**
+ * Copies the native inputs of `from` into `to`: the roots NATIVE_INPUT_ROOTS, filtered by isHashedFile, the predicate the
+ * native hash uses. Symlinks are kept as links, dangling ones included. A directory whose name is in NON_INPUT_DIR_NAMES,
+ * or any hidden directory, is never entered. An entry that vanishes mid-copy is left out, and `visit` runs before each
+ * entry so a case can change the tree at a known point in the walk.
+ */
+function copyNativeInputs(from: string, to: string, visit?: (rel: string) => void): void {
+  for (const root of NATIVE_INPUT_ROOTS) copyEntry(from, to, root, visit)
+}
+
+function copyEntry(from: string, to: string, rel: string, visit: ((rel: string) => void) | undefined): void {
+  visit?.(rel)
+  const stat = statIfPresent(path.join(from, rel))
+  if (stat === undefined) return
+  if (stat.isSymbolicLink()) copySymlink(from, to, rel)
+  else if (stat.isDirectory()) copyDirectory(from, to, rel, visit)
+  else if (stat.isFile() && isHashedFile(rel)) copyNativeFile(from, to, rel)
+}
+
+function copySymlink(from: string, to: string, rel: string): void {
+  ifPresent(() => {
+    fs.mkdirSync(path.dirname(path.join(to, rel)), { recursive: true })
+    fs.symlinkSync(fs.readlinkSync(path.join(from, rel)), path.join(to, rel))
+  })
+}
+
+function copyDirectory(from: string, to: string, rel: string, visit: ((rel: string) => void) | undefined): void {
+  for (const entry of listIfPresent(path.join(from, rel))) {
+    if (entry.isDirectory() && isNonInputDir(entry.name)) continue
+    copyEntry(from, to, `${rel}/${entry.name}`, visit)
+  }
+}
+
+function copyNativeFile(from: string, to: string, rel: string): void {
+  ifPresent(() => {
+    fs.mkdirSync(path.dirname(path.join(to, rel)), { recursive: true })
+    fs.copyFileSync(path.join(from, rel), path.join(to, rel))
+  })
+}
+
+function isNonInputDir(name: string): boolean {
+  return name.startsWith('.') || NON_INPUT_DIR_NAMES.has(name)
+}
+
+function isMissing(error: unknown): boolean {
+  return (error as NodeJS.ErrnoException).code === 'ENOENT'
+}
+
+/** Runs `step`, treating a path that a concurrent test or build removed as already gone. */
+function ifPresent(step: () => void): void {
+  try {
+    step()
+  } catch (error) {
+    if (!isMissing(error)) throw error
+  }
+}
+
+function statIfPresent(file: string): Stats | undefined {
+  try {
+    return fs.lstatSync(file)
+  } catch (error) {
+    if (isMissing(error)) return undefined
+    throw error
+  }
+}
+
+function listIfPresent(dir: string): Dirent[] {
+  try {
+    return fs.readdirSync(dir, { withFileTypes: true })
+  } catch (error) {
+    if (isMissing(error)) return []
+    throw error
+  }
 }
 
 function triple(): string {
@@ -81,26 +193,16 @@ function writeStamps(root: string, paths: StampPaths): void {
 }
 
 /**
- * A package root holding what the verdict reads: every Cargo manifest and Rust source, the bundle inputs at the paths
- * the checkout's stamp lists, the bundle outputs, both stamps, and a placeholder native binary.
+ * A package root holding what the verdict reads: the native inputs the walk finds, the bundle inputs and outputs the
+ * checkout's stamp lists (copied, or placeholders where a concurrent build has removed them), both stamps, and a
+ * placeholder native binary.
  */
 function copyOfCheckout(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rs-dist-copy-'))
   copies.push(root)
   const paths = bundlePaths()
-  const bundleInputs = new Set(paths.inputs)
-  const isNeeded = (rel: string): boolean => /(^|\/)Cargo\.toml$|\.rs$/.test(rel) || bundleInputs.has(rel)
-  // Symlinks are kept as links, dangling ones included: the native hash records a dangling link as a missing entry.
-  fs.cpSync(path.join(PACKAGE_DIR, 'modules'), path.join(root, 'modules'), {
-    recursive: true,
-    filter: src => {
-      const stat = fs.lstatSync(src)
-      const rel = path.relative(PACKAGE_DIR, src).split(path.sep).join('/')
-      return stat.isDirectory() || stat.isSymbolicLink() || isNeeded(rel)
-    },
-  })
-  for (const file of ROOT_FILES) copyFile(file, root)
-  for (const dir of ROOT_DIRS) fs.cpSync(path.join(PACKAGE_DIR, dir), path.join(root, dir), { recursive: true })
+  copyNativeInputs(PACKAGE_DIR, root)
+  for (const rel of paths.inputs) copyFile(rel, root)
   for (const rel of paths.outputs) copyFile(path.join('dist', rel), root)
   writeStamps(root, paths)
   const binary = path.join(root, 'dist', 'native', nativeBinaryFileName(triple()))
@@ -192,5 +294,67 @@ describe('the cached verdict from the run marker', () => {
     stubMarkerFor(root, ['SENTINEL: verdict read from the run marker'])
     fs.writeFileSync(path.join(root, 'dist', 'native', nativeStampFileName(triple())), `${'0'.repeat(64)}\n`)
     expect(() => assertRsDistFresh(root)).toThrow(/does not match current rust inputs/)
+  })
+})
+
+/** A checkout with hashed and unhashed files, and a test-temp directory in modules/tasty that a test churns. */
+function fixtureCheckout(): string {
+  const root = emptyDir()
+  const files: Record<string, string> = {
+    'Cargo.toml': '[workspace]\n',
+    'Cargo.lock': 'version = 4\n',
+    'modules/tasty/Cargo.toml': '[package]\n',
+    'modules/tasty/extra.rs': 'pub fn extra() {}\n',
+    'modules/tasty/lib.rs': 'pub fn lib() {}\n',
+    'modules/tasty/notes.ts': 'export {}\n',
+    'modules/tasty/.scratch/cache.rs': 'pub fn cached() {}\n',
+  }
+  for (const [rel, text] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true })
+    fs.writeFileSync(path.join(root, rel), text)
+  }
+  return root
+}
+
+function emptyDir(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rs-dist-walk-'))
+  copies.push(dir)
+  return dir
+}
+
+describe('the copy of the native inputs', () => {
+  it('never enters a test-temp directory, even while a test creates and removes a Rust file in it', () => {
+    const from = fixtureCheckout()
+    const to = emptyDir()
+    const visited: string[] = []
+    copyNativeInputs(from, to, rel => {
+      visited.push(rel)
+      if (rel === 'modules/tasty/lib.rs') {
+        const churn = path.join(from, 'modules/tasty/.scratch/churn.rs')
+        fs.writeFileSync(churn, 'pub fn churn() {}\n')
+        fs.rmSync(churn)
+      }
+    })
+    expect(visited.filter(rel => rel.includes('.scratch'))).toEqual([])
+    expect(fs.readFileSync(path.join(to, 'modules/tasty/lib.rs'), 'utf8')).toBe('pub fn lib() {}\n')
+    expect(fs.existsSync(path.join(to, 'modules/tasty/.scratch'))).toBe(false)
+    expect(fs.existsSync(path.join(to, 'modules/tasty/notes.ts'))).toBe(false)
+  })
+
+  it('leaves out an input that a concurrent edit removes after the walk lists it', () => {
+    const from = fixtureCheckout()
+    const to = emptyDir()
+    copyNativeInputs(from, to, rel => {
+      if (rel === 'modules/tasty/extra.rs') fs.rmSync(path.join(from, rel))
+    })
+    expect(fs.existsSync(path.join(to, 'modules/tasty/extra.rs'))).toBe(false)
+    expect(fs.readFileSync(path.join(to, 'modules/tasty/lib.rs'), 'utf8')).toBe('pub fn lib() {}\n')
+  })
+
+  it('writes a placeholder for a bundle file that a build removed from the checkout', () => {
+    const from = fixtureCheckout()
+    const to = emptyDir()
+    copyFile('dist/gone.mjs', to, from)
+    expect(fs.readFileSync(path.join(to, 'dist/gone.mjs'), 'utf8')).toBe('placeholder for dist/gone.mjs\n')
   })
 })

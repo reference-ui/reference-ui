@@ -24,7 +24,8 @@ interface InputEntry {
   abs?: string
 }
 
-function isHashedFile(relativePosix: string): boolean {
+/** Whether a checkout-relative path is a native input: a workspace or crate manifest, the lockfile, or a Rust source. */
+export function isHashedFile(relativePosix: string): boolean {
   if (relativePosix === 'Cargo.toml' || relativePosix === 'Cargo.lock') return true
   if (!relativePosix.startsWith('modules/')) return false
   const base = relativePosix.slice(relativePosix.lastIndexOf('/') + 1)
