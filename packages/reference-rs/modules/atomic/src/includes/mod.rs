@@ -8,6 +8,10 @@
 
 mod braces;
 mod glob;
+mod nfa;
+mod state;
+
+pub(crate) use state::GlobState;
 
 /// Compiled include scope: positive alternatives with negative overrides.
 pub struct IncludeScope {

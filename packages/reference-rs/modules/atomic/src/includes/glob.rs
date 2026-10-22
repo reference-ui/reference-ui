@@ -203,7 +203,7 @@ fn decode_at(candidate: &str, from: usize) -> Option<(char, usize)> {
 }
 
 /// One single-character token against one character.
-fn single_hit(token: &Token, hit: char) -> bool {
+pub(super) fn single_hit(token: &Token, hit: char) -> bool {
     match token {
         Token::Literal(want) => hit == *want,
         Token::OneInSegment => hit != '/',
