@@ -1,13 +1,10 @@
-// Link admission for the project walk: which symlinked directory the walk enters, decided from the files its own target holds.
-// It takes a link's alias path and target and emits whether the walk enters it. A link is admitted when it admits a listable file
-// of its target that no earlier admitted link admitted, or when it is the first to reach a target that links to a kept directory;
-// a link under an engine-ignored directory is never admitted, since the Rust walk never enters one. The target is scanned without
-// following its links, so every admission covers a new file or is a first visit, and the walk ends. Entries are sorted by name bytes,
-// the order the Rust walk sorts its entries in.
+// Link admission and directory liveness for the project walk. Under an include, a directory is live when its path from the root
+// can still agree with a positive pattern's literal directory prefix; the walk enters only live directories and only live links,
+// as the Rust walk does. With owns, the first link whose relative path `owns` accepts takes its target; with neither, the first link
+// takes it. Entries are sorted by name bytes, the order the Rust walk sorts its entries in.
 
 import { readdirSync, statSync, type Dirent } from 'node:fs'
-import { basename, join } from 'node:path'
-import { NATIVE_IGNORE_DIRS } from '../../constants.ts'
+import { isAbsolute } from 'node:path'
 
 /** Decides whether a link alias is entered: `rel` is the alias path from the root, `alias` its absolute path, `target` its canonical target. */
 export interface Admission {
@@ -16,17 +13,6 @@ export interface Admission {
 
 /** Whether a path is kept by the include globs: `rel` is relative to the root, `alias` is absolute. */
 export type KeepFn = (rel: string, alias: string) => boolean
-
-/** What a target holds, scanned without following links: its listable files relative to the target, and whether it links to a kept directory. */
-interface Physical {
-  files: string[]
-  dirLinks: boolean
-}
-
-interface PhysicalScan {
-  ignored: (relativePath: string) => boolean
-  out: Physical
-}
 
 // The first link whose relative path `owns` accepts takes its target; later links to it are refused.
 export function linkOnceAdmission(owns: (rel: string) => boolean): Admission {
@@ -40,60 +26,50 @@ export function linkOnceAdmission(owns: (rel: string) => boolean): Admission {
   }
 }
 
-// A link is admitted when it admits a listable file of its target that no earlier admitted link admitted, or when it is the first
-// to reach a target that links to a kept directory. An out-of-scope link therefore never takes a target an in-scope link also reaches.
-export function coverageAdmission(keep: KeepFn, ignored: (relativePath: string) => boolean): Admission {
-  const entered = new Set<string>()
-  const covered = new Map<string, Set<string>>()
-  const scanned = new Map<string, Physical>()
-  return {
-    admit(alias, rel, target) {
-      const physical = physicalOf(target, ignored, scanned)
-      const seen = covered.get(target) ?? new Set<string>()
-      const fresh = physical.files.filter((file) => !seen.has(file) && keep(`${rel}/${file}`, `${alias}/${file}`))
-      const firstVisit = !entered.has(target)
-      entered.add(target)
-      if (fresh.length === 0 && !(physical.dirLinks && firstVisit)) return false
-      covered.set(target, new Set([...seen, ...fresh]))
-      return true
-    },
+// A link is entered when its alias path is live: some include pattern can still reach a path under it. Every live alias is
+// walked, so a target an earlier alias reached still lists the files this alias reaches under it.
+export function liveAdmission(live: (rel: string) => boolean): Admission {
+  return { admit: (_alias, rel) => live(rel) }
+}
+
+/**
+ * The directory liveness test for a list of include patterns: a directory is live when its path from the root agrees with the
+ * literal directory prefix of some positive pattern on every segment both share. A pattern with no usable literal prefix keeps
+ * every directory live: it is absolute, has an empty, `.` or `..` segment, or has no literal directory before its first glob.
+ * Negated patterns never prune, and a list with no positive pattern keeps every directory live.
+ */
+export function liveDirectories(include: readonly string[]): (rel: string) => boolean {
+  const prefixes: string[][] = []
+  for (const pattern of include) {
+    if (pattern.startsWith('!')) continue
+    const prefix = literalPrefix(pattern.replace(/^\.\//, ''))
+    if (prefix === undefined) return () => true
+    prefixes.push(prefix)
+  }
+  if (prefixes.length === 0) return () => true
+  return (rel) => {
+    const segments = rel === '' ? [] : rel.split('/')
+    return prefixes.some((prefix) => agrees(prefix, segments))
   }
 }
 
-function physicalOf(target: string, ignored: (relativePath: string) => boolean, cache: Map<string, Physical>): Physical {
-  const found = cache.get(target)
-  if (found !== undefined) return found
-  const physical: Physical = { files: [], dirLinks: false }
-  scanPhysical(target, '', { ignored, out: physical })
-  cache.set(target, physical)
-  return physical
-}
-
-// The listable extensions: the ones the Rust walk admits, plus MDX, which the fragment scan reads on this side only.
-const LISTABLE = /\.(?:tsx|ts|jsx|js|mdx)$/
-
-function scanPhysical(dir: string, rel: string, scan: PhysicalScan): void {
-  for (const entry of sortedEntries(dir)) scanPhysicalEntry(entry, dir, rel, scan)
-}
-
-// One entry of a target's tree: a real directory is scanned, a link is noted, and a listable file is kept.
-function scanPhysicalEntry(entry: Dirent, dir: string, rel: string, scan: PhysicalScan): void {
-  const childRel = rel === '' ? entry.name : `${rel}/${entry.name}`
-  const pruned = NATIVE_IGNORE_DIRS.has(entry.name) || scan.ignored(childRel)
-  if (entry.isDirectory()) {
-    if (!pruned) scanPhysical(join(dir, entry.name), childRel, scan)
-  } else if (entry.isSymbolicLink()) {
-    scanPhysicalLink(join(dir, entry.name), childRel, pruned, scan.out)
-  } else if (entry.isFile() && LISTABLE.test(entry.name)) {
-    scan.out.files.push(childRel)
+// The leading directory segments with no glob syntax; the last segment names files and is never part of the prefix.
+function literalPrefix(pattern: string): string[] | undefined {
+  const segments = pattern.split('/')
+  if (isAbsolute(pattern) || segments.some((segment) => segment === '' || segment === '.' || segment === '..')) return undefined
+  const literal: string[] = []
+  for (const segment of segments.slice(0, -1)) {
+    if (GLOB_SYNTAX.test(segment)) break
+    literal.push(segment)
   }
+  return literal.length > 0 ? literal : undefined
 }
 
-// A link is noted when it leads to a directory the walk would enter, and kept when it is a listable file.
-function scanPhysicalLink(path: string, childRel: string, pruned: boolean, out: Physical): void {
-  const kind = kindOf(path)
-  if (kind === 'directory' && !pruned) out.dirLinks = true
-  if (kind === 'file' && LISTABLE.test(basename(path))) out.files.push(childRel)
+const GLOB_SYNTAX = /[*?[\]{}()!]/
+
+// True when the path agrees with the prefix on every segment both have, so a directory above a prefix stays live.
+function agrees(prefix: readonly string[], segments: readonly string[]): boolean {
+  return prefix.every((literal, index) => index >= segments.length || segments[index] === literal)
 }
 
 // Entries are sorted by name bytes, the order the Rust walk sorts its entries in, so both sides enter the same first path.

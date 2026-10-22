@@ -1,7 +1,7 @@
-//! Disk-walk and union tests: the disk scan keeps the live set, provided-everything plus a root equals
-//! the bare scan, symlinks keep their stat verdicts on both walks, and roots compare by normalized
-//! candidate. Each test runs `gather` directly over a temp tree and compares sorted pairs. Compiled
-//! only under `cfg(test)` as a child of `sources::tests`.
+//! Disk-walk and union tests over a temp tree: the disk scan, union backfill and root comparison.
+//! Symlinks keep their stat verdicts on both walks, the disk scan keeps the live set, provided-everything plus a root
+//! equals the bare scan, and roots compare by normalized candidate. Each test runs `gather` directly over a temp tree
+//! and compares sorted pairs. Compiled only under `cfg(test)` as a child of `sources::tests`.
 
 use super::{sorted, temp_root, write_tricky_tree};
 use crate::sources::gather::gather;
@@ -358,6 +358,35 @@ fn a_link_under_an_engine_ignored_directory_is_never_walked() {
     assert_eq!(
         listed_paths(&scanned),
         [format!("{root_str}/src/alias/x.ts"), format!("{root_str}/src/app.ts")]
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+    std::fs::remove_dir_all(&outside).unwrap();
+}
+
+/// A file reached only through a link nested in a link target, under an alias that admits none of the target's direct
+/// files: `outside/t` holds `d.ts` and a link `n` to `outside/u`, which holds `x.ts` and `y.ts`. Each alias of `t` admits
+/// one nested file, so both must list: `x.ts` under `src/a/t`, `y.ts` under `src/b/t`.
+#[cfg(unix)]
+#[test]
+fn a_file_reached_only_through_a_nested_link_is_listed_once() {
+    let root = temp_root("nested-residual");
+    let outside = temp_root("nested-residual-outside");
+    write_files(&outside.join("u"), &[("x.ts", "export const x = 1;\n"), ("y.ts", "export const y = 2;\n")]);
+    write_files(&outside.join("t"), &[("d.ts", "export const d = 1;\n")]);
+    std::os::unix::fs::symlink(outside.join("u"), outside.join("t/n")).unwrap();
+    std::fs::create_dir_all(root.join("src/a")).unwrap();
+    std::fs::create_dir_all(root.join("src/b")).unwrap();
+    std::os::unix::fs::symlink(outside.join("t"), root.join("src/a/t")).unwrap();
+    std::os::unix::fs::symlink(outside.join("t"), root.join("src/b/t")).unwrap();
+    let root_str = root.to_string_lossy().to_string();
+    let scanned = gather(&CompileRequest {
+        root_dir: Some(root_str.clone()),
+        include: Some(vec!["src/a/t/n/x.ts".to_string(), "src/b/t/n/y.ts".to_string()]),
+        ..Default::default()
+    });
+    assert_eq!(
+        listed_paths(&scanned),
+        [format!("{root_str}/src/a/t/n/x.ts"), format!("{root_str}/src/b/t/n/y.ts")]
     );
     std::fs::remove_dir_all(&root).unwrap();
     std::fs::remove_dir_all(&outside).unwrap();

@@ -1,7 +1,5 @@
-//! Gathers a compile's sources from its inputs: the provided `files` union-filled from disk when
-//! present, or the filtered `root_dir` scan otherwise. Takes the request's include scope and root and
-//! emits unsorted `(path, content)` pairs, which `request::collect` sorts afterwards. An empty `files`
-//! list counts as absent, so emptiness and absence both mean the caller handed nothing over.
+//! Gathers a compile's sources: the provided `files` union-filled from disk, or the `root_dir` scan.
+//! Takes the request's include scope and root and emits unsorted `(path, content)` pairs, which `request::collect` sorts afterwards. An empty `files` list counts as absent, so emptiness and absence both mean the caller handed nothing over.
 
 use std::path::Path;
 
@@ -9,7 +7,7 @@ use crate::includes::{FileMatcher, IncludeScope};
 use crate::{CompileRequest, VirtualSource};
 
 use super::backfill::walk_root;
-use super::walk::scan_dir;
+use super::walk::{scan_dir, WalkScope};
 
 /// Provided `files` union-filled from disk when present, otherwise the
 /// filtered `root_dir` scan. An empty list scans: absence and emptiness
@@ -18,15 +16,16 @@ pub(super) fn gather(request: &CompileRequest) -> Vec<(String, String)> {
     let patterns = request.include.as_deref().unwrap_or(&[]);
     let scope = IncludeScope::compile(patterns);
     let matcher = scope.matcher(request.root_dir.as_deref());
+    let walk = WalkScope::new(patterns, &matcher);
     if let Some(files) = &request.files {
         if !files.is_empty() {
-            return union_sources(files, request.root_dir.as_deref(), &matcher);
+            return union_sources(files, request.root_dir.as_deref(), &matcher, &walk);
         }
     }
 
     let mut sources = Vec::new();
     if let Some(root_dir) = &request.root_dir {
-        scan_dir(Path::new(root_dir), &matcher, &mut sources);
+        scan_dir(Path::new(root_dir), &walk, &mut sources);
     }
     sources
 }
@@ -52,11 +51,12 @@ fn union_sources(
     files: &[VirtualSource],
     root: Option<&str>,
     matcher: &FileMatcher,
+    walk: &WalkScope,
 ) -> Vec<(String, String)> {
     let mut provided = filter_virtual_sources(files, matcher);
     let Some(root_dir) = root else {
         return provided;
     };
-    walk_root(Path::new(root_dir), matcher, &mut provided);
+    walk_root(Path::new(root_dir), walk, &mut provided);
     provided
 }

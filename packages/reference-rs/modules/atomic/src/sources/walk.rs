@@ -1,17 +1,16 @@
-//! Disk walk for source discovery: sorted directory entries with the readdir type riding free, the
-//! fixed ignore set, and the extension gate, in one traversal shared by the collecting scan and the
-//! union backfill. Takes a root, an include matcher and the canonical identities already claimed, and
-//! emits the in-scope `(path, content)` pairs in walk order. A symlinked directory is entered only when it
-//! admits a file of its target that no earlier admitted link admitted (or when it is the first to reach a
-//! target that links to a directory), never back into an ancestor, and never under an engine-ignored directory,
-//! so a loop ends at the link that closes it. A file reached through two paths is emitted once, under the
-//! first in-scope path in walk order. The //! predicates here are shared with the native scan gate so they cannot drift apart.
+//! Disk walk for source discovery, shared by the collecting scan and the union backfill.
+//! It takes a root, the include scope and the canonical identities already claimed, and emits the in-scope
+//! `(path, content)` pairs in walk order. A directory is entered only when an include pattern can still reach
+//! it by its path from the root, and a symlinked directory is entered under every alias that passes that test,
+//! unless its target is already on the path being walked, which ends a loop at the link that closes it. A file
+//! reached through several paths is emitted once, under its first in-scope path in walk order, real paths before
+//! link aliases. The ignore set and the extension gate are shared with the native scan gate, so the two cannot
+//! drift apart.
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::FxHashSet;
 
 use crate::includes::FileMatcher;
 
@@ -76,169 +75,183 @@ pub(super) fn entry_is_dir(file_type: Option<&std::fs::FileType>, path: &Path) -
     }
 }
 
-/// Recursively collect supported sources under `dir`, skipping fixed ignores. Nothing is claimed up
-/// front, so the first in-scope path to each file wins, a real path ahead of a link alias.
-pub(super) fn scan_dir(dir: &Path, matcher: &FileMatcher, acc: &mut Vec<(String, String)>) {
-    walk_tree(dir, matcher, FxHashSet::default(), acc);
+/// What one traversal keeps and enters: the matcher that keeps a file, and the liveness test that keeps a
+/// directory an include pattern can still reach.
+pub(super) struct WalkScope<'m, 'a> {
+    matcher: &'m FileMatcher<'a>,
+    liveness: Liveness,
 }
 
-/// The one traversal behind the collecting scan and the union backfill. `claimed` holds the canonical
-/// identities the caller already provides, so the walk never reads a file the list carries under
-/// another path. Link aliases wait until the real tree is done, so a file listed under its real path is
-/// never listed again through a link.
-pub(super) fn walk_tree(
-    root: &Path,
-    matcher: &FileMatcher,
+impl<'m, 'a> WalkScope<'m, 'a> {
+    /// Binds the include patterns' literal directory prefixes to the matcher that keeps the files.
+    pub(super) fn new(patterns: &[String], matcher: &'m FileMatcher<'a>) -> Self {
+        Self {
+            matcher,
+            liveness: Liveness::new(patterns),
+        }
+    }
+}
+
+/// The literal directory prefixes of the positive include patterns. A directory can hold a match only when its
+/// path agrees with one prefix on the segments both share; `None` means some pattern has no usable literal
+/// prefix, so every directory is live.
+struct Liveness {
+    prefixes: Option<Vec<Vec<String>>>,
+}
+
+impl Liveness {
+    fn new(patterns: &[String]) -> Self {
+        let positive: Vec<&str> = patterns
+            .iter()
+            .map(String::as_str)
+            .filter(|pattern| !pattern.starts_with('!'))
+            .map(|pattern| pattern.strip_prefix("./").unwrap_or(pattern))
+            .collect();
+        let prefixes: Option<Vec<Vec<String>>> =
+            positive.iter().map(|pattern| literal_prefix(pattern)).collect();
+        match prefixes {
+            Some(list) if !list.is_empty() => Self {
+                prefixes: Some(list),
+            },
+            _ => Self { prefixes: None },
+        }
+    }
+
+    fn live(&self, rel: &Path) -> bool {
+        match &self.prefixes {
+            Some(prefixes) => prefixes.iter().any(|prefix| agrees(prefix, rel)),
+            None => true,
+        }
+    }
+}
+
+/// The literal directory segments a pattern starts from. `None` when a segment is empty, `.` or `..`, when the
+/// pattern is absolute, or when no literal directory comes before the first glob. The last segment names files
+/// and is never part of the prefix.
+fn literal_prefix(pattern: &str) -> Option<Vec<String>> {
+    let segments: Vec<&str> = pattern.split('/').collect();
+    if pattern.starts_with('/') || segments.iter().any(|s| matches!(*s, "" | "." | "..")) {
+        return None;
+    }
+    let literal: Vec<String> = segments[..segments.len() - 1]
+        .iter()
+        .copied()
+        .take_while(|segment| !has_glob_syntax(segment))
+        .map(str::to_string)
+        .collect();
+    (!literal.is_empty()).then_some(literal)
+}
+
+fn has_glob_syntax(segment: &str) -> bool {
+    segment.contains(|c: char| matches!(c, '*' | '?' | '[' | ']' | '{' | '}' | '(' | ')' | '!'))
+}
+
+/// True when the path agrees with the prefix on every segment both have, so a directory above a prefix is kept.
+fn agrees(prefix: &[String], rel: &Path) -> bool {
+    prefix
+        .iter()
+        .zip(rel.components())
+        .all(|(literal, part)| part.as_os_str() == literal.as_str())
+}
+
+/// Where a walk stands: the canonical path of the directory, its path from the walk root, and whether a link
+/// carried the walk there.
+struct Place<'a> {
+    canon: &'a Path,
+    rel: &'a Path,
+    via_link: bool,
+}
+
+/// The state of one traversal: the scope, the identities claimed so far, the canonical directories on the path
+/// being walked, the link-alias files waiting for the real tree, and the output.
+struct WalkCtx<'w, 'm, 'a> {
+    scope: &'w WalkScope<'m, 'a>,
     claimed: FxHashSet<PathBuf>,
-    acc: &mut Vec<(String, String)>,
-) {
-    let mut walk = WalkCtx {
-        matcher,
-        claimed,
-        entered: FxHashSet::default(),
-        covered: FxHashMap::default(),
-        physical: FxHashMap::default(),
-        deferred: Vec::new(),
-        acc,
-    };
-    walk_dir(root, &canonical_or_self(root), false, &mut walk);
-    drain_deferred(&mut walk);
-}
-
-/// The canonical form of `path`, or `path` itself when it cannot be resolved, so a missing root walks
-/// nothing.
-pub(super) fn canonical_or_self(path: &Path) -> PathBuf {
-    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
-}
-
-/// What one link target holds, scanned without following links: its supported files relative to the target, and
-/// whether it holds a link to a kept directory.
-#[derive(Default)]
-struct Physical {
-    files: Vec<PathBuf>,
-    dir_links: bool,
-}
-
-/// The state of one traversal: the scope, the identities claimed so far, the link targets entered, the files each
-/// target's admitted aliases cover, the scanned targets, the link-alias files waiting for the real tree, and the output.
-struct WalkCtx<'w, 'a> {
-    matcher: &'w FileMatcher<'a>,
-    claimed: FxHashSet<PathBuf>,
-    entered: FxHashSet<PathBuf>,
-    covered: FxHashMap<PathBuf, FxHashSet<PathBuf>>,
-    physical: FxHashMap<PathBuf, Rc<Physical>>,
+    path: Vec<PathBuf>,
     deferred: Vec<(PathBuf, PathBuf)>,
     acc: &'w mut Vec<(String, String)>,
 }
 
-impl WalkCtx<'_, '_> {
-    /// The scanned contents of `target`, scanned once per walk.
-    fn physical_of(&mut self, target: &Path) -> Rc<Physical> {
-        if let Some(found) = self.physical.get(target) {
-            return Rc::clone(found);
-        }
-        let mut scanned = Physical::default();
-        scan_physical(target, Path::new(""), &mut scanned);
-        let scanned = Rc::new(scanned);
-        self.physical.insert(target.to_path_buf(), Rc::clone(&scanned));
-        scanned
-    }
+/// Recursively collect supported sources under `dir`, skipping fixed ignores. Nothing is claimed up front, so the
+/// first in-scope path to each file wins, a real path ahead of a link alias.
+pub(super) fn scan_dir(dir: &Path, scope: &WalkScope, acc: &mut Vec<(String, String)>) {
+    walk_tree(dir, scope, FxHashSet::default(), acc);
 }
 
-/// Scans `dir` for what a link to it can admit: supported files, relative to the scan root, and links to kept
-/// directories. Links are not followed, so a target's own tree is what its alias admits.
-fn scan_physical(dir: &Path, rel: &Path, out: &mut Physical) {
+/// The one traversal behind the collecting scan and the union backfill. `claimed` holds the canonical identities
+/// the caller already provides, so the walk never reads a file the list carries under another path. Link aliases
+/// wait until the real tree is done, so a file listed under its real path is never listed again through a link.
+pub(super) fn walk_tree(
+    root: &Path,
+    scope: &WalkScope,
+    claimed: FxHashSet<PathBuf>,
+    acc: &mut Vec<(String, String)>,
+) {
+    let root_canon = canonical_or_self(root);
+    let mut walk = WalkCtx {
+        scope,
+        claimed,
+        path: vec![root_canon.clone()],
+        deferred: Vec::new(),
+        acc,
+    };
+    let place = Place {
+        canon: &root_canon,
+        rel: Path::new(""),
+        via_link: false,
+    };
+    walk_dir(root, &place, &mut walk);
+    drain_deferred(&mut walk);
+}
+
+/// The canonical form of `path`, or `path` itself when it cannot be resolved, so a missing root walks nothing.
+pub(super) fn canonical_or_self(path: &Path) -> PathBuf {
+    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+}
+
+/// Walks one directory in name order: subdirectories are entered when the scope can reach them, and files are
+/// read when in scope and unclaimed.
+fn walk_dir(dir: &Path, place: &Place, walk: &mut WalkCtx) {
     for entry in sorted_entries(dir) {
-        scan_physical_entry(&entry, rel, out);
+        if !entry_is_dir(entry.file_type.as_ref(), &entry.path) {
+            take_file(&entry.path, place.canon, place.via_link, walk);
+        } else if is_kept_dir(&entry.path) {
+            enter_dir(&entry, place, walk);
+        }
     }
 }
 
-/// One entry of a target's tree: a real directory is scanned, a link is noted, and a supported file is kept.
-fn scan_physical_entry(entry: &WalkEntry, rel: &Path, out: &mut Physical) {
+/// Enters one kept directory unless the include cannot reach it, or a link's target is already on the path being
+/// walked: that link closes a loop. The canonical path is pushed for the whole subtree and popped after it.
+fn enter_dir(entry: &WalkEntry, place: &Place, walk: &mut WalkCtx) {
     let path = &entry.path;
     let Some(name) = path.file_name() else {
         return;
     };
-    let child_rel = rel.join(name);
-    if is_symlink(entry) {
-        scan_physical_link(path, child_rel, out);
-    } else if entry_is_dir(entry.file_type.as_ref(), path) {
-        if is_kept_dir(path) {
-            scan_physical(path, &child_rel, out);
-        }
-    } else if path.is_file() && is_supported_extension(path) {
-        out.files.push(child_rel);
+    let rel = place.rel.join(name);
+    if !walk.scope.liveness.live(&rel) {
+        return;
     }
-}
-
-/// A link is noted when it leads to a directory the walk would enter, and kept when it is a supported file.
-fn scan_physical_link(path: &Path, child_rel: PathBuf, out: &mut Physical) {
-    if path.is_dir() {
-        out.dir_links |= is_kept_dir(path);
-    } else if path.is_file() && is_supported_extension(path) {
-        out.files.push(child_rel);
-    }
-}
-
-/// Walks one directory whose canonical path is `canon`, in name order. `via_link` says whether the
-/// alias this directory is reached by runs through a symlink. Subdirectories are entered under their own
-/// names; files are read when in scope and unclaimed.
-fn walk_dir(dir: &Path, canon: &Path, via_link: bool, walk: &mut WalkCtx) {
-    for entry in sorted_entries(dir) {
-        if !entry_is_dir(entry.file_type.as_ref(), &entry.path) {
-            take_file(&entry.path, canon, via_link, walk);
-        } else if is_kept_dir(&entry.path) {
-            enter_dir(&entry, canon, via_link, walk);
-        }
-    }
-}
-
-/// Descends into one kept directory when `child_canon` allows it. Anything reached through a symlink
-/// carries `via_link` into its whole subtree.
-fn enter_dir(entry: &WalkEntry, canon: &Path, via_link: bool, walk: &mut WalkCtx) {
     let link = is_symlink(entry);
-    if let Some(child) = child_canon(entry, canon, link, walk) {
-        walk_dir(&entry.path, &child, via_link || link, walk);
-    }
-}
-
-/// The canonical directory a walk enters for one kept directory entry, or None when the walk must not
-/// enter it. A real directory sits canonically under its parent, so its path is the parent's joined with
-/// its name and costs no syscall. A symlink is resolved once: a target that is an ancestor of the
-/// directory holding the link is a loop and is cut, and a link the admission rule rejects is skipped.
-fn child_canon(entry: &WalkEntry, canon: &Path, link: bool, walk: &mut WalkCtx) -> Option<PathBuf> {
-    if !link {
-        return entry.path.file_name().map(|name| canon.join(name));
-    }
-    let target = fs::canonicalize(&entry.path).ok()?;
-    if canon.starts_with(&target) || !admit_link(&entry.path, &target, walk) {
-        return None;
-    }
-    Some(target)
-}
-
-/// Admits one link alias to its target. The alias is entered when it admits a supported file of the target that no
-/// earlier admitted alias admitted, or when it is the first to reach a target that holds links to directories. An
-/// alias the include rejects, or one whose files earlier aliases already cover, is skipped, so an out-of-scope link
-/// never takes ownership of a target an in-scope link also reaches. Every admission covers a new file or is a
-/// target's first visit, so the walk ends.
-fn admit_link(alias: &Path, target: &Path, walk: &mut WalkCtx) -> bool {
-    let physical = walk.physical_of(target);
-    let matcher = walk.matcher;
-    let covered = walk.covered.get(target);
-    let fresh: Vec<PathBuf> = physical
-        .files
-        .iter()
-        .filter(|rel| !covered.is_some_and(|set| set.contains(*rel)))
-        .filter(|rel| matcher.matches_file(&alias.join(rel).to_string_lossy()))
-        .cloned()
-        .collect();
-    let first_visit = walk.entered.insert(target.to_path_buf());
-    if fresh.is_empty() && !(physical.dir_links && first_visit) {
-        return false;
-    }
-    walk.covered.entry(target.to_path_buf()).or_default().extend(fresh);
-    true
+    let canon = if link {
+        let Ok(target) = fs::canonicalize(path) else {
+            return;
+        };
+        if walk.path.contains(&target) {
+            return;
+        }
+        target
+    } else {
+        place.canon.join(name)
+    };
+    walk.path.push(canon.clone());
+    let child = Place {
+        canon: &canon,
+        rel: &rel,
+        via_link: place.via_link || link,
+    };
+    walk_dir(path, &child, walk);
+    walk.path.pop();
 }
 
 /// True when the entry is itself a symbolic link. A type the readdir did not report costs one lstat.
@@ -249,15 +262,15 @@ fn is_symlink(entry: &WalkEntry) -> bool {
     }
 }
 
-/// Handles one supported source inside the include scope. The scope is a pure path predicate, so an
-/// out-of-scope alias costs a match and claims nothing. A real path claims and reads at once; a link
-/// alias is only queued, and reads at the end if no real path listed the same file.
+/// Handles one supported source inside the include scope. The scope is a pure path predicate, so an out-of-scope
+/// file costs a match and claims nothing. A real path claims and reads at once; a link alias is only queued, and
+/// reads at the end if no real path listed the same file.
 fn take_file(path: &Path, canon: &Path, via_link: bool, walk: &mut WalkCtx) {
     if !is_supported_extension(path) {
         return;
     }
     let path_str = path.to_string_lossy();
-    if !walk.matcher.matches_file(&path_str) {
+    if !walk.scope.matcher.matches_file(&path_str) {
         return;
     }
     let Some(name) = path.file_name() else {
@@ -271,8 +284,8 @@ fn take_file(path: &Path, canon: &Path, via_link: bool, walk: &mut WalkCtx) {
     }
 }
 
-/// Lists the queued link aliases in walk order: the first one for each identity that no real path
-/// claimed is read, and the rest of that identity are skipped by the same claim.
+/// Lists the queued link aliases in walk order: the first one for each identity that no real path claimed is read,
+/// and the rest of that identity are skipped by the same claim.
 fn drain_deferred(walk: &mut WalkCtx) {
     for (identity, path) in std::mem::take(&mut walk.deferred) {
         if walk.claimed.insert(identity) {

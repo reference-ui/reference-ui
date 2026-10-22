@@ -1,8 +1,8 @@
-//! Request-level source contract: the exactly-one-of rule between `files` and `retentionToken`, the
-//! drained-retention path that skips the union backfill when the scan's completeness contract covers
-//! the request, and the outcome that reports how backfill settled. Takes a `CompileRequest` and emits
-//! sorted sources with a `BackfillOutcome`, or a diagnostic code for a rejected token. Roots compare
-//! through the scope's candidate normalization so one directory never splits in two.
+//! Request-level source contract for `files` and `retentionToken`.
+//! It holds the exactly-one-of rule, the drained-retention path that skips the union backfill when the scan's
+//! completeness contract covers the request, and the outcome that reports how backfill settled. Takes a
+//! `CompileRequest` and emits sorted sources with a `BackfillOutcome`, or a diagnostic code for a rejected token.
+//! Roots compare through the scope's candidate normalization so one directory never splits in two.
 
 use std::path::Path;
 
@@ -11,6 +11,7 @@ use crate::CompileRequest;
 
 use super::backfill::walk_root;
 use super::gather::gather;
+use super::walk::WalkScope;
 
 /// How one token-path compile settled the union backfill question: the
 /// completeness contract fired, the walk ran, or neither walk applied.
@@ -97,7 +98,8 @@ fn collect_drained(
         provided.sort_unstable_by(|a, b| a.0.cmp(&b.0));
         return (provided, BackfillOutcome::Skipped);
     }
-    walk_root(Path::new(root_dir), &matcher, &mut provided);
+    let walk = WalkScope::new(patterns, &matcher);
+    walk_root(Path::new(root_dir), &walk, &mut provided);
     provided.sort_unstable_by(|a, b| a.0.cmp(&b.0));
     (provided, BackfillOutcome::Walked)
 }

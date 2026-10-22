@@ -1,15 +1,16 @@
 // Project file listing under the native walk's symlink rule. It takes a project root, the include globs and the ignore globs,
 // and emits the matching files as absolute paths: real paths first, in walk order, then the link aliases. One sorted walk per
-// scope enters every real directory under its own path, and a symlinked directory only when it admits a file of its target that
-// no earlier admitted link admitted; it never enters an ancestor. Directories the Rust walk prunes by name (dist, build, ...) are
-// pruned here too, so both sides enter the same links and list the same files. A scope outside the root (`../shared/**`, an
-// absolute glob) walks its own base the same way.
+// scope enters a directory only when an include pattern can still reach it by its path from the root, and it enters a symlinked
+// directory under every such alias; a link back to a directory already on the walk path ends the loop there. A file reached
+// through several paths is listed once, under the first path the walk reaches it by. Directories the Rust walk prunes by name
+// (dist, build, ...) are walked for their real files only, and no link inside them is admitted. A scope outside the root
+// (`../shared/**`, an absolute glob) walks its own base the same way.
 
 import { realpathSync, type Dirent } from 'node:fs'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import picomatch from 'picomatch'
 import { NATIVE_IGNORE_DIRS } from '../../constants.ts'
-import { coverageAdmission, kindOf, linkOnceAdmission, sortedEntries, type Admission, type KeepFn } from './project-admission.ts'
+import { kindOf, linkOnceAdmission, liveAdmission, liveDirectories, sortedEntries, type Admission, type KeepFn } from './project-admission.ts'
 
 /** One directory the walk enters: its canonical path, and whether a link carried the walk to it. */
 interface PlannedDir {
@@ -33,16 +34,17 @@ export interface ProjectPlan {
   dirs: Map<string, PlannedDir>
   /** Entered directory links: alias path to the canonical target the walk enters through it. */
   links: Map<string, string>
-  /** Refused directory links: alias paths the walk does not enter, because of a loop or because no admitted link needed them. */
+  /** Refused directory links: alias paths the walk does not enter, because of a loop or because no include pattern reaches them. */
   refused: string[]
   files: PlannedFile[]
 }
 
-/** One walk: the base it starts from, its path relative to the root, and the test that keeps a file. */
+/** One walk: the base it starts from, its path relative to the root, the test that keeps a file, and the test that keeps a directory. */
 interface Scope {
   base: string
   prefix: string
   keep: KeepFn
+  live: (rel: string) => boolean
 }
 
 /** One directory the walk is entering: its alias path, its paths relative to the root and to its scope base, its canonical path, and its link and engine flags. */
@@ -66,15 +68,18 @@ interface EntryRef {
 
 interface WalkState {
   ignored: (relativePath: string) => boolean
-  keep: Scope['keep']
+  keep: KeepFn
+  live: (rel: string) => boolean
   admit: Admission
   plan: ProjectPlan
+  /** Canonical directories on the path the walk is on: a link back to one of them closes a loop. */
+  walking: Set<string>
 }
 
 /**
  * Walks `cwd` with the ignore globs applied to every path, as fast-glob applies them, and the engine-ignored directory names the
- * Rust walk prunes. With include globs a link is admitted by the files it adds to its target; with `owns`, the first link whose
- * relative path `owns` accepts takes its target; with neither, the first link takes it.
+ * Rust walk prunes. With include globs a directory is entered only when the globs can still reach it, and a link is entered under
+ * each such alias; with `owns`, the first link whose relative path `owns` accepts takes its target; with neither, the first link takes it.
  */
 export function planProjectWalk(
   cwd: string,
@@ -86,11 +91,11 @@ export function planProjectWalk(
   const plan: ProjectPlan = { root, dirs: new Map(), links: new Map(), refused: [], files: [] }
   const ignored = ignoreMatcher(ignore)
   for (const scope of scopesOf(root, include)) {
-    const admit = admissionFor(scope, include, ignored, owns)
+    const admit = admissionFor(scope, include, owns)
     const canon = canonicalOrSelf(scope.base)
     const local = scope.prefix === '' ? undefined : ''
     const frame: DirFrame = { alias: scope.base, rel: scope.prefix, local, canon, viaLink: false, engine: false }
-    planDir(frame, { ignored, keep: scope.keep, admit, plan })
+    planDir(frame, { ignored, keep: scope.keep, live: scope.live, admit, plan, walking: new Set() })
   }
   return plan
 }
@@ -132,28 +137,25 @@ function scopesOf(root: string, include: readonly string[]): Scope[] {
   const positive = include.filter((pattern) => !isNegated(pattern)).map(normalizePattern)
   const inRoot = positive.filter((pattern) => !isOutside(pattern))
   const outside = positive.filter(isOutside)
-  const scopes: Scope[] = [{ base: root, prefix: '', keep: keepMatcher(inRoot) }]
+  const scopes: Scope[] = [{ base: root, prefix: '', keep: keepMatcher(inRoot), live: liveDirectories(inRoot) }]
   const bases = [...new Set(outside.map((pattern) => resolve(root, staticPrefix(pattern))))]
   for (const base of bases) {
-    scopes.push({ base, prefix: relative(root, base), keep: keepMatcher(outside) })
+    scopes.push({ base, prefix: relative(root, base), keep: keepMatcher(outside), live: liveDirectories(outside) })
   }
   return scopes
 }
 
-function admissionFor(
-  scope: Scope,
-  include: readonly string[],
-  ignored: (relativePath: string) => boolean,
-  owns: ((rel: string) => boolean) | undefined,
-): Admission {
+function admissionFor(scope: Scope, include: readonly string[], owns: ((rel: string) => boolean) | undefined): Admission {
   if (owns !== undefined) return linkOnceAdmission(owns)
-  if (include.length > 0) return coverageAdmission(scope.keep, ignored)
+  if (include.length > 0) return liveAdmission(scope.live)
   return linkOnceAdmission(() => true)
 }
 
 function planDir(frame: DirFrame, state: WalkState): void {
   state.plan.dirs.set(frame.alias, { canon: frame.canon, viaLink: frame.viaLink })
+  state.walking.add(frame.canon)
   for (const entry of sortedEntries(frame.alias)) planEntry(entry, frame, state)
+  state.walking.delete(frame.canon)
 }
 
 // One entry of a directory being walked: a subdirectory is entered, a link is decided, and a file is kept.
@@ -169,9 +171,9 @@ function planEntry(entry: Dirent, frame: DirFrame, state: WalkState): void {
 }
 
 // An engine-ignored directory is still walked for its real files, which the fragment scan matches on this side; the Rust walk
-// prunes it, so no link inside it is admitted.
+// prunes it, so no link inside it is admitted. A directory no include pattern can reach is not entered.
 function planSubdir(child: EntryRef, canon: string, frame: DirFrame, state: WalkState): void {
-  if (isIgnored(child, state)) return
+  if (isIgnored(child, state) || !state.live(child.rel)) return
   const engine = frame.engine || NATIVE_IGNORE_DIRS.has(basename(child.alias))
   planDir({ ...child, canon, viaLink: frame.viaLink, engine }, state)
 }
@@ -212,11 +214,12 @@ function planLink(entry: EntryRef, frame: DirFrame, state: WalkState): void {
     return
   }
   if (NATIVE_IGNORE_DIRS.has(basename(entry.alias))) return
-  planDirLink(entry, frame.canon, realpathSync(entry.alias), state)
+  planDirLink(entry, realpathSync(entry.alias), state)
 }
 
-function planDirLink(entry: EntryRef, canon: string, target: string, state: WalkState): void {
-  if (isSameOrAncestor(target, canon) || !state.admit.admit(entry.alias, entry.rel, target)) {
+// A link is refused when its target is on the walk path (a loop) or the admission rule rejects its alias; an entered link walks its target.
+function planDirLink(entry: EntryRef, target: string, state: WalkState): void {
+  if (state.walking.has(target) || !state.admit.admit(entry.alias, entry.rel, target)) {
     state.plan.refused.push(entry.alias)
     return
   }
@@ -230,10 +233,6 @@ function canonicalOrSelf(path: string): string {
   } catch {
     return path
   }
-}
-
-function isSameOrAncestor(target: string, dir: string): boolean {
-  return dir === target || dir.startsWith(target.endsWith(sep) ? target : `${target}${sep}`)
 }
 
 function isNegated(pattern: string): boolean {
@@ -261,7 +260,7 @@ function staticPrefix(pattern: string): string {
 }
 
 // Relative patterns match the root-relative path; absolute patterns match the absolute path, as fast-glob returns them.
-function keepMatcher(include: readonly string[]): Scope['keep'] {
+function keepMatcher(include: readonly string[]): KeepFn {
   const relativePatterns = include.filter((pattern) => !isAbsolute(pattern))
   const absolutePatterns = include.filter((pattern) => isAbsolute(pattern))
   const relativeMatch = relativePatterns.length > 0 ? picomatch(relativePatterns, { dot: true }) : () => false

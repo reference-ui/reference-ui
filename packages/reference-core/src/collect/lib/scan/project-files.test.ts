@@ -152,3 +152,20 @@ describe('listProjectFiles scope and engine-ignored directories', () => {
   })
 })
 
+describe('listProjectFiles reaches a nested link under an alias that admits none of the target', () => {
+  it('lists a file reached only through a link nested in a target that an earlier alias also reaches', () => {
+    const root = tempRoot()
+    const outside = tempRoot()
+    writeFiles(outside, { 't/d.ts': 'export const d = 1\n', 'u/x.ts': 'export const x = 1\n', 'u/y.ts': 'export const y = 2\n' })
+    symlinkSync(join(outside, 'u'), join(outside, 't', 'n'))
+    mkdirSync(join(root, 'src', 'a'), { recursive: true })
+    mkdirSync(join(root, 'src', 'b'), { recursive: true })
+    symlinkSync(join(outside, 't'), join(root, 'src', 'a', 't'))
+    symlinkSync(join(outside, 't'), join(root, 'src', 'b', 't'))
+    expect(listProjectFiles(root, ['src/a/t/n/x.ts', 'src/b/t/n/y.ts'], ROOT_IGNORE)).toEqual([
+      join(root, 'src', 'a', 't', 'n', 'x.ts'),
+      join(root, 'src', 'b', 't', 'n', 'y.ts'),
+    ])
+  })
+})
+

@@ -1,18 +1,12 @@
-//! Union backfill: completes a provided `files` list or a drained retention with the in-scope disk
-//! paths it misses. Takes the scope matcher and the provided sources, claims the canonical identity of
-//! each provided file before the walk, and appends only the disk files no claim covers, so a file the
-//! list carries under one path is never read again under another. Provided bytes always win on
-//! collision. The `BACKFILL_WALKS` counter records each completed walk for the test-only completeness
-//! telemetry.
+//! Union backfill: completes a provided list or drained retention with the disk paths it misses.
+//! Takes the walk scope and the provided sources, claims the canonical identity of each provided file before the walk, and appends only the disk files no claim covers, so a file the list carries under one path is never read again under another. Provided bytes always win on collision. The `BACKFILL_WALKS` counter records each completed walk for the test-only completeness telemetry.
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::includes::FileMatcher;
-
-use super::walk::{canonical_or_self, walk_tree};
+use super::walk::{canonical_or_self, walk_tree, WalkScope};
 
 /// Union backfill walks completed this process (token path plus the legacy
 /// `files` union). Skipped walks never increment: a complete retention
@@ -30,10 +24,10 @@ pub(super) fn backfill_walks() -> u64 {
 /// Count one union walk, then run it from `root`, appending to `acc` the disk sources it does not
 /// already carry. The counter moves before the walk so a walk that reads nothing still shows up in the
 /// telemetry.
-pub(super) fn walk_root(root: &Path, matcher: &FileMatcher, acc: &mut Vec<(String, String)>) {
+pub(super) fn walk_root(root: &Path, scope: &WalkScope, acc: &mut Vec<(String, String)>) {
     BACKFILL_WALKS.fetch_add(1, Ordering::SeqCst);
     let claimed = claims_of(acc);
-    walk_tree(root, matcher, claimed, acc);
+    walk_tree(root, scope, claimed, acc);
 }
 
 /// The canonical identity of each provided source: its parent directory's canonical path joined with
