@@ -4,8 +4,8 @@
 //! listed file.
 //! A directory is entered only when an include pattern can still reach it by its path from the root, and every
 //! directory entered records its canonical path and the include state of the path that reached it.
-//! A symlinked directory is walked only when that pair is new, which bounds the walk by the directories times the
-//! states they reach, while a real directory is always walked.
+//! A directory reached through a symlink, or beneath one, is walked only when that pair is new, which bounds the walk
+//! by the directories times the states they reach. A directory with no link on its path from the root is always walked.
 //! A file reached through several paths is listed once, under its first in-scope path in walk order, real paths before
 //! link aliases.
 
@@ -155,8 +155,8 @@ fn agrees(prefix: &[String], rel: &Path) -> bool {
         .all(|(literal, part)| part.as_os_str() == literal.as_str())
 }
 
-/// Where a walk stands: the canonical path of the directory, its path from the walk root, whether a link carried the
-/// walk there, and the include state of that path.
+/// Where a walk stands: the canonical path of the directory, its path from the walk root, whether a link lies on that
+/// path, and the include state of that path.
 struct Place<'a> {
     canon: &'a Path,
     rel: &'a Path,
@@ -228,9 +228,9 @@ fn dir_name(path: &Path) -> &str {
 }
 
 /// Enters one kept directory unless the include cannot reach it. Its state is the parent's state stepped by the entry
-/// name, and its (canonical directory, state) pair is recorded. A real directory is always walked; a link is walked
-/// only when its pair is new, so a link that closes a loop or repeats an earlier alias is cut where the earlier visit
-/// already covers it.
+/// name, and its (canonical directory, state) pair is recorded. A directory reached through a link, or beneath one, is
+/// walked only when its pair is new, so a loop or a repeated alias is cut where the earlier visit already covers it.
+/// A directory with no link above it is always walked.
 fn enter_dir(entry: &WalkEntry, place: &Place, walk: &mut WalkCtx) {
     let path = &entry.path;
     let Some(name) = path.file_name() else {
@@ -249,15 +249,16 @@ fn enter_dir(entry: &WalkEntry, place: &Place, walk: &mut WalkCtx) {
     } else {
         place.canon.join(name)
     };
+    let via_link = place.via_link || link;
     let state = walk.scope.matcher.step(place.state, name);
     let fresh = walk.visited.insert((canon.clone(), state.clone()));
-    if link && !fresh {
+    if via_link && !fresh {
         return;
     }
     let child = Place {
         canon: &canon,
         rel: &rel,
-        via_link: place.via_link || link,
+        via_link,
         state: &state,
     };
     walk_dir(path, &child, walk);

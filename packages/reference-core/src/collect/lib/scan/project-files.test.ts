@@ -222,6 +222,15 @@ describe('listProjectFiles under an include walks each (directory, glob state) o
     linkLattice(root, 8)
     expect(listProjectFiles(root, SRC_INCLUDE, ROOT_IGNORE)).toEqual([join(root, 'src', 'n0', 'x.ts')])
   })
+
+  it('cuts a real directory beneath a link whose (directory, glob state) pair was already walked', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'lib/a.ts': 'export const a = 1\n' })
+    mkdirSync(join(root, 'src', 'c'), { recursive: true })
+    symlinkSync('..', join(root, 'src', 'c', 'l2'))
+    symlinkSync(join('..', '..', 'lib'), join(root, 'src', 'c', 'l5'))
+    expect(listProjectFiles(root, ['src/**/*.ts', '!src/zz/**'], ROOT_IGNORE)).toEqual([join(root, 'src', 'c', 'l5', 'a.ts')])
+  })
 })
 
 describe('listProjectFiles under an include: brace, negation and fallback shapes', () => {

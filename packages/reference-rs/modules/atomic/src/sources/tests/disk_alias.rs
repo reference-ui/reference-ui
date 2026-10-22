@@ -1,5 +1,5 @@
 //! Alias-aware symlink walk tests over a temp tree.
-//! A file reached only through a link that closes a loop is listed under that link, and a link-only directory that re-enters itself in a new include state lists its file under the loop alias that sorts first. Cliques, lattices, brace alternatives and negations each list every file once, under the first in-scope path in walk order. Each walk runs on its own thread with a budget, so a walk that never finishes fails its test by name instead of stalling the suite. Compiled only under `cfg(test)` as a child of `sources::tests`, and unix-only because links need symlink privileges.
+//! A file reached only through a link that closes a loop is listed under that link, and a link-only directory that re-enters itself in a new include state lists its file under the loop alias that sorts first. Cliques, lattices, brace alternatives and negations each list every file once, under the first in-scope path in walk order. A real directory beneath a link is cut when its (directory, state) pair was already visited, as the link is. Each walk runs on its own thread with a budget, so a walk that never finishes fails its test by name instead of stalling the suite. Compiled only under `cfg(test)` as a child of `sources::tests`, and unix-only because links need symlink privileges.
 
 #![cfg(unix)]
 
@@ -177,5 +177,23 @@ fn a_self_link_that_changes_state_lists_its_file_under_the_loop_alias_that_sorts
     assert_eq!(
         listed_in_walk_order(&root, &["src/d/**/y.ts", "src/d/a/**/y.ts"]),
         [format!("{root_str}/src/d/a/f/y.ts")]
+    );
+}
+
+/// `src/c/l2` links back to `src`, which the `!src/zz/**` negation keeps in a state the real `src/c` does not share, so the
+/// link is walked. The real `src/c` beneath it then repeats a (directory, state) pair already visited, so the walk cuts
+/// there and `a.ts` is listed once, under `src/c/l5`, not under `src/c/l2/c/l5`.
+#[test]
+fn a_real_directory_beneath_a_link_is_cut_when_its_pair_was_visited() {
+    let root = temp_root("beneath-link");
+    let _roots = TempRoots(vec![root.clone()]);
+    write_files(&root, &[("lib/a.ts", "export const a = 1;\n")]);
+    std::fs::create_dir_all(root.join("src/c")).unwrap();
+    std::os::unix::fs::symlink("..", root.join("src/c/l2")).unwrap();
+    std::os::unix::fs::symlink("../../lib", root.join("src/c/l5")).unwrap();
+    let root_str = root.to_string_lossy().into_owned();
+    assert_eq!(
+        listed_in_walk_order(&root, &["src/**/*.ts", "!src/zz/**"]),
+        [format!("{root_str}/src/c/l5/a.ts")]
     );
 }
