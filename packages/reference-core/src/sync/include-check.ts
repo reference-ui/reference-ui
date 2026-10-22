@@ -12,7 +12,7 @@ import { RETENTION_EXCLUDE } from '../collect/constants.ts'
 import { listPlannedFiles, planProjectWalk } from '../collect/lib/scan/project-files.ts'
 import type { NativeDiagnostic } from '../native/contract.ts'
 
-/** The positive include patterns that match no file under cwd. Negations never count. The walk is planned once for all. */
+/** The positive include patterns that match no file under cwd. Negations never count. Each pattern is planned on its own walk. */
 export function deadIncludePatterns(cwd: string, include: readonly string[]): string[] {
   return include.filter((pattern) => !pattern.startsWith('!') && !patternMatchesAFile(cwd, pattern))
 }

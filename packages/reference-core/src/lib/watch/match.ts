@@ -1,13 +1,11 @@
-// Watch matching: the include matcher the engine's walk implies, the engine's
-// ignore set, watch-root derivation, the real-path helper, and the match snapshot
-// a resync refreshes, which maps each symlinked file and directory under include
-// back to its real target. It takes a real project root plus the config
-// include globs and emits predicates over relative paths, root sets, and
-// snapshots. The engine never reads .gitignore: its walk is fast-glob with
-// dot:true and node_modules pruned, then the native directory ignores, so every
-// predicate here mirrors that walk and nothing more. Enumeration goes through the
-// shared project listing, so a symlink loop cannot hang a resync and each linked
-// directory is followed once, the same rule the sync walk applies.
+// Watch matching: include predicates, the ignore set, watch roots, and the match snapshot.
+// A resync refreshes the snapshot, which maps each symlinked file and directory under include back to its real target.
+// It takes a real project root plus the config include globs and emits predicates over relative paths, root sets, and
+// snapshots. The engine never reads .gitignore: its listing matches with picomatch and dot:true, prunes node_modules, then
+// applies the native directory ignores, so every predicate here mirrors that listing and nothing more. Enumeration goes
+// through the shared project listing, so a symlink loop cannot hang a resync and each file is listed once under its
+// representative path, the rule the sync walk applies. The ownership walk that picks the directories to watch follows the
+// first link per target.
 
 import { realpathSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'

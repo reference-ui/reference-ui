@@ -1,6 +1,6 @@
 // Native single-read scan for fragment discovery.
 // It takes scan options and emits matches plus a retention ref; bytes stay native.
-// fg enumerates, Rust reads plus gates plus retains, and the verbatim
+// The shared listing enumerates, Rust reads plus gates plus retains, and the verbatim
 // splitScan confirms the needle-hits, so match order and selection never drift.
 
 import { sep } from 'node:path'
@@ -85,7 +85,7 @@ function discoveryPatternsOf(options: ScanOptions): DiscoveryPattern[] {
   return patterns
 }
 
-// Walk-completeness subset: the include shapes where fg enumeration provably
+// Walk-completeness subset: the include shapes where the shared listing provably
 // covers every file the native scope matches, so compile may skip its union
 // backfill walk. Anything outside the subset keeps the walk: rejection is
 // always correct, assertion is the claim the differential battery proves.
@@ -100,14 +100,14 @@ function hasWalkableChars(body: string): boolean {
 }
 
 // Globstars agree only as whole segments (`**/`, `/**/`); adjacent or tripled
-// stars cross directories natively while fg reads them as plain stars.
+// stars cross directories natively while picomatch reads them as plain stars.
 function hasWalkStarSegments(body: string): boolean {
   if (body.includes('***')) return false
   return body.split('/').every(segment => !segment.includes('**') || segment === '**')
 }
 
-// Brace ranges (`{1..3}`) expand in fg but stay literal natively, so `..`
-// inside braces rejects. Dot segments outside braces over-enumerate in fg,
+// Brace ranges (`{1..3}`) expand in picomatch but stay literal natively, so `..`
+// inside braces rejects. Dot segments outside braces over-enumerate in picomatch,
 // which is the safe direction.
 function hasNoBraceRanges(body: string): boolean {
   let depth = 0
@@ -119,7 +119,7 @@ function hasNoBraceRanges(body: string): boolean {
   return true
 }
 
-// A lone `{` matches literally natively but matches nothing in fg, so every
+// A lone `{` matches literally natively but matches nothing in picomatch, so every
 // opener needs a later closer. A lone `}` stays literal on both sides.
 function hasClosedWalkBraces(body: string): boolean {
   let seenClose = false
@@ -131,7 +131,7 @@ function hasClosedWalkBraces(body: string): boolean {
 }
 
 // One leading `!` negates on both sides; a second mark is double-negation in
-// fg but a literal mark natively. Returns null when negation disagrees.
+// picomatch but a literal mark natively. Returns null when negation disagrees.
 function stripWalkNegation(pattern: string): string | null {
   if (!pattern.startsWith('!')) return pattern
   const body = pattern.slice(1)

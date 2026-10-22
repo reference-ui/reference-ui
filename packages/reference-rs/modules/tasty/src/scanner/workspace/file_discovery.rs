@@ -2,7 +2,8 @@
 //! It emits them as sorted root-relative file ids, one per real file: a file reached through several paths is listed under
 //! its real path when one is in scope, else under its first alias in walk order, the rule the atomic walk applies too.
 //! The walk follows symlinks, so a link whose target is gone is skipped instead of failing the whole scan, and a link that
-//! closes a loop is cut the same way the atomic walk cuts it. Any other walk error still fails the scan.
+//! closes a loop is cut the same way the atomic walk cuts it, so a file reachable only through that link is not listed
+//! (the known limit the atomic README records). Any other walk error still fails the scan.
 
 use std::collections::{BTreeSet, HashMap};
 use std::ffi::OsStr;
@@ -57,8 +58,8 @@ fn walked_entry(
     }
 }
 
-/// True when the walk stopped at a symlink that points back to one of its ancestors. The ancestor is already on the
-/// walk path, so the files under it are listed through that path and skipping the closing link drops none of them.
+/// True when the walk stopped at a symlink that points back to one of its ancestors. The cut link closes a loop: the files
+/// under the ancestor are listed through the walk path, and a file reachable only through this link is not listed.
 fn is_loop_link(err: &WalkError) -> bool {
     err.loop_ancestor().is_some()
 }

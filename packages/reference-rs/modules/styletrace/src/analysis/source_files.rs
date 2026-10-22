@@ -1,10 +1,11 @@
 //! Source-file discovery for Styletrace analysis.
 //!
 //! This stays separate from JSX tracing so directory walking and file filtering
-//! rules can evolve without adding more branching to the analyzer itself. The walk
-//! follows the atomic source walk's rule: a symlinked directory is entered once per
-//! real target, a link back to an ancestor is cut, and a file is listed once, under
-//! its real path when one exists, so the listing matches what the compiler reads.
+//! rules can evolve without adding more branching to the analyzer itself. Styletrace
+//! has no include scope: a symlinked directory is entered once per real target, a link
+//! back to an ancestor is cut, and a file is listed once, under its real path when one
+//! exists, else under the first alias the walk reaches, so the listing matches what the
+//! compiler reads.
 
 use std::fs;
 use std::path::{Path, PathBuf};
