@@ -125,7 +125,11 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
       hash; tasty manifest content-hashed. 90-edit repro heap 14.8->150 MB became 14.3->15.0 MB. CORE-WATCH-32 (3 MB budget)
       fails if either fix is reverted. xhigh review: land after small fixes (done). Behaviour change accepted: a config
       that reads env/files at load time is evaluated once per bundle per process.
-- [ ] Bounded walkers wave 2: parse-depth guard (F2), symlink-safe walks (F5), corpus test (T2), boundary smoke (T5).
+- [x] Bounded walkers wave 2 landed 2026-10-22 (ff to 8d8e493d5, 53 commits): nesting gate before every parse (1024,
+      located ATM-E-PARSE / STT-W-SKIPPED-FILE / TST-W-PARSE-ERROR / ATL-W-SKIPPED-FILE), symlink walks once per real path
+      in every walker, dunce roots (Windows), corpus + native smoke suites, 3 flakes fixed. Two xhigh rounds (bypasses,
+      false refusals, lexing holes) all fixed; stack floors 16 MiB. Gate: agentrs t x3 (1,792 Rust, 909 vitest), 356 cases,
+      core vt 1,128, dogfood exit 0; CPU lib ~1.01x, docs ~1.0x. No cache (owner).
 - [ ] Bounded walkers wave 3 (deferred to next session, owner wrap-up 2026-10-22): named errors for cyclic/deep token trees (F8), include brace cap (F9), expression-walker depth budgets (F3).
       Also wave 3 (orchestrator rulings 2026-10-22, for owner review): one-shot `ref sync` exits 1 whenever tasty's
       build fails (today exit 0/1 depends on a race; sync.ts already intends 1; cost: a CSS-only user fails on a types
