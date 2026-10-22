@@ -1,3 +1,3 @@
 # Workspace discovery
 
-Include globs into the reachable file set. Walks the globs into sorted root-relative ids (following symlinks, skipping dead links, failing only on real walk errors), crawls the import graph from user files inside the boundary, and applies the import policy that decides which imports bridge libraries into the index.
+Include globs into the reachable file set. Discovery walks the include scope with the shared alias-aware walk (`shared::walk`) into sorted root-relative ids: a directory is entered only when an include can still reach it, `node_modules` is never entered at any depth, a symlink is followed once per directory and include state so loops and cliques stay bounded, each real file is listed once, and a dangling link is skipped rather than failing the scan. It then crawls the import graph from user files inside the boundary, and applies the import policy that decides which imports bridge libraries into the index.

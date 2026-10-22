@@ -1530,8 +1530,6 @@ dependencies = [
  "chrono",
  "dashmap",
  "diagnostics",
- "dunce",
- "globwalk",
  "indexmap",
  "oxc_allocator",
  "oxc_ast",

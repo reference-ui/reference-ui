@@ -1,7 +1,8 @@
 //! Dangling, looping, linked-sibling and import-through-alias symlinks under the scan include.
-//! The walk skips a link whose target is gone and cuts a link that closes a loop, so one such link cannot fail the types
-//! build. A linked sibling is listed once under its representative path: its real path when one is in scope, else its
-//! first alias in walk order. A relative import through a link alias resolves like any other relative import.
+//! The walk skips a link whose target is gone, and follows a link that closes a loop only where its directory and include
+//! state are new, so one such link cannot fail the types build. A linked sibling is listed once under its representative
+//! path: its real path when one is in scope, else its first alias in walk order. A relative import through a link alias
+//! resolves like any other relative import.
 //! Each test builds a temp tree and drives `scan_workspace` or `scan_typescript_bundle`.
 
 use std::os::unix::fs::symlink;
@@ -29,7 +30,7 @@ fn scan_workspace_skips_a_dangling_symlink_under_include() {
 }
 
 #[test]
-fn scan_workspace_cuts_a_symlink_loop_and_lists_each_real_file_once() {
+fn scan_workspace_lists_each_real_file_once_across_symlink_loops() {
     let root = TempDir::new("scanner-workspace-link-loop");
     root.write("src/app.ts", "export interface App { a: number }\n");
     root.write("src/card/card.ts", "export interface Card { c: number }\n");
@@ -37,7 +38,7 @@ fn scan_workspace_cuts_a_symlink_loop_and_lists_each_real_file_once() {
     symlink(".", root.path().join("src/loopB")).expect("loop symlink B");
 
     let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
-        .expect("a symlink loop is cut by the walk, so the types still build");
+        .expect("a symlink loop is walked once per directory and state, so the types still build");
 
     let ids: Vec<&str> = workspace
         .files
@@ -45,6 +46,24 @@ fn scan_workspace_cuts_a_symlink_loop_and_lists_each_real_file_once() {
         .map(|file| file.file_id.as_str())
         .collect();
     assert_eq!(ids, ["src/app.ts", "src/card/card.ts"]);
+}
+
+#[test]
+fn scan_workspace_lists_a_file_reached_only_through_a_loop_link_under_that_link() {
+    let root = TempDir::new("scanner-workspace-loop-only");
+    root.write("src/x.ts", "export interface X { x: number }\n");
+    root.write("src/a/y.ts", "export interface Y { y: number }\n");
+    symlink("..", root.path().join("src/a/up")).expect("loop symlink");
+
+    let workspace = scan_workspace(root.path(), &["src/a/**/*.ts".to_string()])
+        .expect("a loop link under include scans");
+
+    let ids: Vec<&str> = workspace
+        .files
+        .iter()
+        .map(|file| file.file_id.as_str())
+        .collect();
+    assert_eq!(ids, ["src/a/up/x.ts", "src/a/y.ts"]);
 }
 
 #[test]

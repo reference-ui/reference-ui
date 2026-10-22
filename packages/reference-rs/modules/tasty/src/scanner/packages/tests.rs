@@ -226,11 +226,11 @@ fn external_import_returns_none_when_package_has_no_resolvable_entry() {
     );
 }
 
-/// `GlobWalkerBuilder::follow_links(true)` must see sources reached only via symlinks.
+/// The shared walk follows links, so a source reached only through a symlink under the include is listed.
 #[cfg(unix)]
 #[test]
 fn scan_workspace_discovers_symlinked_source_under_glob() {
-    let root = TempDir::new("scanner-packages-globwalk-symlink");
+    let root = TempDir::new("scanner-packages-walk-symlink");
     root.write("vendor/real.ts", "export const v = 1;\n");
     let target = root.path().join("vendor/real.ts");
     let link_path = root.path().join("src/linked.ts");
