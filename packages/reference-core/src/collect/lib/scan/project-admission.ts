@@ -1,7 +1,8 @@
 // Link admission and directory liveness for the project walk. Under an include, a directory is live when its path from the root
 // can still agree with a positive pattern's literal directory prefix; the walk enters only live directories and only live links,
-// as the Rust walk does. With owns, the first link whose relative path `owns` accepts takes its target; with neither, the first link
-// takes it. Entries are sorted by name bytes, the order the Rust walk sorts its entries in.
+// as the Rust walk does, and project-files.ts walks a live link once per (target, glob state). With owns, the first link whose
+// relative path `owns` accepts takes its target; with neither, the first link takes it. Entries are sorted by name bytes, the
+// order the Rust walk sorts its entries in.
 
 import { readdirSync, statSync, type Dirent } from 'node:fs'
 import { isAbsolute } from 'node:path'

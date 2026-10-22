@@ -169,3 +169,95 @@ describe('listProjectFiles reaches a nested link under an alias that admits none
   })
 })
 
+// Eight directories, each linked to the next two and back to the one before, so every state repeats; only n0 holds a file.
+function linkLattice(root: string, size: number): void {
+  for (let index = 1; index < size; index++) mkdirSync(join(root, 'src', `n${index}`), { recursive: true })
+  for (let index = 0; index < size; index++) {
+    const dir = join(root, 'src', `n${index}`)
+    if (index + 1 < size) symlinkSync(join('..', `n${index + 1}`), join(dir, 'next1'))
+    if (index + 2 < size) symlinkSync(join('..', `n${index + 2}`), join(dir, 'next2'))
+    if (index >= 1) symlinkSync(join('..', `n${index - 1}`), join(dir, 'back'))
+  }
+}
+
+// Listing shapes of the alias-aware walk under a glob include: each (directory, glob state) is walked once, so a loop
+// or a link lattice ends, and a file a loop reaches through the link that closes it is listed under that link's path.
+describe('listProjectFiles under an include walks each (directory, glob state) once', () => {
+  it('lists a file a loop reaches only through the link that closes it, after the real files', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'src/x.ts': 'export const x = 1\n', 'src/a/y.ts': 'export const y = 1\n' })
+    symlinkSync('..', join(root, 'src', 'a', 'up'))
+    expect(listProjectFiles(root, ['src/a/**/*.ts'], ROOT_IGNORE)).toEqual([
+      join(root, 'src', 'a', 'y.ts'),
+      join(root, 'src', 'a', 'up', 'x.ts'),
+    ])
+  })
+
+  it('lists each file of a five-directory link clique once, under its real path', () => {
+    const root = tempRoot()
+    const names = ['d0', 'd1', 'd2', 'd3', 'd4']
+    writeFiles(root, Object.fromEntries(names.map((name) => [`src/${name}/f.ts`, 'export const f = 1\n'])))
+    for (const from of names) {
+      for (const to of names) if (from !== to) symlinkSync(join('..', to), join(root, 'src', from, `to-${to}`))
+    }
+    expect(listProjectFiles(root, SRC_INCLUDE, ROOT_IGNORE)).toEqual(names.map((name) => join(root, 'src', name, 'f.ts')))
+  })
+
+  it('walks a seven-directory link clique in under five seconds, listing each file once under its real path', () => {
+    const root = tempRoot()
+    const names = ['d0', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6']
+    writeFiles(root, Object.fromEntries(names.map((name) => [`src/${name}/f.ts`, 'export const f = 1\n'])))
+    for (const from of names) {
+      for (const to of names) if (from !== to) symlinkSync(join('..', to), join(root, 'src', from, `to-${to}`))
+    }
+    const started = Date.now()
+    const listed = listProjectFiles(root, SRC_INCLUDE, ROOT_IGNORE)
+    expect(Date.now() - started).toBeLessThan(5000)
+    expect(listed).toEqual(names.map((name) => join(root, 'src', name, 'f.ts')))
+  })
+
+  it('lists the one file of an eight-directory link lattice, under its real path', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'src/n0/x.ts': 'export const x = 1\n' })
+    linkLattice(root, 8)
+    expect(listProjectFiles(root, SRC_INCLUDE, ROOT_IGNORE)).toEqual([join(root, 'src', 'n0', 'x.ts')])
+  })
+})
+
+describe('listProjectFiles under an include: brace, negation and fallback shapes', () => {
+  it('lists the file under a link to an ignored directory, as the wave-2 walk does', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'src/a/f.ts': 'export const f = 1\n' })
+    symlinkSync('a', join(root, 'src', 'b'))
+    expect(listProjectFiles(root, ['src/**/*.ts', '!src/a/**'], ROOT_IGNORE)).toEqual([join(root, 'src', 'b', 'f.ts')])
+  })
+
+  it('lists each alternative of a brace include, and a file of a shared target once', () => {
+    const root = tempRoot()
+    writeFiles(root, {
+      'src/a/x.ts': 'export const x = 1\n',
+      'src/b/q/x.ts': 'export const x = 2\n',
+      'src/c/x.ts': 'export const x = 3\n',
+    })
+    symlinkSync(join('..', 'a'), join(root, 'src', 'b', 'up'))
+    expect(listProjectFiles(root, ['src/{a,b}/**/x.ts'], ROOT_IGNORE)).toEqual([
+      join(root, 'src', 'a', 'x.ts'),
+      join(root, 'src', 'b', 'q', 'x.ts'),
+    ])
+  })
+
+  it('walks a self-link that changes the glob state, and lists the file it reaches under that link', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'x/a/k.ts': 'export const k = 1\n' })
+    symlinkSync('.', join(root, 'x', 'a', 'a'))
+    expect(listProjectFiles(root, ['**/a/a/*.ts'], ROOT_IGNORE)).toEqual([join(root, 'x', 'a', 'a', 'k.ts')])
+  })
+
+  it('keeps the loop cut for an include the glob model does not cover', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'src/x.ts': 'export const x = 1\n', 'src/a/y.ts': 'export const y = 1\n' })
+    symlinkSync('..', join(root, 'src', 'a', 'up'))
+    expect(listProjectFiles(root, ['src/(a|b)/**/*.ts'], ROOT_IGNORE)).toEqual([join(root, 'src', 'a', 'y.ts')])
+  })
+})
+

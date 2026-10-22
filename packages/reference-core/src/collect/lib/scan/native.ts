@@ -15,6 +15,7 @@ import {
   type ScannedSource,
 } from './scanner.ts'
 import { listProjectFiles } from './project-files.ts'
+import { hasWalkStarSegments, hasWalkableChars } from './project-globs.ts'
 import type { ScanOptions } from '../types.ts'
 
 /**
@@ -85,27 +86,6 @@ function discoveryPatternsOf(options: ScanOptions): DiscoveryPattern[] {
   return patterns
 }
 
-// Walk-completeness subset: the include shapes where the shared listing provably
-// covers every file the native scope matches, so compile may skip its union
-// backfill walk. Anything outside the subset keeps the walk: rejection is
-// always correct, assertion is the claim the differential battery proves.
-function hasWalkableChars(body: string): boolean {
-  return (
-    !body.includes('(') &&
-    !body.includes(')') &&
-    !body.includes('|') &&
-    !body.includes('\\') &&
-    !body.includes('[:')
-  )
-}
-
-// Globstars agree only as whole segments (`**/`, `/**/`); adjacent or tripled
-// stars cross directories natively while picomatch reads them as plain stars.
-function hasWalkStarSegments(body: string): boolean {
-  if (body.includes('***')) return false
-  return body.split('/').every(segment => !segment.includes('**') || segment === '**')
-}
-
 // Brace ranges (`{1..3}`) expand in picomatch but stay literal natively, so `..`
 // inside braces rejects. Dot segments outside braces over-enumerate in picomatch,
 // which is the safe direction.
@@ -138,6 +118,10 @@ function stripWalkNegation(pattern: string): string | null {
   return body.startsWith('!') ? null : body
 }
 
+// Walk-completeness subset: the include shapes where the shared listing provably
+// covers every file the native scope matches, so compile may skip its union
+// backfill walk. Anything outside the subset keeps the walk: rejection is
+// always correct, assertion is the claim the differential battery proves.
 function isCompleteWalkPattern(pattern: string): boolean {
   if (pattern.startsWith('/') || pattern.endsWith('/')) return false
   const body = stripWalkNegation(pattern)
