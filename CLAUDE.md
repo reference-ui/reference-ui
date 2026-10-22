@@ -10,9 +10,11 @@
 
 # Work logs (memex)
 
-Git records what changed; memex logs record why, so a later model can audit
-the decisions, find contradictions and spot risk. Some logs beat none: log as
-you go, not only at the end. Set `MEMEX_AGENT` to your role (for example
+A commit is the final state, and its message states the result. A memex log is
+the working out: the options considered, the evidence, the dead ends, and why
+the result is what it is. A later model reads the logs to audit decisions, find
+contradictions and spot risk. Some logs beat none: log as you go, not only at
+the end. Set `MEMEX_AGENT` to your role (for example
 `orchestrator`, `reviewer`, `cook`), then
 `memex log <stream> --tag <area>[,...] <<'EOF' … EOF`. The store is local
 (`.memex/logs`, gitignored) and worktrees write to the main checkout's store.
