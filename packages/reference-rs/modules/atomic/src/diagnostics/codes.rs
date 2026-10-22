@@ -171,8 +171,9 @@ pub enum DiagnosticCode {
     /// default channel, and the props still extract.
     ExternalUnbacked,
     /// `extract/recipes/slots`: a malformed `slots` list (not an inline array of
-    /// distinct, whitespace-free string literals, or empty), or a slot-keyed
-    /// style map naming a slot the list does not. The whole definition is refused.
+    /// distinct, whitespace-free string literals, or empty), a slot-keyed style map
+    /// naming a slot the list does not, or a slot map that is not an inline object.
+    /// The whole definition is refused.
     RecipeSlot,
 }
 
