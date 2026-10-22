@@ -3,7 +3,7 @@
  * ESM-only, no dts or splitting. It takes the package checkout and emits the .mjs outputs into a staging directory beside
  * dist/, then publishes them one file at a time: each staged file is renamed over its dist path, which replaces the old file
  * in one step, so a reader of dist/ sees the old file or the new one and never a missing one. Only an output that the previous
- * bundle published and this one does not is removed, after the replacements; the tsc leg's declarations are not touched here.
+ * bundle published and this one does not is removed, after the replacements; declarations are published by build-declarations.mjs.
  * The stamp is written last, through the same rename: dist/bundle.inputs.json, the digests of every file the bundle read and
  * every output it wrote (bundle-stamp.mjs), which the test runner checks before it loads dist. Only react stays external (the
  * primitives entry shares the consumer's copy); the manifest carries no runtime dependencies, so the external is a literal.
@@ -12,8 +12,9 @@
  */
 import { build } from 'esbuild'
 import { copyFile, mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
+import { realpathSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 import { BUNDLE_OPTION_FILES, BUNDLE_STAMP_FILE, digestFile } from './bundle-stamp.mjs'
 
 const PKG = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -202,7 +203,8 @@ async function buildBundle() {
   }
 }
 
-if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Compare real paths: the module URL is resolved, while argv[1] keeps a symlinked spelling such as /var for /private/var.
+if (process.argv[1] !== undefined && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     await buildBundle()
   } catch (error) {

@@ -12,3 +12,6 @@ modules/tasty/tests/.scratch/
 
 # Generated ts-rs test bindings
 bindings/
+
+# Staging directories the JS build publishes from (dist.__stage-<pid>, dist.__decl-<pid>); removed on success, kept out of git if a build is killed.
+dist.__*/

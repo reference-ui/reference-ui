@@ -5,13 +5,15 @@
  * This guarantees seamless module resolution for downstream TypeScript consumers importing subpaths.
  * One target is carried, not compiled: tsc emits no output for .d.ts inputs, so the committed
  * primitive types (primitives.d.ts) ship by copy and their stub resolves the copy like every other entry.
+ * A directory argument names where the stubs are written (build-declarations.mjs passes its staging directory);
+ * without one they go to dist/.
  */
 import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const toolsDir = dirname(fileURLToPath(import.meta.url))
-const distDir = resolve(toolsDir, '../../../..', 'dist')
+const distDir = process.argv[2] ? resolve(process.argv[2]) : resolve(toolsDir, '../../../..', 'dist')
 
 // primitives.d.ts is committed generator output, not a tsc emit — copy it into dist so the stub below resolves.
 const e4Target = resolve(distDir, 'modules/primitives/generated/primitives.d.ts')
