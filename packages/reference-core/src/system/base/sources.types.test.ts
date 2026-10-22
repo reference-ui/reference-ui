@@ -33,7 +33,6 @@ const PROBE_TSCONFIG = {
 const DRIFT_PROBE = [
   'import type {',
   '  BaseSystem as EmittedBaseSystem,',
-  '  ExtendSystemOverrides as EmittedExtendSystemOverrides,',
   '  FontOptions as EmittedFontOptions,',
   '  GlobalCssConfig as EmittedGlobalCssConfig,',
   '  KeyframesConfig as EmittedKeyframesConfig,',
@@ -41,7 +40,6 @@ const DRIFT_PROBE = [
   '  TokenConfig as EmittedTokenConfig,',
   "} from '@reference-ui/system'",
   "import type { BaseSystem as RealBaseSystem } from '../../../src/system/base/types.ts'",
-  "import type { ExtendSystemOverrides as RealExtendSystemOverrides } from '../../../src/system/base/extend.ts'",
   'import type {',
   '  FontOptions as RealFontOptions,',
   '  GlobalCssConfig as RealGlobalCssConfig,',
@@ -51,7 +49,6 @@ const DRIFT_PROBE = [
   "} from '../../../src/collect/surface/index.ts'",
   'type MutuallyAssignable<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false',
   'export const baseSystemShapes: MutuallyAssignable<EmittedBaseSystem, RealBaseSystem> = true',
-  'export const extendShapes: MutuallyAssignable<EmittedExtendSystemOverrides, RealExtendSystemOverrides> = true',
   'export const recipeShapes: MutuallyAssignable<EmittedRecipeConfig, RealRecipeConfig> = true',
   'export const tokenShapes: MutuallyAssignable<EmittedTokenConfig, RealTokenConfig> = true',
   'export const keyframesShapes: MutuallyAssignable<EmittedKeyframesConfig, RealKeyframesConfig> = true',
@@ -62,8 +59,8 @@ const DRIFT_PROBE = [
 // The calls run against both the emitted entry and the stable surface, so the two must accept the same valid
 // shapes and reject the same wrong ones.
 const AUTHORING_CALLS = [
-  "import { extendSystem, font, getRhythm, globalCss, keyframes, recipe, tokens } from '@reference-ui/system'",
-  "import type { BaseSystem, FontOptions, GlobalCssConfig, KeyframesConfig, RecipeConfig, TokenConfig } from '@reference-ui/system'",
+  "import { font, getRhythm, globalCss, keyframes, recipe, tokens } from '@reference-ui/system'",
+  "import type { FontOptions, GlobalCssConfig, KeyframesConfig, RecipeConfig, TokenConfig } from '@reference-ui/system'",
   "const theme: TokenConfig = { colors: { brand: { value: '#7c3aed', description: 'Brand' } } }",
   'tokens(theme)',
   "const sans: FontOptions = { value: 'Inter, sans-serif', fontFace: { src: 'url(/fonts/inter.woff2)', fontWeight: '200 900' }, weights: { bold: '700' } }",
@@ -72,8 +69,6 @@ const AUTHORING_CALLS = [
   "globalCss({ ':root': { '--spacing-root': '0.5rem' }, body: { fontFamily: 'sans' } })",
   "const card: RecipeConfig = { className: 'card', base: { padding: '2r' }, variants: { tone: { quiet: { color: 'ink' } } }, defaultVariants: { tone: 'quiet' } }",
   'recipe(card)',
-  "const base: BaseSystem = { name: 'lib', fragment: ';tokens()' }",
-  "export const branded: BaseSystem = extendSystem(base, { tokens: { colors: { brand: { value: '#f00' } } } })",
   'export const rhythm: string[] = [getRhythm(2), getRhythm(1, 2), getRhythm(-1, 3)]',
   '// @ts-expect-error bld is not a font weight name',
   "font('sans', { value: 'Inter', fontFace: { src: 'url(/x.woff2)' }, weights: { bld: '700' } })",
@@ -86,7 +81,7 @@ const AUTHORING_CALLS = [
   '// @ts-expect-error className is required',
   "recipe({ variants: { tone: { quiet: {} } } })",
   '// @ts-expect-error tokens must be a token tree, not a string',
-  "extendSystem(base, { tokens: 'nope' })",
+  "tokens('nope')",
   '// @ts-expect-error getRhythm takes numbers',
   "getRhythm('2')",
 ]

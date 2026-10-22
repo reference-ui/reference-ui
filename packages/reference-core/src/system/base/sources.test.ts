@@ -96,9 +96,6 @@ export function globalCss(config) {
 export function recipe(config) {
   collect('__refRecipeCollector', config)
 }
-export function extendSystem(base, overrides) {
-  return base
-}
 `
 const SYSTEM_ENTRY_TAIL = `export { baseSystem } from './baseSystem.mjs'
 `
@@ -192,16 +189,12 @@ export interface RecipeConfig {
   defaultVariants?: Record<string, string>
   compoundVariants?: RecipeCompoundConfig[]
 }
-export interface ExtendSystemOverrides {
-  tokens: ReferenceTokenConfig
-}
 export declare function defineConfig(config: ReferenceUIConfig): ReferenceUIConfig
 export declare function tokens(config: TokenConfig): void
 export declare function keyframes(config: KeyframesConfig): void
 export declare function font(name: string, options: FontOptions): void
 export declare function globalCss(config: GlobalCssConfig): void
 export declare function recipe(config: RecipeConfig): void
-export declare function extendSystem(base: BaseSystem, overrides: ExtendSystemOverrides): BaseSystem
 export declare function getRhythm(num: number, denom?: number): string
 export declare const baseSystem: BaseSystem
 `

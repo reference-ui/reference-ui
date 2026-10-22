@@ -1,15 +1,13 @@
 // Emitted-source builders for the generated system folder.
-// It takes the published system for the two declaration texts and nothing
-// else, and emits the authoring entry, the portable interface, and both
-// declaration texts. The interface lists `jsxOwned` only for a system that
-// carries it, so a system without owned data prints the declarations it
-// always did. The packager leg calls these pure builders and owns every write;
-// the banner rides the shared leaf constant. The entry's getRhythm is emitted from rhythm.ts by its source
-// text, so the generated runtime prints what the compiler prints. The authoring calls
-// take core's real types, inlined because the generated package depends on nothing (the
-// goldens and type probes pin the copies), and at runtime they behave as core's collectors
-// and identity helpers do: tokens, keyframes, font, globalCss and recipe push into the sync
-// slot and do nothing elsewhere, while defineConfig and extendSystem return their first argument.
+// It takes the published system for the two declaration texts and nothing else, and emits the authoring entry,
+// the portable interface, and both declaration texts. The interface lists `jsxOwned` only for a system that
+// carries it, so a system without owned data prints the declarations it always did. The packager leg calls these
+// pure builders and owns every write; the banner rides the shared leaf constant. The entry's getRhythm is emitted
+// from rhythm.ts by its source text, so the generated runtime prints what the compiler prints. The authoring calls
+// take core's real types, inlined because the generated package depends on nothing (the goldens and type probes
+// pin the copies), and at runtime they behave as core's collectors and identity helpers do: tokens, keyframes,
+// font, globalCss and recipe push into the sync slot and do nothing elsewhere, while defineConfig returns its first
+// argument; extendSystem is a core call, so the system id does not export it.
 
 import { BASE_SYSTEM_HEADER } from '../../packager/constants.ts'
 import { getRhythm } from './rhythm.ts'
@@ -83,16 +81,13 @@ export function systemEntrySource(): string {
     'export function recipe(config) {',
     "  collect('__refRecipeCollector', config)",
     '}',
-    'export function extendSystem(base, overrides) {',
-    '  return base',
-    '}',
     `export const getRhythm = ${getRhythm.toString()}`,
     "export { baseSystem } from './baseSystem.mjs'",
     '',
   ].join('\n')
 }
 
-// Core's authoring types for the four calls, copied from collect/surface. The
+// Core's authoring types for the collector calls, copied from collect/surface. The
 // generated package depends on nothing, so the entry carries its own copies.
 const AUTHORING_TYPES = [
   'export interface ReferenceTokenLeaf {',
@@ -137,9 +132,6 @@ const AUTHORING_TYPES = [
   '  defaultVariants?: Record<string, string>',
   '  compoundVariants?: RecipeCompoundConfig[]',
   '}',
-  'export interface ExtendSystemOverrides {',
-  '  tokens: ReferenceTokenConfig',
-  '}',
 ]
 
 export function systemTypesSource(system: DescribedSystem = {}): string {
@@ -175,7 +167,6 @@ export function systemTypesSource(system: DescribedSystem = {}): string {
     'export declare function font(name: string, options: FontOptions): void',
     'export declare function globalCss(config: GlobalCssConfig): void',
     'export declare function recipe(config: RecipeConfig): void',
-    'export declare function extendSystem(base: BaseSystem, overrides: ExtendSystemOverrides): BaseSystem',
     'export declare function getRhythm(num: number, denom?: number): string',
     'export declare const baseSystem: BaseSystem',
     '',

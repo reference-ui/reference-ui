@@ -1,0 +1,1 @@
+{"id": "CORE-SYNC-20", "name": "extendSystem is a core call: a config that imports it from @reference-ui/system fails sync by name", "sync": true}

@@ -6,7 +6,6 @@
 
 import type {
   BaseSystem,
-  ExtendSystemOverrides,
   FontOptions,
   GlobalCssConfig,
   KeyframesConfig,
@@ -22,7 +21,6 @@ export type {
 } from '@reference-ui/core';
 export type {
   BaseSystem,
-  ExtendSystemOverrides,
   FontOptions,
   GlobalCssConfig,
   KeyframesConfig,
@@ -38,7 +36,6 @@ export declare function keyframes(config: KeyframesConfig): void;
 export declare function font(name: string, options: FontOptions): void;
 export declare function globalCss(config: GlobalCssConfig): void;
 export declare function recipe(config: RecipeConfig): void;
-export declare function extendSystem(base: BaseSystem, overrides: ExtendSystemOverrides): BaseSystem;
 
 export declare function getRhythm(num: number, denom?: number): string;
 export declare const baseSystem: BaseSystem;
