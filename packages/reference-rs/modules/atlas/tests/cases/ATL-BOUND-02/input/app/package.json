@@ -1,0 +1,9 @@
+{
+  "name": "@fixtures/atl-bound-02",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "react": "*"
+  }
+}

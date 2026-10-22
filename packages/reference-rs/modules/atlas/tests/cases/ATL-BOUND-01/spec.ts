@@ -5,7 +5,6 @@
  * analyzeDetailed in a child process, so a native fault or a runaway walk ends that child, not the Vitest worker.
  * Every shape must finish inside 1 s, Node startup included, and report the components, props and diagnostics pinned below.
  */
-import fs from 'node:fs'
 import { expect } from 'vitest'
 import { createVirtualWorkspace, expectBounded, runIsolated, type IsolatedRun } from '../../../../../testing/index.js'
 import type { AtlasAnalysisResult } from '../../../js/index.js'
@@ -173,12 +172,10 @@ function summarize(result: AtlasAnalysisResult): ShapeSummary {
 async function checkShape(shape: Shape): Promise<void> {
   const workspace = await createVirtualWorkspace(shape.files, 'atlas-bound-01')
   try {
-    // Atlas counts a root reached through a symlink differently (on macOS /var is /private/var),
-    // so the shape is analyzed by its canonical path.
     const run = runIsolated<AtlasAnalysisResult>({
       module: 'atlas',
       fn: 'analyzeDetailed',
-      args: [fs.realpathSync(workspace.rootDir)],
+      args: [workspace.rootDir],
       timeoutMs: KILL_BUDGET_MS,
     })
     const result = boundedResult(shape, run)

@@ -1,0 +1,1 @@
+{"id": "ATL-BOUND-02", "name": "a project analyzed through a symlinked root counts the same as through its real path"}

@@ -1,7 +1,8 @@
 //! Runs one Atlas analysis over a project: discovers and parses the app's sources, loads the packages it references
 //! or includes, builds the tracked component set, counts usage and observations across the app's modules, and
-//! assembles the result. It takes an `AtlasConfig` and emits an `AtlasAnalysisResult`. A scan or parse failure
-//! becomes a result with one diagnostic and no components, so a bad tree never surfaces as a Rust error.
+//! assembles the result. It takes an `AtlasConfig` and emits an `AtlasAnalysisResult`. The root is canonicalized when the
+//! analyzer is built, so every module key and lookup shares one spelling. A scan or parse failure becomes a result with
+//! one diagnostic and no components, so a bad tree never surfaces as a Rust error.
 
 use crate::config::AtlasConfig;
 use crate::diagnostics::{AtlasDiagnostic, DiagnosticError};
@@ -28,7 +29,11 @@ pub struct AtlasAnalyzer {
 }
 
 impl AtlasAnalyzer {
-    pub fn new(config: AtlasConfig) -> Self {
+    /// Module keys are joined onto the root and a parent-relative import falls back to a canonical candidate, so a root
+    /// spelled through a symlink (macOS `/var` is `/private/var`) would key its modules one way and look them up the
+    /// other. The root is therefore canonical from here on; a root that does not exist keeps the spelling it was given.
+    pub fn new(mut config: AtlasConfig) -> Self {
+        config.root_dir = canonical_root(&config.root_dir);
         let scanner = Scanner::new(&config.root_dir);
         Self { config, scanner }
     }
@@ -287,6 +292,14 @@ fn is_dependency_path(path: &Path, app_root: &Path) -> bool {
             .components()
             .any(|component| component.as_os_str() == "node_modules")
     })
+}
+
+/// The root's real path as a string, or the root unchanged when it cannot be resolved.
+fn canonical_root(root: &str) -> String {
+    match std::fs::canonicalize(root) {
+        Ok(path) => path.to_string_lossy().into_owned(),
+        Err(_) => root.to_string(),
+    }
 }
 
 fn failed_result(message: &str) -> Result<AtlasAnalysisResult, DiagnosticError> {
