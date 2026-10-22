@@ -1,6 +1,8 @@
 //! Pins which guard-limit cuts lose names. A cut whose reachable names are all traced loses nothing, so
 //! the surface stays whole and the component stays silent; a cut that hides a name refuses the surface
-//! and is reported once. Each test writes its own scratch tree and reads the names or the cut it produces.
+//! and is reported once. One known over-report is pinned on purpose: a cut that reaches an argument its
+//! callee never reads still warns, though no name is lost. Each test writes its own scratch tree and reads
+//! the names or the cut it produces.
 
 use crate::{collect_reference_style_prop_names, collect_style_prop_names, StyleSurface};
 
@@ -113,4 +115,45 @@ fn a_cut_that_hides_only_a_name_in_its_argument_is_lossy() {
         vec!["C1"],
         "C1 is refused before C0 reads its argument, so the argument's name is lost"
     );
+}
+
+/// Pins a known over-report on purpose. The cut at `C1` reaches `C0`'s argument `{ unread }`, which `Probe`
+/// never reads, so no expansion would add `unread`; the cut still counts as lossy and warns. The lossy-cut
+/// paragraph in packages/reference-rs/modules/styletrace/README.md documents this, so change both together.
+#[test]
+fn a_cut_whose_reach_names_an_argument_the_callee_never_reads_still_warns() {
+    let scratch = ScratchDir::new("argument-unread-cut");
+    let mut source = String::from(concat!(
+        "type Probe<T> = { key0?: string }\n",
+        "type C0 = Probe<{ unread?: string }>\n",
+    ));
+    let mut direct = String::from("key0?: string; ");
+    for index in 1..=65 {
+        source.push_str(&format!(
+            "type C{index} = C{} & {{ k{index}?: string }}\n",
+            index - 1
+        ));
+        direct.push_str(&format!("k{index}?: string; "));
+    }
+    source.push_str(&format!("export type Direct = {{ {direct}}}\n"));
+    source.push_str("export type Props = C65 & Direct\n");
+    scratch.write("src/props.ts", &source);
+    let path = scratch.root().join("src/props.ts");
+
+    let traced = collect_style_prop_names(scratch.root(), &path, "Props", None)
+        .expect("expected props to trace");
+
+    assert!(traced.names.contains(&"k1".to_string()));
+    assert!(traced.names.contains(&"key0".to_string()));
+    assert!(!traced.names.contains(&"unread".to_string()));
+    let lossy: Vec<&str> = traced.cuts.iter().map(|cut| cut.name.as_str()).collect();
+    assert_eq!(
+        lossy,
+        vec!["C1"],
+        "C1 is refused, and its reach holds only a name no expansion would add"
+    );
+    let warning =
+        crate::diagnostics::type_expansion_limit(&path.to_string_lossy(), &traced.cuts[0])
+            .expect("a lossy cut reports the expansion limit");
+    assert_eq!(warning.code.as_str(), "STT-W-TYPE-EXPANSION-LIMIT");
 }
