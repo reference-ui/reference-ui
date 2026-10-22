@@ -1,11 +1,12 @@
 //! The nesting gate in front of every Oxc parse in reference-rs.
-//! A source nested past `MAX_NESTING` is refused before Oxc sees it, because Oxc recurses once per level and a hostile
+//! A source nested past `MAX_NESTING` is refused before Oxc sees it, because Oxc recurses once per level and a deeply nested
 //! file overflows a native stack. `parse_bounded` takes an allocator, a source and its `SourceType`, and returns Oxc's
 //! `ParserReturn`, or a `NestingRefusal` naming the depth and the line where the limit was crossed. `refused_parser_return`
 //! gives a caller Oxc's failed-parse shape for a refused source, so each module attaches its own located error. The
 //! pre-scan lives in `parse/scan.rs` and the files beside it, and this file is the one place that calls `Parser::new`.
 //! Two wider limits back the scan up, so a construct it misreads cannot let a pathological file through: no more than
 //! `MAX_OPEN` constructs open at once, and no more than `MAX_RAW` brackets deep in a count that reads every byte as code.
+//! `parse/README.md` says what the gate is for and what it leaves alone, including input crafted to defeat the lexer.
 
 mod scan;
 
