@@ -15,9 +15,10 @@ domain crates.
    in-memory `BaseSystem` fixtures, and frozen wire-contract fixtures
    shared by compiler-crate tests, so no crate hand-rolls its own.
 4. **Nesting gate** — `parse::parse_bounded` runs one linear pre-scan
-   before Oxc sees a source (`parse/scan.rs`): brackets, and TypeScript
-   generic `<`, nested past `MAX_NESTING` (1,024) are refused as a
-   `NestingRefusal` with the line where the limit was crossed. Every
+   before Oxc sees a source (`parse/scan.rs`): brackets, TypeScript
+   generic `<`, and, in `.tsx` and `.jsx` files, JSX element nesting
+   (`parse/scan/jsx.rs`), nested past `MAX_NESTING` (1,024) are refused
+   as a `NestingRefusal` with the line where the limit was crossed. Every
    production Oxc parse in `reference-rs` goes through it, and the
    `complexity.mjs` gate fails any other `Parser::new(` in production code.
 

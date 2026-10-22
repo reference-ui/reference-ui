@@ -3,7 +3,8 @@
 //! file overflows a native stack. `parse_bounded` takes an allocator, a source and its `SourceType`, and returns Oxc's
 //! `ParserReturn`, or a `NestingRefusal` naming the depth and the line where the limit was crossed. `refused_parser_return`
 //! gives a caller Oxc's failed-parse shape for a refused source, so each module attaches its own located error. The
-//! pre-scan lives in `parse/scan.rs`, and this file is the one place that calls `Parser::new`.
+//! pre-scan lives in `parse/scan.rs` (JSX element rules in `parse/scan/jsx.rs`), and this file is the one place that calls
+//! `Parser::new`.
 
 mod scan;
 
@@ -48,7 +49,7 @@ pub fn parse_bounded<'a>(
 
 /// Returns the deepest nesting `source` reaches, or the refusal when it passes `MAX_NESTING`. Linear in the source.
 pub fn scan_nesting(source: &str, source_type: SourceType) -> Result<usize, NestingRefusal> {
-    scan::Scan::new(source.as_bytes(), source_type.is_typescript()).run()
+    scan::Scan::new(source.as_bytes(), source_type.is_typescript(), source_type.is_jsx()).run()
 }
 
 /// Oxc's failed-parse shape for a refused source: the empty program Oxc gives for empty text, with `panicked` set and

@@ -1,1 +1,1 @@
-{"id": "ATM-BOUND-02", "name": "a file nested 300,000 levels deep is refused with a located ATM-E-PARSE beside its siblings"}
+{"id": "ATM-BOUND-02", "name": "a file nested 300,000 levels deep, or 5,000 JSX elements deep, is refused with a located ATM-E-PARSE beside its siblings"}

@@ -14,6 +14,8 @@ use oxc_span::SourceType;
 
 use super::{line_start, parse_bounded, refused_parser_return, scan_nesting, NestingRefusal, MAX_NESTING};
 
+mod jsx;
+
 fn ts() -> SourceType {
     SourceType::ts()
 }
@@ -138,30 +140,37 @@ fn a_source_within_the_bound_reaches_oxc_unchanged() {
     assert_eq!(parsed.program.body.len(), 2);
 }
 
-/// Pre-scan throughput on a synthetic TypeScript corpus of about 8 MB. It runs only when `SHARED_MEASURE_OUT` names a
-/// file, which receives one line with the rate: `SHARED_MEASURE_OUT=<file> pnpm agentrs c shared --release measure_`.
+/// Pre-scan throughput on a synthetic corpus of about 8 MB, as TypeScript and as TSX (which runs the JSX rules too). It
+/// runs only when `SHARED_MEASURE_OUT` names a file, which receives one line per corpus with the rate:
+/// `SHARED_MEASURE_OUT=<file> pnpm agentrs c shared --release measure_`.
 #[test]
 fn measure_throughput() {
     let Some(out) = std::env::var_os("SHARED_MEASURE_OUT") else { return };
     let block = "export function pick<T extends Record<string, number>>(input: T, keys: (keyof T)[]) {\n  return keys.map(key => ({ key, value: input[key] * (2 + 3) }))\n}\n// generated `template` ${value}\nconst text = 'a string with (brackets) inside';\n";
     let corpus = block.repeat(8_000_000 / block.len());
-    let rounds = 5;
-    let started = Instant::now();
-    for _ in 0..rounds {
-        scan_nesting(&corpus, ts()).expect("corpus stays within the bound");
+    let mut line = String::new();
+    for (name, source_type) in [("ts", ts()), ("tsx", SourceType::tsx())] {
+        let (rate, megabytes, ms) = measure_rate(&corpus, source_type);
+        line.push_str(&format!(
+            "pre-scan throughput ({name}): {rate:.0} MB/s over {megabytes:.1} MB ({ms:.2} ms per pass)\n"
+        ));
     }
-    let seconds = started.elapsed().as_secs_f64() / rounds as f64;
-    let megabytes = corpus.len() as f64 / 1_000_000.0;
-    let line = format!(
-        "pre-scan throughput: {:.0} MB/s over {:.1} MB ({:.2} ms per pass)\n",
-        megabytes / seconds,
-        megabytes,
-        seconds * 1000.0
-    );
     append(&out, &line);
 }
 
-/// Deepest nesting over every `.ts`, `.tsx`, `.d.ts` and `.js` file under the colon-separated roots in
+/// Scans `corpus` several times and returns the rate in MB/s, the corpus size in MB and the time per pass in ms.
+fn measure_rate(corpus: &str, source_type: SourceType) -> (f64, f64, f64) {
+    let rounds = 5;
+    let started = Instant::now();
+    for _ in 0..rounds {
+        scan_nesting(corpus, source_type).expect("corpus stays within the bound");
+    }
+    let seconds = started.elapsed().as_secs_f64() / rounds as f64;
+    let megabytes = corpus.len() as f64 / 1_000_000.0;
+    (megabytes / seconds, megabytes, seconds * 1000.0)
+}
+
+/// Deepest nesting over every `.ts`, `.tsx`, `.d.ts`, `.js` and `.jsx` file under the colon-separated roots in
 /// `SHARED_DEPTH_ROOTS`, appended to `SHARED_MEASURE_OUT`. It runs only when both variables are set.
 #[test]
 fn measure_repo_nesting() {
@@ -242,5 +251,5 @@ fn visit(dir: &Path, each: &mut dyn FnMut(&Path)) {
 
 fn is_scannable(path: &Path) -> bool {
     let name = path.to_string_lossy();
-    [".ts", ".tsx", ".js"].iter().any(|ext| name.ends_with(ext))
+    [".ts", ".tsx", ".js", ".jsx"].iter().any(|ext| name.ends_with(ext))
 }
