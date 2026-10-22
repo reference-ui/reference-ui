@@ -9,7 +9,7 @@
   },
   "scripts": {
     "setup:local": "bash ./pipeline/setup/local.sh",
-    "bootstrap": "node scripts/copy-corpus.mjs && pnpm --filter @reference-ui/rust run build && pnpm --filter @reference-ui/lib run build && pnpm --filter @reference-ui/reference-docs run sync",
+    "bootstrap": "pnpm --filter @reference-ui/rust run build && pnpm --filter @reference-ui/lib run build && pnpm --filter @reference-ui/reference-docs run sync",
     "dogfood": "node scripts/dogfood-sync.mjs",
     "pipeline": "pnpm --dir pipeline exec tsx src/cli.ts",
     "dev": "node scripts/dev.mjs",
