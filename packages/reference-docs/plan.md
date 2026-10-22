@@ -111,6 +111,11 @@ message parsing (needs an ExtractDetail variant).
 Process for every item: implement on a branch/worktree -> landing gate (agentrs t, agentcore run,
 core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review for non-trivial work -> land.
 
+- [x] Recipe slots landed 2026-10-22 (ff to fe3cd549d, 30 commits): xhigh review M1 (generic wrappers) + m1–m4 fixed;
+      plain-path cost: output byte-identical, CPU ratio 1.01–1.03 at 50x recipes (replaces bench rerun). Gate: 1669 Rust,
+      824 vitest, 349 cases, core vt 1095, real syncs no new warnings. Rulings: non-object slot map refused (write `{}`);
+      `__proto__` allowed as a slot name (runtime null-prototype); TS probes pass 5.7.3–7.0.2, 5.0–5.6 unverified (needs
+      owner OK to download). Found: dist-freshness.test.ts flake (wave 1) -> wave 2 fixing.
 - [x] Bounded walkers wave 1 landed 2026-10-22 (ff to 86dee34c6, 26 commits): every xhigh item fixed with a red-first test;
       gate: agentrs t (1,644 Rust, 822 vitest), 347 cases, core vt 1080/1080, dogfood all exit 0, dev:docs 60s+edit.
       Rulings: STT-WRAP-13 perf after memo +10%/+35 ms accepted; circular key alias left; reach over-reports, never misses.
@@ -119,7 +124,6 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
       predates wave 1). Investigator running; fix + a bounded-heap watch test to follow.
 - [ ] Bounded walkers wave 2: parse-depth guard (F2), symlink-safe walks (F5), corpus test (T2), boundary smoke (T5).
 - [ ] Bounded walkers wave 3: named errors for cyclic/deep token trees (F8), include brace cap (F9), expression-walker depth budgets (F3).
-- [ ] recipe({ slots }) (feat/recipe-slots): xhigh review, quiet-machine bench rerun (>=8 rounds, alternating), land.
 - [ ] Small fixes:
   - tasty resolver reports `INSTALL.md?raw` imports as unresolved (strip query suffixes).
   - Verify `pnpm agentrs q` thresholds vs AGENTS.md section 4 (cook saw file 1500 / complexity 60 / args 12 vs 500/15/5).
