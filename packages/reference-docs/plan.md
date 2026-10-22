@@ -111,7 +111,12 @@ message parsing (needs an ExtractDetail variant).
 Process for every item: implement on a branch/worktree -> landing gate (agentrs t, agentcore run,
 core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review for non-trivial work -> land.
 
-- [ ] Bounded walkers wave 1 (fix/bounded-walkers): review fixes in progress, then re-gate + land.
+- [x] Bounded walkers wave 1 landed 2026-10-22 (ff to 86dee34c6, 26 commits): every xhigh item fixed with a red-first test;
+      gate: agentrs t (1,644 Rust, 822 vitest), 347 cases, core vt 1080/1080, dogfood all exit 0, dev:docs 60s+edit.
+      Rulings: STT-WRAP-13 perf after memo +10%/+35 ms accepted; circular key alias left; reach over-reports, never misses.
+      Repros: 12-barrel clique 41 s -> 0.4 s; 5,000-paren lanes SIGILL -> 210 ms.
+- [ ] `ref sync --watch` OOM: dev:docs watcher died at ~4 GB heap after 35 min of heavy edits (2026-10-22 00:03,
+      predates wave 1). Investigator running; fix + a bounded-heap watch test to follow.
 - [ ] Bounded walkers wave 2: parse-depth guard (F2), symlink-safe walks (F5), corpus test (T2), boundary smoke (T5).
 - [ ] Bounded walkers wave 3: named errors for cyclic/deep token trees (F8), include brace cap (F9), expression-walker depth budgets (F3).
 - [ ] recipe({ slots }) (feat/recipe-slots): xhigh review, quiet-machine bench rerun (>=8 rounds, alternating), land.
