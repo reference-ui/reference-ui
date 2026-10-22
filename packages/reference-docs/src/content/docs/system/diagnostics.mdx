@@ -261,6 +261,16 @@ the code in any tooling you build.
   into an argument that names no component, like the result of a call. Sync
   skips the component it creates, so its style props get no CSS. Pass a
   component by name in that argument.
+- `STT-E-UNRESOLVED-SURFACE`: sync cannot build the StyleProps surface it
+  traces against, so it refuses the trace and fails. There are two causes,
+  and the message says which one applies. If sync finds no sync root, no
+  StyleProps or primitive entrypoint, or a declaration file it cannot read or
+  that yields no names, run `ref sync` so `.reference-ui/` is generated. Sync
+  rebuilds that folder on every run, so running it again also repairs
+  generated output that is damaged. If a guard limit cut a type on the surface
+  and hid names, the message names the declaration, its module and the limit:
+  `depth`, `argument` or `budget`. Flatten the alias chain or shorten the
+  recursive type it names, then run `ref sync` again.
 - `ATM-W-EXTERNAL-UNBACKED`: style props on a component from a package whose
   system is in neither `extends` nor `layers`. The props get no CSS. Add the
   `baseSystem` the warning names. See [Primitives](/primitives#your-own-components).
