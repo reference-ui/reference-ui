@@ -44,7 +44,7 @@ const spec: AtomicCaseSpec = {
     expect(parseErrors, 'one located ATM-E-PARSE for the deep file').toHaveLength(1)
     expect(parseErrors[0]!.file).toMatch(/src\/deep\.ts$/)
     expect(parseErrors[0]!.line).toBe(2)
-    expect(parseErrors[0]!.message).toBe('nesting deeper than 1024 levels at line 2')
+    expect(parseErrors[0]!.message).toBe('nesting deeper than 1024 levels at line 2; split or flatten the deeply nested expression')
     expect(Object.keys(result.css?.classes ?? {}).sort()).toEqual(['color:blue', 'color:red'])
   },
 }

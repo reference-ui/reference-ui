@@ -6,7 +6,7 @@ nests one `css()` colour value 300,000 parentheses deep on line 2, and compiles 
 in a child process under `runIsolated` (kill budget 30 s, budget 2000 ms through `expectBounded`).
 
 The pre-scan refuses `deep.ts` before Oxc sees it. The compile must report exactly one `ATM-E-PARSE` that names
-`src/deep.ts` at line 2 with the message `nesting deeper than 1024 levels at line 2`, must emit no class from the
+`src/deep.ts` at line 2 with the message `nesting deeper than 1024 levels at line 2; split or flatten the deeply nested expression`, must emit no class from the
 deep value (`color:green`), and must keep both siblings' classes.
 
 The depth is sized past the current build's limit. On the exports' 256 MiB thread the unguarded compile survives
