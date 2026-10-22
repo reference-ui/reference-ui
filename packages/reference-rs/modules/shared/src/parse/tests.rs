@@ -47,6 +47,18 @@ fn refusal_names_the_line_where_the_limit_is_crossed() {
 }
 
 #[test]
+fn refusal_message_names_the_line_and_the_fix() {
+    let refusal = NestingRefusal {
+        depth: MAX_NESTING + 1,
+        line: 7,
+    };
+    assert_eq!(
+        refusal.message(),
+        "nesting deeper than 1024 levels at line 7; split or flatten the deeply nested expression"
+    );
+}
+
+#[test]
 fn closed_brackets_release_depth_for_later_siblings() {
     let siblings = "f({ a: [1] }); ".repeat(MAX_NESTING * 4);
     assert_eq!(scan_nesting(&siblings, ts()), Ok(3));

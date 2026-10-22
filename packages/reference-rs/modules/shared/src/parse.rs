@@ -26,9 +26,13 @@ pub struct NestingRefusal {
 }
 
 impl NestingRefusal {
-    /// The sentence every module reports for a refused source; the file it came from locates it.
+    /// The sentence every module reports for a refused source. It names the line and says what to do; the file it
+    /// came from locates it.
     pub fn message(&self) -> String {
-        format!("nesting deeper than {MAX_NESTING} levels at line {}", self.line)
+        format!(
+            "nesting deeper than {MAX_NESTING} levels at line {}; split or flatten the deeply nested expression",
+            self.line
+        )
     }
 }
 
