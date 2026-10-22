@@ -143,7 +143,7 @@ pub(crate) fn owned_wire(
 /// Caller hosts plus traced names for one compile.
 pub fn collect_hosts(request: &CompileRequest) -> FxHashSet<String> {
     let mut session = DiagnosticsSession::new();
-    // The trace takes screened sources; this path parses nothing, so the verdict itself is never read here.
+    // The trace takes screened sources. No atomic parse runs on this path; the trace gates what it parses itself.
     let sources = crate::screen_sources(crate::sources::collect(request));
     // No parse runs on this path, so no failure signal exists: every
     // source counts as parsed-clean and the trace gate applies fully.

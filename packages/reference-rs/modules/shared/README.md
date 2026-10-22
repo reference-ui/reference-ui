@@ -19,8 +19,10 @@ domain crates.
    generic `<`, and, in `.tsx` and `.jsx` files, JSX element nesting
    (`parse/scan/jsx.rs`), nested past `MAX_NESTING` (1,024) are refused
    as a `NestingRefusal` with the line where the limit was crossed. Every
-   production Oxc parse in `reference-rs` goes through it, and the
-   `complexity.mjs` gate fails any other `Parser::new(` in production code.
+   production Oxc parse in `reference-rs` goes through `parse_bounded`, or
+   through `parse_screened` for a `ScreenedSource` screened once where its
+   text was read, and the `complexity.mjs` gate fails any other `Parser::new(`
+   in production code.
 
 Internal workspace dependency (`rlib`): no public Node-API symbols, no
 standalone JavaScript entrypoint.
