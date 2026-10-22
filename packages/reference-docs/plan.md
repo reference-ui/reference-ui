@@ -120,8 +120,11 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
       gate: agentrs t (1,644 Rust, 822 vitest), 347 cases, core vt 1080/1080, dogfood all exit 0, dev:docs 60s+edit.
       Rulings: STT-WRAP-13 perf after memo +10%/+35 ms accepted; circular key alias left; reach over-reports, never misses.
       Repros: 12-barrel clique 41 s -> 0.4 s; 5,000-paren lanes SIGILL -> 210 ms.
-- [ ] `ref sync --watch` OOM: dev:docs watcher died at ~4 GB heap after 35 min of heavy edits (2026-10-22 00:03,
-      predates wave 1). Investigator running; fix + a bounded-heap watch test to follow.
+- [x] `ref sync --watch` heap leak fixed 2026-10-22 (ff to 16c7a97e2): Node's ESM cache kept a module per resync
+      (config bundle `?t=`, fragment temp .mjs, tasty `?tastyv=N`). Fix: fragments run via vm; config cached by bundle
+      hash; tasty manifest content-hashed. 90-edit repro heap 14.8->150 MB became 14.3->15.0 MB. CORE-WATCH-32 (3 MB budget)
+      fails if either fix is reverted. xhigh review: land after small fixes (done). Behaviour change accepted: a config
+      that reads env/files at load time is evaluated once per bundle per process.
 - [ ] Bounded walkers wave 2: parse-depth guard (F2), symlink-safe walks (F5), corpus test (T2), boundary smoke (T5).
 - [ ] Bounded walkers wave 3: named errors for cyclic/deep token trees (F8), include brace cap (F9), expression-walker depth budgets (F3).
 - [x] Small fixes landed 2026-10-22 (ff to a6c19efc4, 46 commits; items 1-25, xhigh review + 7 fixes). Gate: 1685 Rust,
