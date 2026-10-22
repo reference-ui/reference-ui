@@ -125,6 +125,8 @@ describe('primitives generator goldens', () => {
     expect(dts).toContain('export type PrimitiveProps<T extends PrimitiveTag>')
     expect(dts).toContain('export type PrimitiveElement<T extends PrimitiveTag>')
     expect(dts).toContain('export declare function useColorMode(): string | undefined')
+    expect(dts).toContain("colorMode?: 'light' | 'dark'")
+    expect(dts).not.toContain('colorMode?: unknown')
     expect(dts.match(/export declare const \w+: \(props: /g)).toHaveLength(101)
     expect(dts).not.toMatch(/\b(Box|Flex|Grid)\b/)
     expect(dts).not.toMatch(/^\s*as\?:/m)

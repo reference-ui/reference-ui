@@ -1,6 +1,5 @@
 /**
- * Printers for the three committed primitives artifacts: the vocabulary (vocabulary.json),
- * the roster module (primitives.mjs), and the primitive types (primitives.d.ts).
+ * Printers for the three committed artifacts: vocabulary.json, primitives.mjs and primitives.d.ts.
  * buildVocabularyJson renders the machine contract with sorted keys and a stable
  * layout; buildPrimitivesMjs renders the raw system-unbound component module with
  * the configurePrimitives seam; buildPrimitivesDts renders the raw types in today's
@@ -81,7 +80,7 @@ const PRIMITIVE_PROPS = [
   "  StylePropName | 'css' | 'colorMode' | 'variant'",
   '> & StyleProps & {',
   '  css?: PrimitiveCssProp',
-  '  colorMode?: unknown',
+  "  colorMode?: 'light' | 'dark'",
   '  variant?: unknown',
   '}',
 ]
@@ -175,7 +174,7 @@ function perTagDecls(elements: readonly ElementRow[]): string[] {
   for (const row of ordered) {
     const tag = JSON.stringify(row.dom)
     lines.push(
-      `export type ${row.jsx}Props = Omit<React.ComponentPropsWithoutRef<${tag}>, StylePropName | 'css' | 'colorMode' | 'variant'> & StyleProps & { css?: PrimitiveCssProp; colorMode?: unknown; variant?: unknown }`,
+      `export type ${row.jsx}Props = Omit<React.ComponentPropsWithoutRef<${tag}>, StylePropName | 'css' | 'colorMode' | 'variant'> & StyleProps & { css?: PrimitiveCssProp; colorMode?: 'light' | 'dark'; variant?: unknown }`,
       `export declare const ${row.jsx}: (props: ${row.jsx}Props & { ref?: React.Ref<React.ComponentRef<${tag}>> }) => React.ReactNode`,
       ''
     )
