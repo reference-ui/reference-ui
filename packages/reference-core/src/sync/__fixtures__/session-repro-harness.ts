@@ -61,6 +61,8 @@ export async function cleanupHarness(): Promise<void> {
 // (fragments bundle as IIFE). A load in the pid the gate file names marks its
 // arrival and waits until the file is removed, so that process stays inside a
 // sync holding its lock; any other pid, a newcomer included, loads through.
+// A process evaluates an unchanged config bundle once (config/evaluate.ts), so
+// a hold stamps the config anew: the resync's load is a real evaluation.
 export const gatePath = (dir: string): string => join(dir, 'resync.gate')
 export const arrivedPath = (dir: string): string => join(dir, 'resync.arrived')
 
@@ -77,10 +79,11 @@ function gateLines(dir: string): string[] {
   ]
 }
 
-function configFile(gatedDir?: string): string {
+function configFile(gatedDir?: string, stamp = 'boot'): string {
   return [
     "import { defineConfig } from '@reference-ui/core'",
     ...(gatedDir === undefined ? [] : gateLines(gatedDir)),
+    ...(gatedDir === undefined ? [] : [`export const holdStamp = ${JSON.stringify(stamp)}`]),
     '',
     'export default defineConfig({',
     "  name: 'lock-test',",
@@ -224,8 +227,9 @@ export async function holdWatchMidResync(): Promise<HeldResync> {
   const dir = await writeWorld(0, true)
   const watch = spawnBin(['sync', '--watch', '--debug', dir], dir)
   await waitForOutput(watch, () => watch.output().includes('ready in'), 'the boot block')
-  writeFileSync(join(dir, 'theme', 'tokens.ts'), tokensFile(REBRAND))
   writeFileSync(gatePath(dir), String(watch.child.pid))
+  writeFileSync(join(dir, 'theme', 'tokens.ts'), tokensFile(REBRAND))
+  writeFileSync(join(dir, 'ui.config.ts'), configFile(dir, 'held'))
   const openGate = (): void => rmSync(gatePath(dir), { force: true })
   gateOpeners.push(openGate)
   watch.child.kill('SIGUSR2')

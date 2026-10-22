@@ -1,6 +1,9 @@
 // Evaluation for bundled Core config code as an ESM module.
 // It takes bundled code plus the source path and emits the raw config export, or a timeout error when the module never settles.
+// Node keeps every module record for the life of the process, so an unchanged bundle reuses the export it already
+// evaluated, keyed by a hash of the code and the config path: a watch that resyncs an unchanged config holds one module.
 
+import { createHash } from 'node:crypto'
 import { mkdir, mkdtemp, rm, rmdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -65,6 +68,14 @@ function exportOf(mod: unknown): unknown {
   return mod.default ?? mod
 }
 
+// Settled exports by bundle key. A watch resync of an unchanged config must not import a second module: each import
+// is kept by Node for good, about 0.66 MB a resync on docs. A failed evaluation leaves no entry, so a retry imports again.
+const evaluatedByKey = new Map<string, Promise<unknown>>()
+
+function bundleKeyOf(bundledCode: string, configPath: string): string {
+  return createHash('sha256').update(configPath).update('\0').update(bundledCode).digest('hex')
+}
+
 /**
  * Evaluate the bundled user config as an ESM module rooted beside the source config.
  *
@@ -82,13 +93,28 @@ export async function evaluateConfig(
   configPath: string,
   options: EvaluateConfigOptions = {}
 ): Promise<unknown> {
+  const key = bundleKeyOf(bundledCode, configPath)
+  const cached = evaluatedByKey.get(key)
+  if (cached) return cached
+  const evaluation = importConfigBundle(bundledCode, configPath, options)
+  evaluatedByKey.set(key, evaluation)
+  evaluation.catch(() => evaluatedByKey.delete(key))
+  return evaluation
+}
+
+// One real import of the bundle from its own temp dir; the path is unique, so the URL needs no cache-busting query.
+async function importConfigBundle(
+  bundledCode: string,
+  configPath: string,
+  options: EvaluateConfigOptions
+): Promise<unknown> {
   const tempRoot = getProjectTmpDirPath(dirname(configPath))
   const tempDir = await createEvalDir(tempRoot)
 
   try {
     const tempFile = join(tempDir, 'config.bundle.mjs')
     await writeFile(tempFile, bundledCode, 'utf8')
-    const url = `${pathToFileURL(tempFile).href}?t=${Date.now()}`
+    const url = pathToFileURL(tempFile).href
     return exportOf(await importWithTimeout(url, configPath, options.timeoutMs ?? CONFIG_EVALUATION_TIMEOUT_MS))
   } finally {
     await rm(tempDir, { recursive: true, force: true })
