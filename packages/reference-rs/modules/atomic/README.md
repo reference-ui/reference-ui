@@ -90,6 +90,8 @@ Compilation follows a deterministic, one-pass pipeline: `compile(request) -> { s
    - `css(...)` open style composition
    - `recipe(...)` closed variant definitions
    - `staticCss` on the ingested `BaseSystem` (third want source; `['*']` enumerates the property's token category)
+
+   Every parse goes through the nesting gate in `shared` first: a source nested past 1,024 levels is never handed to Oxc, and it reports one located `ATM-E-PARSE` at the line where the limit was crossed while its siblings still compile.
    Extracts raw property-value pairs into `Want`s. Never evaluates author JS: branches of ternaries and arrays are extracted symmetrically to capture every possible runtime state. Does not expand `staticCss` at emit time.
 
 3. **Resolution**:

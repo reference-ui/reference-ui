@@ -12,8 +12,6 @@ use rustc_hash::FxHashMap;
 use module_graph::{DiskFs, FileSystem, Loader, ModuleKey, ModuleRecord, ProbeMemo};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
-use oxc_parser::Parser;
-use oxc_span::SourceType;
 
 use super::super::constants::{collect_local_constants, LocalConstants};
 
@@ -190,11 +188,7 @@ impl Loader for AtomicLoader<'_> {
 /// unparseable targets stay absent, leaving their importers on the refusal.
 fn parse_record(path: &str, content: &str) -> Option<(ModuleRecord, LocalConstants)> {
     let allocator = Allocator::default();
-    // Mirror lib.rs: JSX follows the extension, TypeScript always on.
-    let source_type = SourceType::from_path(std::path::Path::new(path))
-        .unwrap_or_default()
-        .with_typescript(true);
-    let ret = Parser::new(&allocator, content, source_type).parse();
+    let ret = crate::parse_source(path, content, &allocator);
     if ret.panicked {
         return None;
     }
@@ -206,6 +200,8 @@ fn parse_record(path: &str, content: &str) -> Option<(ModuleRecord, LocalConstan
 #[cfg(test)]
 mod tests {
     use super::*;
+    use oxc_parser::Parser;
+    use oxc_span::SourceType;
 
     /// An fs over two staged sources plus the disk arm.
     fn fs() -> AtomicFs<'static> {

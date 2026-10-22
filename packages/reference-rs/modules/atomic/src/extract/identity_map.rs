@@ -15,9 +15,6 @@ use oxc_ast::ast::{
     ExportSpecifier, ImportDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
     ObjectPattern, Program, Statement, StringLiteral, TSModuleDeclarationName, VariableDeclaration,
 };
-use oxc_parser::Parser;
-use oxc_span::SourceType;
-use std::path::Path;
 
 use super::bindings::imported_name;
 
@@ -71,14 +68,10 @@ impl ExportMap {
     }
 }
 
-/// Parse one file's export surface; a panicked parse is an opaque dead end.
+/// Parse one file's export surface; a panicked parse, a refused nesting included, is an opaque dead end.
 pub(crate) fn parse_export_map(content: &str, path: &str) -> Option<ExportMap> {
     let allocator = Allocator::default();
-    // Mirror lib.rs: JSX follows the extension, TypeScript always on.
-    let source_type = SourceType::from_path(Path::new(path))
-        .unwrap_or_default()
-        .with_typescript(true);
-    let parsed = Parser::new(&allocator, content, source_type).parse();
+    let parsed = crate::parse_source(path, content, &allocator);
     if parsed.panicked {
         return None;
     }

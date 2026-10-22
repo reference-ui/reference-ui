@@ -56,8 +56,10 @@ pub use types::{CompileRequest, CompileResult, VirtualSource};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
-use oxc_parser::Parser;
-use oxc_span::SourceType;
+use oxc_diagnostics::OxcDiagnostic;
+use oxc_parser::ParserReturn;
+use oxc_span::{SourceType, Span};
+use shared::parse::NestingRefusal;
 use std::path::{Path, PathBuf};
 
 use std::collections::BTreeMap;
@@ -226,16 +228,37 @@ pub(crate) fn streaming_candidate(content: &str) -> bool {
 /// Parse one source: JSX follows the extension (`.tsx` on, `.ts` off),
 /// so `.ts`-only `<T>` assertions parse only when JSX is off.
 /// Shared with the resolver's streamed refinement, which re-parses the same
-/// bytes the staging pass already screened.
+/// bytes the staging pass already screened. A source nested past the
+/// nesting gate is never handed to Oxc; it comes back as a failed parse.
 pub(crate) fn parse_source<'a>(
     path: &str,
     content: &'a str,
     allocator: &'a Allocator,
-) -> oxc_parser::ParserReturn<'a> {
+) -> ParserReturn<'a> {
     let source_type = SourceType::from_path(Path::new(path))
         .unwrap_or_default()
         .with_typescript(true);
-    Parser::new(allocator, content, source_type).parse()
+    match shared::parse::parse_bounded(allocator, content, source_type) {
+        Ok(parsed) => parsed,
+        Err(refusal) => refused_parse(allocator, content, source_type, refusal),
+    }
+}
+
+/// The failed parse for a refused source: Oxc's empty program with `panicked`
+/// set, and the refusal as its one error, located at the start of the line
+/// where nesting crossed the limit. The parse-error path reports it as ATM-E-PARSE.
+fn refused_parse<'a>(
+    allocator: &'a Allocator,
+    content: &str,
+    source_type: SourceType,
+    refusal: NestingRefusal,
+) -> ParserReturn<'a> {
+    let mut parsed = shared::parse::refused_parser_return(allocator, source_type);
+    let start = shared::parse::line_start(content, refusal.line);
+    parsed
+        .errors
+        .push(OxcDiagnostic::error(refusal.message()).with_label(Span::new(start, start)));
+    parsed
 }
 
 /// Report the independent diagnostics analysis expectations into the

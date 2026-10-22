@@ -16,6 +16,7 @@ canon.workspace = true
 base_system.workspace = true
 diagnostics.workspace = true
 module_graph.workspace = true
+shared.workspace = true
 styletrace.workspace = true
 serde = { workspace = true }
 # Pinned explicitly: per-prop object declaration order follows author order
@@ -33,7 +34,6 @@ oxc_syntax = "0.115"
 indexmap = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]
-shared.workspace = true
 typegen.workspace = true
 criterion.workspace = true
 

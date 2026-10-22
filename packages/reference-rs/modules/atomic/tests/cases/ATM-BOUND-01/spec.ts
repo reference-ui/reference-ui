@@ -1,5 +1,5 @@
 /**
- * Bounded-depth case. A lane-sized project with one `css()` value nested 2,000 parentheses deep must compile
+ * Bounded-depth case. A lane-sized project with one `css()` value nested 1,000 parentheses deep must compile
  * and emit the red class. The compile itself runs in a child process (helpers.ts routes this case through
  * runIsolated), so this spec states only the contract the isolated result must meet.
  */
