@@ -5,10 +5,11 @@
 // carries it, so a system without owned data prints the declarations it
 // always did. The packager leg calls these pure builders and owns every write;
 // the banner rides the shared leaf constant. The entry's getRhythm is emitted from rhythm.ts by its source
-// text, so the generated runtime prints what the compiler prints. The authoring
-// calls take core's real token, font, keyframes and globalCss types; the builder
-// inlines copies because the generated package depends on nothing, and
-// sources.test.ts pins those copies to core's.
+// text, so the generated runtime prints what the compiler prints. The authoring calls
+// take core's real types, inlined because the generated package depends on nothing (the
+// goldens and type probes pin the copies), and at runtime they behave as core's collectors
+// and identity helpers do: tokens, keyframes, font, globalCss and recipe push into the sync
+// slot and do nothing elsewhere, while defineConfig and extendSystem return their first argument.
 
 import { BASE_SYSTEM_HEADER } from '../../packager/constants.ts'
 import { getRhythm } from './rhythm.ts'
@@ -79,6 +80,12 @@ export function systemEntrySource(): string {
     'export function globalCss(config) {',
     "  collect('__refGlobalCssCollector', config)",
     '}',
+    'export function recipe(config) {',
+    "  collect('__refRecipeCollector', config)",
+    '}',
+    'export function extendSystem(base, overrides) {',
+    '  return base',
+    '}',
     `export const getRhythm = ${getRhythm.toString()}`,
     "export { baseSystem } from './baseSystem.mjs'",
     '',
@@ -118,6 +125,21 @@ const AUTHORING_TYPES = [
   '  [property: string]: unknown',
   '}',
   'export type GlobalCssConfig = Record<string, GlobalCssRule>',
+  'export type SystemStyleObject = Record<string, unknown>',
+  'export interface RecipeCompoundConfig {',
+  '  css: SystemStyleObject',
+  '  [axis: string]: unknown',
+  '}',
+  'export interface RecipeConfig {',
+  '  className: string',
+  '  base?: SystemStyleObject',
+  '  variants?: Record<string, Record<string, SystemStyleObject>>',
+  '  defaultVariants?: Record<string, string>',
+  '  compoundVariants?: RecipeCompoundConfig[]',
+  '}',
+  'export interface ExtendSystemOverrides {',
+  '  tokens: ReferenceTokenConfig',
+  '}',
 ]
 
 export function systemTypesSource(system: DescribedSystem = {}): string {
@@ -152,8 +174,9 @@ export function systemTypesSource(system: DescribedSystem = {}): string {
     'export declare function keyframes(config: KeyframesConfig): void',
     'export declare function font(name: string, options: FontOptions): void',
     'export declare function globalCss(config: GlobalCssConfig): void',
-    'export declare function getRhythm(n: number): string',
-    'export declare function getRhythm(num: number, denom: number): string',
+    'export declare function recipe(config: RecipeConfig): void',
+    'export declare function extendSystem(base: BaseSystem, overrides: ExtendSystemOverrides): BaseSystem',
+    'export declare function getRhythm(num: number, denom?: number): string',
     'export declare const baseSystem: BaseSystem',
     '',
   ].join('\n')

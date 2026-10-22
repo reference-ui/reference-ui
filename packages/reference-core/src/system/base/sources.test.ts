@@ -3,15 +3,9 @@
 // A system that owns props gains one interface line and a published key, and
 // a system without owned data keeps the bytes it always had. These pins name
 // the culprit builder on drift; the end-to-end byte proof stays with the
-// resync determinism case. The tsc probe at the end checks the emitted authoring
-// types: valid shapes pass, wrong ones fail, and each type stays mutually
-// assignable with core's own.
+// resync determinism case. The tsc type probes live in sources.types.test.ts.
 
-import { execFileSync } from 'node:child_process'
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { assembleBaseSystem } from './assemble.ts'
 import { getRhythm } from './rhythm.ts'
 import {
@@ -99,6 +93,12 @@ export function font(name, options) {
 export function globalCss(config) {
   collect('__refGlobalCssCollector', config)
 }
+export function recipe(config) {
+  collect('__refRecipeCollector', config)
+}
+export function extendSystem(base, overrides) {
+  return base
+}
 `
 const SYSTEM_ENTRY_TAIL = `export { baseSystem } from './baseSystem.mjs'
 `
@@ -180,13 +180,29 @@ export interface GlobalCssRule {
   [property: string]: unknown
 }
 export type GlobalCssConfig = Record<string, GlobalCssRule>
+export type SystemStyleObject = Record<string, unknown>
+export interface RecipeCompoundConfig {
+  css: SystemStyleObject
+  [axis: string]: unknown
+}
+export interface RecipeConfig {
+  className: string
+  base?: SystemStyleObject
+  variants?: Record<string, Record<string, SystemStyleObject>>
+  defaultVariants?: Record<string, string>
+  compoundVariants?: RecipeCompoundConfig[]
+}
+export interface ExtendSystemOverrides {
+  tokens: ReferenceTokenConfig
+}
 export declare function defineConfig(config: ReferenceUIConfig): ReferenceUIConfig
 export declare function tokens(config: TokenConfig): void
 export declare function keyframes(config: KeyframesConfig): void
 export declare function font(name: string, options: FontOptions): void
 export declare function globalCss(config: GlobalCssConfig): void
-export declare function getRhythm(n: number): string
-export declare function getRhythm(num: number, denom: number): string
+export declare function recipe(config: RecipeConfig): void
+export declare function extendSystem(base: BaseSystem, overrides: ExtendSystemOverrides): BaseSystem
+export declare function getRhythm(num: number, denom?: number): string
 export declare const baseSystem: BaseSystem
 `
 
@@ -275,90 +291,3 @@ describe('system source builders for a system that owns props', () => {
     expect(plain).toBe(baseSystemMjsSource(assembleBaseSystem(base)))
   })
 })
-
-const PACKAGE_ROOT = fileURLToPath(new URL('../../..', import.meta.url))
-const scratchDirs: string[] = []
-
-const PROBE_TSCONFIG = {
-  compilerOptions: {
-    strict: true,
-    noEmit: true,
-    skipLibCheck: true,
-    allowImportingTsExtensions: true,
-    module: 'NodeNext',
-    moduleResolution: 'NodeNext',
-    target: 'ES2022',
-    lib: ['ES2022', 'DOM'],
-    types: [],
-  },
-  files: ['probe.ts'],
-}
-
-// The probe reads the emitted entry as system.d.mts. The drift lines pin each
-// emitted authoring type to core's own, in both directions; the calls below
-// check that valid shapes pass and that a misspelled token leaf key, a wrong font
-// weight, a missing fontFace and a wrong keyframe value fail. ReferenceTokenLeaf
-// names its keys and has no index signature, so an unknown leaf key is an error.
-const AUTHORING_PROBE = [
-  "import { font, globalCss, keyframes, tokens } from './system.mjs'",
-  "import type { FontOptions, GlobalCssConfig, KeyframesConfig, TokenConfig } from './system.mjs'",
-  'import type {',
-  '  FontOptions as RealFontOptions,',
-  '  GlobalCssConfig as RealGlobalCssConfig,',
-  '  KeyframesConfig as RealKeyframesConfig,',
-  '  TokenConfig as RealTokenConfig,',
-  "} from '../../../src/collect/surface/index.ts'",
-  'type MutuallyAssignable<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false',
-  'export const tokenShapes: MutuallyAssignable<TokenConfig, RealTokenConfig> = true',
-  'export const keyframesShapes: MutuallyAssignable<KeyframesConfig, RealKeyframesConfig> = true',
-  'export const fontShapes: MutuallyAssignable<FontOptions, RealFontOptions> = true',
-  'export const globalCssShapes: MutuallyAssignable<GlobalCssConfig, RealGlobalCssConfig> = true',
-  "const theme: TokenConfig = { colors: { brand: { value: '#7c3aed', description: 'Brand' } } }",
-  'tokens(theme)',
-  "const sans: FontOptions = { value: 'Inter, sans-serif', fontFace: { src: 'url(/fonts/inter.woff2)', fontWeight: '200 900' }, weights: { bold: '700' } }",
-  "font('sans', sans)",
-  "keyframes({ fade: { '0%': { opacity: '0' }, '100%': { opacity: 1 } } })",
-  "globalCss({ ':root': { '--spacing-root': '0.5rem' }, body: { fontFamily: 'sans' } })",
-  '// @ts-expect-error bld is not a font weight name',
-  "font('sans', { value: 'Inter', fontFace: { src: 'url(/x.woff2)' }, weights: { bld: '700' } })",
-  '// @ts-expect-error fontFace is required',
-  "font('sans', { value: 'Inter', weights: { bold: '700' } })",
-  '// @ts-expect-error opacity must be a string or a number',
-  "keyframes({ fade: { from: { opacity: true } } })",
-  '// @ts-expect-error valu is not a token leaf key',
-  "tokens({ colors: { brand: { valu: '#f00' } } })",
-]
-
-describe('system entry authoring types under strict tsc', () => {
-  afterEach(() => {
-    for (const dir of scratchDirs.splice(0)) rmSync(dir, { recursive: true, force: true })
-  })
-
-  it('types the four authoring calls from the emitted entry', () => {
-    const dir = scratchDir('system-entry-types')
-    writeFileSync(join(dir, 'system.d.mts'), systemTypesSource())
-    writeFileSync(join(dir, 'probe.ts'), `${AUTHORING_PROBE.join('\n')}\n`)
-    expect(checkProbe(dir)).toBe('')
-  }, 150000)
-})
-
-/** A scratch project under the package's gitignored tests/.artifacts, with its own strict tsconfig. */
-function scratchDir(name: string): string {
-  const dir = join(PACKAGE_ROOT, 'tests', '.artifacts', `${name}-${process.pid}-${Date.now()}`)
-  mkdirSync(dir, { recursive: true })
-  scratchDirs.push(dir)
-  writeFileSync(join(dir, 'tsconfig.json'), `${JSON.stringify(PROBE_TSCONFIG, null, 2)}\n`)
-  return dir
-}
-
-/** Strict tsc over the probe project; returns the diagnostics, empty when clean. */
-function checkProbe(dir: string): string {
-  const tsc = join(PACKAGE_ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
-  try {
-    execFileSync(process.execPath, [tsc, '-p', dir, '--pretty', 'false'], { stdio: 'pipe', timeout: 120000 })
-    return ''
-  } catch (error) {
-    const failure = error as { stdout?: unknown; stderr?: unknown }
-    return `${String(failure.stdout ?? '')}${String(failure.stderr ?? '')}`
-  }
-}
