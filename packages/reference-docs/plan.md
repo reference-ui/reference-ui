@@ -130,9 +130,10 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
       Also wave 3 (orchestrator rulings 2026-10-22, for owner review): one-shot `ref sync` exits 1 whenever tasty's
       build fails (today exit 0/1 depends on a race; sync.ts already intends 1; cost: a CSS-only user fails on a types
       error); watch reports it and keeps running. Owner scope (2026-10-22): wave 3 is small local fixes only
-      (tasty exit code, symlink visit cap, FIFO skip, lookahead budget, F8/F9/F3 if local).
-- [ ] Backlog (architectural, not tonight): alias-aware walk keyed on (canonical dir, glob state) so a file reachable
-      only through a loop-closing link is listed; run the nesting gate once per file read instead of per parse.
+      (tasty exit code, FIFO skip, lookahead budget, F8/F9/F3 if local).
+- [ ] Next after wave 2 (owner 2026-10-22, xhigh plan then orchestrator): (A) ScreenedSource: nesting gate once per
+      file read, not per parse (no caching: owner principle); (B) alias-aware walk keyed on (canonical dir, glob
+      state), which also ends symlink clique blowups (wave 3 visit cap dropped).
 - [x] Small fixes landed 2026-10-22 (ff to a6c19efc4, 46 commits; items 1-25, xhigh review + 7 fixes). Gate: 1685 Rust,
       353 cases, core vt 1105, docs/lib/book sync 0 warnings, MDX now gated. Highlights: typed @reference-ui/system
       (token typos error; recipe exported; extendSystem stays core-only); sync-time system alias is its own barrel
