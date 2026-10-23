@@ -1,0 +1,1 @@
+{"id": "CORE-BOUND-01", "name": "a tokens() tree that contains itself fails ref sync with exit 1 and 'token tree cycles at colors.self (<file>)'", "sync": false}

@@ -2,7 +2,9 @@
 // It takes collected fragment objects and emits merged trees and provenance keys.
 // A token leaf replaces the earlier leaf whole, groups merge recursively, and
 // upstream `_private` subtrees strip at merge time so the owning package keeps
-// its internals while downstream extenders never see them.
+// its internals while downstream extenders never see them. Fragments are live
+// objects, so assertFragmentTree refuses a cyclic or over-deep tree by name
+// before any of these recursive walks reads it.
 
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -142,4 +144,53 @@ export function tokenLeafPaths(tokens: Record<string, unknown>): string[] {
     if (isPlainObject(value)) collectLeafPaths(value, key, paths)
   }
   return paths
+}
+
+/** The deepest a fragment tree may nest: an object at a dotted path of more keys is refused. */
+export const MAX_FRAGMENT_TREE_DEPTH = 100
+
+/** A fragment tree the merge cannot walk: it holds itself, or nests past the depth limit. */
+export class TokenTreeError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'TokenTreeError'
+  }
+}
+
+/** The collector call a fragment came from and its file, for the error line. */
+export interface FragmentTreeSource {
+  call: 'token' | 'keyframes' | 'globalCss'
+  source: string
+}
+
+interface TreeWalk {
+  active: WeakSet<object>
+  at: FragmentTreeSource
+}
+
+// One object node at `path`, `depth` keys deep. The active set holds only the objects on the
+// path from the root, entered and left in step, so a subtree shared by two keys still passes.
+function walkFragmentNode(node: Record<string, unknown>, path: string, depth: number, walk: TreeWalk): void {
+  const { call, source } = walk.at
+  if (walk.active.has(node)) throw new TokenTreeError(`${call} tree cycles at ${path} (${source})`)
+  if (depth > MAX_FRAGMENT_TREE_DEPTH) {
+    throw new TokenTreeError(
+      `${call} tree nests deeper than ${MAX_FRAGMENT_TREE_DEPTH} levels at ${path} (${source})`
+    )
+  }
+  walk.active.add(node)
+  for (const [key, value] of Object.entries(node)) {
+    if (isPlainObject(value)) walkFragmentNode(value, childPath(path, key), depth + 1, walk)
+  }
+  walk.active.delete(node)
+}
+
+/**
+ * Refuse a fragment tree that the recursive walks above cannot finish: one that holds
+ * itself, or one with an object more than MAX_FRAGMENT_TREE_DEPTH keys deep. Throws a
+ * TokenTreeError naming the call, the dotted path and the file; returns nothing otherwise.
+ */
+export function assertFragmentTree(tree: unknown, at: FragmentTreeSource): void {
+  if (!isPlainObject(tree)) return
+  walkFragmentNode(tree, '', 0, { active: new WeakSet(), at })
 }

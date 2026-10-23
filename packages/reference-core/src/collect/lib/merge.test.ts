@@ -1,10 +1,17 @@
 // Unit tests for the Core token merge, leaf paths, and private stripping.
 // They take token trees and assert merged output: a leaf replaces the earlier leaf
 // whole, a group merges recursively, and the inputs stay untouched. They also pin
-// the provenance keys and the `_private` strip.
+// the provenance keys and the `_private` strip, and the fragment tree guard that
+// refuses a cyclic or over-deep tree by name.
 
 import { describe, expect, it } from 'vitest'
-import { mergeTokenTree, stripPrivateTokensDeep, tokenLeafPaths } from './merge.ts'
+import {
+  assertFragmentTree,
+  mergeTokenTree,
+  stripPrivateTokensDeep,
+  TokenTreeError,
+  tokenLeafPaths,
+} from './merge.ts'
 
 describe('mergeTokenTree', () => {
   it('merges sibling token trees key by key', () => {
@@ -184,5 +191,54 @@ describe('tokenLeafPaths', () => {
 
   it('skips non-object children', () => {
     expect(tokenLeafPaths({ colors: { stray: 'red' } })).toEqual([])
+  })
+})
+
+// A group nested `levels` deep under `deep`: the innermost object sits at depth `levels`.
+function nestedTree(levels: number): Record<string, unknown> {
+  let node: Record<string, unknown> = { value: '#000' }
+  for (let level = 1; level < levels; level += 1) node = { n: node }
+  return { deep: node }
+}
+
+const SOURCE = { call: 'token', source: 'src/tokens.ts' } as const
+
+describe('assertFragmentTree', () => {
+  it('refuses a tree that contains itself, naming the call, path and file', () => {
+    const colors: Record<string, unknown> = { brand: { value: '#000' } }
+    colors.self = colors
+
+    expect(() => assertFragmentTree({ colors }, SOURCE)).toThrow(
+      new TokenTreeError('token tree cycles at colors.self (src/tokens.ts)')
+    )
+  })
+
+  it('passes a subtree shared by two keys, which is not a cycle', () => {
+    const shared = { value: '#000' }
+
+    expect(() => assertFragmentTree({ a: { x: shared }, b: { y: shared } }, SOURCE)).not.toThrow()
+  })
+
+  it('passes a tree 100 levels deep and refuses one 101 levels deep at the first node past the limit', () => {
+    expect(() => assertFragmentTree(nestedTree(100), SOURCE)).not.toThrow()
+    const path = ['deep', ...Array(100).fill('n')].join('.')
+
+    expect(() => assertFragmentTree(nestedTree(101), SOURCE)).toThrow(
+      new TokenTreeError(`token tree nests deeper than 100 levels at ${path} (src/tokens.ts)`)
+    )
+  })
+
+  it('refuses keyframes and globalCss cycles under their own call names', () => {
+    const fade: Record<string, unknown> = { from: { opacity: '0' } }
+    fade.again = fade
+    const body: Record<string, unknown> = { margin: '0' }
+    body.nested = body
+
+    expect(() => assertFragmentTree({ fade }, { call: 'keyframes', source: 'src/motion.ts' })).toThrow(
+      'keyframes tree cycles at fade.again (src/motion.ts)'
+    )
+    expect(() => assertFragmentTree({ body }, { call: 'globalCss', source: 'src/global.ts' })).toThrow(
+      'globalCss tree cycles at body.nested (src/global.ts)'
+    )
   })
 })

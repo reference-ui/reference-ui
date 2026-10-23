@@ -1,11 +1,19 @@
 // Spec assembly for the fragment evaluator: it takes the collected buckets per collector, the config name, the
 // static CSS and the upstream names, and emits the frozen EvaluatedSystemSpec with its provenance and the token
-// shadow diagnostics. Upstream token fragments are stripped of private keys before the merge reads them.
+// shadow diagnostics. Every tokens, keyframes and globalCss fragment first passes the tree guard, so a cyclic or
+// over-deep tree fails sync by name; upstream token fragments are then stripped of private keys before the merge.
 import { relative } from 'node:path'
 import type { EvaluatedSystemSpec, GlobalStyleNode } from '@reference-ui/rust/contracts'
 import type { NativeDiagnostic } from '../../native/contract.ts'
 import { CONFIG_FRAGMENT_SOURCE_PROPERTY, UPSTREAM_FRAGMENT_SOURCE } from '../constants.ts'
-import { isPlainObject, mergeTokenTree, stripPrivateTokensDeep, tokenLeafPaths } from './merge.ts'
+import {
+  assertFragmentTree,
+  type FragmentTreeSource,
+  isPlainObject,
+  mergeTokenTree,
+  stripPrivateTokensDeep,
+  tokenLeafPaths,
+} from './merge.ts'
 import { mergeTokenFragmentsWithShadows, tokenShadowDiagnostic } from './shadow.ts'
 
 type SpecProvenance = EvaluatedSystemSpec['provenance']
@@ -62,6 +70,7 @@ export function mergeCollectedSpec({
   staticCss,
   upstreamNames,
 }: SpecMergeInput): EvaluatedFragments {
+  assertFragmentTrees(collected, cwd)
   const tokens = bucketByName(collected, 'tokens').map(fragment =>
     scopeUpstreamTokenFragment(fragment, upstreamNames)
   )
@@ -90,6 +99,21 @@ export function mergeCollectedSpec({
     ],
   }
   return { spec, diagnostics: tokenMerge.shadows.map(tokenShadowDiagnostic) }
+}
+
+// The buckets whose fragments the recursive merge walks, with the call name each error line uses.
+const GUARDED_BUCKETS: ReadonlyArray<[bucket: string, call: FragmentTreeSource['call']]> = [
+  ['tokens', 'token'],
+  ['keyframes', 'keyframes'],
+  ['globalCss', 'globalCss'],
+]
+
+function assertFragmentTrees(collected: CollectedBucket[], cwd: string): void {
+  for (const [bucket, call] of GUARDED_BUCKETS) {
+    for (const fragment of bucketByName(collected, bucket)) {
+      assertFragmentTree(fragment, { call, source: sourceOfFragment(fragment, cwd) })
+    }
+  }
 }
 
 function bucketByName(collected: CollectedBucket[], name: string): unknown[] {
