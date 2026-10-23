@@ -2,10 +2,11 @@
 // and emits the matching files as absolute paths: real paths first, in walk order, then the link aliases. One sorted walk per
 // scope enters a directory only when an include can still reach it, and enters a symlinked directory under every such alias,
 // visiting each (canonical directory, glob state) once so that loops and lattices of links end; an owns walk or an include that
-// project-globs.ts does not model cuts a link back onto the walk path instead. A file reached through several paths is listed
-// once, under its first path in walk order. Directories the Rust walk prunes by name are walked for their real files only, and
-// a scope outside the root (`../shared/**`, an absolute glob) walks its own base. A negated include drops the paths it matches;
-// the Rust walk never prunes on one, and this walk prunes only at `<dir>/**`, where every path beneath is dropped anyway.
+// project-globs.ts does not model cuts a link back onto the walk path instead. Only regular files are listed, never a FIFO or
+// device or a link to one, and a file reached through several paths is listed once, under its first path in walk order.
+// Directories the Rust walk prunes by name are walked for their real files only, and a scope outside the root (`../shared/**`,
+// an absolute glob) walks its own base. A negated include drops the paths it matches; the Rust walk never prunes on one, and
+// this walk prunes only at `<dir>/**`, where every path beneath is dropped anyway.
 
 import { realpathSync, type Dirent } from 'node:fs'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
@@ -199,14 +200,15 @@ function planDir(frame: DirFrame, state: WalkState): void {
   state.walking.delete(frame.canon)
 }
 
-// One entry of a directory being walked: a subdirectory is entered, a link is decided, and a file is kept.
+// One entry of a directory being walked: a subdirectory is entered, a link is decided, and a regular file is kept. A FIFO,
+// socket or device is skipped, as the Rust walk never opens one.
 function planEntry(entry: Dirent, frame: DirFrame, state: WalkState): void {
   const child = childOf(entry.name, frame)
   if (entry.isDirectory()) {
     planSubdir(child, joinPath(frame.canon, entry.name), frame, state)
   } else if (entry.isSymbolicLink()) {
     planLink(child, frame, state)
-  } else {
+  } else if (entry.isFile()) {
     keepFile(child, frame, state)
   }
 }

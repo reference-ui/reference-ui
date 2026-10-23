@@ -1,0 +1,1 @@
+{"id": "CORE-BOUND-07", "name": "a src tree holding a FIFO named pipe.ts and a link to it syncs in under 10 s with the CSS of the tree without them", "sync": false}

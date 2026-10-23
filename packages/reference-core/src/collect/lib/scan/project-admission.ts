@@ -93,9 +93,13 @@ function compareEntries(a: Dirent, b: Dirent): number {
 // Printable ASCII names compare as strings, where UTF-16 order is byte order; any other name compares by bytes.
 const PRINTABLE_ASCII = /^[ -~]*$/
 
+// What a link resolves to: a directory, a regular file, or undefined for a dangling link or a target that is neither (a FIFO,
+// socket or device), which the walk skips.
 export function kindOf(alias: string): 'file' | 'directory' | undefined {
   try {
-    return statSync(alias).isDirectory() ? 'directory' : 'file'
+    const stat = statSync(alias)
+    if (stat.isDirectory()) return 'directory'
+    return stat.isFile() ? 'file' : undefined
   } catch {
     return undefined
   }

@@ -1,6 +1,8 @@
 // Unit tests for the project file listing under the native walk's symlink rule. Each test builds a temp tree with real
 // symlinks, lists it through listProjectFiles and planProjectWalk, and compares the exact paths. The trees mirror the Rust
-// unit tests in atomic's sources/tests/disk.rs, so both sides pin the same expectations.
+// unit tests in atomic's sources/tests/disk.rs, so both sides pin the same expectations; the FIFO test mirrors
+// sources/tests/fifo.rs.
+import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -69,6 +71,14 @@ describe('listProjectFiles', () => {
       join(root, 'src', 'keep.ts'),
       join(root, 'src', 'one', 'x.ts'),
     ])
+  })
+
+  it.skipIf(process.platform === 'win32')('omits a FIFO named like a source and a link to it', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'src/app.ts': 'export const a = 1\n' })
+    execFileSync('mkfifo', [join(root, 'src', 'pipe.ts')])
+    symlinkSync('pipe.ts', join(root, 'src', 'pipe-link.ts'))
+    expect(listProjectFiles(root, SRC_INCLUDE, ROOT_IGNORE)).toEqual([join(root, 'src', 'app.ts')])
   })
 
   it('never plans a link inside an ignored directory, so the ignore set prunes it as fast-glob does', () => {
