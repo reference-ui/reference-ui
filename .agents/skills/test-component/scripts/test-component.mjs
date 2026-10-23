@@ -7,8 +7,10 @@
  * `--react 17|18|19|all` pins the CT Vite gallery via @ct-runtime packages (no pipeline).
  * Visual snapshots run on React 19 only. Snapshot writes need --update-snapshots --confirm.
  *
- * Persistent daemon owns ONE Vite gallery on :3101. Concurrent `pnpm agentct`
- * invocations queue one job at a time, with at most two test workers.
+ * One persistent daemon serves every checkout and worktree: it owns ONE Vite gallery
+ * on :3101 and runs each job in its caller's tree (runner, specs, stories, CSS, Vite,
+ * artifacts). Concurrent `pnpm agentct` invocations queue one job at a time, with at
+ * most two test workers.
  */
 
 import { spawn, spawnSync, execSync } from 'node:child_process'
@@ -21,7 +23,7 @@ import { evidenceErrors } from './cases/results.mjs'
 import { unitDirectory, artifactsDirectory } from './cases/targets.mjs'
 import { resolveSelection, selectLegacyTarget, executionArguments } from './cases/selection.mjs'
 import { parseCatalogInvocation, formatCatalogJson, formatCatalogHuman, listingExitCode, writeCatalogOutput } from './cases/output.mjs'
-import { canAcquireJob, MAX_ACTIVE_JOBS, workerBudget, selectOwnedGroups, isListenerOwnedByGroups } from './cases/resources.mjs'
+import { canAcquireJob, MAX_ACTIVE_JOBS, workerBudget, selectOwnedGroups, isListenerOwnedByGroups, findWorkspaceRoot, resolveJobTree, galleryServes, jobTreeProblem } from './cases/resources.mjs'
 import { writeVideoContactSheets } from './videoContactSheet.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -459,8 +461,11 @@ async function startDaemon({ auto = false } = {}) {
   fs.rmSync(SOCKET_PATH, { force: true })
   fs.rmSync(DAEMON_PID_FILE, { force: true })
 
-  const daemonRoot = findRepoRoot(__dirname)
-  const daemonLibDir = path.join(daemonRoot, 'packages/reference-lib')
+  const jobTreeFs = {
+    findRoot: (cwd) => findWorkspaceRoot(cwd, fs.existsSync),
+    exists: fs.existsSync,
+    realpath: fs.realpathSync,
+  }
   const vitePort = process.env.CT_PORT ? parseInt(process.env.CT_PORT, 10) : 3101
   const viteUrl = `http://localhost:${vitePort}/playwright/index.html`
   const queue = []
@@ -468,6 +473,7 @@ async function startDaemon({ auto = false } = {}) {
   let viteChild = null
   let viteClosePromise = null
   let viteRuntime = null
+  let viteRoot = null
   let viteCaptureTimer = null
   let viteOwnedGroups = new Set()
   let pumping = false
@@ -508,6 +514,7 @@ async function startDaemon({ auto = false } = {}) {
     if (!child?.pid && owned.size === 0 && !closePromise) {
       viteChild = null
       viteRuntime = null
+      viteRoot = null
       viteClosePromise = null
       viteOwnedGroups = new Set()
       return
@@ -529,6 +536,7 @@ async function startDaemon({ auto = false } = {}) {
     // Both conditions met: only now release the gallery reference and groups.
     viteChild = null
     viteRuntime = null
+    viteRoot = null
     viteClosePromise = null
     viteOwnedGroups = new Set()
   }
@@ -537,12 +545,14 @@ async function startDaemon({ auto = false } = {}) {
     return withViteLock(() => stopViteUnlocked())
   }
 
-  async function ensureVite(runtime, { isCanceled } = {}) {
+  // The gallery serves one tree at a time; a job from another tree restarts it there.
+  async function ensureVite(tree, runtime, { isCanceled } = {}) {
     return withViteLock(async () => {
       const canceled = () => isCleaningUp || (typeof isCanceled === 'function' && isCanceled())
       const target = runtime || '19'
       if (canceled()) return false
-      if (viteChild?.pid && viteRuntime === target && isPidAlive(viteChild.pid) && await isViteUp()) {
+      const gallery = { root: viteRoot, runtime: viteRuntime }
+      if (viteChild?.pid && galleryServes(gallery, { root: tree.root, runtime: target }) && isPidAlive(viteChild.pid) && await isViteUp()) {
         // A live warm child plus an HTTP 200 is not enough: the listener must
         // still be held by the warm child's own groups, or we restart it.
         const warmOwned = collectOwnedGroups(viteChild.pid)
@@ -550,12 +560,15 @@ async function startDaemon({ auto = false } = {}) {
         for (const pgid of warmOwned) viteOwnedGroups.add(pgid)
         if (portOwnedByProcessGroups(vitePort, warmOwned)) return true
       }
+      if (viteChild && viteRoot && viteRoot !== tree.root) {
+        console.log(`[agentct-daemon] Gallery tree changes from ${viteRoot} to ${tree.root}; restarting Vite.`)
+      }
       await stopViteUnlocked()
       // A canceled job must not spawn a gallery it will immediately orphan.
       if (canceled()) return false
-      console.log(`[agentct-daemon] Starting persistent Vite on :${vitePort} (react ${target})...`)
+      console.log(`[agentct-daemon] Starting persistent Vite on :${vitePort} (react ${target}) in ${tree.libDir}...`)
       const child = spawn(daemonPnpm, ['exec', 'vite', '--config', 'playwright/vite.config.ts'], {
-        cwd: daemonLibDir,
+        cwd: tree.libDir,
         env: {
           ...process.env,
           CT_REACT: target,
@@ -567,6 +580,7 @@ async function startDaemon({ auto = false } = {}) {
       })
       viteChild = child
       viteRuntime = target
+      viteRoot = tree.root
       viteOwnedGroups = new Set()
       if (child.pid && process.platform !== 'win32') viteOwnedGroups.add(child.pid)
       // One close promise per gallery, established at spawn. Stop awaits it so a
@@ -621,7 +635,7 @@ async function startDaemon({ auto = false } = {}) {
             // Accept readiness only while the spawned Vite is alive and actually
             // owns the port, so an unrelated or exiting listener cannot fool us.
             if (viteChild === child && !spawnError && !exited && portOwnedByProcessGroups(vitePort, viteOwnedGroups)) {
-              console.log(`[agentct-daemon] Vite ready ${viteUrl} (react ${target})`)
+              console.log(`[agentct-daemon] Vite ready ${viteUrl} (react ${target}, tree ${tree.root})`)
               return true
             }
           }
@@ -658,7 +672,7 @@ async function startDaemon({ auto = false } = {}) {
     if (active.some((j) => j.runtime === 'exclusive')) return false
     if (job.runtime && job.runtime !== 'exclusive') {
       const viteUsers = active.filter((j) => j.runtime && j.runtime !== 'exclusive')
-      if (viteUsers.some((j) => j.runtime !== job.runtime)) return false
+      if (viteUsers.some((j) => j.runtime !== job.runtime || j.tree.root !== job.tree.root)) return false
     }
     return true
   }
@@ -701,7 +715,7 @@ async function startDaemon({ auto = false } = {}) {
           }
           // A canceled job never restores a gallery it declined to keep.
           if (restoreVite && !isCleaningUp && !job.canceled) {
-            try { await ensureVite('19', { isCanceled: () => isCleaningUp || job.canceled }) } catch (err) {
+            try { await ensureVite(job.tree, '19', { isCanceled: () => isCleaningUp || job.canceled }) } catch (err) {
               console.error('[agentct-daemon] Failed to restore Vite 19: ' + err.message)
             }
           }
@@ -767,17 +781,18 @@ async function startDaemon({ auto = false } = {}) {
       if (exclusive) {
         restoreVite = Boolean(viteChild)
         await stopVite()
-      } else if (job.runtime) await ensureVite(job.runtime, { isCanceled: () => job.canceled || socket.destroyed })
+      } else if (job.runtime) await ensureVite(job.tree, job.runtime, { isCanceled: () => job.canceled || socket.destroyed })
       if (job.canceled || socket.destroyed || isCleaningUp) {
         await finishJob()
         return
       }
 
-      console.log('[agentct-daemon] Starting (1 active job, workers=' + workers + '): ' + label)
-      socket.write(JSON.stringify({ type: 'start', workers, port: vitePort }) + '\n')
-      const child = spawn(process.execPath, [__filename, ...(req.argv || [])], {
+      console.log('[agentct-daemon] Starting (1 active job, workers=' + workers + ', tree ' + job.tree.root + '): ' + label)
+      socket.write(JSON.stringify({ type: 'start', workers, port: vitePort, root: job.tree.root, pid: process.pid }) + '\n')
+      // The job's own runner, so specs, stories, CSS and artifacts are its tree's.
+      const child = spawn(process.execPath, [job.tree.runner, ...(req.argv || [])], {
         stdio: ['ignore', 'pipe', 'pipe'],
-        cwd: req.cwd || daemonRoot,
+        cwd: req.cwd || job.tree.root,
         env: {
           ...process.env,
           ...req.env,
@@ -868,6 +883,7 @@ async function startDaemon({ auto = false } = {}) {
           const argv = req.argv || req.args || []
           const job = {
             socket,
+            tree: resolveJobTree(req, jobTreeFs),
             req: { ...req, argv },
             runtime: req.runtime === null ? null : parseJobRuntime(argv),
             canceled: false,
@@ -1046,6 +1062,9 @@ async function ensureDaemon() {
 }
 
 function sendToDaemon(argv) {
+  // The job runs in the caller's tree (the workspace above its cwd, else this
+  // script's checkout); the daemon's start ack has to confirm it.
+  const clientRoot = fs.realpathSync(findWorkspaceRoot(process.cwd(), fs.existsSync) || repoRoot)
   return new Promise((resolve, reject) => {
     let completed = false
     let buffer = ''
@@ -1055,6 +1074,7 @@ function sendToDaemon(argv) {
         type: 'run',
         argv,
         runtime: runE2e ? parseJobRuntime(argv) : null,
+        root: clientRoot,
         cwd: process.cwd(),
         env: {
           FORCE_COLOR: '1',
@@ -1077,6 +1097,14 @@ function sendToDaemon(argv) {
             if (!isJson) console.log(`[agentct-queue] Waiting in daemon queue (position ${msg.position} of ${msg.total})...`)
           }
           if (msg.type === 'start') {
+            const problem = jobTreeProblem(clientRoot, msg.root, msg.pid || readDaemonPid() || '<daemon pid>')
+            if (problem) {
+              completed = true
+              console.error(problem)
+              client.destroy()
+              resolve(2)
+              return
+            }
             if (!isJson) console.log(`[agentct-queue] Slot acquired. Routing to warm Vite :${msg.port || 3101} (${msg.workers || WORKERS_PER_SLOT} workers).`)
           }
           if (msg.type === 'stdout') process.stdout.write(msg.data)
@@ -1157,14 +1185,15 @@ Usage: pnpm agentct [Component] [options]
   pnpm agentct Popover -g "escape"   Name filter (unit -t and Playwright -g)
 
   pnpm agentct daemon               Shared Vite + one-job queue in this terminal
-  pnpm agentct stop                 Stop the persistent daemon and Vite :3101
+  pnpm agentct stop                 Stop the persistent daemon and Vite :3101 (for every tree)
 
   --headed                     Playwright headed
   --clean                      Clear this run's isolated artifact directory
   --json                       Machine-readable summary
   --update-snapshots --confirm   Rewrite React 19 baselines (human yes required)
 
-Concurrent agentct invocations share ONE Vite gallery on :3101.
+One daemon serves all trees: each job runs in its caller's checkout or worktree.
+Concurrent agentct invocations share ONE Vite gallery on :3101; it restarts when the tree changes.
 Global queue permits one active job; Vitest and Playwright each use at most two workers.
 CT_WORKERS=1 lowers the budget; higher overrides are capped at two.
 React 17/18/19 are isolated @ct-runtime packages. Not the matrix pipeline.
@@ -2104,6 +2133,8 @@ await runE2eSuites()
 // so `--json` stdout stays one parseable value.
 const videoRuns = e2eRuns.filter((entry) => entry.videoPath)
 if (videoRuns.length > 0) {
+  const sheetsStartedAt = Date.now()
+  console.error(`[agentct] Building ${videoRuns.length} contact sheets, about 10 s each; the job slot stays held.`)
   try {
     const sheets = await writeVideoContactSheets(videoRuns.map((entry) => entry.videoPath))
     const sheetByVideo = new Map(sheets.map((sheet) => [path.resolve(sheet.videoPath), sheet]))
@@ -2120,6 +2151,7 @@ if (videoRuns.length > 0) {
       console.warn(`[agentct] ⚠ Contact sheet failed for ${entry.videoPath}: ${err.message}`)
     }
   }
+  console.error(`[agentct] Contact sheets done in ${((Date.now() - sheetsStartedAt) / 1000).toFixed(1)} s.`)
 }
 
 await releaseExecutionGate()

@@ -1,10 +1,13 @@
-// node:test suite for the agentct job-slot and worker-budget rules.
-// It takes synthetic process inventories and asserts slot acquisition, worker budgets, and
-// owned-listener detection without touching real processes.
+// node:test suite for the agentct job-slot, worker-budget and job-tree rules.
+// It takes synthetic process inventories and fake fs functions and asserts slot acquisition,
+// worker budgets, owned-listener detection and per-tree job routing without touching real processes.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   canAcquireJob,
+  galleryServes,
+  jobTreeProblem,
+  resolveJobTree,
   isListenerOwnedByGroups,
   MAX_ACTIVE_JOBS,
   MAX_WORKERS,
@@ -91,4 +94,74 @@ test('listener ownership fails closed on empty, unknown, partial, and mixed sets
   assert.equal(isListenerOwnedByGroups([999], inventory, owned), false)
   assert.equal(isListenerOwnedByGroups([101], inventory, owned), false)
   assert.equal(isListenerOwnedByGroups([100, 101], inventory, owned), false)
+})
+
+const RUNNER = '.agents/skills/test-component/scripts/test-component.mjs'
+
+function fakeFs({ roots = {}, files = [] } = {}) {
+  const present = new Set(files)
+  return {
+    findRoot: (cwd) => roots[cwd] ?? null,
+    exists: (p) => present.has(p),
+    realpath: (p) => {
+      if (!present.has(p)) throw new Error(`ENOENT: ${p}`)
+      return p
+    },
+  }
+}
+
+test('resolveJobTree prefers the sent root and derives runner and lib from it', () => {
+  const fsx = fakeFs({ files: ['/wt/b', `/wt/b/${RUNNER}`], roots: { '/wt/a/x': '/wt/a' } })
+  assert.deepEqual(resolveJobTree({ root: '/wt/b', cwd: '/wt/a/x' }, fsx), {
+    root: '/wt/b',
+    runner: `/wt/b/${RUNNER}`,
+    libDir: '/wt/b/packages/reference-lib',
+  })
+})
+
+test('resolveJobTree falls back to the strict finder over the caller cwd', () => {
+  const fsx = fakeFs({ files: [`/wt/a/${RUNNER}`], roots: { '/wt/a/packages': '/wt/a' } })
+  assert.equal(resolveJobTree({ cwd: '/wt/a/packages' }, fsx).root, '/wt/a')
+})
+
+test('resolveJobTree throws naming the path when no root resolves', () => {
+  const fsx = fakeFs()
+  assert.throws(() => resolveJobTree({ cwd: '/nowhere' }, fsx), /\/nowhere/)
+  assert.throws(() => resolveJobTree({ root: '/gone', cwd: '/nowhere' }, fsx), /\/gone/)
+  assert.throws(() => resolveJobTree({}, fsx), /root/i)
+})
+
+test('resolveJobTree throws naming the runner when it is missing', () => {
+  const fsx = fakeFs({ files: ['/wt/old'] })
+  assert.throws(() => resolveJobTree({ root: '/wt/old' }, fsx), new RegExp(`/wt/old/${RUNNER.replaceAll('.', '\\.')}`))
+})
+
+test('galleryServes is true only when both root and runtime match', () => {
+  const gallery = { root: '/wt/a', runtime: '19' }
+  assert.equal(galleryServes(gallery, { root: '/wt/a', runtime: '19' }), true)
+  assert.equal(galleryServes(gallery, { root: '/wt/b', runtime: '19' }), false)
+  assert.equal(galleryServes(gallery, { root: '/wt/a', runtime: '18' }), false)
+  assert.equal(galleryServes(null, { root: '/wt/a', runtime: '19' }), false)
+  assert.equal(galleryServes({ root: null, runtime: null }, { root: null, runtime: null }), false)
+})
+
+test('jobTreeProblem is null for the same tree and names both trees otherwise', () => {
+  assert.equal(jobTreeProblem('/wt/a', '/wt/a', 42), null)
+  const other = jobTreeProblem('/wt/b', '/wt/a', 42)
+  assert.match(other, /\/wt\/b/)
+  assert.match(other, /\/wt\/a/)
+  assert.match(other, /nothing ran/i)
+  assert.match(other, /5-minute idle/)
+  assert.match(other, /pnpm agentct stop/)
+  assert.match(other, /ps -o command= -p 42/)
+})
+
+test('jobTreeProblem names an older daemon when the ack carries no root', () => {
+  for (const ack of [undefined, null, '']) {
+    const msg = jobTreeProblem('/wt/b', ack, 7)
+    assert.match(msg, /\/wt\/b/)
+    assert.match(msg, /an older daemon that runs its own checkout/)
+    assert.match(msg, /nothing ran/i)
+    assert.match(msg, /ps -o command= -p 7/)
+  }
 })

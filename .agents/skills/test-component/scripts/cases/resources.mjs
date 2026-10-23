@@ -1,6 +1,9 @@
 /**
  * Bound component verification to one active job and two workers per job.
  * Environment overrides may lower the worker budget without raising its ceiling.
+ * It also resolves the checkout a daemon job runs in (its caller's tree, never the
+ * daemon's), decides when the shared gallery serves a job, and words the client's
+ * refusal when a daemon confirms a different tree. Fs access is injected.
  */
 export const MAX_ACTIVE_JOBS = 1
 export const MAX_WORKERS = 2
@@ -73,4 +76,53 @@ export function isListenerOwnedByGroups(listenerPids, inventory, groups) {
     if (!groups.has(entry.pgid)) return false
   }
   return true
+}
+
+const RUNNER_PATH = '.agents/skills/test-component/scripts/test-component.mjs'
+
+// Strict root finder: unlike findRepoRoot it never falls back to process.cwd(),
+// which inside the daemon is the daemon's own tree.
+export function findWorkspaceRoot(startDir, exists) {
+  if (!startDir) return null
+  let cur = startDir.replace(/\/+$/, '') || '/'
+  for (;;) {
+    if (exists(`${cur}/pnpm-workspace.yaml`)) return cur
+    const parent = cur.slice(0, cur.lastIndexOf('/')) || '/'
+    if (parent === cur) return null
+    cur = parent
+  }
+}
+
+// The tree a job runs in: the root the client sent, else the workspace above its cwd.
+export function resolveJobTree(req, { findRoot, exists, realpath }) {
+  let root = null
+  if (req?.root) {
+    try {
+      root = realpath(req.root)
+    } catch {
+      throw new Error(`agentct job root ${req.root} does not exist`)
+    }
+  } else {
+    root = req?.cwd ? findRoot(req.cwd) : null
+    if (!root) throw new Error(`agentct found no workspace root above ${req?.cwd || '(no cwd sent)'}`)
+  }
+  const runner = `${root}/${RUNNER_PATH}`
+  if (!exists(runner)) throw new Error(`agentct runner missing in job tree: ${runner}`)
+  return { root, runner, libDir: `${root}/packages/reference-lib` }
+}
+
+export function galleryServes(gallery, { root, runtime }) {
+  if (!gallery || !gallery.root || !gallery.runtime) return false
+  return gallery.root === root && gallery.runtime === runtime
+}
+
+// Client-side check of the daemon's start ack. Null when the job runs here.
+export function jobTreeProblem(clientRoot, ackRoot, pid) {
+  if (ackRoot && ackRoot === clientRoot) return null
+  const daemonTree = ackRoot ? `runs this job in ${ackRoot}` : 'is an older daemon that runs its own checkout'
+  return [
+    `[agentct] Refused: this tree is ${clientRoot}, but the live daemon ${daemonTree}.`,
+    '[agentct] Nothing ran.',
+    `[agentct] Fix: wait for the daemon's 5-minute idle stop, or run \`pnpm agentct stop\` once \`ps -o command= -p ${pid}\` shows no agent needs it.`,
+  ].join('\n')
 }
