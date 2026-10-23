@@ -15,6 +15,7 @@ import { kindOf, linkOnceAdmission, liveAdmission, liveDirectories, sortedEntrie
 import {
   compileGlobs,
   expandBraces,
+  negatedClassesAsCaret,
   startPositions,
   stepPositions,
   unfinishedPositions,
@@ -365,8 +366,8 @@ function staticPrefix(pattern: string): string {
 
 // Relative patterns match the root-relative path; absolute patterns match the absolute path, as fast-glob returns them.
 function keepMatcher(include: readonly string[]): KeepFn {
-  const relativePatterns = include.filter((pattern) => !isAbsolute(pattern))
-  const absolutePatterns = include.filter((pattern) => isAbsolute(pattern))
+  const relativePatterns = include.filter((pattern) => !isAbsolute(pattern)).map(negatedClassesAsCaret)
+  const absolutePatterns = include.filter((pattern) => isAbsolute(pattern)).map(negatedClassesAsCaret)
   const relativeMatch = relativePatterns.length > 0 ? picomatch(relativePatterns, { dot: true }) : () => false
   const absoluteMatch = absolutePatterns.length > 0 ? picomatch(absolutePatterns, { dot: true }) : () => false
   return (rel, alias) => relativeMatch(rel) || absoluteMatch(alias)
@@ -374,5 +375,5 @@ function keepMatcher(include: readonly string[]): KeepFn {
 
 function ignoreMatcher(ignore: readonly string[]): (relativePath: string) => boolean {
   if (ignore.length === 0) return () => false
-  return picomatch(ignore.map(normalizePattern), { dot: true })
+  return picomatch(ignore.map((pattern) => negatedClassesAsCaret(normalizePattern(pattern))), { dot: true })
 }

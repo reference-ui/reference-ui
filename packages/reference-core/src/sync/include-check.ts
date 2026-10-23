@@ -12,7 +12,7 @@ import fg from 'fast-glob'
 import picomatch from 'picomatch'
 import { RETENTION_EXCLUDE } from '../collect/constants.ts'
 import { listPlannedFiles, planProjectWalk, prunesDescent } from '../collect/lib/scan/project-files.ts'
-import { expandBraces } from '../collect/lib/scan/project-globs.ts'
+import { expandBraces, negatedClassesAsCaret } from '../collect/lib/scan/project-globs.ts'
 import type { NativeDiagnostic } from '../native/contract.ts'
 
 /** The positive include patterns that match no file under cwd. Negations never count. Each pattern is planned on its own walk. */
@@ -61,7 +61,7 @@ export function includeMatchDiagnostics(cwd: string, include: readonly string[])
 
 function negatedMatcher(negated: readonly string[]): (entry: string) => boolean {
   if (negated.length === 0) return () => false
-  return picomatch(negated.map((body) => body.replace(/^\.\//, '')), { dot: true })
+  return picomatch(negated.map((body) => negatedClassesAsCaret(body.replace(/^\.\//, ''))), { dot: true })
 }
 
 // A link that exists while its target does not: lstat finds the link, and stat reports the target missing.

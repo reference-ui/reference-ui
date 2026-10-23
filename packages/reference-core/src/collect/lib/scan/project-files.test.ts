@@ -290,5 +290,11 @@ describe('listProjectFiles under an include: brace, negation and fallback shapes
     symlinkSync('..', join(root, 'src', 'a', 'up'))
     expect(listProjectFiles(root, ['src/(a|b)/**/*.ts'], ROOT_IGNORE)).toEqual([join(root, 'src', 'a', 'y.ts')])
   })
-})
 
+  it('reads [!b] as a negated class, as the Rust walk and fast-glob do', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'src/ab.ts': 'export const b = 1\n', 'src/ac.ts': 'export const c = 1\n' })
+    expect(listProjectFiles(root, ['src/a[!b].ts'], ROOT_IGNORE)).toEqual([join(root, 'src', 'ac.ts')])
+    expect(listProjectFiles(root, ['src/a*.ts', '!src/a[!b].ts'], ROOT_IGNORE)).toEqual([join(root, 'src', 'ab.ts')])
+  })
+})
