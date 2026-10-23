@@ -1,3 +1,3 @@
 # Reference build bridge
 
-The serial-phase surface sync wires for the reference tasty build. The scheduler runs the cold-start build on the next loop iteration while sync completes unwatched; the runner answers structured results with warnings riding the unified reporter and throws becoming failed results, never rejections. One-shot CLIs drain the pending build before exit.
+The serial-phase surface sync wires for the reference tasty build. The scheduler runs the cold-start build on the next loop iteration while sync completes unwatched; the runner answers structured results with warnings riding the unified reporter and throws becoming failed results, never rejections. One-shot CLIs drain the cold build before exit: a build still pending drains as its promise, and one that already settled drains as its parked result. Each result drains exactly once; a parked result is not a cache, since the drain removes it and the next scheduled build clears a stale one.

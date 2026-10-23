@@ -1,6 +1,7 @@
 // Reference tasty phase scheduler suite: it takes the mocked runner plus the
 // mocked session cache and emits the pins — scheduling never blocks,
 // cold start pays once per source dir, cached builds skip, failures retry.
+// A result drains exactly once, whether pending or settled at the drain.
 // The background loop here is real setImmediate, drained, never faked.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -120,5 +121,56 @@ describe('reference/bridge/init', () => {
     await drainBackgroundLoop()
 
     expect(onRunBuild).toHaveBeenCalledTimes(2)
+  })
+
+})
+
+describe('reference/bridge/init drain', () => {
+  it('drains a failure that settled before the drain once, then nothing', async () => {
+    const { initReference, flushReferenceBuild, isReferenceBuildPending } = await importInitModule({
+      runImpl: async () => {
+        throw new Error('background exploded')
+      },
+    })
+    const sourceDir = '/workspace/scheduler-settled'
+
+    initReference(testPayload(sourceDir))
+    await drainBackgroundLoop()
+
+    expect(isReferenceBuildPending(sourceDir)).toBe(false)
+    await expect(flushReferenceBuild(sourceDir)).resolves.toEqual({
+      status: 'failed',
+      message: 'background exploded',
+    })
+    await expect(flushReferenceBuild(sourceDir)).resolves.toBeUndefined()
+  })
+
+  it('drains the retry result after a settled failure', async () => {
+    let calls = 0
+    const { initReference, flushReferenceBuild } = await importInitModule({
+      runImpl: async () => {
+        calls += 1
+        if (calls === 1) throw new Error('first build exploded')
+        return { status: 'complete' }
+      },
+    })
+    const payload = testPayload('/workspace/scheduler-settled-retry')
+
+    initReference(payload)
+    await drainBackgroundLoop()
+    initReference(payload)
+    await drainBackgroundLoop()
+
+    await expect(flushReferenceBuild(payload.sourceDir)).resolves.toEqual({ status: 'complete' })
+    await expect(flushReferenceBuild(payload.sourceDir)).resolves.toBeUndefined()
+  })
+
+  it('drains a build still pending at the drain once, then nothing', async () => {
+    const { initReference, flushReferenceBuild } = await importInitModule()
+    const sourceDir = '/workspace/scheduler-pending-drain'
+
+    initReference(testPayload(sourceDir))
+    await expect(flushReferenceBuild(sourceDir)).resolves.toEqual({ status: 'complete' })
+    await expect(flushReferenceBuild(sourceDir)).resolves.toBeUndefined()
   })
 })
