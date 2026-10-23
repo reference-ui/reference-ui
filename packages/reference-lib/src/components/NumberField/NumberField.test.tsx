@@ -3360,6 +3360,69 @@ describe('NumberField commitBehavior', () => {
     await cleanup(m.container, m.root)
   })
 
+  it('validate: an invalid commit on the form-submit path reports onInvalidCommit once and blocks submit', async () => {
+    // Issue #25 through a form: the commit and the submit listener must not
+    // both report. Enter fires the implicit submit inside its keydown (the
+    // Firefox order, before React flushes); blur then a submit click is the
+    // two-step path. Each attempt reports once and the submit is blocked.
+    const seen: Array<number | null> = []
+    const invalid: Array<[number, string]> = []
+    const submits: boolean[] = []
+    const Field = validateApp(seen, invalid, { min: 0, max: 10 })
+    function App() {
+      return (
+        <form
+          onSubmit={e => {
+            submits.push(e.defaultPrevented)
+            e.preventDefault()
+          }}
+        >
+          <Field />
+          <button type="submit">Submit</button>
+        </form>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const form = container.querySelector('form') as HTMLFormElement
+    const button = container.querySelector('button[type="submit"]') as HTMLButtonElement
+    // Case 1: type 2.3, Enter, implicit submit.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '2.3')
+    })
+    await React.act(async () => {
+      const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+      input.dispatchEvent(enter)
+      expect(enter.defaultPrevented).toBe(false)
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    })
+    expect(seen).toEqual([2.3])
+    expect(invalid).toEqual([[2.3, 'off-step']])
+    expect(submits).toEqual([true])
+    // Case 2: type 11, blur, then click submit.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '11')
+    })
+    await React.act(async () => {
+      input.blur()
+    })
+    await React.act(async () => {
+      button.click()
+    })
+    expect(seen).toEqual([2.3, 11])
+    expect(invalid).toEqual([
+      [2.3, 'off-step'],
+      [11, 'out-of-range'],
+    ])
+    expect(submits).toEqual([true, true])
+    await cleanup(container, root)
+  })
+
   it('validate: on-step in-range commits publish plainly', async () => {
     const seen: Array<number | null> = []
     const invalid: Array<[number, string]> = []
