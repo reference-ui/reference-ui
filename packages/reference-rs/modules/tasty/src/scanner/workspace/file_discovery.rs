@@ -3,7 +3,8 @@
 //! once per directory and include state, so a loop or a clique of links stays bounded. Each real file is listed once,
 //! under its real path when one is in scope, else under its first link alias in walk order. A candidate needs a ts, tsx,
 //! mts or cts extension and must be a regular file through its metadata, so a dangling link is skipped, not a failure.
-//! An absent scan root fails the scan with the walk error it always raised.
+//! An absent scan root fails the scan with the walk error it always raised, and so does an include glob with an unclosed
+//! character class, which the shared scope would read as a literal `[`.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -21,6 +22,7 @@ const SKIPPED_DIR: &str = "node_modules";
 /// The sorted root-relative ids of the in-scope sources, one per real file.
 pub(super) fn discover_file_ids(root_dir: &Path, include: &[String]) -> Result<Vec<String>, String> {
     check_scan_root(root_dir)?;
+    check_include_globs(include)?;
     let root_text = root_dir.to_string_lossy().into_owned();
     let scope = IncludeScope::compile(include);
     let matcher = scope.matcher(Some(root_text.as_str()));
@@ -46,6 +48,49 @@ fn check_scan_root(root_dir: &Path) -> Result<(), String> {
             root_dir.display()
         ))
     })
+}
+
+/// Fails the scan on the first include glob with a `[` that never closes, naming the glob and the bracket's character offset.
+fn check_include_globs(include: &[String]) -> Result<(), String> {
+    for pattern in include {
+        if let Some(offset) = unclosed_class_offset(pattern) {
+            return Err(scan_failed(format!(
+                "invalid include glob '{pattern}': unclosed character class at offset {offset}; missing ']'"
+            )));
+        }
+    }
+    Ok(())
+}
+
+/// The character offset of the first `[` with no closing `]`, read as the shared glob parser reads a class: a backslash
+/// escapes the next character, and a `]` right after `[`, `[!` or `[^` is a member, not the close.
+fn unclosed_class_offset(pattern: &str) -> Option<usize> {
+    let chars: Vec<char> = pattern.chars().collect();
+    let mut at = 0;
+    while at < chars.len() {
+        match chars[at] {
+            '\\' => at += 2,
+            '[' => match class_end(&chars, at) {
+                Some(next) => at = next,
+                None => return Some(at),
+            },
+            _ => at += 1,
+        }
+    }
+    None
+}
+
+/// The index after the `]` that closes the class opened at `open`, or `None` when no `]` follows.
+fn class_end(chars: &[char], open: usize) -> Option<usize> {
+    let mut at = open + 1;
+    if matches!(chars.get(at), Some('!' | '^')) {
+        at += 1;
+    }
+    if chars.get(at) == Some(&']') {
+        at += 1;
+    }
+    let rest = chars.get(at..)?;
+    rest.iter().position(|&c| c == ']').map(|found| at + found + 1)
 }
 
 /// Tasty's walk sink: it keeps the TypeScript sources that are regular files, never enters `node_modules`, and records

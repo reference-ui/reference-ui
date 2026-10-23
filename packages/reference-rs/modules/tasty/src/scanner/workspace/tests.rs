@@ -1,6 +1,6 @@
 //! Workspace discovery tests.
-//! Pins traversal layout, library boundaries, dangling-link tolerance, the failure for a missing scan root, and resolver
-//! memoization over temp-dir fixtures.
+//! Pins traversal layout, library boundaries, dangling-link tolerance, the failures for a missing scan root and for an include
+//! glob with an unclosed class, and resolver memoization over temp-dir fixtures.
 
 mod dangling_links;
 mod discovery_layout;
@@ -146,4 +146,21 @@ fn scan_workspace_fails_with_the_walk_error_when_the_root_is_missing() {
             missing.display()
         )
     );
+}
+
+#[test]
+fn scan_workspace_fails_on_an_include_glob_with_an_unclosed_class() {
+    let root = TempDir::new("scanner-workspace-unclosed-class");
+    std::fs::create_dir_all(root.path().join("src")).expect("src dir");
+    std::fs::write(root.path().join("src/ok.ts"), "export const ok = 1;\n").expect("source");
+    let include = ["src/**/*.ts".to_string(), "src/[ab.ts".to_string()];
+    let err = scan_workspace(root.path(), &include)
+        .err()
+        .expect("an unclosed class fails the scan");
+    assert_eq!(
+        err,
+        "TST-E-SCAN-FAILED: invalid include glob 'src/[ab.ts': unclosed character class at offset 4; missing ']'"
+    );
+    let closed = ["src/**/*.ts".to_string(), "src/[]ab].ts".to_string(), "src/\\[x.ts".to_string()];
+    assert!(scan_workspace(root.path(), &closed).is_ok());
 }
