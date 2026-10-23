@@ -4,14 +4,16 @@
 //! for file or dir, list a dir, and canonicalize a path. [`DiskFs`] runs them
 //! against `std::fs` and is the only type in the crate allowed to; [`MemoryFs`]
 //! serves an in-memory tree with symlink support for tests and virtual
-//! compiles. Every operation fails closed (`None`, `false`, empty) — a missing
-//! file is a missed probe, never an error.
+//! compiles. `DiskFs` reads only regular files, so a FIFO named like a
+//! manifest is a missed probe instead of a blocked compile. Every operation
+//! fails closed (`None`, `false`, empty) — a missing file is a missed probe,
+//! never an error.
 
 use std::collections::HashMap;
 
 /// The five filesystem operations module resolution may use.
 pub trait FileSystem {
-    /// File text, or `None` when the path cannot be read as a file.
+    /// File text, or `None` when the path is not a regular file or cannot be read.
     fn read_to_string(&self, path: &str) -> Option<String>;
     /// True when `path` names a file, following symlinks.
     fn is_file(&self, path: &str) -> bool;
@@ -29,6 +31,10 @@ pub struct DiskFs;
 
 impl FileSystem for DiskFs {
     fn read_to_string(&self, path: &str) -> Option<String> {
+        // Opening a FIFO blocks until a writer appears, so only regular files are read.
+        if !self.is_file(path) {
+            return None;
+        }
         std::fs::read_to_string(path).ok()
     }
 

@@ -1,9 +1,10 @@
-//! Filesystem behavior: MemoryFs trees with links, plus a DiskFs smoke test.
+//! Filesystem behavior: MemoryFs trees with links, plus DiskFs smoke and FIFO tests.
 //!
 //! Pins reads, implicit dirs, sorted listings, and symlink resolution —
 //! relative links, links through parent dirs, dangling links reading as
 //! missing, and loops failing closed. DiskFs gets one real-tempdir pass
-//! proving it is the same trait against real files.
+//! proving it is the same trait against real files, and a unix-only pass
+//! proving a FIFO named tsconfig.json or package.json reads as missing.
 
 mod common;
 
@@ -115,4 +116,30 @@ fn empty_tree_has_no_filesystem() {
     assert!(!fs.is_file("/p/a.ts"));
     assert!(!fs.is_dir("/p"));
     assert!(fs.read_dir("/p").is_empty());
+}
+
+/// DiskFs reads a FIFO named tsconfig.json or package.json as missing without opening it,
+/// since opening one blocks until a writer appears. The read runs in a thread bounded by
+/// a 5 s `recv_timeout`, so a read that opens the FIFO fails by name instead of hanging.
+#[cfg(unix)]
+#[test]
+fn disk_fs_reads_a_fifo_manifest_as_missing() {
+    let root = std::env::temp_dir().join(format!("module-graph-fifo-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("fixture dir");
+    for name in ["tsconfig.json", "package.json"] {
+        let pipe = root.join(name);
+        let status = std::process::Command::new("mkfifo").arg(&pipe).status().expect("mkfifo");
+        assert!(status.success(), "mkfifo failed for {}", pipe.display());
+        let path = pipe.to_string_lossy().replace('\\', "/");
+        let (send, recv) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = send.send(DiskFs.read_to_string(&path));
+        });
+        let read = recv
+            .recv_timeout(std::time::Duration::from_secs(5))
+            .expect("the read blocked on a FIFO");
+        assert_eq!(read, None, "{name}");
+    }
+    let _ = std::fs::remove_dir_all(&root);
 }

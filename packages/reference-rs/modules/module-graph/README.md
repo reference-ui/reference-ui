@@ -1,7 +1,7 @@
 # module_graph
 
 Resolves import specifiers to files and walks exports to where a binding is
-declared, shared by the Reference UI compilers.
+declared. The Reference UI compilers share it.
 
 ## What it provides
 
@@ -27,7 +27,8 @@ declared, shared by the Reference UI compilers.
   and `export *` stars to the declaration. Failures are `Refused` data: cycles,
   unresolved specifiers, missing exports, ambiguous stars, default or namespace.
 - **Filesystem** (`FileSystem`): five methods (`read_to_string` through
-  `canonicalize`); `DiskFs` uses disk, `MemoryFs` backs tests.
+  `canonicalize`); `DiskFs` uses disk and reads only regular files, so a FIFO
+  named like a manifest never blocks; `MemoryFs` backs tests.
 
 ## Where it is used
 
