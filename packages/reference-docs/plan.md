@@ -139,8 +139,12 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
       per compile and every later atomic parse reads the verdict the text carries (no caching: owner principle). Gate:
       agentrs t x3 (1,796 Rust, 909 vitest in 68), 356 cases, core vt 1,128, dogfood 1/0/100/6. Open: styletrace still
       re-gates staged text it re-parses (A4, deferred); `hosts::collect_hosts` has no callers.
-- [ ] (B) Alias-aware walk keyed on (canonical dir, glob state), which also ends symlink clique blowups (wave 3 visit
-      cap dropped). JS negated includes now drop paths and prune only `<dir>/**` (orchestrator ruling 2026-10-23).
+- [x] (B) Alias-aware walk landed 2026-10-23 (ff to 35d93c98b, 18 commits): Rust and JS walks key on (canonical dir,
+      glob state), which ends symlink clique blowups (wave 3 visit cap dropped); tasty shares the walk. JS negated
+      includes drop paths and prune only `<dir>/**`; `[!x]` is a negated class (orchestrator rulings 2026-10-23).
+      Parity: main/stress/ext 5,100 cases agree, brute-force oracle 0 missing/extra. xhigh review: land after 3 fixes
+      (done). Gate: agentrs t x3 (1,814 Rust, 912 vitest), 357 cases, core vt 1,177, dogfood 1/0/100/6, lib sync +1.9%.
+      Open: watch matcher still reads `[!x]` with picomatch semantics; project-globs.ts 402 lines (warn 365).
 - [x] Small fixes landed 2026-10-22 (ff to a6c19efc4, 46 commits; items 1-25, xhigh review + 7 fixes). Gate: 1685 Rust,
       353 cases, core vt 1105, docs/lib/book sync 0 warnings, MDX now gated. Highlights: typed @reference-ui/system
       (token typos error; recipe exported; extendSystem stays core-only); sync-time system alias is its own barrel
