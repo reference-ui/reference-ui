@@ -184,7 +184,7 @@ pnpm agentrs c <crate> -t "<pattern>"                        # crate + test filt
 
 # 4. Code Quality & Comment Check (MANDATORY after every generation):
 pnpm agentrs q                                               # smart check (changed files or target)
-pnpm agentrs q <file-or-dir>                                 # target specific file or directory
+pnpm agentrs q <file-or-dir> [...]                           # target files or directories, one path per argument; exits 1 if one matches nothing or none holds source
 pnpm agentrs <path-to-file>                                  # path shorthand runs quality automatically
 pnpm agentrs q --all                                         # inspect entire workspace
 pnpm agentrs q --clippy                                      # include clippy JSON diagnostics

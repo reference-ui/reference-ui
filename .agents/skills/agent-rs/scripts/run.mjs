@@ -10,6 +10,7 @@
  * - Native addon and JS dist (build:js) refreshed before Vitest, so seam tests never load a stale build
  * - Criterion micro-benches (cargo bench) for the flame-filed hot functions
  * - Code quality, file length limits (<365 / <500), cyclomatic complexity, and banned Clippy allows
+ * - `q <paths>` fails when a path matches nothing or the paths hold no source file, so a joined argument never passes silently
  */
 
 import { spawn, spawnSync } from 'node:child_process'
@@ -30,6 +31,9 @@ import {
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// Complexity rules only apply to source code, NEVER to markdown documentation
+const SOURCE_EXTENSIONS = ['.rs', '.ts', '.tsx', '.js', '.mjs']
 
 // 1. Darwin QoS Jailbreak (Unconditional & Deterministic)
 function ensureQosJailbreak() {
@@ -143,6 +147,34 @@ async function getGitChangedFiles(repoRoot, rsDir) {
   })
 }
 
+// Resolves positional `q` arguments against the caller's cwd, this cwd, reference-rs and its modules.
+// Returns the source files found plus every argument that matched no file or directory.
+function resolvePositionalTargets(rawArgs, rsDir) {
+  const files = []
+  const unresolved = []
+  for (const raw of rawArgs) {
+    const candidates = path.isAbsolute(raw)
+      ? [raw]
+      : [
+          path.resolve(process.env.INIT_CWD || process.cwd(), raw),
+          path.resolve(process.cwd(), raw),
+          path.resolve(rsDir, raw),
+          path.resolve(rsDir, 'modules', raw),
+        ]
+    const fullPath = candidates.find((p) => fs.existsSync(p))
+    if (!fullPath) {
+      unresolved.push(raw)
+      continue
+    }
+    if (fs.statSync(fullPath).isDirectory()) {
+      files.push(...findSourceFiles(fullPath, SOURCE_EXTENSIONS))
+    } else if (SOURCE_EXTENSIONS.some((ext) => fullPath.endsWith(ext))) {
+      files.push(fullPath)
+    }
+  }
+  return { files, unresolved }
+}
+
 async function runQualityCommand(args, repoRoot, rsDir) {
   console.log('\n\x1b[1;34m=== [agent-rs] Code Quality & Complexity Scan ===\x1b[0m\n')
 
@@ -156,27 +188,20 @@ async function runQualityCommand(args, repoRoot, rsDir) {
   const nonFlagArgs = args.filter((a) => !a.startsWith('-'))
   let targetFiles = []
 
-  // Complexity rules only apply to source code, NEVER to markdown documentation
-  const SOURCE_EXTENSIONS = ['.rs', '.ts', '.tsx', '.js', '.mjs']
-
   if (nonFlagArgs.length > 0) {
-    for (const raw of nonFlagArgs) {
-      const candidates = [
-        path.isAbsolute(raw) ? raw : path.resolve(process.env.INIT_CWD || process.cwd(), raw),
-        path.isAbsolute(raw) ? raw : path.resolve(process.cwd(), raw),
-        path.isAbsolute(raw) ? raw : path.resolve(rsDir, raw),
-        path.isAbsolute(raw) ? raw : path.resolve(rsDir, 'modules', raw),
-      ]
-      const fullPath = candidates.find((p) => fs.existsSync(p))
-      if (fullPath && fs.existsSync(fullPath)) {
-        const stat = fs.statSync(fullPath)
-        if (stat.isDirectory()) {
-          targetFiles.push(...findSourceFiles(fullPath, SOURCE_EXTENSIONS))
-        } else if (SOURCE_EXTENSIONS.some((ext) => fullPath.endsWith(ext))) {
-          targetFiles.push(fullPath)
-        }
+    const { files, unresolved } = resolvePositionalTargets(nonFlagArgs, rsDir)
+    if (unresolved.length > 0) {
+      for (const raw of unresolved) {
+        const hint = /\s/.test(raw) ? ' (pass each path as its own argument)' : ''
+        console.error(`\x1b[31m[agent-rs] no file or directory matches '${raw}'${hint}\x1b[0m`)
       }
+      return 1
     }
+    if (files.length === 0) {
+      console.error('\x1b[31m[agent-rs] the given paths hold no source files to inspect.\x1b[0m\n')
+      return 1
+    }
+    targetFiles = files
   } else if (!checkAll) {
     // Default smart inspection: changed files first; fallback to atomic crate
     const changed = await getGitChangedFiles(repoRoot, rsDir)
