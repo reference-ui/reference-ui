@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "error",
+    "code": "ATM-E-RECIPE-FIELD",
+    "message": "recipe 'importedTone': 'compoundVariants[0].tone' is not a string literal, a const string, or a non-empty list of them",
+    "file": "input/src/recipe.ts",
+    "line": 10,
+    "column": 30,
+    "span": {
+      "start": 268,
+      "end": 272
+    },
+    "help": [
+      "write compoundVariants[0].tone as a string literal or a list of them, or name a const string declared in this file"
+    ]
+  }
+]
