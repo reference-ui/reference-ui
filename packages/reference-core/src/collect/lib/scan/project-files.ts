@@ -10,12 +10,12 @@
 import { realpathSync, type Dirent } from 'node:fs'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import picomatch from 'picomatch'
+import { negatedClassesAsCaret } from './glob-classes.ts'
 import { NATIVE_IGNORE_DIRS } from '../../constants.ts'
 import { kindOf, linkOnceAdmission, liveAdmission, liveDirectories, sortedEntries, type Admission, type KeepFn } from './project-admission.ts'
 import {
   compileGlobs,
   expandBraces,
-  negatedClassesAsCaret,
   startPositions,
   stepPositions,
   unfinishedPositions,

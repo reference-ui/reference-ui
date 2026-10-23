@@ -1,7 +1,8 @@
 // Unit tests for the watch matching seam over temp trees, no watcher running.
 // They pin the engine's include semantics (dot entries match, a negated pattern
-// subtracts, engine-ignored directories never match), the watch-root derivation,
-// the symlink-target snapshot, and the subtree probe a moved-in directory passes.
+// subtracts, `[!b]` is a negated class, engine-ignored directories never match),
+// the watch-root derivation, the symlink-target snapshot, and the subtree probe a
+// moved-in directory passes.
 
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -57,6 +58,15 @@ describe('include matcher', () => {
     const matches = createIncludeMatcher(['theme/**/*.ts', '!theme/skip/**'])
     expect(matches('theme/a.ts')).toBe(true)
     expect(matches('theme/skip/b.ts')).toBe(false)
+  })
+
+  it('reads [!b] as a negated class, as the listing does', () => {
+    const matches = createIncludeMatcher(['src/a[!b].ts'])
+    expect(matches('src/ac.ts')).toBe(true)
+    expect(matches('src/ab.ts')).toBe(false)
+    const subtracts = createIncludeMatcher(['src/a*.ts', '!src/a[!b].ts'])
+    expect(subtracts('src/ab.ts')).toBe(true)
+    expect(subtracts('src/ac.ts')).toBe(false)
   })
 })
 

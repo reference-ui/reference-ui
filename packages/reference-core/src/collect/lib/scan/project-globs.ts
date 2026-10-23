@@ -2,9 +2,10 @@
 // picomatch decides one segment at a time. A walk state is the sorted set of unfinished positions after the names read so far:
 // two directories with one canonical path and one state have the same future, so the walk visits each such pair once.
 // compileGlobs returns undefined for any list outside the subset this model reads exactly; the walk keeps its wave-2 cut there.
-// Every picomatch the listing builds reads `[!b]` through negatedClassesAsCaret, so a negated class means what it means in Rust.
+// Segment matchers read `[!b]` through negatedClassesAsCaret (glob-classes.ts), so a negated class means what it means in Rust.
 
 import picomatch from 'picomatch'
+import { negatedClassesAsCaret } from './glob-classes.ts'
 
 /** The lists a walk decides with: keep over the root-relative path (`kr`) or the absolute path (`ka`), ignore over the root-relative path (`ir`) or the scope-local path (`il`). */
 export type GlobTag = 'kr' | 'ka' | 'ir' | 'il'
@@ -43,44 +44,6 @@ export interface CompiledGlobs {
   nodes: Node[]
   /** The node id of each position text. */
   ids: Map<string, number>
-}
-
-/**
- * Rewrites each `[!` that opens a class to `[^`, which picomatch reads as a negated class while it reads `[!b]` as `!` or `b`.
- * The class is read as the Rust parse_class reads it: a backslash outside a class escapes the next character, a `]` right
- * after the opener is a member, and a `[` with no closing `]` is a literal. A leading `!` negation is never touched.
- */
-export function negatedClassesAsCaret(glob: string): string {
-  const chars = Array.from(glob)
-  let out = ''
-  let at = 0
-  while (at < chars.length) {
-    const char = chars[at] ?? ''
-    if (char === '\\') {
-      out += char + (chars[at + 1] ?? '')
-      at += 2
-      continue
-    }
-    const end = char === '[' ? classEnd(chars, at) : undefined
-    if (end === undefined) {
-      out += char
-      at += 1
-      continue
-    }
-    const body = chars.slice(at + 1, end).join('')
-    out += body.startsWith('!') ? `[^${body.slice(1)}` : `[${body}`
-    at = end
-  }
-  return out
-}
-
-// The index of the `]` that closes the class opened at `open`, or undefined when none does.
-function classEnd(chars: readonly string[], open: number): number | undefined {
-  let at = open + 1
-  if (chars[at] === '!' || chars[at] === '^') at += 1
-  if (chars[at] === ']') at += 1
-  const close = chars.indexOf(']', at)
-  return close === -1 ? undefined : close
 }
 
 /**

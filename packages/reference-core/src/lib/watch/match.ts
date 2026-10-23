@@ -1,16 +1,17 @@
 // Watch matching: include predicates, the ignore set, watch roots, and the match snapshot.
 // A resync refreshes the snapshot, which maps each symlinked file and directory under include back to its real target.
 // It takes a real project root plus the config include globs and emits predicates over relative paths, root sets, and
-// snapshots. The engine never reads .gitignore: its listing matches with picomatch and dot:true, prunes node_modules, then
-// applies the native directory ignores, so every predicate here mirrors that listing and nothing more. Enumeration goes
-// through the shared project listing, so a symlink loop cannot hang a resync and each file is listed once under its
-// representative path, the rule the sync walk applies. The ownership walk that picks the directories to watch follows the
-// first link per target.
+// snapshots. The engine never reads .gitignore: its listing matches with picomatch and dot:true, reads `[!b]` as a negated
+// class, prunes node_modules, then applies the native directory ignores, so every predicate here mirrors that listing.
+// Enumeration goes through the shared project listing, so a symlink loop cannot hang a resync and each file is listed once
+// under its representative path, the rule the sync walk applies. The ownership walk that picks the directories to watch
+// follows the first link per target.
 
 import { realpathSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import picomatch from 'picomatch'
 import { NATIVE_IGNORE_DIRS, RETENTION_EXCLUDE } from '../../collect/constants.ts'
+import { negatedClassesAsCaret } from '../../collect/lib/scan/glob-classes.ts'
 import { listProjectFiles, planProjectWalk } from '../../collect/lib/scan/project-files.ts'
 
 export type IncludeMatcher = (relativePath: string) => boolean
@@ -42,8 +43,10 @@ export function isEngineIgnoredDir(relativePath: string): boolean {
 // The include globs as the engine's walk reads them: dot entries match, a `!`
 // pattern subtracts, and no path under an engine-ignored directory matches.
 export function createIncludeMatcher(include: string[]): IncludeMatcher {
-  const matchesAny = picomatch(include.filter((pattern) => !isNegated(pattern)), { dot: true })
-  const matchesNegated = picomatch(include.filter(isNegated).map((pattern) => pattern.slice(1)), { dot: true })
+  const positive = include.filter((pattern) => !isNegated(pattern)).map(negatedClassesAsCaret)
+  const negated = include.filter(isNegated).map((pattern) => negatedClassesAsCaret(pattern.slice(1)))
+  const matchesAny = picomatch(positive, { dot: true })
+  const matchesNegated = picomatch(negated, { dot: true })
   return (relativePath) => {
     const normalized = toPosix(relativePath)
     return !isEngineIgnoredFile(normalized) && matchesAny(normalized) && !matchesNegated(normalized)
@@ -187,7 +190,7 @@ function dirGlobsOf(include: string[]): string[] {
 // so a directory-only walk does: each real target is subscribed, and maps back to its link so a new file there resyncs.
 function scanSymlinkedDirs(watchRoot: string, include: string[], snapshot: MatchSnapshot): void {
   // The first link whose directory the globs reach owns its target, so an out-of-scope link never hides an in-scope one.
-  const inDirScope = picomatch(dirGlobsOf(include), { dot: true })
+  const inDirScope = picomatch(dirGlobsOf(include).map(negatedClassesAsCaret), { dot: true })
   const plan = planProjectWalk(watchRoot, [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS], [], (rel) => inDirScope(rel))
   for (const [alias, real] of plan.links) {
     snapshot.targetDirs.set(real, toPosix(relative(plan.root, alias)))

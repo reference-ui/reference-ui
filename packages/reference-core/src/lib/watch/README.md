@@ -31,8 +31,9 @@ globs.
   `.gitignore`: a gitignored file that matches include is watched and
   synced, exactly as the engine compiles it
 - include matching as the engine's walk reads it: dot entries match
-  (`dot: true`), a negated pattern subtracts, and nothing under an
-  ignored directory matches
+  (`dot: true`), a negated pattern subtracts, `[!b]` is a negated class
+  (`glob-classes.ts` in the scan), and nothing under an ignored directory
+  matches
 - symlinked roots and targets: the project root is canonicalized before
   any comparison, since parcel reports real paths; a matched symlink is
   watched through its real target, whose directory becomes a root, and
