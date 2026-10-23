@@ -1,6 +1,6 @@
 //! Workspace discovery tests.
-//! Pins traversal layout, library boundaries, dangling-link tolerance, the failures for a missing scan root and for an include
-//! glob with an unclosed class, and resolver memoization over temp-dir fixtures.
+//! Pins traversal layout, library boundaries, dangling-link tolerance, the failures for a missing or unreadable scan root
+//! and for an include glob with an unclosed class, and resolver memoization over temp-dir fixtures.
 
 mod dangling_links;
 mod discovery_layout;
@@ -144,6 +144,44 @@ fn scan_workspace_fails_with_the_walk_error_when_the_root_is_missing() {
         format!(
             "TST-E-SCAN-FAILED: failed to walk scan root: IO error for operation on {}: {io}",
             missing.display()
+        )
+    );
+}
+
+/// Restores a locked directory's mode on drop, so the temp dir can be removed even when an assertion fails first.
+#[cfg(unix)]
+struct RestoreMode<'a>(&'a std::path::Path);
+
+#[cfg(unix)]
+impl Drop for RestoreMode<'_> {
+    fn drop(&mut self) {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(self.0, std::fs::Permissions::from_mode(0o755));
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn scan_workspace_fails_with_the_walk_error_when_the_root_is_unreadable() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = TempDir::new("scanner-workspace-unreadable-root");
+    root.write("locked/src/a.ts", "export const a = 1;\n");
+    let locked = root.path().join("locked");
+    std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o000)).expect("lock the root");
+    let restore = RestoreMode(&locked);
+    let io = match std::fs::read_dir(&locked) {
+        Ok(_) => return,
+        Err(io) => io,
+    };
+    let err = scan_workspace(&locked, &["**/*.ts".to_string()])
+        .err()
+        .expect("an unreadable scan root fails the scan");
+    drop(restore);
+    assert_eq!(
+        err,
+        format!(
+            "TST-E-SCAN-FAILED: failed to walk scan root: IO error for operation on {}: {io}",
+            locked.display()
         )
     );
 }

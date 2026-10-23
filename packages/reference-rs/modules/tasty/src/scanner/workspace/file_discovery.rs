@@ -3,8 +3,8 @@
 //! once per directory and include state, so a loop or a clique of links stays bounded. Each real file is listed once,
 //! under its real path when one is in scope, else under its first link alias in walk order. A candidate needs a ts, tsx,
 //! mts or cts extension and must be a regular file through its metadata, so a dangling link is skipped, not a failure.
-//! An absent scan root fails the scan with the walk error it always raised, and so does an include glob with an unclosed
-//! character class, which the shared scope would read as a literal `[`.
+//! An absent or unreadable scan root fails the scan with the walk error it always raised, and so does an include glob with
+//! an unclosed character class, which the shared scope would read as a literal `[`.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -39,15 +39,22 @@ pub(super) fn discover_file_ids(root_dir: &Path, include: &[String]) -> Result<V
     Ok(file_ids.into_iter().collect())
 }
 
-/// Fails the scan when the root path itself is absent, with the message the scan has always given for that error. A link as
-/// the root is not absent, so a dangling one lists nothing, as before.
+/// Fails the scan when the root path itself is absent, or is a directory that cannot be read, with the message the scan
+/// has always given for that error. A link as the root is not absent, so a dangling one lists nothing, as before, and so
+/// does a file root.
 fn check_scan_root(root_dir: &Path) -> Result<(), String> {
-    fs::symlink_metadata(root_dir).map(|_| ()).map_err(|err| {
-        scan_failed(format!(
-            "failed to walk scan root: IO error for operation on {}: {err}",
-            root_dir.display()
-        ))
-    })
+    fs::symlink_metadata(root_dir).map_err(|err| root_walk_failed(root_dir, &err))?;
+    if fs::metadata(root_dir).is_ok_and(|meta| meta.is_dir()) {
+        fs::read_dir(root_dir).map_err(|err| root_walk_failed(root_dir, &err))?;
+    }
+    Ok(())
+}
+
+fn root_walk_failed(root_dir: &Path, err: &std::io::Error) -> String {
+    scan_failed(format!(
+        "failed to walk scan root: IO error for operation on {}: {err}",
+        root_dir.display()
+    ))
 }
 
 /// Fails the scan on the first include glob with a `[` that never closes, naming the glob and the bracket's character offset.
