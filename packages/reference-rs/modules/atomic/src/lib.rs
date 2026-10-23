@@ -227,7 +227,7 @@ pub(crate) fn streaming_candidate(content: &str) -> bool {
 }
 
 /// One collected source: its path, and its text with the nesting gate's verdict.
-/// The gate ran once when the compile screened the source, and every parse reads that verdict.
+/// The gate ran once when the compile screened the source, and every atomic parse reads that verdict.
 pub type Source = (String, ScreenedSource);
 
 /// The type every parse of `path` uses: the extension's type, with TypeScript on.

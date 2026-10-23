@@ -145,8 +145,8 @@ pub fn collect_hosts(request: &CompileRequest) -> FxHashSet<String> {
     let mut session = DiagnosticsSession::new();
     // The trace takes screened sources. No atomic parse runs on this path; the trace gates what it parses itself.
     let sources = crate::screen_sources(crate::sources::collect(request));
-    // No parse runs on this path, so no failure signal exists: every
-    // source counts as parsed-clean and the trace gate applies fully.
+    // No atomic parse runs on this path, so no failure signal exists:
+    // every source counts as parsed-clean and the trace gate applies fully.
     let failed = vec![false; sources.len()];
     let programs = FxHashMap::default();
     let inputs = ResolveInputs {
