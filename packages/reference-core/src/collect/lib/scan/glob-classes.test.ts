@@ -1,5 +1,5 @@
 // Unit tests for negatedClassesAsCaret. They pin which `[!` it rewrites, reading a class as the Rust parse_class does.
-// They also check that picomatch then reads each rewritten class as negated.
+// They also check that picomatch then reads each rewritten glob as Rust does: negated classes, unclosed `[` and in-class backslashes.
 import picomatch from 'picomatch'
 import { describe, expect, it } from 'vitest'
 import { negatedClassesAsCaret } from './glob-classes.ts'
@@ -11,7 +11,24 @@ describe('negatedClassesAsCaret', () => {
     expect(negatedClassesAsCaret('!src/**')).toBe('!src/**')
     expect(negatedClassesAsCaret('a[]!]')).toBe('a[]!]')
     expect(negatedClassesAsCaret('a[!]a]')).toBe('a[^]a]')
-    expect(negatedClassesAsCaret('a[!b')).toBe('a[!b')
+    expect(negatedClassesAsCaret('a[!b')).toBe('a\\[!b')
+    expect(negatedClassesAsCaret('src/[!]')).toBe('src/\\[!]')
+    expect(negatedClassesAsCaret('a[\\]]c')).toBe('a[\\\\]]c')
+    expect(negatedClassesAsCaret('a[!\\]]c')).toBe('a[^\\\\]]c')
+  })
+
+  it('makes picomatch read an unclosed [ as a literal, as Rust does', () => {
+    const unclosed = picomatch(negatedClassesAsCaret('src/[!]'), { dot: true })
+    expect(['src/[!]', 'src/!', 'src/]', 'src/a'].map((name) => unclosed(name))).toEqual([true, false, false, false])
+    const open = picomatch(negatedClassesAsCaret('a[!b'), { dot: true })
+    expect(['a[!b', 'ac', 'a!b'].map((name) => open(name))).toEqual([true, false, false])
+  })
+
+  it('makes picomatch read a backslash inside a class as a member, as Rust does', () => {
+    const member = picomatch(negatedClassesAsCaret('a[\\]]c'), { dot: true })
+    expect(['a\\]c', 'a]c'].map((name) => member(name))).toEqual([true, false])
+    const negated = picomatch(negatedClassesAsCaret('a[!\\]]c'), { dot: true })
+    expect(['a\\]c', 'a]c', 'ax]c'].map((name) => negated(name))).toEqual([false, false, true])
   })
 
   it('makes picomatch read [!b] and [!]a] as negated classes', () => {
