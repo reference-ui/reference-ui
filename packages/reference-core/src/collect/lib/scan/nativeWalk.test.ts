@@ -1,16 +1,16 @@
-// Walk-completeness battery for the native scan: the agreed glob subset plus
-// the fg-vs-native differential that proves it. It takes the check plus tricky
-// trees and pins which include shapes assert a complete walk (bench patterns
-// fire, extglob and star-adjacent shapes fall back) and that every asserted
-// pattern enumerates at least what the native scope matches, so skipping the
-// union backfill walk drops nothing.
+// Walk-completeness battery: the agreed glob subset and its differential.
+// It takes the check plus tricky trees and pins which include shapes assert a
+// complete walk (bench patterns fire; extglob, star-adjacent and unmodeled
+// shapes fall back). The differential lists each agreed include through the
+// project listing and checks it covers what the native scope matches, so
+// skipping the union backfill walk drops nothing.
 
 import { readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import fg from 'fast-glob'
 import { describe, expect, it } from 'vitest'
 import { RETENTION_EXCLUDE } from './scanner.ts'
 import { isCompleteWalkInclude } from './native.ts'
+import { listProjectFiles } from './project-files.ts'
 import {
   TRICKY_TREE,
   atomic,
@@ -66,7 +66,7 @@ const EXTRA_FILES: Array<[string, string]> = [
   'theme/deep/x.ts',
 ].map((rel, index) => [rel, CSS(`extra-${index}`)] as [string, string])
 
-// Every pattern here must enumerate at least the native scope set (fg is a
+// Every pattern here must enumerate at least the native scope set (the listing is a
 // superset of native over kept source extensions). The battery pins the
 // shapes the walk-completeness check asserts, including both bench globs.
 const AGREED_PATTERNS: string[][] = [
@@ -139,6 +139,9 @@ const REJECTED_PATTERNS: string[][] = [
   ['src\\**/*.ts'],
   ['src/[[:alpha:]]b.ts'],
   ['src/**/*.ts', '!src/skip/**', 'src/a+(b).ts'],
+  ['src/[a/b]x/*.ts'],
+  ['src/{a/b}/*.ts'],
+  ['src/**/*.ts', '!src/x[/]y/**'],
 ]
 
 const IGNORE_DIRS = new Set([
@@ -177,7 +180,7 @@ describe('walk-completeness check', () => {
 
   it('rejects every disagreed shape', () => {
     for (const include of REJECTED_PATTERNS) {
-      expect(isCompleteWalkInclude(include, RETENTION_EXCLUDE)).toBe(false)
+      expect(isCompleteWalkInclude(include, RETENTION_EXCLUDE), include.join(' ')).toBe(false)
     }
   })
 
@@ -199,16 +202,14 @@ describe('walk-completeness differential', () => {
       const files = rels.map(rel => ({ path: rel, content: readFileSync(join(root, rel), 'utf8') }))
       for (const include of AGREED_PATTERNS) {
         const enumerated = new Set(
-          fg
-            .sync(include, { cwd: root, absolute: true, ignore: RETENTION_EXCLUDE, dot: true })
-            .map(found => relative(root, found))
+          listProjectFiles(root, include, RETENTION_EXCLUDE).map(found => relative(root, found))
         )
         const compiled = await mod.compile({ baseSystem, files, include, logs: ['proof'] })
         const native = new Set(
           (compiled.wants ?? []).map(want => want.file).filter(file => file !== undefined)
         )
         const missing = kept.filter(rel => native.has(rel) && !enumerated.has(rel))
-        expect(missing).toEqual([])
+        expect(missing, include.join(' ')).toEqual([])
       }
     })
   }, 120000)

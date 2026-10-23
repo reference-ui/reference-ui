@@ -15,7 +15,7 @@ import {
   type ScannedSource,
 } from './scanner.ts'
 import { listProjectFiles } from './project-files.ts'
-import { hasWalkStarSegments, hasWalkableChars } from './project-globs.ts'
+import { expandBraces, hasWalkStarSegments, hasWalkableChars, modeledAlternative } from './project-globs.ts'
 import type { ScanOptions } from '../types.ts'
 
 /**
@@ -120,8 +120,9 @@ function stripWalkNegation(pattern: string): string | null {
 
 // Walk-completeness subset: the include shapes where the shared listing provably
 // covers every file the native scope matches, so compile may skip its union
-// backfill walk. Anything outside the subset keeps the walk: rejection is
-// always correct, assertion is the claim the differential battery proves.
+// backfill walk. Every brace alternative must be one the glob model covers, or
+// the listing keeps its loop cut. Anything outside the subset keeps the walk:
+// rejection is always correct, assertion is the claim the differential battery proves.
 function isCompleteWalkPattern(pattern: string): boolean {
   if (pattern.startsWith('/') || pattern.endsWith('/')) return false
   const body = stripWalkNegation(pattern)
@@ -130,7 +131,8 @@ function isCompleteWalkPattern(pattern: string): boolean {
     hasWalkableChars(body) &&
     hasWalkStarSegments(body) &&
     hasNoBraceRanges(body) &&
-    hasClosedWalkBraces(body)
+    hasClosedWalkBraces(body) &&
+    expandBraces(body).every(modeledAlternative)
   )
 }
 

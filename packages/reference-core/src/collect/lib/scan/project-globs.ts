@@ -240,7 +240,7 @@ function compileSegment(segment: string): Segment {
 
 // An alternative is modeled when the two whole-pattern checks pass and every segment is whole: a bracket or brace that a
 // slash splits would be one class or literal to picomatch, and two segments to the model.
-function modeledAlternative(alternative: string): boolean {
+export function modeledAlternative(alternative: string): boolean {
   return hasWalkableChars(alternative) && hasWalkStarSegments(alternative) && alternative.split('/').every(wholeSegment)
 }
 
