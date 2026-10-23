@@ -135,9 +135,12 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
       build fails (today exit 0/1 depends on a race; sync.ts already intends 1; cost: a CSS-only user fails on a types
       error); watch reports it and keeps running. Owner scope (2026-10-22): wave 3 is small local fixes only
       (tasty exit code, FIFO skip, lookahead budget, F8/F9/F3 if local).
-- [ ] Next after wave 2 (owner 2026-10-22, xhigh plan then orchestrator): (A) ScreenedSource: nesting gate once per
-      file read, not per parse (no caching: owner principle); (B) alias-aware walk keyed on (canonical dir, glob
-      state), which also ends symlink clique blowups (wave 3 visit cap dropped).
+- [x] (A) ScreenedSource landed 2026-10-23 (ff to 74a32679f, 5 commits): atomic runs the nesting gate once per source
+      per compile and every later atomic parse reads the verdict the text carries (no caching: owner principle). Gate:
+      agentrs t x3 (1,796 Rust, 909 vitest in 68), 356 cases, core vt 1,128, dogfood 1/0/100/6. Open: styletrace still
+      re-gates staged text it re-parses (A4, deferred); `hosts::collect_hosts` has no callers.
+- [ ] (B) Alias-aware walk keyed on (canonical dir, glob state), which also ends symlink clique blowups (wave 3 visit
+      cap dropped). JS negated includes now drop paths and prune only `<dir>/**` (orchestrator ruling 2026-10-23).
 - [x] Small fixes landed 2026-10-22 (ff to a6c19efc4, 46 commits; items 1-25, xhigh review + 7 fixes). Gate: 1685 Rust,
       353 cases, core vt 1105, docs/lib/book sync 0 warnings, MDX now gated. Highlights: typed @reference-ui/system
       (token typos error; recipe exported; extendSystem stays core-only); sync-time system alias is its own barrel
