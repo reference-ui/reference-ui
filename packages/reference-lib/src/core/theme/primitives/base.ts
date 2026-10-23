@@ -7,7 +7,10 @@ export const base = {
   // The icon shell is a Div but must inherit its container's colour (e.g. a
   // primary Button's label). Icons ship in an earlier cascade layer, so a pin
   // here would beat both their `color: inherit` default and an explicit colour.
-  '.ref-div:not([data-slot="icon"])': {
+  // The exclusion sits in :where() so the selector stays (0,1,0): attribute-keyed
+  // globals such as `[data-reference-field]` (forms/field.ts) set their own font
+  // size on Divs and win only by source order.
+  '.ref-div:where(:not([data-slot="icon"]))': {
     ...baseTypography,
   },
 

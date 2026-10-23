@@ -25,7 +25,7 @@ describe('icon shell colour (BT-ICON-01)', () => {
     expect(pinned.length).toBeGreaterThan(0)
     for (const selector of pinned) {
       for (const part of selector.split(',').filter(p => p.includes('.ref-div'))) {
-        expect(part.trim()).toBe('.ref-div:not([data-slot="icon"])')
+        expect(part.trim()).toBe('.ref-div:where(:not([data-slot="icon"]))')
       }
     }
   })

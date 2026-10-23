@@ -5,8 +5,9 @@ import { globalCss } from '@reference-ui/system'
 import { baseTypography, blockText, focusRingStyles } from './shared'
 
 export const documentPrimitiveStyles = {
-  // Icon shells are Divs; leave their colour to the icon (see base.ts).
-  '.ref-div:not([data-slot="icon"]), .ref-main, .ref-header, .ref-footer, .ref-section, .ref-article, .ref-aside, .ref-nav, .ref-search, .ref-form, .ref-address, .ref-hgroup':
+  // Icon shells are Divs; leave their colour to the icon. :where() keeps the
+  // pin at one class so field font sizes win by source order (see base.ts).
+  '.ref-div:where(:not([data-slot="icon"])), .ref-main, .ref-header, .ref-footer, .ref-section, .ref-article, .ref-aside, .ref-nav, .ref-search, .ref-form, .ref-address, .ref-hgroup':
     {
       ...baseTypography,
     },
