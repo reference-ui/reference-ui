@@ -1,6 +1,6 @@
 // Fragment author surface: the calls fragment files import from Core.
 // It takes nothing and re-exports the five collectors plus their shapes.
-// This barrel is the bootstrap alias target for fragment execution.
+// No alias targets it directly: core's root index.ts and lib/system-alias.ts re-export these calls from here.
 
 export {
   tokens,

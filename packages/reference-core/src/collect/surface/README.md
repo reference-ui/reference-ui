@@ -2,8 +2,11 @@
 
 Five calls — `tokens()`, `font()`, `keyframes()`, `globalCss()`,
 `recipe()` — plus their shapes. This is the only part of collect that
-fragment files ever import, and its barrel is the bootstrap alias
-target, so its shape is load-bearing and stays put. The collector
+fragment files ever import, so its shape is load-bearing and stays
+put. No bootstrap alias points at this barrel: during sync,
+`@reference-ui/core` resolves to core's root `index.ts` and
+`@reference-ui/system` to `lib/system-alias.ts` (see
+`lib/bootstrap.ts`), and both re-export the five calls from here. The collector
 factories live here because the calls are built on them, but nothing
 outside collect imports the factories: authors get the calls, the
 machinery gets the rest.
