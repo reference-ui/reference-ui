@@ -3,6 +3,7 @@
  * Each folder under `<Component>/__e2e__/` is one CT case named by its raw ID (LIB-<COMPONENT>-<nnn>)
  * holding case.json {id, name}, a README.md headed "# <ID> — <name>", and one *.ct.spec.ts with one
  * declaration; every *.test.ts(x) outside __e2e__ yields unit entries labelled <Component>/<file>:<line>.
+ * A component-level case.json is a retired manifest and fails the catalog.
  * Every problem is collected and thrown once; metadata never substitutes for executing the evidence.
  */
 import fs from 'node:fs'
@@ -125,6 +126,7 @@ function caseFolders(dir, errors, component) {
 function readComponent(component, context) {
   const { componentsDir, errors, exported } = context
   const dir = path.join(componentsDir, component)
+  if (fs.existsSync(path.join(dir, 'case.json'))) errors.push(`${component}: component manifests are retired; cases live in __e2e__/<ID>/`)
   let files = []
   try { files = evidenceFiles(dir) }
   catch (error) { errors.push(`${component}: ${error.message}`) }

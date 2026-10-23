@@ -117,13 +117,6 @@ test('catalog reads per-ID case folders and discovers unit declarations', t => {
   assert.throws(() => selectCase(catalog, 'LIB-NOPE-001'), /Unknown catalog case/)
 })
 
-test('catalog ignores a root case.json and loose non-evidence files at the __e2e__ root', t => {
-  const { root, dir } = fixture(t)
-  fs.writeFileSync(path.join(dir, 'case.json'), '{ not json')
-  fs.writeFileSync(path.join(dir, '__e2e__/env.config.ts'), 'export default {}\n')
-  assert.equal(loadCatalog(root).cases.length, 3)
-})
-
 function rejects(root, pattern) {
   assert.throws(() => loadCatalog(root), error => {
     assert.match(error.message, /^Component case conformity failed \(\d+\):/)
@@ -131,6 +124,24 @@ function rejects(root, pattern) {
     return true
   })
 }
+
+test('catalog allows loose non-evidence files at the __e2e__ root', t => {
+  const { root, dir } = fixture(t)
+  fs.writeFileSync(path.join(dir, '__e2e__/env.config.ts'), 'export default {}\n')
+  assert.equal(loadCatalog(root).cases.length, 3)
+})
+
+test('catalog rejects a component-level case.json', t => {
+  const { root, dir } = fixture(t)
+  fs.writeFileSync(path.join(dir, 'case.json'), '{ not json')
+  rejects(root, /Widget: component manifests are retired; cases live in __e2e__\/<ID>\//)
+})
+
+test('catalog rejects two unit declarations on one line as a duplicate id', t => {
+  const { root, dir } = fixture(t)
+  fs.writeFileSync(path.join(dir, 'Pair.test.ts'), "import { it } from 'vitest'\nit('one', () => {}); it('two', () => {})\n")
+  rejects(root, /duplicate catalog case id Widget\/Pair\.test\.ts:2/)
+})
 
 test('catalog rejects a case.json whose id differs from its folder', t => {
   const { root, writeCase } = fixture(t)
