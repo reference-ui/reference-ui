@@ -1,0 +1,4 @@
+{
+  "id": "LIB-NUMBERFIELD-185",
+  "name": "NumberField CT NF-COMMIT-12: Validate commit reports onInvalidCommit when the parent has echoed the live value"
+}

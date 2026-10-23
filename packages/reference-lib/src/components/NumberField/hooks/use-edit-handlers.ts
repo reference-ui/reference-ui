@@ -196,7 +196,14 @@ export function useEditHandlers(options: EditHandlersOptions): EditHandlers {
         setFailedBoundary(true)
         return 'failed'
       }
-      if (decision.kind === 'noop') return 'noop'
+      if (decision.kind === 'noop') {
+        // Issue #25: the echoed live value requests nothing more, but a
+        // validate violation is still reported; submit gating sees 'noop'.
+        if (decision.invalidReason !== undefined && decision.attempted !== undefined) {
+          onInvalidCommit?.(decision.attempted, decision.invalidReason)
+        }
+        return 'noop'
+      }
       requestValue(decision.candidate)
       if (decision.invalidReason !== undefined && decision.candidate !== null) {
         onInvalidCommit?.(decision.candidate, decision.invalidReason)

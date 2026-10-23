@@ -50,10 +50,9 @@ test.describe('NumberField CT', () => {
     }
 
     // The fixture accepts immediately, so every invalid value lands via
-    // live request and each Enter is a retaining no-op — which is exactly
-    // the freeze's "accepted invalid numbers" path. No commit-request ever
-    // fires, so the advisory log stays quiet (advisory itself is proven in
-    // unit NF-MATH-13, where the commit path actually requests).
+    // live request and each Enter requests nothing more — the freeze's
+    // "accepted invalid numbers" path. The commit still reports each
+    // violation to onInvalidCommit (issue #25), so the log grows.
     await expect(input).toHaveValue('5')
     // Off-step mismatch retained with managed invalid state, native clean.
     await input.fill('2.5')
@@ -62,7 +61,7 @@ test.describe('NumberField CT', () => {
     await expect(input).toHaveValue('2.5')
     await expect(display).toHaveText('Validate Value: 2.5')
     await expect(hidden).toHaveValue('2.5')
-    await expect(log).toHaveText('invalid: none')
+    await expect(log).toHaveText('invalid: 2.5:off-step')
     await expect(input).toHaveAttribute('aria-invalid', 'true')
     await expect(input).toHaveAttribute('data-invalid', '')
     expect(await nativeValidity()).toEqual(cleanNative)
@@ -74,7 +73,7 @@ test.describe('NumberField CT', () => {
     await expect(input).toHaveValue('25')
     await expect(display).toHaveText('Validate Value: 25')
     await expect(hidden).toHaveValue('25')
-    await expect(log).toHaveText('invalid: none')
+    await expect(log).toHaveText('invalid: 2.5:off-step, 25:out-of-range')
     await expect(input).toHaveAttribute('aria-invalid', 'true')
     expect(await nativeValidity()).toEqual(cleanNative)
 
@@ -85,18 +84,18 @@ test.describe('NumberField CT', () => {
     await expect(input).toHaveValue('-5')
     await expect(display).toHaveText('Validate Value: -5')
     await expect(hidden).toHaveValue('-5')
-    await expect(log).toHaveText('invalid: none')
+    await expect(log).toHaveText('invalid: 2.5:off-step, 25:out-of-range, -5:out-of-range')
     await expect(input).toHaveAttribute('aria-invalid', 'true')
     expect(await nativeValidity()).toEqual(cleanNative)
 
-    // A valid commit clears managed invalid state without advisory noise.
+    // A valid commit clears managed invalid state and adds no log entry.
     await input.fill('7')
     await expect(display).toHaveText('Validate Value: 7')
     await page.keyboard.press('Enter')
     await expect(input).toHaveValue('7')
     await expect(display).toHaveText('Validate Value: 7')
     await expect(hidden).toHaveValue('7')
-    await expect(log).toHaveText('invalid: none')
+    await expect(log).toHaveText('invalid: 2.5:off-step, 25:out-of-range, -5:out-of-range')
     await expect(input).not.toHaveAttribute('data-invalid')
     await expect(input).not.toHaveAttribute('aria-invalid')
   })

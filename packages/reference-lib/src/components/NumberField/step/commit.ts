@@ -3,7 +3,8 @@
  * decideCommit parses the text and applies the commit policy — validate
  * retains the rounded raw candidate with an advisory reason, snap walks
  * endpoint-preservation → lattice → authored rounding → final clamp,
- * 'none' clamps — and reports request/failed/noop without touching state.
+ * 'none' clamps — and reports request/failed/noop without touching state;
+ * a validate noop on an echoed invalid value still carries its reason.
  * The commit hook applies the decision: requests, failure flags, and the
  * advisory invalid-commit report. Pure, proven by its colocated suite.
  */
@@ -29,7 +30,7 @@ export interface CommitInput {
 export type CommitDecision =
   | { kind: 'request'; candidate: number | null; invalidReason?: NumberFieldInvalidCommitReason }
   | { kind: 'failed' }
-  | { kind: 'noop' }
+  | { kind: 'noop'; attempted?: number; invalidReason?: NumberFieldInvalidCommitReason }
 
 // Commit outcome for submit handling: 'request' means the parent has
 // not echoed yet (submit must wait for an explicit retry), 'failed'
@@ -64,21 +65,30 @@ export function decideCommit(input: CommitInput): CommitDecision {
   // rounded raw candidate as-is (never snap, never clamp); managed
   // invalid state derives from the controlled value and blocks submit.
   // onInvalidCommit is advisory: it fires after the onChange request
-  // when the committed candidate violates constraints, range-first.
+  // (or, when the live request was already echoed, on the noop alone)
+  // whenever the committed candidate violates constraints, range-first.
   // Violation is judged on the committed (rounded) candidate, so a
   // rounding that lands valid stays silent.
   if (commitBehavior === 'validate') {
     const accepted = roundTrip(parsed)
     const canonical = Object.is(accepted, -0) ? 0 : accepted
-    // FEATURES #2: committing the current value is no change.
-    if (canonical === value) return { kind: 'noop' }
-    const decision: CommitDecision = { kind: 'request', candidate: canonical }
+    let invalidReason: NumberFieldInvalidCommitReason | undefined
     if (canonical < min || canonical > max) {
-      decision.invalidReason = 'out-of-range'
+      invalidReason = 'out-of-range'
     } else if (!isOnStepLattice(canonical, step)) {
-      decision.invalidReason = 'off-step'
+      invalidReason = 'off-step'
     }
-    return decision
+    // FEATURES #2: committing the current value is no change — but a
+    // parent that echoed the live request still hears the advisory
+    // (issue #25), so the noop carries the attempted value and reason.
+    if (canonical === value) {
+      return invalidReason === undefined
+        ? { kind: 'noop' }
+        : { kind: 'noop', attempted: canonical, invalidReason }
+    }
+    return invalidReason === undefined
+      ? { kind: 'request', candidate: canonical }
+      : { kind: 'request', candidate: canonical, invalidReason }
   }
   // Snap order (NF-MATH-12): endpoint-preservation
   // or nearest lattice, then authored rounding, then final clamp — one

@@ -3087,9 +3087,10 @@ describe('NumberField commitBehavior', () => {
     // Replaces the two earlier validate-reject
     // titles. Retain-and-report — the rounded raw candidate is requested
     // as-is; the advisory onInvalidCommit fires after the commit request.
-    // (With an immediately accepting parent the commit is a no-op, so the
-    // advisory never fires — the suite rejects live, then echoes manually
-    // to prove the retained invalid display. The name says *commit*.)
+    // This suite withholds the live echo so the commit itself requests,
+    // then echoes manually to prove the retained invalid display. An
+    // immediately accepting parent makes the commit a no-op that still
+    // reports (issue #25, proven in the echoed-live-value test below).
     const seen: Array<number | null> = []
     const invalid: Array<[number, string]> = []
     const order: string[] = []
@@ -3276,6 +3277,87 @@ describe('NumberField commitBehavior', () => {
     expect(bareInput.value).toBe('2.5')
     expect(bareInput.getAttribute('aria-invalid')).toBe('true')
     await cleanup(b.container, b.root)
+  })
+
+  it('validate: a commit on the echoed live value still reports onInvalidCommit (issue #25)', async () => {
+    // The live request publishes 2.3 and the parent echoes it, so the
+    // commit requests nothing — the advisory must still fire, after onChange.
+    const seen: Array<number | null> = []
+    const invalid: Array<[number, string]> = []
+    const order: string[] = []
+    const m = mount()
+    // validateApp's echoing parent, with an order log across both callbacks.
+    function App() {
+      const [value, setValue] = React.useState<number | null>(5)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          min={0}
+          max={10}
+          step={1}
+          commitBehavior="validate"
+          onChange={v => {
+            seen.push(v)
+            order.push(`change:${v}`)
+            setValue(v)
+          }}
+          onInvalidCommit={(attempted, reason) => {
+            invalid.push([attempted, reason])
+            order.push(`invalid:${attempted}:${reason}`)
+          }}
+        >
+          <NumberField.Group>
+            <NumberField.Input aria-label="Quantity" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      m.root.render(<App />)
+    })
+    const input = m.container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '2.3')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([2.3])
+    expect(invalid).toEqual([[2.3, 'off-step']])
+    expect(order).toEqual(['change:2.3', 'invalid:2.3:off-step'])
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    await React.act(async () => {
+      setNativeValue(input, '11')
+    })
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(seen).toEqual([2.3, 11])
+    expect(invalid).toEqual([
+      [2.3, 'off-step'],
+      [11, 'out-of-range'],
+    ])
+    expect(order).toEqual(['change:2.3', 'invalid:2.3:off-step', 'change:11', 'invalid:11:out-of-range'])
+    expect(input.value).toBe('11')
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    // Retyping the same invalid meaning (a real edit: '11.0') requests
+    // nothing — live dedupe and the commit noop — yet reports again.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '11.0')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([2.3, 11])
+    expect(invalid).toEqual([
+      [2.3, 'off-step'],
+      [11, 'out-of-range'],
+      [11, 'out-of-range'],
+    ])
+    await cleanup(m.container, m.root)
   })
 
   it('validate: on-step in-range commits publish plainly', async () => {

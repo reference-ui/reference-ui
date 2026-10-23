@@ -595,6 +595,14 @@ The shared `PART-TYPE-01`, `PART-DOM-01`, `PART-PROP-01`,
   and an unrelated C in separate schedules. Assert each stale/unrelated prop
   replaces text from actual controlled state, ends the dirty session, ignores
   late events, and emits no programmatic callback.
+- [x] `NF-COMMIT-12` `[reference]` `[browser]` —
+  **Validate commit reports onInvalidCommit when the parent has echoed the
+  live value.** Type off-step and out-of-range values into a validate field
+  whose parent echoes every live `onChange`, then commit by Enter and Tab.
+  Assert each commit requests no second value yet reports
+  `onInvalidCommit(attempted, reason)` after the live `onChange`, the value is
+  retained with managed `aria-invalid`, and a valid commit adds no report
+  (issue #25).
 
 ### Keyboard stepping
 

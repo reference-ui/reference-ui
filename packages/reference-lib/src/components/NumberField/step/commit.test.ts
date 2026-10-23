@@ -74,6 +74,20 @@ describe('commit decision', () => {
     ).toEqual({ kind: 'request', candidate: 10 })
   })
 
+  it('reports the reason when a validate commit lands on the echoed value', () => {
+    // Issue #25: the live request already published the candidate and the
+    // parent echoed it, so the commit requests nothing but still reports.
+    expect(
+      decideCommit(input({ text: '2.3', value: 2.3, step: 1, commitBehavior: 'validate' }))
+    ).toEqual({ kind: 'noop', attempted: 2.3, invalidReason: 'off-step' })
+    expect(
+      decideCommit(input({ text: '11', value: 11, max: 10, commitBehavior: 'validate' }))
+    ).toEqual({ kind: 'noop', attempted: 11, invalidReason: 'out-of-range' })
+    expect(
+      decideCommit(input({ text: '7', value: 7, max: 10, commitBehavior: 'validate' }))
+    ).toEqual({ kind: 'noop' })
+  })
+
   it('discards a single leading orphan group separator at commit', () => {
     expect(decideCommit(input({ text: ',024', value: 0 }))).toEqual({
       kind: 'request',
