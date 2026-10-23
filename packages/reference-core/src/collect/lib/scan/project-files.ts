@@ -4,7 +4,8 @@
 // visiting each (canonical directory, glob state) once so that loops and lattices of links end; an owns walk or an include that
 // project-globs.ts does not model cuts a link back onto the walk path instead. A file reached through several paths is listed
 // once, under its first path in walk order. Directories the Rust walk prunes by name are walked for their real files only, and
-// a scope outside the root (`../shared/**`, an absolute glob) walks its own base.
+// a scope outside the root (`../shared/**`, an absolute glob) walks its own base. A negated include drops the paths it matches
+// and prunes descent only where it negates `<dir>/**`, as the Rust walk does.
 
 import { realpathSync, type Dirent } from 'node:fs'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
@@ -13,6 +14,7 @@ import { NATIVE_IGNORE_DIRS } from '../../constants.ts'
 import { kindOf, linkOnceAdmission, liveAdmission, liveDirectories, sortedEntries, type Admission, type KeepFn } from './project-admission.ts'
 import {
   compileGlobs,
+  expandBraces,
   startPositions,
   stepPositions,
   unfinishedPositions,
@@ -79,7 +81,10 @@ interface EntryRef {
 }
 
 interface WalkState {
+  /** Drops a file: the ignore globs and every negated include. */
   ignored: (relativePath: string) => boolean
+  /** Prunes a directory or link: the ignore globs and each negated alternative that is `**` or ends in `/**`. */
+  pruned: (relativePath: string) => boolean
   keep: KeepFn
   live: (rel: string) => boolean
   admit: Admission
@@ -93,10 +98,11 @@ interface WalkState {
 }
 
 /**
- * Walks `cwd` with the ignore globs applied to every path, as fast-glob applies them, and the engine-ignored directory names the
- * Rust walk prunes. With include globs a directory is entered only when the globs can still reach it, and a link is entered under
- * each such alias, each (directory, glob state) once; with `owns`, the first link whose relative path `owns` accepts takes its
- * target; with neither, the first link takes it.
+ * Walks `cwd` with the ignore globs applied to every path and the engine-ignored directory names the Rust walk prunes. A negated
+ * include drops the files it matches and prunes a directory or link only through an alternative that is `**` or ends in `/**`.
+ * With include globs a directory is entered only when the globs can still reach it, and a link is entered under each such alias,
+ * each (directory, glob state) once; with `owns`, the first link whose relative path `owns` accepts takes its target; with
+ * neither, the first link takes it.
  */
 export function planProjectWalk(
   cwd: string,
@@ -106,14 +112,17 @@ export function planProjectWalk(
 ): ProjectPlan {
   const root = resolve(cwd)
   const plan: ProjectPlan = { root, dirs: new Map(), links: new Map(), refused: [], files: [] }
-  const ignored = ignoreMatcher(ignore)
+  const negated = include.filter(isNegated).map((pattern) => pattern.slice(1))
+  const dropped = [...ignore, ...negated]
+  const ignored = ignoreMatcher(dropped)
+  const pruned = ignoreMatcher([...ignore, ...negated.flatMap(expandBraces).filter(prunesDescent)])
   for (const scope of scopesOf(root, include)) {
     const admit = admissionFor(scope, include, owns)
     const canon = canonicalOrSelf(scope.base)
     const local = scope.prefix === '' ? undefined : ''
     const frame: DirFrame = { alias: scope.base, rel: scope.prefix, local, canon, viaLink: false, engine: false, glob: [] }
-    const state: WalkState = { ignored, keep: scope.keep, live: scope.live, admit, plan, walking: new Set() }
-    const globs = modeledGlobs(scope, ignore, include, owns)
+    const state: WalkState = { ignored, pruned, keep: scope.keep, live: scope.live, admit, plan, walking: new Set() }
+    const globs = modeledGlobs(scope, dropped, include, owns)
     if (globs !== undefined) {
       // The root is the first (canonical directory, state) pair of the walk, so a link back to it is a repeat.
       state.globs = globs
@@ -128,8 +137,7 @@ export function planProjectWalk(
 /** The files `include` reaches under `cwd`, one per real file, with the symlink rule applied. Absolute paths: real paths first. */
 export function listProjectFiles(cwd: string, include: readonly string[], ignore: readonly string[]): string[] {
   if (!include.some((pattern) => !isNegated(pattern))) return []
-  const negated = include.filter(isNegated).map((pattern) => pattern.slice(1))
-  return listedFiles(planProjectWalk(cwd, [...ignore, ...negated], include).files)
+  return listedFiles(planProjectWalk(cwd, ignore, include).files)
 }
 
 /** The files `include` reaches in a plan that already kept them: each identity once, real paths first, absolute paths. */
@@ -205,7 +213,7 @@ function planEntry(entry: Dirent, frame: DirFrame, state: WalkState): void {
 // prunes it, so no link inside it is admitted, and its glob state is neither recorded nor checked. A directory no include pattern
 // can reach is not entered.
 function planSubdir(child: EntryRef, canon: string, frame: DirFrame, state: WalkState): void {
-  if (isIgnored(child, state) || !state.live(child.rel)) return
+  if (isIgnored(child, state.pruned) || !state.live(child.rel)) return
   const engine = frame.engine || NATIVE_IGNORE_DIRS.has(basename(child.alias))
   const glob = engine ? [] : enteredGlob(child, canon, frame, state)
   if (glob === undefined) return
@@ -234,22 +242,28 @@ function joinPath(dir: string, name: string): string {
   return `${dir}${dir.endsWith(sep) ? '' : sep}${name}`
 }
 
-// The ignore set applies to the path from the root (fast-glob's cwd) and, for a scope outside the root, to the path from its base.
-function isIgnored(entry: EntryRef, state: WalkState): boolean {
-  if (state.ignored(entry.rel)) return true
-  return entry.local !== undefined && entry.local !== entry.rel && state.ignored(entry.local)
+// A matcher tests the path from the root and, for a scope outside the root, the path from its base. Files test the dropped set,
+// and directories and links test the pruned set, so a negation descends only where it negates `<dir>/**`.
+function isIgnored(entry: EntryRef, matches: (relativePath: string) => boolean): boolean {
+  if (matches(entry.rel)) return true
+  return entry.local !== undefined && entry.local !== entry.rel && matches(entry.local)
+}
+
+// A negated alternative prunes the walk only when it negates everything beneath a directory.
+function prunesDescent(alternative: string): boolean {
+  return alternative === '**' || alternative.endsWith('/**')
 }
 
 // The identity is the canonical directory holding the entry joined with its name: computed only for a kept file.
 function keepFile(entry: EntryRef, frame: DirFrame, state: WalkState): void {
-  if (isIgnored(entry, state) || !state.keep(entry.rel, entry.alias)) return
+  if (isIgnored(entry, state.ignored) || !state.keep(entry.rel, entry.alias)) return
   const identity = join(frame.canon, basename(entry.alias))
   state.plan.files.push({ alias: entry.alias, rel: entry.rel, identity, viaLink: frame.viaLink, engine: frame.engine })
 }
 
 // A link to a file is kept as a file of its own, as the Rust walk keeps it; a dangling link is dropped, as fast-glob drops it.
 function planLink(entry: EntryRef, frame: DirFrame, state: WalkState): void {
-  if (frame.engine || isIgnored(entry, state)) return
+  if (frame.engine || isIgnored(entry, state.pruned)) return
   const kind = kindOf(entry.alias)
   if (kind === undefined) return
   if (kind === 'file') {

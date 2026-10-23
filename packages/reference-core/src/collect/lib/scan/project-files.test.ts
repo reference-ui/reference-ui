@@ -262,6 +262,28 @@ describe('listProjectFiles under an include: brace, negation and fallback shapes
     expect(listProjectFiles(root, ['**/a/a/*.ts'], ROOT_IGNORE)).toEqual([join(root, 'x', 'a', 'a', 'k.ts')])
   })
 
+  it('drops only the directory and the link a bare negation names, and walks beneath both', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'src/b/y.ts': 'export const y = 1\n', 'lib/x.ts': 'export const x = 1\n' })
+    symlinkSync(join('..', 'lib'), join(root, 'src', 'l0'))
+    expect(listProjectFiles(root, ['src/**/*.ts', '!src/b', '!src/l0'], ROOT_IGNORE)).toEqual([
+      join(root, 'src', 'b', 'y.ts'),
+      join(root, 'src', 'l0', 'x.ts'),
+    ])
+  })
+
+  it('drops the files a one-level negation matches and walks the directories it matches', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'src/b/y.ts': 'export const y = 1\n', 'src/b/sub/z.ts': 'export const z = 1\n' })
+    expect(listProjectFiles(root, ['src/**/*.ts', '!src/b/*'], ROOT_IGNORE)).toEqual([join(root, 'src', 'b', 'sub', 'z.ts')])
+  })
+
+  it('prunes only the brace alternative of a negation that ends in /**', () => {
+    const root = tempRoot()
+    writeFiles(root, { 'src/a/x.ts': 'export const x = 1\n', 'src/b/y.ts': 'export const y = 1\n' })
+    expect(listProjectFiles(root, ['src/**/*.ts', '!{src/a/**,src/b}'], ROOT_IGNORE)).toEqual([join(root, 'src', 'b', 'y.ts')])
+  })
+
   it('keeps the loop cut for an include the glob model does not cover', () => {
     const root = tempRoot()
     writeFiles(root, { 'src/x.ts': 'export const x = 1\n', 'src/a/y.ts': 'export const y = 1\n' })

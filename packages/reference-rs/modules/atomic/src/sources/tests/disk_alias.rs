@@ -197,3 +197,21 @@ fn a_real_directory_beneath_a_link_is_cut_when_its_pair_was_visited() {
         [format!("{root_str}/src/c/l5/a.ts")]
     );
 }
+
+/// `!src/b` and `!src/l0` name a directory and a directory link, not anything beneath them, so the walk descends into both.
+/// `src/b/y.ts` is listed under its real path and `lib/x.ts` under the link alias `src/l0/x.ts`.
+#[test]
+fn a_bare_negation_drops_only_its_own_path() {
+    let root = temp_root("bare-negation");
+    let _roots = TempRoots(vec![root.clone()]);
+    write_files(
+        &root,
+        &[("src/b/y.ts", "export const y = 1;\n"), ("lib/x.ts", "export const x = 1;\n")],
+    );
+    std::os::unix::fs::symlink("../lib", root.join("src/l0")).unwrap();
+    let root_str = root.to_string_lossy().into_owned();
+    assert_eq!(
+        listed_in_walk_order(&root, &["src/**/*.ts", "!src/b", "!src/l0"]),
+        [format!("{root_str}/src/b/y.ts"), format!("{root_str}/src/l0/x.ts")]
+    );
+}
