@@ -8,6 +8,10 @@ import { test, expect, snap } from '../../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
+async function logOf(page: Page, testid: string): Promise<string[]> {
+  return JSON.parse((await page.getByTestId(testid).textContent()) ?? '[]')
+}
+
 async function expectActiveDescendant(source: Locator, option: Locator) {
   const id = await option.getAttribute('id')
   expect(id).toBeTruthy()

@@ -8,6 +8,10 @@ import { test, expect, snap } from '../../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
+async function logOf(page: Page, testid: string): Promise<string[]> {
+  return JSON.parse((await page.getByTestId(testid).textContent()) ?? '[]')
+}
+
 test.describe('Combobox cluster B CT', () => {
   test('CB-SELECT-08 virtual: trigger home/end/page wait behind one current scroll', async ({
     mount,

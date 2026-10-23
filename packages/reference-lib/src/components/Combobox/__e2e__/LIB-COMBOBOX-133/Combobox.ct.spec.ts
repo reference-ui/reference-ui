@@ -8,6 +8,18 @@ import { test, expect, snap } from '../../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
+async function logOf(page: Page, testid: string): Promise<string[]> {
+  return JSON.parse((await page.getByTestId(testid).textContent()) ?? '[]')
+}
+
+async function inputState(input: Locator) {
+  return input.evaluate((el: HTMLInputElement) => ({
+    value: el.value,
+    start: el.selectionStart,
+    end: el.selectionEnd,
+  }))
+}
+
 test.describe('Combobox cluster B CT', () => {
   test('CB-MODE-03: both completes the suffix; typing replaces only the suffix', async ({
     mount,

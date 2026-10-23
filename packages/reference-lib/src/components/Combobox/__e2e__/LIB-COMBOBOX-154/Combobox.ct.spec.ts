@@ -8,6 +8,24 @@ import { test, expect, snap } from '../../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
+async function logOf(page: Page, testid: string): Promise<string[]> {
+  return JSON.parse((await page.getByTestId(testid).textContent()) ?? '[]')
+}
+
+async function clickNoFocus(page: Page, testid: string) {
+  await page.getByTestId(testid).evaluate((el: HTMLElement) => el.click())
+}
+
+function captureComboboxDiagnostics(page: Page) {
+  const errors: string[] = []
+  page.on('console', msg => {
+    if (msg.type() === 'error' && msg.text().includes('[reference-ui] Combobox')) {
+      errors.push(msg.text())
+    }
+  })
+  return errors
+}
+
 test.describe('Combobox cluster B CT', () => {
   test('CB-ADAPTER-08: competing authorities diagnose, stay inert, and recover', async ({
     mount,

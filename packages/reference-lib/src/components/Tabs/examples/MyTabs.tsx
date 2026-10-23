@@ -63,8 +63,9 @@ const underlineIndicatorUnselected = css({
   borderBottom: '2px solid transparent',
 })
 
-// The user's OWN typed variant: inferred from their recipe, not the kernel.
-export type MyTabsVariant = RecipeVariantProps<typeof myTabsTab>['variant']
+// The user's OWN typed variant: inferred from their recipe, not the kernel;
+// kernel `variant` takes a plain name, so the responsive form is excluded.
+export type MyTabsVariant = Extract<RecipeVariantProps<typeof myTabsTab>['variant'], string>
 
 export type MyTabsListProps = Omit<TabsListProps, 'variant'> & {
   variant?: MyTabsVariant

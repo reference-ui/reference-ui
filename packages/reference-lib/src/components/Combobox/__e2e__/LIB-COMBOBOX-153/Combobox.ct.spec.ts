@@ -8,6 +8,14 @@ import { test, expect, snap } from '../../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
+async function logOf(page: Page, testid: string): Promise<string[]> {
+  return JSON.parse((await page.getByTestId(testid).textContent()) ?? '[]')
+}
+
+async function clickNoFocus(page: Page, testid: string) {
+  await page.getByTestId(testid).evaluate((el: HTMLElement) => el.click())
+}
+
 test.describe('Combobox cluster B CT', () => {
   test('CB-ADAPTER-07: grid typeahead follows current metadata and cancels stale requests', async ({
     mount,

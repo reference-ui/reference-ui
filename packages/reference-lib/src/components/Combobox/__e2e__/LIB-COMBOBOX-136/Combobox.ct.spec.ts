@@ -8,6 +8,22 @@ import { test, expect, snap } from '../../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
+async function logOf(page: Page, testid: string): Promise<string[]> {
+  return JSON.parse((await page.getByTestId(testid).textContent()) ?? '[]')
+}
+
+async function inputState(input: Locator) {
+  return input.evaluate((el: HTMLInputElement) => ({
+    value: el.value,
+    start: el.selectionStart,
+    end: el.selectionEnd,
+  }))
+}
+
+async function clickNoFocus(page: Page, testid: string) {
+  await page.getByTestId(testid).evaluate((el: HTMLElement) => el.click())
+}
+
 test.describe('Combobox cluster B CT', () => {
   test('CB-MODE-06: mode switches clear obsolete completion with the source focused', async ({
     mount,
