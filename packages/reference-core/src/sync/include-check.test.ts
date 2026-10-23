@@ -1,8 +1,10 @@
 // Include check legs: a glob that reaches no file yields one warning naming each
 // dead positive pattern, a glob that reaches a file stays silent, and negations
 // never count. A dangling symlink the globs reach yields one warning naming the
-// link, while a live link or one outside include stays silent. Each leg runs over
-// a temp project with one token file under theme/.
+// link, while a live link or one outside include stays silent. A dangling link
+// beneath a bare-negated directory is still named, since the listing walks beneath
+// it; only `<dir>/**` prunes. Each leg runs over a temp project with one token file
+// under theme/.
 
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
@@ -67,5 +69,17 @@ describe('includeMatchDiagnostics', () => {
     mkdirSync(join(dir, 'other'), { recursive: true })
     symlinkSync('../nowhere.ts', join(dir, 'other', 'gone.ts'))
     expect(includeMatchDiagnostics(dir, ['theme/**/*.ts', '!theme/skip.ts'])).toEqual([])
+  })
+
+  it('names a dangling link beneath a bare-negated directory, and stays silent beneath a negated <dir>/**', async () => {
+    const dir = await projectWithTokens()
+    mkdirSync(join(dir, 'theme', 'sub'), { recursive: true })
+    symlinkSync('../../nowhere.ts', join(dir, 'theme', 'sub', 'gone.ts'))
+    for (const negation of ['!theme/sub', '!theme/*']) {
+      const diagnostics = includeMatchDiagnostics(dir, ['theme/**/*.ts', negation])
+      expect(diagnostics, negation).toHaveLength(1)
+      expect(diagnostics[0]?.message, negation).toContain("'theme/sub/gone.ts'")
+    }
+    expect(includeMatchDiagnostics(dir, ['theme/**/*.ts', '!theme/sub/**'])).toEqual([])
   })
 })

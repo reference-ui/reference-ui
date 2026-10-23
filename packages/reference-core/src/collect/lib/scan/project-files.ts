@@ -4,8 +4,8 @@
 // visiting each (canonical directory, glob state) once so that loops and lattices of links end; an owns walk or an include that
 // project-globs.ts does not model cuts a link back onto the walk path instead. A file reached through several paths is listed
 // once, under its first path in walk order. Directories the Rust walk prunes by name are walked for their real files only, and
-// a scope outside the root (`../shared/**`, an absolute glob) walks its own base. A negated include drops the paths it matches
-// and prunes descent only where it negates `<dir>/**`, as the Rust walk does.
+// a scope outside the root (`../shared/**`, an absolute glob) walks its own base. A negated include drops the paths it matches;
+// the Rust walk never prunes on one, and this walk prunes only at `<dir>/**`, where every path beneath is dropped anyway.
 
 import { realpathSync, type Dirent } from 'node:fs'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
@@ -99,7 +99,8 @@ interface WalkState {
 
 /**
  * Walks `cwd` with the ignore globs applied to every path and the engine-ignored directory names the Rust walk prunes. A negated
- * include drops the files it matches and prunes a directory or link only through an alternative that is `**` or ends in `/**`.
+ * include drops the files it matches. The Rust walk never prunes on a negation; this walk prunes a directory or link only
+ * through an alternative that is `**` or ends in `/**`, where every path beneath is dropped anyway.
  * With include globs a directory is entered only when the globs can still reach it, and a link is entered under each such alias,
  * each (directory, glob state) once; with `owns`, the first link whose relative path `owns` accepts takes its target; with
  * neither, the first link takes it.
@@ -249,8 +250,8 @@ function isIgnored(entry: EntryRef, matches: (relativePath: string) => boolean):
   return entry.local !== undefined && entry.local !== entry.rel && matches(entry.local)
 }
 
-// A negated alternative prunes the walk only when it negates everything beneath a directory.
-function prunesDescent(alternative: string): boolean {
+/** True when a negated alternative may prune the walk: it negates everything beneath a directory (`**` or `<dir>/**`). */
+export function prunesDescent(alternative: string): boolean {
   return alternative === '**' || alternative.endsWith('/**')
 }
 

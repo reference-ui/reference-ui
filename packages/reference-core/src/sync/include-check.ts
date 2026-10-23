@@ -2,14 +2,17 @@
 // globs, and emits warning diagnostics for what the engine drops without a word:
 // one naming the positive patterns that match no file, and one per dangling
 // symlink the globs reach, naming the link. The engine scans only what the globs
-// reach and skips a dangling link silently, so this check names both, using the
-// same dot and ignore rules as the engine's scan.
+// reach and skips a dangling link silently, so this check names both, with dot
+// files reached. A negation drops every path it matches but prunes descent only
+// where the listing does (`<dir>/**`), so a link beneath `!dir` is still named.
 
 import { lstatSync, readlinkSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import fg from 'fast-glob'
+import picomatch from 'picomatch'
 import { RETENTION_EXCLUDE } from '../collect/constants.ts'
-import { listPlannedFiles, planProjectWalk } from '../collect/lib/scan/project-files.ts'
+import { listPlannedFiles, planProjectWalk, prunesDescent } from '../collect/lib/scan/project-files.ts'
+import { expandBraces } from '../collect/lib/scan/project-globs.ts'
 import type { NativeDiagnostic } from '../native/contract.ts'
 
 /** The positive include patterns that match no file under cwd. Negations never count. Each pattern is planned on its own walk. */
@@ -26,15 +29,17 @@ function patternMatchesAFile(cwd: string, pattern: string): boolean {
 export function danglingIncludeLinks(cwd: string, include: readonly string[]): string[] {
   const positive = include.filter((pattern) => !pattern.startsWith('!'))
   const negated = include.filter((pattern) => pattern.startsWith('!')).map((pattern) => pattern.slice(1))
-  // Links are listed unfollowed, so a dangling one is an entry; the followed walk drops it.
+  // Links are listed unfollowed, so a dangling one is an entry; the followed walk drops it. fast-glob prunes on what it
+  // ignores, so it gets only the negations the listing prunes on, and every negation then drops the entries it matches.
   const reached = fg.sync(positive, {
     cwd,
-    ignore: [...RETENTION_EXCLUDE, ...negated],
+    ignore: [...RETENTION_EXCLUDE, ...negated.flatMap(expandBraces).filter(prunesDescent)],
     dot: true,
     onlyFiles: false,
     followSymbolicLinks: false,
   })
-  return reached.filter((entry) => isDanglingLink(join(cwd, entry)))
+  const dropped = negatedMatcher(negated)
+  return reached.filter((entry) => !dropped(entry) && isDanglingLink(join(cwd, entry)))
 }
 
 /** One warning per dangling link under the include globs, each naming its link and the target it points at. */
@@ -52,6 +57,11 @@ export function danglingLinkDiagnostics(cwd: string, include: readonly string[])
 /** The include warnings: the dead positive patterns, then the dangling links, or nothing when the include is clean. */
 export function includeMatchDiagnostics(cwd: string, include: readonly string[]): NativeDiagnostic[] {
   return [...deadIncludeDiagnostics(cwd, include), ...danglingLinkDiagnostics(cwd, include)]
+}
+
+function negatedMatcher(negated: readonly string[]): (entry: string) => boolean {
+  if (negated.length === 0) return () => false
+  return picomatch(negated.map((body) => body.replace(/^\.\//, '')), { dot: true })
 }
 
 // A link that exists while its target does not: lstat finds the link, and stat reports the target missing.
