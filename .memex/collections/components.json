@@ -1,1 +1,0 @@
-{"at": "/cases", "description": "Component unit contracts: one doc per case in a component's case.json manifest, for the unit cases that have no CT case folder.", "id": "id", "include": ["*/case.json"], "kind": "json", "name": "components", "owner": "test-component skill", "title": "title", "weights": {"id": 4, "title": 3, "name": 2}}
