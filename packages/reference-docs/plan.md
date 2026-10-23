@@ -130,11 +130,13 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
       in every walker, dunce roots (Windows), corpus + native smoke suites, 3 flakes fixed. Two xhigh rounds (bypasses,
       false refusals, lexing holes) all fixed; stack floors 16 MiB. Gate: agentrs t x3 (1,792 Rust, 909 vitest), 356 cases,
       core vt 1,128, dogfood exit 0; CPU lib ~1.01x, docs ~1.0x. No cache (owner).
-- [ ] Bounded walkers wave 3 (deferred to next session, owner wrap-up 2026-10-22): named errors for cyclic/deep token trees (F8), include brace cap (F9), expression-walker depth budgets (F3).
-      Also wave 3 (orchestrator rulings 2026-10-22, for owner review): one-shot `ref sync` exits 1 whenever tasty's
-      build fails (today exit 0/1 depends on a race; sync.ts already intends 1; cost: a CSS-only user fails on a types
-      error); watch reports it and keeps running. Owner scope (2026-10-22): wave 3 is small local fixes only
-      (tasty exit code, FIFO skip, lookahead budget, F8/F9/F3 if local).
+- [x] Bounded walkers wave 3 landed 2026-10-23 (small local fixes, each red-first with its own case): `agentrs q`
+      fails on unmatched paths; FIFOs named like sources are skipped by every walker (ATM-BOUND-06, CORE-BOUND-07);
+      one-shot sync exits 1 on every tasty failure, settled or pending (CORE-SYNC-22/23; orchestrator ruling, owner
+      to review); cyclic/over-deep token, keyframes, globalCss trees fail with a named error (CORE-BOUND-01/02);
+      config refuses include braces past 1,024 globs or 64 levels (CORE-BOUND-04); ATM-RECIPE-18 pin. Lookahead
+      budget was already complete. Backlog: F3 expression-walker depth (not local), F9 Rust half (IncludeScope
+      compile is infallible), `.content-collections` watcher ignore (owner call).
 - [x] (A) ScreenedSource landed 2026-10-23 (ff to 74a32679f, 5 commits): atomic runs the nesting gate once per source
       per compile and every later atomic parse reads the verdict the text carries (no caching: owner principle). Gate:
       agentrs t x3 (1,796 Rust, 909 vitest in 68), 356 cases, core vt 1,128, dogfood 1/0/100/6. Open: styletrace still
