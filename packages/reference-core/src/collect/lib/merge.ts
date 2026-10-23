@@ -4,7 +4,7 @@
 // upstream `_private` subtrees strip at merge time so the owning package keeps
 // its internals while downstream extenders never see them. Fragments are live
 // objects, so assertFragmentTree refuses a cyclic or over-deep tree by name
-// before any of these recursive walks reads it.
+// before any of these recursive walks reads it; extendSystem guards its overrides the same way.
 
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -157,9 +157,9 @@ export class TokenTreeError extends Error {
   }
 }
 
-/** The collector call a fragment came from and its file, for the error line. */
+/** The call a tree came from (a collector, or extendSystem) and its file or base, for the error line. */
 export interface FragmentTreeSource {
-  call: 'token' | 'keyframes' | 'globalCss'
+  call: 'token' | 'keyframes' | 'globalCss' | 'extendSystem'
   source: string
 }
 

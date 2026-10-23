@@ -1,9 +1,9 @@
 # base
 
-Base assembles portability from discovery plus config: upstream bundles plus
-local IIFEs become the fragment, upstream css plus the own block becomes the
-portable sheet, configured names union traced names become the roster, and all
-three plus the name become the published BaseSystem. The props a traced
+Base assembles the published BaseSystem from discovery plus config. Upstream
+bundles plus local IIFEs become the fragment, upstream css plus the own block
+becomes the portable sheet, configured names union traced names become the
+roster, and all three plus the name become the BaseSystem. The props a traced
 component keeps for itself ride beside the roster as an owned map, joined from
 extends and layers alike. The extends validator guards the chain's input side
 with the same contract the assembler emits, so a system that fails validation
@@ -58,7 +58,10 @@ or `pending` (case being added, not yet in the tree):
 - E14 One merge. `mergeTokenTree` serves fragments, the E13 diagnostic
   and `extendSystem`; under extends, an `extendSystem` result contributes
   one named fragment node, `extend:<base>`, after the base's nodes.
-  (`merge.test.ts`; CORE-CHAIN-13; `extend.test.ts`; CORE-LAYERS-18.)
+  `extendSystem` runs its overrides through `assertFragmentTree` first, so a
+  cyclic or over-deep override throws `TokenTreeError` naming the path and base.
+  (`merge.test.ts`; CORE-CHAIN-13; `extend.test.ts`; `extend.bounds.test.ts`;
+  CORE-LAYERS-18.)
 - E15 Legacy entries. Legacy `{name, fragment}` entries are accepted as
   one opaque node. Accepted limit: the bases a legacy bundle carries
   cannot be deduped, so a legacy entry beside a named entry sharing its

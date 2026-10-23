@@ -5,7 +5,7 @@
 // claims the stamps the base's own token block claims: its own, then those of every system it extends.
 // Under extends, the marker becomes one `extend:<base>` fragment node, appended after the base's nodes.
 
-import { isPlainObject, mergeTokenTree, tokenLeafPaths } from '../../collect/lib/merge.ts'
+import { assertFragmentTree, isPlainObject, mergeTokenTree, tokenLeafPaths } from '../../collect/lib/merge.ts'
 import type { ReferenceTokenConfig } from '../../collect/surface/tokens.ts'
 import { extendedSystemsOf } from './extended.ts'
 import { lowerRhythm, SPACING_ROOT_VAR } from './rhythm.ts'
@@ -287,13 +287,16 @@ function streamsWithBlock(streams: readonly SystemStreams[], name: string, block
  * the result never stacks blocks. Braces and rhythm units lower to CSS as the compiler lowers them, so `2r`
  * prints `calc(2 * var(--spacing-root))`. It throws ExtendSystemError for an unknown token, a self-reference
  * (including a rhythm value on spacing.root), a leaf with no value, a slot that is not a string, a malformed
- * brace, or a reference that the base does not declare.
+ * brace, or a reference that the base does not declare. An override tree that holds itself or nests past
+ * MAX_FRAGMENT_TREE_DEPTH throws TokenTreeError, naming the dotted path and the base, before any merge walks it.
  */
 export function extendSystem(base: BaseSystem, overrides: ExtendSystemOverrides): BaseSystem {
   assertBaseSystem(base)
   const prior = extendedOf(base)
   const root = prior?.root ?? base
-  const tokens = mergeTokenTree(prior?.tokens ?? {}, tokenTreeOf(overrides))
+  const overrideTree = tokenTreeOf(overrides)
+  assertFragmentTree(overrideTree, { call: 'extendSystem', source: root.name })
+  const tokens = mergeTokenTree(prior?.tokens ?? {}, overrideTree)
   const own = ownStream(root)
   const tokensPortable = own?.tokensPortable ?? ''
   const decls = declsOf(tokens, { base: root.name, declared: declaredNames(tokensPortable) })
