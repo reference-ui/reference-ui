@@ -70,7 +70,7 @@ function expandLiteralBraces(chars: readonly string[], close: number): string[] 
 }
 
 // The first `{` with its depth-zero mate; a `{` without a mate leaves the whole pattern unexpanded, as the Rust port does.
-function findBracePair(chars: readonly string[]): [number, number] | undefined {
+export function findBracePair(chars: readonly string[]): [number, number] | undefined {
   const open = findUnescaped(chars, 0, '{')
   if (open === undefined) return undefined
   const close = findMate(chars, open)
@@ -112,7 +112,7 @@ function trackBrace(hit: string, depth: number): number {
 }
 
 // Splits the innards of a brace on its top-level commas: a part that closes its own braces ends a choice.
-function splitChoices(chars: readonly string[]): string[] {
+export function splitChoices(chars: readonly string[]): string[] {
   const choices: string[] = []
   let current = ''
   let depth = 0

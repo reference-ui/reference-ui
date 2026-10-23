@@ -8,3 +8,4 @@ Each case gives Core an input that once crashed or ran away, and proves it ends 
 - `CORE-BOUND-03` — a src tree with two self-linked directories and a linked sibling syncs in under 10 s with the CSS of the same tree written out with no links.
 - `CORE-BOUND-02` — a tokens() group nested 150 levels fails ref sync with exit 1 naming the 100-level limit, the path and the file.
 - `CORE-BOUND-01` — a tokens() tree that contains itself fails ref sync with exit 1 and 'token tree cycles at colors.self (<file>)'.
+- `CORE-BOUND-04` — an include pattern that expands past 1,024 globs, or nests braces past 64 levels, fails ref sync inside 10 s with a config error naming the pattern.

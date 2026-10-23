@@ -1,9 +1,17 @@
 // Validation and normalization for the evaluated Core config object.
 // It takes the raw module export and emits a ReferenceUIConfig or throws.
+// Include patterns are refused here when their braces expand past 1,024 globs or nest past
+// 64 levels, before any later stage expands them.
 
 import type { ReferenceUIConfig, StrictCategory } from './types.ts'
 import type { BaseSystemField } from '../system/base/validate.ts'
 import { ConfigValidationError } from './errors.ts'
+import {
+  braceDepth,
+  countBraceAlternatives,
+  MAX_BRACE_ALTERNATIVES,
+  MAX_BRACE_DEPTH,
+} from '../collect/lib/scan/brace-limits.ts'
 import {
   isSafeSystemName,
   validateBaseSystemEntries,
@@ -27,6 +35,26 @@ function mustBeObject(raw: unknown): ConfigRecord {
 function validateInclude(cfg: ConfigRecord): void {
   if (!cfg.include || !Array.isArray(cfg.include)) {
     throw ConfigValidationError.mustHaveInclude()
+  }
+  for (const pattern of cfg.include) {
+    if (typeof pattern === 'string') validateIncludeBraces(pattern)
+  }
+}
+
+// A negated pattern expands its body, so the limits read the body and the error names the pattern whole.
+function validateIncludeBraces(pattern: string): void {
+  const body = pattern.startsWith('!') ? pattern.slice(1) : pattern
+  if (braceDepth(body) > MAX_BRACE_DEPTH) {
+    throw ConfigValidationError.invalidConfig(
+      'include',
+      `include pattern '${pattern}' nests braces deeper than ${MAX_BRACE_DEPTH} levels`
+    )
+  }
+  if (countBraceAlternatives(body, MAX_BRACE_ALTERNATIVES) > MAX_BRACE_ALTERNATIVES) {
+    throw ConfigValidationError.invalidConfig(
+      'include',
+      `include pattern '${pattern}' expands to more than 1,024 globs`
+    )
   }
 }
 

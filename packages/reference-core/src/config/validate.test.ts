@@ -314,3 +314,36 @@ describe('validateConfig base-system fields report together', () => {
     ).toThrowError(/^Config field 'extends' is invalid\.\nExpected an array of BaseSystem objects\.$/)
   })
 })
+
+describe('validateConfig include brace limits', () => {
+  const nest = (levels: number): string => `src/${'{a,'.repeat(levels)}b${'}'.repeat(levels)}.ts`
+  const withInclude = (include: string[]) => ({ name: SYSTEM_NAME, include })
+
+  it('passes {a,b} written 10 times and refuses 11, naming the pattern', () => {
+    const wide = `src/${'{a,b}'.repeat(11)}`
+
+    expect(() => validateConfig(withInclude([`src/${'{a,b}'.repeat(10)}`]))).not.toThrow()
+    expect(() => validateConfig(withInclude([wide]))).toThrowError(
+      `Config field 'include' is invalid.\ninclude pattern '${wide}' expands to more than 1,024 globs`
+    )
+  })
+
+  it('passes 64 nesting levels and refuses 65, naming the pattern', () => {
+    expect(() => validateConfig(withInclude([nest(64)]))).not.toThrow()
+    expect(() => validateConfig(withInclude([nest(65)]))).toThrowError(
+      `include pattern '${nest(65)}' nests braces deeper than 64 levels`
+    )
+  })
+
+  it('checks a negated pattern by its body and names it whole', () => {
+    const negated = `!src/${'{a,b}'.repeat(11)}`
+
+    expect(() => validateConfig(withInclude(['src/**/*.ts', negated]))).toThrowError(
+      `include pattern '${negated}' expands to more than 1,024 globs`
+    )
+  })
+
+  it('does not count escaped braces', () => {
+    expect(() => validateConfig(withInclude([`src/${'\\{a,b\\}'.repeat(24)}`]))).not.toThrow()
+  })
+})

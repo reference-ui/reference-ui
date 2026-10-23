@@ -1,0 +1,1 @@
+{"id": "CORE-BOUND-04", "name": "an include pattern that expands past 1,024 globs, or nests braces past 64 levels, fails ref sync inside 10 s with a config error naming the pattern", "sync": false}
