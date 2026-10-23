@@ -4,6 +4,7 @@
 //! file reads once (portable open plus 64KB short-rule reads, lossy UTF-8),
 //! retention applies the verbatim IGNORE-dir plus extension gates, and compile
 //! drains the retained bytes (moves, never clones) behind exactly-one-of.
+//! A path that does not stat as a regular file, such as a FIFO, drops unopened.
 
 use std::io::Read;
 
@@ -186,8 +187,12 @@ fn hit(content: &str, needles: &[String]) -> bool {
 
 /// Portable single-read: open plus 64KB reads until a short read or EOF, lossy
 /// UTF-8 exactly as `readFileSync(utf-8)`. Unreadable files drop (None, never
-/// an error); a short read ends the file with no confirm read.
+/// an error); a short read ends the file with no confirm read. A path that does not stat as a regular file (a FIFO,
+/// socket or device) drops before it is opened, since opening one can block.
 fn read_lossy(path: &str, chunk: &mut [u8]) -> Option<String> {
+    if !std::fs::metadata(path).is_ok_and(|meta| meta.is_file()) {
+        return None;
+    }
     let mut file = std::fs::File::open(path).ok()?;
     let mut out = Vec::new();
     loop {

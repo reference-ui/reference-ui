@@ -2,7 +2,8 @@
 //! The traversal itself lives in `shared::walk`, which enters only the directories the include scope can reach and
 //! walks each link alias once per directory and include state; this module hands it those rules as a `WalkSink`.
 //! `scan_dir` and `WalkScope::new` keep their paths and signatures, and `canonical_or_self` is re-exported for the
-//! union backfill and the link tests.
+//! union backfill and the link tests. A listed path is read only when it stats as a regular file, so a FIFO or
+//! device named like a source is skipped unopened.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -62,8 +63,12 @@ impl WalkSink for Collect<'_> {
     }
 }
 
-/// Reads one listed source and appends it; an unreadable file is dropped, as the walk always did.
+/// Reads one listed source and appends it; an unreadable file is dropped, as the walk always did. The path is stat'd
+/// first and read only when it is a regular file, so a FIFO, socket or device named like a source is never opened.
 fn read_into(path: &Path, acc: &mut Vec<(String, String)>) {
+    if !fs::metadata(path).is_ok_and(|meta| meta.is_file()) {
+        return;
+    }
     if let Ok(content) = fs::read_to_string(path) {
         acc.push((path.to_string_lossy().into_owned(), content));
     }

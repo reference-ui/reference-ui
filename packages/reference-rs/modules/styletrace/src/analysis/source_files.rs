@@ -5,7 +5,8 @@
 //! has no include scope: a symlinked directory is entered once per real target, a link
 //! back to an ancestor is cut, and a file is listed once, under its real path when one
 //! exists, else under the first alias in name order, the same representative the atomic walk
-//! picks, so the listing matches what the compiler reads.
+//! picks, so the listing matches what the compiler reads. Only regular files are listed: a FIFO, device or dangling
+//! link named like a source is skipped, as atomic and tasty skip it.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -71,7 +72,8 @@ fn collect_source_files(
     Ok(())
 }
 
-/// Handles one directory entry: a directory is walked into, and a traceable source is listed.
+/// Handles one directory entry: a directory is walked into, and a traceable source is listed when it resolves to a
+/// regular file, so a FIFO or a dangling link is never listed.
 fn visit_entry(
     entry: &fs::DirEntry,
     canon: &Path,
@@ -89,7 +91,7 @@ fn visit_entry(
         if let Some(child) = child_canon(entry, canon, link, walk) {
             collect_source_files(&path, &child, via_link || link, walk)?;
         }
-    } else if is_traceable_source_file(&path, name_text.as_ref()) {
+    } else if path.is_file() && is_traceable_source_file(&path, name_text.as_ref()) {
         list_source(path, canon.join(&file_name), via_link, walk);
     }
     Ok(())
@@ -200,5 +202,22 @@ mod tests {
         assert_eq!(found.len(), 1, "{found:?}");
         assert!(found[0].ends_with("l0/shared/x.ts"), "{found:?}");
         std::fs::remove_dir_all(&base).expect("cleanup");
+    }
+
+    /// A FIFO named `pipe.ts` and a dangling link named `gone.ts` are not regular files, so discovery lists neither and
+    /// only `a.ts` remains. Unix-only, since the test makes the FIFO with `mkfifo` at runtime.
+    #[cfg(unix)]
+    #[test]
+    fn discovery_omits_a_fifo_and_a_dangling_link() {
+        let dir = std::env::temp_dir().join(format!("styletrace-fifo-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("src")).expect("temp root");
+        std::fs::write(dir.join("src/a.ts"), "export const a = 1;\n").expect("temp file");
+        let status = std::process::Command::new("mkfifo").arg(dir.join("src/pipe.ts")).status().expect("mkfifo");
+        assert!(status.success(), "mkfifo failed");
+        std::os::unix::fs::symlink(dir.join("src/missing.ts"), dir.join("src/gone.ts")).expect("dangling link");
+        let found = discover_source_files(&dir).expect("discovery");
+        std::fs::remove_dir_all(&dir).expect("cleanup");
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].ends_with("src/a.ts"), "{found:?}");
     }
 }
