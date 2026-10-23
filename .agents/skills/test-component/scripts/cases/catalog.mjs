@@ -1,28 +1,21 @@
 /**
- * Validates the component catalog against the live source and public barrel.
- * Every component directory and every runnable declaration is accounted for;
- * metadata never substitutes for executing the registered evidence.
+ * Builds the component case catalog from the live source and public barrel (AGENTS.md section 7).
+ * Each folder under `<Component>/__e2e__/` is one CT case named by its raw ID (LIB-<COMPONENT>-<nnn>)
+ * holding case.json {id, name}, a README.md headed "# <ID> — <name>", and one *.ct.spec.ts with one
+ * declaration; every *.test.ts(x) outside __e2e__ yields unit entries labelled <Component>/<file>:<line>.
+ * Every problem is collected and thrown once; metadata never substitutes for executing the evidence.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { discoverTests, exportedComponents } from './discover.mjs'
 
-const MANIFEST_KEYS = ['schemaVersion', 'component', 'scope', 'description', 'cases']
-const CASE_KEYS = ['id', 'name', 'kind', 'file', 'title']
-const SCOPES = ['public', 'support', 'internal']
-
-function nonempty(value) {
-  return typeof value === 'string' && value.trim().length > 0
-}
+const CASE_KEYS = ['id', 'name']
+const README_HEADING = /^# (.+?) — (.*)$/
+const CT_SPEC = /\.ct\.spec\.ts$/
+const UNIT_TEST = /\.test\.tsx?$/
 
 function object(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
-}
-
-function exactKeys(value, allowed, label, errors) {
-  for (const key of Object.keys(value)) {
-    if (!allowed.includes(key)) errors.push(`${label}: unknown field ${key}`)
-  }
 }
 
 export function evidenceFiles(dir) {
@@ -39,91 +32,120 @@ export function evidenceFiles(dir) {
   return files.sort()
 }
 
-function evidenceInventory(dir, errors) {
-  const inventory = new Map()
-  try {
-    for (const file of evidenceFiles(dir)) {
-      try { inventory.set(file, discoverTests(path.join(dir, file))) }
-      catch (error) { errors.push(error.message) }
+function discover(dir, file, problems) {
+  try { return discoverTests(path.join(dir, file)) }
+  catch (error) { problems.push(error.message); return null }
+}
+
+function caseJsonProblems(folder, caseDir) {
+  const file = path.join(caseDir, 'case.json')
+  if (!fs.existsSync(file)) return { name: undefined, problems: [`no case.json; add {"id": "${folder}", "name": "<one-line claim>"}`] }
+  let value
+  try { value = JSON.parse(fs.readFileSync(file, 'utf8')) }
+  catch (error) { return { name: undefined, problems: [`case.json is not valid JSON (${error.message})`] } }
+  if (!object(value)) return { name: undefined, problems: ['case.json must be a JSON object'] }
+  const problems = []
+  for (const key of Object.keys(value)) {
+    if (!CASE_KEYS.includes(key)) problems.push(`case.json has unknown field "${key}"; only "id" and "name" are allowed`)
+  }
+  if (value.id !== folder) problems.push(`case.json id ${value.id === undefined ? 'is missing' : `is ${JSON.stringify(value.id)}`}; it must equal folder name "${folder}"`)
+  const name = typeof value.name === 'string' ? value.name : undefined
+  if (name === undefined || name.trim() === '') problems.push('case.json needs a non-empty string "name"')
+  return { name, problems }
+}
+
+function readmeProblems(folder, caseDir, name) {
+  const expected = `"# ${folder} — ${name ?? '<one-line claim>'}"`
+  const file = path.join(caseDir, 'README.md')
+  if (!fs.existsSync(file)) return [`no README.md; its first line must be ${expected}`]
+  const heading = README_HEADING.exec(fs.readFileSync(file, 'utf8').split(/\r?\n/, 1)[0])
+  if (!heading) return [`README.md first line must be ${expected}`]
+  const problems = []
+  if (heading[1] !== folder) problems.push(`README.md heading names "${heading[1]}"; it must name folder "${folder}"`)
+  if (heading[2].trim() === '') problems.push('README.md heading has no claim after the em dash')
+  else if (name !== undefined && heading[2] !== name) problems.push(`README.md heading claim "${heading[2]}" must equal case.json name "${name}"`)
+  return problems
+}
+
+// One CT case folder: the folder name, case.json, README.md and its single one-declaration spec.
+function readCaseFolder(folder, specs, context) {
+  const { component, dir, errors } = context
+  const caseDir = path.join(dir, '__e2e__', folder)
+  const problems = []
+  if (!new RegExp(`^LIB-${component.toUpperCase()}-\\d{3,}$`).test(folder)) {
+    problems.push(`folder is not named by a raw case ID (LIB-${component.toUpperCase()}-<nnn>)`)
+  }
+  const { name, problems: indexProblems } = caseJsonProblems(folder, caseDir)
+  problems.push(...indexProblems, ...readmeProblems(folder, caseDir, name))
+  let entry = null
+  if (specs.length !== 1) {
+    problems.push(`a case folder holds exactly one *.ct.spec.ts evidence file (found ${specs.length})`)
+  } else {
+    const file = `__e2e__/${folder}/${specs[0]}`
+    const declarations = discover(dir, file, problems)
+    if (declarations && declarations.length !== 1) {
+      problems.push(`${specs[0]} must hold exactly one declaration (found ${declarations.length})`)
+    } else if (declarations) {
+      entry = { ...declarations[0], id: folder, name, kind: 'ct', file, component, absoluteFile: path.join(dir, file) }
     }
-  } catch (error) { errors.push(`${dir}: ${error.message}`) }
-  return inventory
+  }
+  for (const problem of problems) errors.push(`${component}/__e2e__/${folder}: ${problem}`)
+  return problems.length ? null : entry
 }
 
-function validateCase(entry, context) {
-  const { component, inventory, errors, seenIds, seenEvidence } = context
-  const label = `${component}/case.json ${entry?.id || '(case)'}`
-  if (!object(entry)) {
-    errors.push(`${label}: case must be an object`)
-    return null
+// Sorts each evidence file into its case folder, the unit set, or a misplaced-evidence error.
+function classifyEvidence(component, files, errors, folders) {
+  const specsByFolder = new Map(folders.map(folder => [folder, []]))
+  const unitFiles = []
+  for (const file of files) {
+    const parts = file.split('/')
+    const inE2e = parts[0] === '__e2e__'
+    if (UNIT_TEST.test(file)) {
+      if (inE2e) errors.push(`${component}/${file}: unit test files cannot live under __e2e__; move it beside the source`)
+      else unitFiles.push(file)
+    } else if (CT_SPEC.test(file)) {
+      if (inE2e && parts.length === 3 && specsByFolder.has(parts[1])) specsByFolder.get(parts[1]).push(parts[2])
+      else errors.push(`${component}/${file}: CT specs must live in __e2e__/<ID>/ (one case folder per spec)`)
+    }
   }
-  exactKeys(entry, CASE_KEYS, label, errors)
-  if (!nonempty(entry.id) || entry.id !== entry.id.trim() || !/^LIB-[A-Z][A-Z0-9]*-[0-9]{3,}$/.test(entry.id)) errors.push(`${label}: id must be LIB-COMPONENT-NNN`)
-  if (nonempty(entry.id) && !entry.id.startsWith(`LIB-${component.toUpperCase()}-`)) errors.push(`${label}: id must belong to ${component}`)
-  if (seenIds.has(entry.id)) errors.push(`${label}: duplicate global case id (also ${seenIds.get(entry.id)})`)
-  seenIds.set(entry.id, component)
-  if (!nonempty(entry.name)) errors.push(`${label}: name must be nonempty`)
-  if (!['unit', 'ct'].includes(entry.kind)) errors.push(`${label}: kind must be unit or ct`)
-  if (!nonempty(entry.title)) errors.push(`${label}: title must be the full static declaration title`)
-  const file = entry.file
-  if (!nonempty(file) || path.isAbsolute(file) || file.includes('\\') || file.split('/').some(part => part === '..' || part === '.' || !part)) {
-    errors.push(`${label}: file must be a contained POSIX path relative to its component`)
-    return null
-  }
-  const declarations = inventory.get(file)
-  if (!declarations) {
-    errors.push(`${label}: missing or invalid evidence file ${file}`)
-    return null
-  }
-  const declaration = declarations.find(test => test.title === entry.title)
-  if (!declaration) {
-    errors.push(`${label}: stale title in ${file}: ${entry.title}`)
-    return null
-  }
-  if (entry.kind !== declaration.kind) errors.push(`${label}: kind does not match ${file}`)
-  const key = `${file}\0${entry.title}`
-  if (seenEvidence.has(key)) errors.push(`${label}: declaration already indexed by ${seenEvidence.get(key)}`)
-  seenEvidence.set(key, entry.id)
-  return { ...entry, ...declaration, component, absoluteFile: path.join(context.dir, file) }
+  return { specsByFolder, unitFiles }
 }
 
-function validateComponent(component, context) {
-  const { componentsDir, errors, exported, seenIds } = context
+function caseFolders(dir, errors, component) {
+  const e2e = path.join(dir, '__e2e__')
+  if (!fs.existsSync(e2e)) return []
+  const folders = []
+  for (const entry of fs.readdirSync(e2e, { withFileTypes: true })) {
+    if (entry.isSymbolicLink()) errors.push(`${component}/__e2e__/${entry.name}: symlinks cannot be case folders`)
+    else if (entry.isDirectory()) folders.push(entry.name)
+  }
+  return folders.sort()
+}
+
+function readComponent(component, context) {
+  const { componentsDir, errors, exported } = context
   const dir = path.join(componentsDir, component)
-  const inventory = evidenceInventory(dir, errors)
-  const manifestFile = path.join(dir, 'case.json')
-  let manifest
-  try {
-    if (fs.lstatSync(manifestFile).isSymbolicLink()) throw new Error('manifest must not be a symlink')
-    manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'))
-  } catch (error) {
-    errors.push(`${component}/case.json: ${error.code === 'ENOENT' ? 'missing component manifest' : error.message}`)
-    return null
+  let files = []
+  try { files = evidenceFiles(dir) }
+  catch (error) { errors.push(`${component}: ${error.message}`) }
+  const folders = caseFolders(dir, errors, component)
+  const { specsByFolder, unitFiles } = classifyEvidence(component, files, errors, folders)
+  const ct = []
+  for (const folder of folders) {
+    const entry = readCaseFolder(folder, specsByFolder.get(folder) || [], { component, dir, errors })
+    if (entry) ct.push(entry)
   }
-  if (!object(manifest)) {
-    errors.push(`${component}/case.json: manifest must be an object`)
-    return null
-  }
-  exactKeys(manifest, MANIFEST_KEYS, `${component}/case.json`, errors)
-  if (manifest.schemaVersion !== 1) errors.push(`${component}/case.json: schemaVersion must be 1`)
-  if (manifest.component !== component) errors.push(`${component}/case.json: component must match its directory`)
-  if (!SCOPES.includes(manifest.scope)) errors.push(`${component}/case.json: scope must be public, support, or internal`)
-  if (exported.has(component) && manifest.scope !== 'public') errors.push(`${component}/case.json: component is publicly exported and must have public scope`)
-  if (!exported.has(component) && manifest.scope === 'public') errors.push(`${component}/case.json: public scope has no component export in src/index.ts`)
-  if (!nonempty(manifest.description)) errors.push(`${component}/case.json: description must explain its tested surface or internal purpose`)
-  if (!Array.isArray(manifest.cases)) {
-    errors.push(`${component}/case.json: cases must be an array`)
-    return null
-  }
-  if (manifest.cases.length === 0 && manifest.scope !== 'internal') errors.push(`${component}/case.json: public/support components must have executable cases`)
-  const seenEvidence = new Map()
-  const cases = manifest.cases.map(entry => validateCase(entry, { component, dir, inventory, errors, seenIds, seenEvidence })).filter(Boolean)
-  for (const [file, declarations] of inventory) {
-    for (const declaration of declarations) {
-      if (!seenEvidence.has(`${file}\0${declaration.title}`)) errors.push(`${component}/${file}: unindexed declaration ${declaration.title}`)
+  const unit = []
+  for (const file of unitFiles) {
+    const problems = []
+    for (const declaration of discover(dir, file, problems) || []) {
+      unit.push({ ...declaration, id: `${component}/${file}:${declaration.line}`, name: declaration.title, kind: 'unit', file, component, absoluteFile: path.join(dir, file) })
     }
+    errors.push(...problems)
   }
-  return { ...manifest, cases }
+  const cases = [...ct.sort((a, b) => a.id.localeCompare(b.id)), ...unit.sort((a, b) => a.id.localeCompare(b.id, 'en', { numeric: true }))]
+  if (exported.has(component) && cases.length === 0) errors.push(`${component}: exported component has no CT cases or unit declarations`)
+  return { component, cases }
 }
 
 export function loadCatalog(libDir) {
@@ -141,10 +163,17 @@ export function loadCatalog(libDir) {
     if (!names.includes(name)) errors.push(`src/index.ts: exported component directory ${name} is missing`)
   }
   if (names.length === 0) errors.push('component catalog has no component directories')
-  const seenIds = new Map()
-  const components = names.map(component => validateComponent(component, { componentsDir, errors, exported, seenIds })).filter(Boolean)
+  const components = names.map(component => readComponent(component, { componentsDir, errors, exported }))
+  const cases = components.flatMap(component => component.cases)
+  const seen = new Map()
+  for (const entry of cases) {
+    if (seen.has(entry.id)) errors.push(`${entry.component}: duplicate catalog case id ${entry.id} (also ${seen.get(entry.id)})`)
+    seen.set(entry.id, entry.component)
+  }
   if (errors.length) throw new Error(`Component case conformity failed (${errors.length}):\n${errors.map(error => `- ${error}`).join('\n')}`)
-  return { components, cases: components.flatMap(component => component.cases).sort((a, b) => a.id.localeCompare(b.id)) }
+  const ct = cases.filter(entry => entry.kind === 'ct').sort((a, b) => a.id.localeCompare(b.id))
+  const unit = cases.filter(entry => entry.kind === 'unit').sort((a, b) => a.id.localeCompare(b.id, 'en', { numeric: true }))
+  return { components, cases: [...ct, ...unit] }
 }
 
 export function selectCase(catalog, id, component = '') {

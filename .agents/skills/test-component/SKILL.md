@@ -22,9 +22,9 @@ If you modified `packages/reference-core` (sync, packager, runtime, bundler plug
 | Kind | Location | Runner |
 | --- | --- | --- |
 | Unit | Colocated next to source: `src/components/<Component>/*.test.ts(x)` | Vitest |
-| Component E2E | `src/components/<Component>/__e2e__/<Component>.ct.spec.ts` | Playwright CT |
+| Component E2E | `src/components/<Component>/__e2e__/<ID>/<Component>.ct.spec.ts`, one case folder per `LIB-<COMPONENT>-<nnn>` | Playwright CT |
 | Stories (CT fixtures) | `src/components/<Component>/<Component>.story.tsx` | Mounted by CT |
-| Visual snapshots | `src/components/<Component>/__e2e__/__snapshots__/*.png` | Playwright `toHaveScreenshot` |
+| Visual snapshots | `src/components/<Component>/__e2e__/<ID>/__snapshots__/*.png` | Playwright `toHaveScreenshot` |
 
 Unit tests sit beside the code they cover. `__e2e__` is separate because those files are Playwright component tests against a real browser, not Vitest files.
 
@@ -32,18 +32,21 @@ Matrix contract tests in `matrix/*/tests/e2e` are a different layer (cross-bundl
 
 ## Case catalog and conformity
 
-Each component directory has a `case.json` indexing every executable unit and CT
-declaration with a stable `LIB-COMPONENT-NNN` ID. `pnpm agentct` validates the full
-catalog before verification; missing manifests, stale or unindexed declarations,
-duplicate IDs/evidence, disabled tests, and empty public/support coverage fail.
-The manifest format and authoring rules live in
+Every CT case is a folder `src/components/<Component>/__e2e__/<ID>/` named by its
+raw ID (`LIB-<COMPONENT>-<nnn>`), holding `case.json` (`{"id", "name"}`), a
+`README.md` whose first line is `# <ID> — <name>`, and one `*.ct.spec.ts` with one
+declaration (AGENTS.md section 7). Unit declarations need no index: every
+`*.test.ts(x)` outside `__e2e__/` is discovered, and each declaration is labelled
+`<Component>/<file>:<line>`. `pnpm agentct` validates the full catalog before
+verification; a broken case folder, misplaced evidence, disabled tests, and an
+exported component with no evidence fail. The folder rules live in
 `packages/reference-lib/testing/README.md`.
 
 ```bash
 pnpm agentct check                    # Conformity only; no execution proof
 pnpm agentct list                     # Registered cases; no daemon needed
 pnpm agentct search "focus"
-pnpm agentct run LIB-POPOVER-001       # Precise registered unit/CT declaration
+pnpm agentct run LIB-POPOVER-001       # One CT case folder
 ```
 
 Static `it.each` tables are registered once using their unexpanded declaration
@@ -288,12 +291,12 @@ export const ClickToOpen = () => (
 )
 ```
 
-### 3. E2E spec (`src/components/<Component>/__e2e__/<Component>.ct.spec.ts`)
+### 3. E2E case (`src/components/<Component>/__e2e__/<ID>/<Component>.ct.spec.ts`)
 
-Import `test`, `expect`, and `snap` from the CT fixture. Mount stories as `components/<Component>/<Component>/<StoryExportName>`. Snapshot settled frames; let the video cover motion. Leave `snap()` in the spec even for `--react 17/18` — it no-ops off 19.
+Create the case folder with `case.json` and `README.md` (see the catalog section), then one spec holding one declaration. Import `test`, `expect`, and `snap` from the CT fixture. Mount stories as `components/<Component>/<Component>/<StoryExportName>`. Snapshot settled frames; let the video cover motion. Leave `snap()` in the spec even for `--react 17/18` — it no-ops off 19.
 
 ```ts
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap } from '../../../../../playwright/ct'
 
 test('popover opens on trigger click', async ({ mount, page }) => {
   const component = await mount('components/Popover/Popover/ClickToOpen')

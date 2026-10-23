@@ -32,6 +32,12 @@ describe('Widget Ω', () => {
   it.each(['first', 'second'] as const)('accepts %s', value => { expect(value).toBeTruthy() })
 })`
 
+const CT_SOURCE = `import { test, expect } from '@playwright/experimental-ct-react'
+test('Widget opens in the browser', async () => { expect(true).toBe(true) })`
+
+const UNIT_EACH = 'Widget/Widget.test.ts:5'
+
+// A §7 component: Widget.test.ts holds unit evidence and __e2e__/LIB-WIDGET-001/ is one CT case folder.
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ref-component-catalog-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
@@ -40,16 +46,17 @@ function fixture(t) {
   fs.writeFileSync(path.join(root, 'src/index.ts'), "export * from './components/Widget/index'\n")
   const file = path.join(dir, 'Widget.test.ts')
   fs.writeFileSync(file, SOURCE)
-  const manifest = {
-    schemaVersion: 1, component: 'Widget', scope: 'public', description: 'Native widget and row contracts.',
-    cases: discoverTests(file).map((entry, index) => ({
-      id: `LIB-WIDGET-${String(index + 1).padStart(3, '0')}`, name: entry.title,
-      kind: entry.kind, file: 'Widget.test.ts', title: entry.title,
-    })),
+  const writeCase = (id, { name = 'Widget opens in the browser', caseJson = { id, name }, readme = `# ${id} — ${name}\n\n${name}.\n`, spec = CT_SOURCE, specName = 'Widget.ct.spec.ts' } = {}) => {
+    const caseDir = path.join(dir, '__e2e__', id)
+    fs.mkdirSync(caseDir, { recursive: true })
+    if (caseJson !== null) fs.writeFileSync(path.join(caseDir, 'case.json'), typeof caseJson === 'string' ? caseJson : JSON.stringify(caseJson))
+    if (readme !== null) fs.writeFileSync(path.join(caseDir, 'README.md'), readme)
+    if (spec !== null) fs.writeFileSync(path.join(caseDir, specName), spec)
+    return caseDir
   }
-  const save = () => fs.writeFileSync(path.join(dir, 'case.json'), JSON.stringify(manifest))
-  save()
-  return { root, dir, file, manifest, save }
+  const caseDir = writeCase('LIB-WIDGET-001')
+  fs.writeFileSync(path.join(dir, '__e2e__/README.md'), '# Widget CT cases\n')
+  return { root, dir, file, caseDir, writeCase }
 }
 
 test('discovery preserves UTF-8 line positions across repeated parses and static each rows', () => {
@@ -91,65 +98,147 @@ test('discovery rejects skipped, focused, TODO, empty each, duplicate, and dynam
   ]) assert.throws(() => discoverSource(source))
 })
 
-test('catalog indexes every declaration with exact selection and search', t => {
+test('catalog reads per-ID case folders and discovers unit declarations', t => {
   const { root } = fixture(t)
   const catalog = loadCatalog(root)
   assert.equal(catalog.components.length, 1)
-  assert.equal(catalog.cases.length, 2)
-  assert.equal(selectCase(catalog, 'LIB-WIDGET-002').rows, 2)
+  assert.deepEqual(catalog.cases.map(entry => entry.id), ['LIB-WIDGET-001', 'Widget/Widget.test.ts:4', UNIT_EACH])
+  const ct = selectCase(catalog, 'LIB-WIDGET-001')
+  assert.equal(ct.kind, 'ct')
+  assert.equal(ct.file, '__e2e__/LIB-WIDGET-001/Widget.ct.spec.ts')
+  assert.equal(ct.title, 'Widget opens in the browser')
+  assert.equal(ct.name, 'Widget opens in the browser')
+  assert.equal(ct.component, 'Widget')
+  const unit = selectCase(catalog, UNIT_EACH)
+  assert.equal(unit.kind, 'unit')
+  assert.equal(unit.name, 'Widget Ω accepts %s')
+  assert.equal(unit.rows, 2)
   assert.equal(searchCases(catalog, 'native').length, 1)
   assert.throws(() => selectCase(catalog, 'LIB-NOPE-001'), /Unknown catalog case/)
 })
 
-test('catalog fails on missing manifests, missing public directories, and empty public evidence', t => {
-  const { root, dir, manifest, save } = fixture(t)
-  fs.unlinkSync(path.join(dir, 'case.json'))
-  assert.throws(() => loadCatalog(root), /missing component manifest/)
-  manifest.cases = []
-  save()
-  assert.throws(() => loadCatalog(root), /public\/support components must have executable cases/)
-  fs.writeFileSync(path.join(root, 'src/index.ts'), "export * from './components/Absent/index'")
-  assert.throws(() => loadCatalog(root), /exported component directory Absent is missing/)
+test('catalog ignores a root case.json and loose non-evidence files at the __e2e__ root', t => {
+  const { root, dir } = fixture(t)
+  fs.writeFileSync(path.join(dir, 'case.json'), '{ not json')
+  fs.writeFileSync(path.join(dir, '__e2e__/env.config.ts'), 'export default {}\n')
+  assert.equal(loadCatalog(root).cases.length, 3)
 })
 
-test('catalog rejects unknown fields, wrong scope, duplicate IDs, and repeated evidence', t => {
-  const { root, manifest, save } = fixture(t)
-  manifest.scope = 'support'
-  manifest.cases[1] = { ...manifest.cases[0], extra: true }
-  save()
+function rejects(root, pattern) {
   assert.throws(() => loadCatalog(root), error => {
-    for (const message of ['must have public scope', 'unknown field extra', 'duplicate global case id', 'already indexed']) {
-      assert.match(error.message, new RegExp(message))
-    }
+    assert.match(error.message, /^Component case conformity failed \(\d+\):/)
+    assert.match(error.message, pattern)
     return true
   })
+}
+
+test('catalog rejects a case.json whose id differs from its folder', t => {
+  const { root, writeCase } = fixture(t)
+  writeCase('LIB-WIDGET-001', { caseJson: { id: 'LIB-WIDGET-002', name: 'Widget opens in the browser' } })
+  rejects(root, /Widget\/__e2e__\/LIB-WIDGET-001: case\.json id is "LIB-WIDGET-002"; it must equal folder name "LIB-WIDGET-001"/)
 })
 
-test('catalog rejects stale titles, unindexed declarations, wrong kinds, and escaped evidence paths', t => {
-  const { root, manifest, save } = fixture(t)
-  manifest.cases[0].title = 'old title'
-  manifest.cases[1].kind = 'ct'
-  save()
-  assert.throws(() => loadCatalog(root), /stale title/)
-  assert.throws(() => loadCatalog(root), /unindexed declaration/)
-  assert.throws(() => loadCatalog(root), /kind does not match/)
-  manifest.cases[0].file = '../elsewhere.test.ts'
-  save()
-  assert.throws(() => loadCatalog(root), /contained POSIX path/)
+test('catalog rejects a case.json with keys other than id and name', t => {
+  const { root, writeCase } = fixture(t)
+  writeCase('LIB-WIDGET-001', { caseJson: { id: 'LIB-WIDGET-001', name: 'Widget opens in the browser', extra: true } })
+  rejects(root, /LIB-WIDGET-001: case\.json has unknown field "extra"/)
 })
 
-test('catalog detects new evidence files and symlinked evidence rather than silently ignoring them', t => {
+test('catalog rejects a missing case.json', t => {
+  const { root, caseDir } = fixture(t)
+  fs.unlinkSync(path.join(caseDir, 'case.json'))
+  rejects(root, /LIB-WIDGET-001: no case\.json/)
+})
+
+test('catalog rejects a case folder without a README', t => {
+  const { root, caseDir } = fixture(t)
+  fs.unlinkSync(path.join(caseDir, 'README.md'))
+  rejects(root, /LIB-WIDGET-001: no README\.md; its first line must be "# LIB-WIDGET-001 — Widget opens in the browser"/)
+})
+
+test('catalog rejects a README heading that names another ID', t => {
+  const { root, writeCase } = fixture(t)
+  writeCase('LIB-WIDGET-001', { readme: '# LIB-WIDGET-009 — Widget opens in the browser\n' })
+  rejects(root, /LIB-WIDGET-001: README\.md heading names "LIB-WIDGET-009"; it must name folder "LIB-WIDGET-001"/)
+})
+
+test('catalog rejects a README claim that differs from the case.json name', t => {
+  const { root, writeCase } = fixture(t)
+  writeCase('LIB-WIDGET-001', { readme: '# LIB-WIDGET-001 — Widget opens somewhere else\n' })
+  rejects(root, /README\.md heading claim "Widget opens somewhere else" must equal case\.json name "Widget opens in the browser"/)
+})
+
+test('catalog rejects a case spec with two declarations', t => {
+  const { root, writeCase } = fixture(t)
+  writeCase('LIB-WIDGET-001', { spec: `${CT_SOURCE}\ntest('Widget closes in the browser', async () => {})` })
+  rejects(root, /LIB-WIDGET-001: Widget\.ct\.spec\.ts must hold exactly one declaration \(found 2\)/)
+})
+
+test('catalog rejects a case folder with two specs', t => {
+  const { root, writeCase } = fixture(t)
+  writeCase('LIB-WIDGET-001', { specName: 'Second.ct.spec.ts', spec: CT_SOURCE.replace('opens', 'reopens') })
+  rejects(root, /LIB-WIDGET-001: a case folder holds exactly one \*\.ct\.spec\.ts evidence file \(found 2\)/)
+})
+
+test('catalog rejects a folder under __e2e__ that is not named by a case ID', t => {
+  const { root, writeCase } = fixture(t)
+  writeCase('opens')
+  writeCase('LIB-OTHER-001')
+  rejects(root, /Widget\/__e2e__\/opens: folder is not named by a raw case ID \(LIB-WIDGET-<nnn>\)/)
+  rejects(root, /Widget\/__e2e__\/LIB-OTHER-001: folder is not named by a raw case ID/)
+})
+
+test('catalog rejects a CT spec outside a case folder', t => {
+  const { root, dir } = fixture(t)
+  fs.writeFileSync(path.join(dir, '__e2e__/Loose.ct.spec.ts'), CT_SOURCE)
+  fs.writeFileSync(path.join(dir, 'Root.ct.spec.ts'), CT_SOURCE)
+  rejects(root, /Widget\/__e2e__\/Loose\.ct\.spec\.ts: CT specs must live in __e2e__\/<ID>\//)
+  rejects(root, /Widget\/Root\.ct\.spec\.ts: CT specs must live in __e2e__\/<ID>\//)
+})
+
+test('catalog rejects a unit test file under __e2e__', t => {
+  const { root, dir, caseDir } = fixture(t)
+  fs.writeFileSync(path.join(caseDir, 'stray.test.ts'), `it('stray', () => {})`)
+  fs.writeFileSync(path.join(dir, '__e2e__/loose.test.ts'), `it('loose', () => {})`)
+  rejects(root, /Widget\/__e2e__\/LIB-WIDGET-001\/stray\.test\.ts: unit test files cannot live under __e2e__/)
+  rejects(root, /Widget\/__e2e__\/loose\.test\.ts: unit test files cannot live under __e2e__/)
+})
+
+test('catalog rejects an exported component with no evidence and a missing exported directory', t => {
+  const { root, dir, file } = fixture(t)
+  fs.unlinkSync(file)
+  fs.rmSync(path.join(dir, '__e2e__'), { recursive: true })
+  rejects(root, /Widget: exported component has no CT cases or unit declarations/)
+  fs.writeFileSync(path.join(root, 'src/index.ts'), "export * from './components/Absent/index'")
+  rejects(root, /exported component directory Absent is missing/)
+})
+
+test('catalog keeps an unexported component with no evidence as an empty entry', t => {
+  const { root } = fixture(t)
+  fs.mkdirSync(path.join(root, 'src/components/Internal'))
+  const catalog = loadCatalog(root)
+  assert.deepEqual(catalog.components.map(entry => [entry.component, entry.cases.length]), [['Internal', 0], ['Widget', 3]])
+})
+
+test('catalog collects every broken folder before throwing once', t => {
+  const { root, writeCase, caseDir } = fixture(t)
+  fs.unlinkSync(path.join(caseDir, 'README.md'))
+  writeCase('LIB-WIDGET-002', { caseJson: { id: 'LIB-WIDGET-003', name: 'Widget opens in the browser' } })
+  rejects(root, /conformity failed \(2\)/)
+})
+
+test('catalog discovers new unit files and rejects symlinked evidence', t => {
   const { root, dir } = fixture(t)
   fs.writeFileSync(path.join(dir, 'new.test.ts'), `it('new contract', () => { expect(true).toBe(true) })`)
-  assert.throws(() => loadCatalog(root), /unindexed declaration new contract/)
+  assert.equal(selectCase(loadCatalog(root), 'Widget/new.test.ts:1').name, 'new contract')
   fs.unlinkSync(path.join(dir, 'new.test.ts'))
   fs.symlinkSync(path.join(dir, 'Widget.test.ts'), path.join(dir, 'alias.test.ts'))
-  assert.throws(() => loadCatalog(root), /symlinks cannot be case evidence/)
+  rejects(root, /symlinks cannot be case evidence/)
 })
 
 test('execution proof rejects missing, skipped, and partial rows even when the process exits zero', t => {
   const { root } = fixture(t)
-  const entry = selectCase(loadCatalog(root), 'LIB-WIDGET-002')
+  const entry = selectCase(loadCatalog(root), UNIT_EACH)
   const row = title => ({ file: entry.absoluteFile, fullTitle: title, status: 'passed' })
   const passing = [row('Widget Ω accepts first'), row('Widget Ω accepts second')]
   assert.deepEqual(evidenceErrors(passing, [entry]), [])
@@ -780,7 +869,7 @@ test('unrelated objects, destructuring, conditionals, and locally shadowed frame
   assert.equal(shadowed[0].title, 'real')
 })
 
-test('conformity rejects an unsupported evidence source even when its manifest indexes only the normal declaration', t => {
+test('conformity rejects an unsupported evidence source even beside a well-formed declaration', t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ref-component-catalog-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const dir = path.join(root, 'src/components/Widget')
@@ -793,9 +882,5 @@ describe('Widget', () => {
   rows.push('b')
   it.each(rows)('accepts %s', () => {})
 })`)
-  fs.writeFileSync(path.join(dir, 'case.json'), JSON.stringify({
-    schemaVersion: 1, component: 'Widget', scope: 'public', description: 'Native widget surface.',
-    cases: [{ id: 'LIB-WIDGET-001', name: 'keeps', kind: 'unit', file: 'Widget.test.ts', title: 'Widget keeps the native contract' }],
-  }))
   assert.throws(() => loadCatalog(root), /immutable|mutat|escape/i)
 })

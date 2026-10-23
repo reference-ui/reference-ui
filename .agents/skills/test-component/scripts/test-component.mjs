@@ -1316,7 +1316,7 @@ try {
   catalog = loadCatalog(libDir)
 
   if (catalogCommand === 'check') {
-    console.log(`[agentct] Case conformity passed: ${catalog.components.length} components, ${catalog.cases.length} cases, ${catalog.cases.reduce((count, entry) => count + entry.rows, 0)} executable rows.`)
+    console.log(`[agentct] Case conformity passed: ${catalog.components.length} components, ${catalog.cases.filter(entry => entry.kind === 'ct').length} cases, ${catalog.cases.filter(entry => entry.kind === 'unit').length} unit declarations, ${catalog.cases.reduce((count, entry) => count + entry.rows, 0)} executable rows.`)
     process.exit(0)
   }
 

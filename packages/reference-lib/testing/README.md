@@ -1,9 +1,10 @@
 # Component cases
 
-Every component directory has a colocated manifest. The catalog
-indexes executable unit and browser declarations, not the component's design
-notes. `pnpm agentct check` validates the entire catalog without starting a
-browser; a conforming index does not mean its tests have passed.
+Each CT case is a folder named by its raw ID; unit declarations come from test files.
+The catalog indexes executable unit and browser
+declarations, not the component's design notes. `pnpm agentct check` validates the
+entire catalog without starting a browser; a conforming index does not mean its
+tests have passed.
 
 ```bash
 pnpm agentct check
@@ -17,57 +18,51 @@ pnpm agentct Button
 pnpm agentct Button --e2e --react all
 ```
 
-Each manifest has this shape:
+A CT case follows the repository case convention (AGENTS.md section 7):
 
-```json
-{
-  "schemaVersion": 1,
-  "component": "Button",
-  "scope": "support",
-  "description": "Browser evidence for the generated native button primitive.",
-  "cases": [
-    {
-      "id": "LIB-BUTTON-001",
-      "name": "A readable name for the behavior being asserted",
-      "kind": "ct",
-      "file": "<component-relative spec path>",
-      "title": "Exact suite title Exact test declaration title"
-    }
-  ]
-}
+```
+src/components/Button/__e2e__/LIB-BUTTON-001/
+  case.json                 {"id": "LIB-BUTTON-001", "name": "<one-line claim>"}
+  README.md                 first line: # LIB-BUTTON-001 — <one-line claim>
+  Button.ct.spec.ts         exactly one declaration (one it.each counts as one)
+  __snapshots__/            optional baselines for this case
 ```
 
-The example title is illustrative. A real entry must match its full declaration
-title, with outer and inner suite titles joined by one space. Evidence paths are
-relative to that component, use forward slashes, and cannot escape through `..`
-or symlinks. `kind` is `unit` for `*.test.ts(x)` and `ct` for
-`__e2e__/*.ct.spec.ts`. IDs are globally unique `LIB-COMPONENT-NNN` values;
-retain an existing ID when its test moves or its title changes, and assign new
-IDs to new behavior without renumbering.
+Every folder directly under `<Component>/__e2e__/` is a case folder. Its name is
+`LIB-<COMPONENT>-<nnn>`, with the component directory name uppercased. `case.json`
+holds exactly `id` and `name`; `id` equals the folder name and `name` is a
+non-empty claim. The README heading names the same ID, and its claim equals
+`name`. The folder holds one `*.ct.spec.ts`, and that spec holds one declaration.
+Files at the `__e2e__/` root itself, such as its README or a config, are not cases.
+Keep an existing ID when its test changes; give new behavior a new ID without
+renumbering.
 
-`list`, `search`, and their `--search` alias report stable `LIB-COMPONENT-NNN`
-records. Add `--json` for one parseable JSON value on stdout with no human
+Unit evidence needs no index. Every `*.test.ts(x)` outside `__e2e__/` is
+discovered, and each declaration becomes a catalog entry labelled
+`<Component>/<file>:<line>` and named by its full declaration title, with outer
+and inner suite titles joined by one space. A component-root `case.json` is not
+read.
+
+Conformity collects every problem and fails once, one line per problem, as
+`<Component>/__e2e__/<folder>: <problem>`. It fails on a broken case folder, a
+`*.test.ts(x)` under `__e2e__/`, a `*.ct.spec.ts` outside `__e2e__/<ID>/`,
+symlinked component folders or evidence, a duplicate ID, and an exported component
+with no CT case or unit declaration. Unexported components with no evidence stay
+in the catalog as empty entries, and running one fails explicitly.
+
+`list`, `search`, and their `--search` alias report CT case IDs and unit labels. Add `--json` for one parseable JSON value on stdout with no human
 trailer, invoked as `pnpm --silent agentct ... --json`: default `pnpm` prints
 package-script banners on stdout, so the silent form is what keeps the value
 machine-readable. A search with no matches returns an empty list and a nonzero
 exit. Listing and searching are catalog-only: they never start the daemon or a
 browser.
 
-`public` directories are reexported by the package index. `support` directories
-exercise primitives or shared implementation outside their own directory.
-`internal` directories are Book fixtures or development surfaces; the description
-explains that purpose. Only internal directories may have no cases. They remain
-visible to conformity, and running one without evidence fails explicitly.
-
-Every runnable declaration must appear exactly once. Adding, deleting, or
-renaming a test requires updating its manifest in the same change. Missing
-manifests, stale titles, duplicate entries, wrong kinds, unknown fields, disabled
-tests, and focused suites fail conformity. Tests use static titles and callbacks;
+Disabled tests and focused suites fail conformity. Tests use static titles and callbacks;
 dynamic test-generation loops require rewriting as explicit cases or supported
 `it.each` declarations.
 
-For `it.each`, register the declaration's unexpanded title (`%s` or `$name`
-stays in the title) once. The table must be a nonempty static array, inline or
+For `it.each`, the catalog keeps the declaration's unexpanded title (`%s` or
+`$name` stays in the title) as one entry. The table must be a nonempty static array, inline or
 in a local variable. Selecting that case runs every row, and execution proof
 requires the complete expected count to pass. Parameterized suites and
 spread/dynamic tables fail rather than silently dropping evidence. A named table
