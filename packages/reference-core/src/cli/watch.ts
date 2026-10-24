@@ -116,7 +116,7 @@ function trackStalls(say: (line: string) => void): { shutdownStalled: () => bool
 // here and the watch stays up; the caller then prints no success line for that
 // sync. Otherwise the caller carries the landing's count (human) or diagnostics
 // (JSON) into its own line. Resolves undefined when no landing has ever run.
-async function drainFoldedLanding(dir: string, say: (line: string) => void): Promise<ReferenceBuildResult | undefined> {
+export async function drainFoldedLanding(dir: string, say: (line: string) => void): Promise<ReferenceBuildResult | undefined> {
   const { flushReferenceBuild } = await import('../reference/bridge/init.ts')
   const { flushTastyLanding } = await import('../sync/tasty-phase.ts')
   const cold = await flushReferenceBuild(dir)

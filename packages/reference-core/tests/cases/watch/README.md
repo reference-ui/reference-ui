@@ -36,9 +36,10 @@ window (about 10 s); the bound covers config evaluation only — a
 fragment or tasty pass that never settles is bounded by LC-58's stuck
 line and SIGINT exit alone.
 
-Thirty-two cases carry the group (CORE-WATCH-01 to 32); CORE-WATCH-33 and
+Thirty-three cases carry the group (CORE-WATCH-01 to 33); CORE-WATCH-34 and
 up are unassigned. CORE-WATCH-32 bounds the heap a long watch keeps: forty
-resyncs of an unchanged project must retain under 3 MB.
+resyncs of an unchanged project must retain under 3 MB. CORE-WATCH-33 pins a
+tasty failure that settles before the watch drain: reported once, watch runs on.
 
 No webpack dual-consumption leg: Core has no webpack target.
 
