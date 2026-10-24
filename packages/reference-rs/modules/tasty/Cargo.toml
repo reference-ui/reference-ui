@@ -22,3 +22,7 @@ chrono.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
+
+[[test]]
+name = "gate_once"
+path = "tests/rust/gate_once.rs"

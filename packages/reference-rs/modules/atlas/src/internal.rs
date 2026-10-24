@@ -1,16 +1,16 @@
-//! Internal per-module records shared by the Atlas parse, resolve, and usage phases: imports, components, types, and re-exports.
-//! Parsing fills one `ModuleInfo` per file; resolution and call-site aggregation read those records back to build the inventory.
+//! Internal per-module records the Atlas parse, resolve, and usage phases share.
+//! They hold imports, components, types, re-exports, and the JSX occurrences read from each local file.
+//! Parsing fills one `ModuleInfo` per file, with the JSX occurrences and scope names of the app's own files read from the same parse; resolution and call-site aggregation read those records back to build the inventory.
 //! Nothing here crosses the wire — the public `Component` payload is assembled from these records in the output stage.
 
 use crate::model::{Component, ComponentInterface, ComponentProp, Usage};
 use oxc_ast::ast::Expression;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
 pub struct ModuleInfo {
     pub path: PathBuf,
-    pub content: String,
     pub display_source: String,
     pub imports: HashMap<String, ImportBinding>,
     pub namespace_imports: HashMap<String, String>,
@@ -20,6 +20,10 @@ pub struct ModuleInfo {
     pub types: HashMap<String, TypeDef>,
     pub named_type_reexports: HashMap<String, ReExport>,
     pub star_reexports: Vec<String>,
+    /// Every JSX element of the file in source pre-order. Filled for the app's own modules only; a package module has none.
+    pub jsx_occurrences: Vec<JsxOccurrence>,
+    /// Names the file binds at module scope. Filled for the app's own modules only.
+    pub scope_declarations: HashSet<String>,
 }
 
 #[derive(Clone, Debug)]

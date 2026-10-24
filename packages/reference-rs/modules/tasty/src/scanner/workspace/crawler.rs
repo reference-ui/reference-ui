@@ -1,14 +1,17 @@
 //! Breadth-first import graph crawler that builds the reachable file set.
+//! Reads and screens each file once, parses it once for its specifiers, and keeps the text with the file it discovers.
 //! Holds pending work and discovered files while enforcing the scan boundary.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fs;
 
+use shared::parse::ScreenedSource;
+
 use crate::constants::libraries::USER_LIBRARY_NAME;
 use crate::diagnostics::scan_failed;
 
 use super::policy::{resolve_import_for_discovery, DiscoveryContext};
-use crate::scanner::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
+use crate::scanner::imports::{module_specifiers_of, source_type_of};
 use crate::scanner::model::{DiscoveredFile, Discovery, ResolvedModule};
 use crate::scanner::packages::ImportResolver;
 use crate::scanner::paths::module_specifier_for_file_id;
@@ -16,143 +19,118 @@ use crate::scanner::paths::module_specifier_for_file_id;
 pub(super) struct Crawler<'a> {
     resolver: &'a ImportResolver,
     user_file_ids: BTreeSet<String>,
-    discovered: BTreeMap<String, DiscoveredFile>,
-    pending: VecDeque<String>,
+    /// Every file id enqueued so far, crawled or not. Borrowed by the import policy for each file.
+    known_file_ids: BTreeSet<String>,
+    pending: VecDeque<ResolvedModule>,
+    /// Files already crawled, each with the text read and screened for it.
+    crawled: BTreeMap<String, DiscoveredFile>,
     bridged_libraries: BTreeSet<String>,
 }
 
 impl<'a> Crawler<'a> {
     pub(super) fn new(resolver: &'a ImportResolver, entry_points: Vec<String>) -> Self {
-        let user_file_ids = entry_points.iter().cloned().collect();
-        let mut discovered = BTreeMap::new();
-        let mut pending = VecDeque::new();
-
-        for file_id in entry_points {
-            Self::enqueue_entry_point(&mut discovered, &mut pending, file_id);
-        }
+        let user_file_ids: BTreeSet<String> = entry_points.iter().cloned().collect();
+        let known_file_ids = user_file_ids.clone();
+        let mut seen = BTreeSet::new();
+        let pending = entry_points
+            .iter()
+            .filter(|file_id| seen.insert(file_id.as_str()))
+            .map(|file_id| Self::user_module(file_id))
+            .collect();
 
         Self {
             resolver,
             user_file_ids,
-            discovered,
+            known_file_ids,
             pending,
+            crawled: BTreeMap::new(),
             bridged_libraries: BTreeSet::new(),
         }
     }
 
     pub(super) fn run(mut self) -> Result<Discovery, String> {
-        while let Some(file_id) = self.pending.pop_front() {
-            self.crawl_file(&file_id)?;
+        while let Some(module) = self.pending.pop_front() {
+            self.crawl_file(module)?;
         }
 
         Ok(Discovery {
-            files: self.discovered,
+            files: self.crawled,
             bridged_libraries: self.bridged_libraries,
         })
     }
 
-    fn enqueue_entry_point(
-        discovered: &mut BTreeMap<String, DiscoveredFile>,
-        pending: &mut VecDeque<String>,
-        file_id: String,
-    ) {
-        discovered.insert(file_id.clone(), Self::discovered_user_file(&file_id));
-        pending.push_back(file_id);
-    }
-
-    fn crawl_file(&mut self, file_id: &str) -> Result<(), String> {
-        let source = self.read_source(file_id)?;
-        let known_file_ids = self.known_file_ids();
-        let discovered = self
-            .discovered
-            .get(file_id)
-            .expect("crawler should only visit discovered files");
-        let is_user_file = self.is_user_file(file_id);
-        let reexport_specifiers = self.reexports_of(is_user_file, file_id, &source);
+    fn crawl_file(&mut self, module: ResolvedModule) -> Result<(), String> {
+        let source = self.read_source(&module.file_id)?;
+        let specifiers = module_specifiers_of(&source);
+        let is_user_file = self.user_file_ids.contains(&module.file_id);
 
         let ctx = DiscoveryContext {
             resolver: self.resolver,
-            file_id,
+            file_id: &module.file_id,
             is_user_file,
-            current_library: &discovered.library,
-            external_depth: discovered.external_depth,
-            known_file_ids: &known_file_ids,
+            current_library: &module.library,
+            external_depth: module.external_depth,
+            known_file_ids: &self.known_file_ids,
             user_file_ids: &self.user_file_ids,
-            reexport_specifiers: &reexport_specifiers,
+            reexport_specifiers: &specifiers.reexports,
         };
+        let followed = Self::resolve_imports(&ctx, &specifiers.all);
 
-        for (resolved, bridged) in self.resolve_imports(&ctx, &source) {
+        for (resolved, bridged) in followed {
             if bridged && resolved.library != USER_LIBRARY_NAME {
                 self.bridged_libraries.insert(resolved.library.clone());
             }
             self.enqueue(resolved);
         }
 
+        self.crawled.insert(
+            module.file_id,
+            DiscoveredFile {
+                module_specifier: module.module_specifier,
+                library: module.library,
+                source,
+            },
+        );
         Ok(())
     }
 
-    fn read_source(&self, file_id: &str) -> Result<String, String> {
+    /// Reads the file and runs the nesting gate on it once; the verdict travels with the text.
+    fn read_source(&self, file_id: &str) -> Result<ScreenedSource, String> {
         let absolute_path = self.resolver.root_dir().join(file_id);
-        fs::read_to_string(&absolute_path).map_err(|err| {
+        let text = fs::read_to_string(&absolute_path).map_err(|err| {
             scan_failed(format!(
                 "failed to read {}: {err}",
                 absolute_path.display()
             ))
-        })
-    }
-
-    fn known_file_ids(&self) -> BTreeSet<String> {
-        self.discovered.keys().cloned().collect()
-    }
-
-    fn is_user_file(&self, file_id: &str) -> bool {
-        self.user_file_ids.contains(file_id)
+        })?;
+        Ok(ScreenedSource::screen(text, source_type_of(file_id)))
     }
 
     fn resolve_imports(
-        &self,
         ctx: &DiscoveryContext<'_>,
-        source: &str,
+        specifiers: &[String],
     ) -> Vec<(ResolvedModule, bool)> {
-        extract_module_specifiers(ctx.file_id, source)
-            .into_iter()
+        specifiers
+            .iter()
             .filter_map(|source_module| {
-                let resolved = resolve_import_for_discovery(ctx, &source_module)?;
-                let bridged =
-                    ctx.is_user_file && ctx.reexport_specifiers.contains(&source_module);
+                let resolved = resolve_import_for_discovery(ctx, source_module)?;
+                let bridged = ctx.is_user_file && ctx.reexport_specifiers.contains(source_module);
                 Some((resolved, bridged))
             })
             .collect()
     }
 
-    fn reexports_of(&self, is_user_file: bool, file_id: &str, source: &str) -> BTreeSet<String> {
-        if !is_user_file {
-            return BTreeSet::new();
-        }
-
-        extract_reexport_module_specifiers(file_id, source)
-            .into_iter()
-            .collect()
-    }
-
     fn enqueue(&mut self, resolved: ResolvedModule) {
-        if self.discovered.contains_key(&resolved.file_id) {
+        if !self.known_file_ids.insert(resolved.file_id.clone()) {
             return;
         }
 
-        self.discovered.insert(
-            resolved.file_id.clone(),
-            DiscoveredFile {
-                module_specifier: resolved.module_specifier,
-                library: resolved.library,
-                external_depth: resolved.external_depth,
-            },
-        );
-        self.pending.push_back(resolved.file_id);
+        self.pending.push_back(resolved);
     }
 
-    fn discovered_user_file(file_id: &str) -> DiscoveredFile {
-        DiscoveredFile {
+    fn user_module(file_id: &str) -> ResolvedModule {
+        ResolvedModule {
+            file_id: file_id.to_string(),
             module_specifier: module_specifier_for_file_id(file_id),
             library: USER_LIBRARY_NAME.to_string(),
             external_depth: 0,

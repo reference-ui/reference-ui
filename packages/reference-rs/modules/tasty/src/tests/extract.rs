@@ -11,7 +11,9 @@ use std::rc::Rc;
 
 use crate::ast::extract_ast;
 use crate::model::TypeRef;
-use crate::scanner::{ImportResolver, ScannedFile, ScannedWorkspace};
+use shared::parse::ScreenedSource;
+
+use crate::scanner::{source_type_of, ImportResolver, ScannedFile, ScannedWorkspace};
 
 fn test_resolver() -> Rc<ImportResolver> {
     Rc::new(ImportResolver::new(Path::new(".")))
@@ -26,7 +28,7 @@ fn workspace(files: &[(&str, &str)]) -> ScannedWorkspace {
             file_id: (*file_id).to_string(),
             module_specifier: (*file_id).to_string(),
             library: "user".to_string(),
-            source: (*source).to_string(),
+            source: ScreenedSource::screen((*source).to_string(), source_type_of(file_id)),
         });
     }
     ScannedWorkspace {
@@ -55,7 +57,7 @@ fn single_library_file(
             file_id: file_id.to_string(),
             module_specifier: module_specifier.to_string(),
             library: library.to_string(),
-            source: source.to_string(),
+            source: ScreenedSource::screen(source.to_string(), source_type_of(file_id)),
         }],
         file_ids,
         bridged_libraries: BTreeSet::new(),

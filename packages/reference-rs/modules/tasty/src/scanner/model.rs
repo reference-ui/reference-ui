@@ -5,6 +5,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
+use shared::parse::ScreenedSource;
+
 use super::packages::ImportResolver;
 
 #[derive(Debug, Clone)]
@@ -12,7 +14,8 @@ pub(crate) struct ScannedFile {
     pub(crate) file_id: String,
     pub(crate) module_specifier: String,
     pub(crate) library: String,
-    pub(crate) source: String,
+    /// The text the crawl read, with the nesting gate's verdict from the one screening.
+    pub(crate) source: ScreenedSource,
 }
 
 #[derive(Debug, Clone)]
@@ -32,7 +35,8 @@ pub(crate) struct ScannedWorkspace {
 pub(super) struct DiscoveredFile {
     pub(super) module_specifier: String,
     pub(super) library: String,
-    pub(super) external_depth: usize,
+    /// Read and screened once by the crawl, and carried into the `ScannedFile`.
+    pub(super) source: ScreenedSource,
 }
 
 #[derive(Debug, Clone)]

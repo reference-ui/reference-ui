@@ -22,3 +22,7 @@ ts-rs.workspace = true
 dashmap.workspace = true
 chrono.workspace = true
 indexmap.workspace = true
+
+[[test]]
+name = "gate_once"
+path = "tests/rust/gate_once.rs"

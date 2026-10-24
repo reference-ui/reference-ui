@@ -260,7 +260,9 @@ mod tests {
     use crate::ast::extract_ast;
     use crate::ast::model::SymbolShell;
     use crate::model::TypeRef;
-    use crate::scanner::{ImportResolver, ScannedFile, ScannedWorkspace};
+    use shared::parse::ScreenedSource;
+
+    use crate::scanner::{source_type_of, ImportResolver, ScannedFile, ScannedWorkspace};
 
     /// `export type Combo = ...` with `holes` template holes, each a union of ten string literals.
     fn combo_source(holes: usize) -> String {
@@ -280,7 +282,7 @@ mod tests {
                 file_id: "combo.ts".to_string(),
                 module_specifier: "combo.ts".to_string(),
                 library: "user".to_string(),
-                source: source.to_string(),
+                source: ScreenedSource::screen(source.to_string(), source_type_of("combo.ts")),
             }],
             file_ids: BTreeSet::from(["combo.ts".to_string()]),
             bridged_libraries: BTreeSet::new(),

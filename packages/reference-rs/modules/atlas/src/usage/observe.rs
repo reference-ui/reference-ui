@@ -4,10 +4,8 @@
 //! spec's source, a namespace member of that source, or, when the file imports from the source
 //! and nothing else declares the name, as an unbound tag. Scoring follows the component policy:
 //! element usage over all observed counts, prop usage over the element's count, and usedWith
-//! among observed names only.
+//! among observed names only. It reads the occurrences and scope names the parser stored on each module.
 
-use super::scope::module_scope_declarations;
-use super::walker::find_jsx_occurrences;
 use crate::config::ObserveSpec;
 use crate::internal::{JsxOccurrence, ModuleInfo};
 use crate::model::{ComponentProp, ObservedElement};
@@ -91,7 +89,7 @@ struct FileScope<'a> {
     module: &'a ModuleInfo,
     /// Observed sources the file imports anything from.
     imported_sources: HashSet<&'a str>,
-    declared: HashSet<String>,
+    declared: &'a HashSet<String>,
 }
 
 impl<'a> FileScope<'a> {
@@ -114,7 +112,7 @@ impl<'a> FileScope<'a> {
         Some(Self {
             module,
             imported_sources,
-            declared: module_scope_declarations(module),
+            declared: &module.scope_declarations,
         })
     }
 }
@@ -131,14 +129,14 @@ impl ObservePass {
         };
 
         let mut seen_in_file = BTreeSet::new();
-        for occurrence in find_jsx_occurrences(module) {
+        for occurrence in &module.jsx_occurrences {
             let Some(key) = index.resolve(&occurrence.tag_name, &scope) else {
                 continue;
             };
             self.elements
                 .entry(key.clone())
                 .or_default()
-                .record(&occurrence);
+                .record(occurrence);
             seen_in_file.insert(key);
         }
         self.record_file(&seen_in_file);

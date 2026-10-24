@@ -1,29 +1,23 @@
-//! Finds every JSX element in one module and records it as a `JsxOccurrence` for the usage passes.
-//! It parses the module with oxc and walks the whole program with oxc's `Visit` trait, so JSX is found
+//! Finds every JSX element in a parsed program and records each as a `JsxOccurrence`.
+//! It takes the program the module parse already holds and walks all of it with oxc's `Visit` trait, so JSX is found
 //! wherever the grammar allows it: class bodies, `new` arguments, `throw`, optional calls, template
 //! literals, default parameters and any other expression position. Occurrences come out in source
-//! pre-order (a parent before its attributes and children), which the usage and observe passes rely on. A module the
-//! nesting gate refuses has no occurrences.
+//! pre-order (a parent before its attributes and children), which the usage and observe passes rely on. The parser stores the
+//! result on the module, so a module is parsed once for its declarations, occurrences and scope names.
 
 use super::literals::{jsx_attribute_from_item, jsx_child_is_meaningful, jsx_name_to_string, slice_span};
-use crate::internal::{JsxOccurrence, ModuleInfo};
-use oxc_allocator::Allocator;
-use oxc_ast::ast::JSXElement;
+use crate::internal::JsxOccurrence;
+use oxc_ast::ast::{JSXElement, Program};
 use oxc_ast_visit::{walk, Visit};
-use shared::parse::parse_bounded;
-use oxc_span::{GetSpan, SourceType};
+use oxc_span::GetSpan;
 
-pub(super) fn find_jsx_occurrences(module: &ModuleInfo) -> Vec<JsxOccurrence> {
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path(&module.path).unwrap_or_else(|_| SourceType::tsx());
-    let Ok(parsed) = parse_bounded(&allocator, &module.content, source_type) else {
-        return Vec::new();
-    };
+/// Every JSX element of `program` in source pre-order, with snippets sliced from `source`.
+pub(crate) fn find_jsx_occurrences(program: &Program<'_>, source: &str) -> Vec<JsxOccurrence> {
     let mut collector = OccurrenceCollector {
-        source: &module.content,
+        source,
         occurrences: Vec::new(),
     };
-    collector.visit_program(&parsed.program);
+    collector.visit_program(program);
     collector.occurrences
 }
 

@@ -12,7 +12,11 @@ use std::rc::Rc;
 
 use crate::ast::{extract_ast, resolve_ast};
 use crate::model::TypeRef;
-use crate::scanner::{scan_workspace, symbol_id, ImportResolver, ScannedFile, ScannedWorkspace};
+use shared::parse::ScreenedSource;
+
+use crate::scanner::{
+    scan_workspace, source_type_of, symbol_id, ImportResolver, ScannedFile, ScannedWorkspace,
+};
 
 use crate::tests::fixtures::TempDir;
 
@@ -29,7 +33,7 @@ fn workspace(files: &[(&str, &str)]) -> ScannedWorkspace {
             file_id: (*file_id).to_string(),
             module_specifier: (*file_id).to_string(),
             library: "user".to_string(),
-            source: (*source).to_string(),
+            source: ScreenedSource::screen((*source).to_string(), source_type_of(file_id)),
         });
     }
     ScannedWorkspace {

@@ -2,6 +2,7 @@
 //! Pins traversal layout, library boundaries, dangling-link tolerance, the failures for a missing or unreadable scan root
 //! and for an include glob with an unclosed class or braces past the limits, and resolver memoization over temp-dir fixtures.
 
+mod chain_scaling;
 mod dangling_links;
 mod discovery_layout;
 mod library_boundaries;

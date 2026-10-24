@@ -2,7 +2,8 @@
 //! It records what the file imports, declares and exports. Collection is split by statement family: imports here, components in `components`,
 //! export statements in `exports`, and type shapes in `types`, all sharing one per-file `FileCtx` and one
 //! mutable `ModuleParseState`. `parse_modules` takes the discovered source files and returns the module map
-//! keyed by path; a file the nesting gate refuses is left out of that map and reported as `ATL-W-SKIPPED-FILE`.
+//! keyed by path; a file the nesting gate refuses is left out of that map and reported as `ATL-W-SKIPPED-FILE`. The app's own
+//! files are parsed once: the same program also yields the JSX occurrences and module-scope names the usage and observe passes read.
 
 mod components;
 mod exports;
@@ -13,6 +14,7 @@ mod utils;
 use crate::diagnostics::{skipped_file, AtlasDiagnostic, DiagnosticError};
 use crate::internal::{ComponentDecl, ImportBinding, ImportKind, ModuleInfo, ReExport, TypeDef};
 use crate::scanner::SourceFile;
+use crate::usage::{find_jsx_occurrences, module_scope_declarations};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     ExportAllDeclaration, Function, ImportDeclarationSpecifier, ImportOrExportKind, Statement,
@@ -49,7 +51,8 @@ pub fn parse_modules(
         let location = app_relative_path
             .clone()
             .unwrap_or_else(|| source_file.path.display().to_string());
-        match parse_module(source_file, &display_source, app_relative_path) {
+        let local = package_name.is_none();
+        match parse_module(source_file, &display_source, app_relative_path, local) {
             Ok(module) => {
                 modules.insert(source_file.path.clone(), module);
             }
@@ -59,11 +62,13 @@ pub fn parse_modules(
     Ok(modules)
 }
 
-/// Parses one file into its module record, or returns the nesting gate's refusal before Oxc sees the file.
+/// Parses one file into its module record, or returns the nesting gate's refusal before Oxc sees the file. A `local` file
+/// (the app's own, not a package's) also gets its JSX occurrences and module-scope names from the same program.
 fn parse_module(
     source_file: &SourceFile,
     display_source: &str,
     app_relative_path: Option<String>,
+    local: bool,
 ) -> Result<ModuleInfo, NestingRefusal> {
     let allocator = Allocator::default();
     let parsed = parse_bounded(&allocator, &source_file.content, source_file.source_type)?;
@@ -88,9 +93,17 @@ fn parse_module(
         .map(|binding| (binding.local.clone(), binding.source.clone()))
         .collect::<HashMap<_, _>>();
 
+    let (jsx_occurrences, scope_declarations) = if local {
+        (
+            find_jsx_occurrences(&parsed.program, &source_file.content),
+            module_scope_declarations(&parsed.program),
+        )
+    } else {
+        Default::default()
+    };
+
     Ok(ModuleInfo {
         path: source_file.path.clone(),
-        content: source_file.content.clone(),
         display_source: display_source.to_string(),
         imports: state.imports,
         namespace_imports,
@@ -100,6 +113,8 @@ fn parse_module(
         types: state.types,
         named_type_reexports: state.named_type_reexports,
         star_reexports: state.star_reexports,
+        jsx_occurrences,
+        scope_declarations,
     })
 }
 

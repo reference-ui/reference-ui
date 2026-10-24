@@ -9,6 +9,8 @@ mod workspace;
 
 #[cfg(test)]
 pub(crate) use imports::extract_module_specifiers;
+#[cfg(test)]
+pub(crate) use imports::source_type_of;
 pub(crate) use model::{ScannedFile, ScannedWorkspace};
 pub use packages::resolve_external_import_path;
 pub(crate) use packages::ImportResolver;

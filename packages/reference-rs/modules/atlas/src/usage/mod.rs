@@ -1,7 +1,6 @@
-//! Counts how often each tracked component appears in the app's modules, with which props, and alongside which
-//! other components. `collect_usage_for_module` takes one module, the usage snapshot taken before the pass, and the
-//! mutable states, and adds that module's JSX occurrences to them. `finalize_components` then scores the counts
-//! into the sorted `Component` list the result carries.
+//! Counts each tracked component's appearances in the app, with which props and beside which others. `collect_usage_for_module` takes one module, the usage snapshot taken before the pass, and the
+//! mutable states, and adds that module's JSX occurrences, which the parser stored, to them. `finalize_components`
+//! then scores the counts into the sorted `Component` list the result carries.
 
 use crate::internal::{JsxAttribute, JsxOccurrence, ModuleInfo, UsageState};
 use crate::model::{Component, ComponentProp};
@@ -16,7 +15,8 @@ mod scope;
 mod walker;
 
 pub use observe::observe_elements;
-use walker::find_jsx_occurrences;
+pub(crate) use scope::module_scope_declarations;
+pub(crate) use walker::find_jsx_occurrences;
 
 pub fn collect_usage_for_module(
     module: &ModuleInfo,
@@ -33,7 +33,7 @@ pub fn collect_usage_for_module(
     };
     let mut seen_in_file = BTreeSet::new();
 
-    for occurrence in find_jsx_occurrences(module) {
+    for occurrence in &module.jsx_occurrences {
         let Some(key) = resolve_occurrence_key(module, &scope, &occurrence.tag_name) else {
             continue;
         };
@@ -49,10 +49,10 @@ pub fn collect_usage_for_module(
     record_used_with(state_snapshot, states, &seen_keys);
 }
 
-fn record_occurrence(state: &mut UsageState, occurrence: JsxOccurrence) {
+fn record_occurrence(state: &mut UsageState, occurrence: &JsxOccurrence) {
     state.component.count += 1;
     record_example(state, &occurrence.snippet);
-    let explicit_names = record_attributes(state, occurrence.attributes);
+    let explicit_names = record_attributes(state, &occurrence.attributes);
     if occurrence.has_children && !explicit_names.contains("children") {
         bump_prop_count(state, "children");
     }
@@ -65,17 +65,17 @@ fn record_example(state: &mut UsageState, snippet: &str) {
 }
 
 /// Counts each attribute against its prop and its literal value, and returns the attribute names it saw.
-fn record_attributes(state: &mut UsageState, attributes: Vec<JsxAttribute>) -> BTreeSet<String> {
+fn record_attributes(state: &mut UsageState, attributes: &[JsxAttribute]) -> BTreeSet<String> {
     let mut explicit_names = BTreeSet::new();
     for attribute in attributes {
         explicit_names.insert(attribute.name.clone());
         bump_prop_count(state, &attribute.name);
-        if let Some(value) = attribute.literal_value {
+        if let Some(value) = &attribute.literal_value {
             state
                 .prop_value_counts
-                .entry(attribute.name)
+                .entry(attribute.name.clone())
                 .or_default()
-                .entry(value)
+                .entry(value.clone())
                 .and_modify(|count| *count += 1)
                 .or_insert(1);
         }

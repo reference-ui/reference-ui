@@ -1,4 +1,4 @@
-//! Per-file Oxc parse + statement walk that produces [`ParsedFileAst`](crate::ast::model::ParsedFileAst).
+//! Per-file statement walk that produces [`ParsedFileAst`](crate::ast::model::ParsedFileAst).
 //! Parses with Oxc and runs the statement loop; extract_files is the entry point. A file the nesting gate refuses
 //! yields an empty shell and one TST-W-PARSE-ERROR, so its siblings still extract.
 
@@ -6,8 +6,8 @@ use std::collections::BTreeMap;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Comment, Statement, TSInterfaceDeclaration, TSTypeAliasDeclaration};
-use shared::parse::parse_bounded;
-use oxc_span::{GetSpan, SourceType};
+use shared::parse::parse_screened;
+use oxc_span::GetSpan;
 
 use super::module_bindings::{ExportOutputs, ExportScope};
 use super::namespaces::{collect_namespace_table, NamespaceView};
@@ -44,8 +44,7 @@ fn extract_file(
     diagnostics: &mut Vec<TastyDiagnostic>,
 ) -> Result<ParsedFileAst, DiagnosticError> {
     let allocator = Allocator::default();
-    let source_type = SourceType::from_path(&scanned_file.file_id).unwrap_or_default();
-    let parsed = match parse_bounded(&allocator, &scanned_file.source, source_type) {
+    let parsed = match parse_screened(&allocator, &scanned_file.source) {
         Ok(parsed) => parsed,
         Err(refusal) => {
             diagnostics.push(crate::diagnostics::nesting_refused(&scanned_file.file_id, refusal)?);

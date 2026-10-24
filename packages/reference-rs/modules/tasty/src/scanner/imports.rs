@@ -1,52 +1,57 @@
 //! Module specifier discovery.
-//! Extracts the import and export module specifiers of a file so the crawler can follow them.
-//! Syntax-level only; it never resolves. A file the nesting gate refuses yields no specifiers.
+//! Extracts the import and export module specifiers of a screened file so the crawler can follow them, and the re-export
+//! subset of them, from one parse. Syntax-level only; it never resolves. A file the nesting gate refused yields no specifiers.
+
+use std::collections::BTreeSet;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Statement;
-use shared::parse::parse_bounded;
 use oxc_span::{SourceType, Span};
+use shared::parse::{parse_screened, ScreenedSource};
 
-pub(crate) fn extract_module_specifiers(file_id: &str, source: &str) -> Vec<String> {
-    extract_module_specifiers_with(file_id, source, true)
+/// What one parse of a file yields for the crawler: every followed specifier, and the subset that appears in re-exports.
+#[derive(Debug, Default)]
+pub(super) struct ModuleSpecifiers {
+    /// Imports and exports with a source, in source order.
+    pub(super) all: Vec<String>,
+    /// Specifiers that appear in re-exports only: `export ... from 'module'`.
+    /// They decide which followed libraries bridge into the name index (only
+    /// user re-exports bridge; scoped plain imports are followed without indexing).
+    pub(super) reexports: BTreeSet<String>,
 }
 
-/// Module specifiers that appear in re-exports only: `export ... from 'module'`.
-/// Used to decide which followed libraries bridge into the name index (only
-/// user re-exports bridge; scoped plain imports are followed without indexing).
-pub(super) fn extract_reexport_module_specifiers(file_id: &str, source: &str) -> Vec<String> {
-    extract_module_specifiers_with(file_id, source, false)
+/// The source type both the crawl and the extraction parse a file with.
+pub(crate) fn source_type_of(file_id: &str) -> SourceType {
+    SourceType::from_path(file_id).unwrap_or_default()
 }
 
 const IGNORED_ASSET_EXTENSIONS: [&str; 6] = [".css", ".scss", ".sass", ".less", ".pcss", ".styl"];
 
-fn extract_module_specifiers_with(
-    file_id: &str,
-    source: &str,
-    include_imports: bool,
-) -> Vec<String> {
+/// Both specifier lists from one parse of `source`. A file the nesting gate refused yields none; extract_file reports the
+/// refusal once.
+pub(super) fn module_specifiers_of(source: &ScreenedSource) -> ModuleSpecifiers {
     let allocator = Allocator::default();
-    let source_type = SourceType::from_path(file_id).unwrap_or_default();
-    // A file the nesting gate refuses yields no specifiers; extract_file reports the refusal once.
-    let Ok(parsed) = parse_bounded(&allocator, source, source_type) else {
-        return Vec::new();
+    let Ok(parsed) = parse_screened(&allocator, source) else {
+        return ModuleSpecifiers::default();
     };
-    let program = parsed.program;
-    let mut module_specifiers = Vec::new();
+    let mut specifiers = ModuleSpecifiers::default();
 
-    for statement in &program.body {
-        if let Some(module_specifier) =
-            module_specifier_from_statement(statement, source, include_imports)
-        {
-            module_specifiers.push(module_specifier);
+    for statement in &parsed.program.body {
+        let Some((module_specifier, is_reexport)) = module_specifier_from_statement(statement, source)
+        else {
+            continue;
+        };
+        let module_specifier = normalize_module_specifier(module_specifier);
+        if !should_follow_module_specifier(&module_specifier) {
+            continue;
         }
+        if is_reexport {
+            specifiers.reexports.insert(module_specifier.clone());
+        }
+        specifiers.all.push(module_specifier);
     }
 
-    module_specifiers
-        .into_iter()
-        .map(normalize_module_specifier)
-        .filter(|module_specifier| should_follow_module_specifier(module_specifier))
-        .collect()
+    specifiers
 }
 
 fn should_follow_module_specifier(module_specifier: &str) -> bool {
@@ -55,22 +60,22 @@ fn should_follow_module_specifier(module_specifier: &str) -> bool {
         .any(|extension| module_specifier.ends_with(extension))
 }
 
+/// The statement's source specifier, and whether the statement is a re-export.
 fn module_specifier_from_statement(
     statement: &Statement<'_>,
     source: &str,
-    include_imports: bool,
-) -> Option<String> {
+) -> Option<(String, bool)> {
     match statement {
-        Statement::ImportDeclaration(import) if include_imports => {
-            Some(slice_span(source, import.source.span).to_string())
+        Statement::ImportDeclaration(import) => {
+            Some((slice_span(source, import.source.span).to_string(), false))
         }
         Statement::ExportAllDeclaration(export) => {
-            Some(slice_span(source, export.source.span).to_string())
+            Some((slice_span(source, export.source.span).to_string(), true))
         }
         Statement::ExportNamedDeclaration(export) => export
             .source
             .as_ref()
-            .map(|source_module| slice_span(source, source_module.span).to_string()),
+            .map(|source_module| (slice_span(source, source_module.span).to_string(), true)),
         _ => None,
     }
 }
@@ -81,6 +86,13 @@ fn normalize_module_specifier(value: String) -> String {
 
 fn slice_span(source: &str, span: Span) -> &str {
     &source[span.start as usize..span.end as usize]
+}
+
+/// Every followed specifier of `source`, screened and parsed once. Tests only: the crawler holds its own screened source.
+#[cfg(test)]
+pub(crate) fn extract_module_specifiers(file_id: &str, source: &str) -> Vec<String> {
+    let screened = ScreenedSource::screen(source.to_string(), source_type_of(file_id));
+    module_specifiers_of(&screened).all
 }
 
 #[cfg(test)]

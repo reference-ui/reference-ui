@@ -1,12 +1,12 @@
 //! Workspace scan pass.
 //! Expands include globs into user files, crawls reachable imports under the scan boundary, and returns the scanned file set.
+//! The crawl reads and screens each file once, so this pass only moves the crawled text into the scanned files.
 
 mod crawler;
 mod discovery;
 mod file_discovery;
 mod policy;
 
-use std::fs;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -14,9 +14,8 @@ use self::discovery::discover_reachable_files;
 use self::file_discovery::discover_file_ids;
 use super::model::{DiscoveredFile, ScannedFile, ScannedWorkspace};
 use super::packages::ImportResolver;
-use crate::diagnostics::scan_failed;
 
-/// Discover and read every reachable file. The resolver built here is carried
+/// Discover every reachable file, carrying the text the crawl read. The resolver built here is carried
 /// on the workspace so extraction shares the same resolution memo.
 pub(crate) fn scan_workspace(
     root_dir: &Path,
@@ -33,18 +32,11 @@ pub(crate) fn scan_workspace(
         DiscoveredFile {
             module_specifier,
             library,
+            source,
             ..
         },
     ) in discovery.files
     {
-        let absolute_path = root_dir.join(&file_id);
-        let source = fs::read_to_string(&absolute_path).map_err(|err| {
-            scan_failed(format!(
-                "failed to read {}: {err}",
-                absolute_path.display()
-            ))
-        })?;
-
         files.push(ScannedFile {
             file_id,
             module_specifier,
