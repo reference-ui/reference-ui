@@ -140,23 +140,6 @@ pub(crate) fn owned_wire(
         .collect()
 }
 
-/// Caller hosts plus traced names for one compile.
-pub fn collect_hosts(request: &CompileRequest) -> FxHashSet<String> {
-    let mut session = DiagnosticsSession::new();
-    // The trace takes screened sources. No atomic parse runs on this path; the trace gates what it parses itself.
-    let sources = crate::screen_sources(crate::sources::collect(request));
-    // No atomic parse runs on this path, so no failure signal exists:
-    // every source counts as parsed-clean and the trace gate applies fully.
-    let failed = vec![false; sources.len()];
-    let programs = FxHashMap::default();
-    let inputs = ResolveInputs {
-        sources: &sources,
-        failed: &failed,
-        programs: &programs,
-    };
-    resolve(request, inputs, &mut session).0.hosts()
-}
-
 /// Trace the include-scoped entry set against the engine surface.
 /// Returns traced and configured names plus trace warnings for the
 /// compile diagnostics, reporting one host fact per skip into the
