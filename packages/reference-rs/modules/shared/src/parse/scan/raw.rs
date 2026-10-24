@@ -8,7 +8,7 @@
 //! them cannot reach any limit.
 
 use super::NestingRefusal;
-use crate::parse::{MAX_NESTING, MAX_RAW};
+use crate::parse::{MAX_NESTING, MAX_OPEN, MAX_RAW};
 
 /// Bytes tallied per step; a `u8` tally per step cannot overflow, and the compiler turns it into wide byte compares.
 const STEP: usize = 255;
@@ -16,12 +16,31 @@ const STEP: usize = 255;
 /// Bytes per block of the bound.
 const BLOCK: usize = 4096;
 
-/// Whether `src` holds enough opener bytes for any limit to refuse it: more than `MAX_NESTING` of `(`, `[`, `{` and `<`.
+/// Whether `src` could reach any limit: it holds more than `MAX_NESTING` of `(`, `[`, `{` and `<`, or more than `MAX_OPEN` of
+/// the bytes chain links are made of, or more than `MAX_OPEN` keyword letters (see `may_hold_keyword_run`).
 pub(in crate::parse) fn can_refuse(src: &[u8]) -> bool {
+    exceeds(src, MAX_NESTING, |byte| {
+        matches!(byte, b'(' | b'[' | b'{' | b'<')
+    }) || exceeds(src, MAX_OPEN, |byte| {
+        matches!(byte, b'!' | b'~' | b'-' | b'+' | b'?' | b'=')
+    }) || may_hold_keyword_run(src)
+}
+
+/// Whether `src` holds enough keyword letters for a run of more than `MAX_OPEN` keyword operators. Each of `typeof`, `void`,
+/// `delete` and `await` holds a `y`, `v`, `l` or `w`, so a run of them holds that many such letters. Only then does the scan
+/// look at words.
+pub(in crate::parse) fn may_hold_keyword_run(src: &[u8]) -> bool {
+    exceeds(src, MAX_OPEN, |byte| {
+        matches!(byte, b'y' | b'v' | b'l' | b'w')
+    })
+}
+
+/// Whether more than `limit` bytes of `src` satisfy `wanted`, stopping as soon as that is so.
+fn exceeds(src: &[u8], limit: usize, wanted: impl Fn(u8) -> bool + Copy) -> bool {
     let mut seen = 0usize;
     for step in src.chunks(STEP) {
-        seen += tally(step, |byte| matches!(byte, b'(' | b'[' | b'{' | b'<'));
-        if seen > MAX_NESTING {
+        seen += tally(step, wanted);
+        if seen > limit {
             return true;
         }
     }

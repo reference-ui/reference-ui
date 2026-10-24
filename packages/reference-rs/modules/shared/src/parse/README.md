@@ -28,6 +28,16 @@ counts one level over the deepest nesting that closed inside it. A comparison, a
 nothing, and a `;` or an outer closer drops it. Strings, comments and template text are read past whole, and JSX text, which is
 raw, is read as text.
 
+Oxc also recurses through chains that open no bracket: `!!!!x`, `typeof typeof x`, `a ? b : c ? d : e`, `a => b => c` and
+`a = b = c`. Each bracket level keeps two counters for them, and a level that passes 8,192 is refused. The prefix counter
+counts the operators (`! ~ - +` and the words `typeof`, `void`, `delete`, `await`) that follow one another with only whitespace
+and comments between them, and only where an expression can start, so a binary `-`, a `!=` and a TypeScript non-null `a!!` are
+not prefix operators. The other counter counts the links that recurse to the right across their operands: a ternary `?`, an
+`=>` and an `=`. `?.`, `??`, `==`, `<=` and the `?` of an optional member or parameter are not links. That run ends at a `;`, at
+a `,`, at a newline unless the line ends in an operator that continues the expression, and when its bracket closes, which
+restores the counters of the bracket level around it. A minified file, a list of ternaries and a file of assignments never
+reach the limit, because each statement, element and bracket ends its run.
+
 A `/` where an expression can start is a regex and is skipped whole, so a quote or a backtick inside it cannot swallow the line.
 The start is judged from the code before the slash, comments skipped: an operator, an opener, a separator or a keyword that takes
 an operand starts one, and a name, a closer or a string does not. After the head of an `if`, `while`, `for` or `with` a statement
@@ -48,6 +58,9 @@ hostile source cannot make the scan quadratic.
 - 8,192 deep in a raw count of `(`, `[` and `{` over every byte, which never goes below zero (`MAX_RAW`). It reads strings,
   comments and JSX text as code, so a mistake in the lexer rules cannot hide a nest from it. The survey peaks at 438, bar that
   fixture.
+- 8,192 links in one unbracketed chain (`MAX_OPEN` again): prefix operators, or `?`, `=>` and `=` links in one run. On the release
+  build Oxc passes 8,192 links of a prefix chain on 2 MiB, of a ternary, assignment or type-level chain on 4 MiB, and of an arrow chain on 8 MiB,
+  so the lane floor holds them.
 - Oxc needs 12 to 16 MiB of stack to recurse through 8,192 levels: parentheses, brackets, calls and generics take 12 MiB, and
   object literals, template expressions, type literals, tuples and function bodies take 16 MiB (measured on the release build).
   Lanes run on 64 MiB and exports on 256 MiB. A thread start the OS refuses retries at half the size down to a 16 MiB floor, so
@@ -72,14 +85,16 @@ test that reads a delta runs alone in its own process, as `shared/tests/gate_run
 - A hashbang line is read as code: `#!/usr/…` reads `/usr/` as a regex. Nothing in it hides.
 - A nest hidden by a mistake the rules make is caught only by the two backstops, so it passes between 1,025 and 8,192 levels.
   Production stacks hold those.
-- The gate counts brackets, template expressions, generics and JSX elements. Oxc also recurses on chains it does not count: a run
-  of `!`, `a ? b : c ? …`, `a => a => …` or `a = b = …`. They overflow the 2 MiB test stack between 2,000 and 16,000 links, and
-  a 64 MiB lane holds about 32 times as many.
+- The gate counts brackets, template expressions, generics, JSX elements and the chains above. Oxc also recurses on prefix
+  type operators and assertions it does not count: a run of `keyof`, `readonly`, `new` or the assertion `<T>`. A 64 MiB stack
+  holds more than 100,000 links of `keyof`, and the lane floor holds the 8,192 it takes to matter for honest code.
+- A ternary, arrow or assignment chain that a newline breaks after an operand is counted per line, not whole, so a
+  generated file that wraps such a chain line by line passes.
 - Oxc takes quadratic time on valid code such as `[a<b, a<b, …]`, about 25 s at 8,192 comparisons. That is the parser's cost.
 
 ## Tests
 
 The unit tests pin the limit and its line, the skipped runs, the JSX and regex rules, each lexing hole the reviews found, the
-unclosed `<` and the two backstops. They check the opener count against the scan on token soups and the scan against generated
+unclosed `<`, the two backstops and the chain limit with the sources it must leave alone. They check the opener count against the scan on token soups and the scan against generated
 nests of known depth. Measurements run only when `SHARED_MEASURE_OUT` is set: the scan's throughput, the time of an adversarial
 source, and a survey of every source under `SHARED_DEPTH_ROOTS`.

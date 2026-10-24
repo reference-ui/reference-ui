@@ -131,7 +131,7 @@ impl Scan<'_> {
 
     /// The index just past the last code byte before `at`: whitespace is skipped, and so is the run of comments that ends
     /// there, when the scan noted one.
-    fn code_end_before(&self, at: usize) -> usize {
+    pub(super) fn code_end_before(&self, at: usize) -> usize {
         let end = self.space_start_before(at);
         let (first, last) = self.behind.comments;
         if end > 0 && end == last {

@@ -5,7 +5,8 @@
 //! generic `<` and a JSX element are guesses, so they count only once their closer is seen, and a comparison, a shift or a
 //! misread tag that never closes counts for nothing. Strings, regex literals, template text and comments are opaque runs.
 //! `scan/stack.rs` holds the stack and that rule, `scan/jsx.rs` the element rules, `scan/rescan.rs` the second pass over text a
-//! misread element swallowed, `scan/expression.rs` the test for where an expression starts, `scan/literals.rs` and
+//! misread element swallowed, `scan/expression.rs` the test for where an expression starts, `scan/chains.rs` the counters for
+//! the chains that open no bracket (`!!!x`, `a ? b : c ? d : e`, `a => b => c`, `a = b = c`), `scan/literals.rs` and
 //! `scan/regex.rs` the skipped runs, and `scan/raw.rs` the bracket count that backs the scan up. This is a bound, not a lexer:
 //! a real-code survey checks that no ordinary file comes near the limit, and the two wider limits catch what a misreading
 //! lets through.
@@ -13,6 +14,7 @@
 use std::cell::Cell;
 use std::collections::HashSet;
 
+mod chains;
 mod expression;
 mod jsx;
 mod literals;
@@ -21,17 +23,23 @@ mod regex;
 mod rescan;
 mod stack;
 
+use chains::Chains;
 use expression::Behind;
 #[cfg(test)]
 pub(super) use raw::peak as raw_peak;
-pub(super) use raw::{can_refuse, check_raw};
+pub(super) use raw::{can_refuse, check_raw, may_hold_keyword_run};
 use stack::Frame;
 
 use super::NestingRefusal;
 
 /// Bytes that can change the scan's state in code: quotes, comment and regex slashes, escapes, newlines, template backticks,
-/// brackets, `<` and `>` (generics, arrows and JSX), and `;`. Every other byte only advances the scan.
-const CODE_SPECIAL: [bool; 256] = special_bytes(b"\"'`/\\\n()[]{}<>;");
+/// brackets, `<` and `>` (generics, arrows and JSX), `;` and `,` (which end a chain), and the chain operators `! ~ - + ? =`.
+/// Every other byte only advances the scan.
+const CODE_SPECIAL: [bool; 256] = special_bytes(b"\"'`/\\\n()[]{}<>;,!~-+?=");
+
+/// `CODE_SPECIAL` plus the first letters of the keyword operators `typeof`, `void`, `delete` and `await`, for a source with
+/// enough keyword letters to hold a run of them.
+const CODE_SPECIAL_WORDS: [bool; 256] = special_bytes(b"\"'`/\\\n()[]{}<>;,!~-+?=tvda");
 
 /// Bytes that can change the scan's state in template text: the backtick, `$` (for `${`), escapes and newlines.
 const TEMPLATE_SPECIAL: [bool; 256] = special_bytes(b"`$\\\n");
@@ -63,8 +71,9 @@ const fn special_bytes(bytes: &[u8]) -> [bool; 256] {
     table
 }
 
-fn special(mode: Mode) -> &'static [bool; 256] {
+fn special(mode: Mode, words: bool) -> &'static [bool; 256] {
     match mode {
+        Mode::Code if words => &CODE_SPECIAL_WORDS,
         Mode::Code => &CODE_SPECIAL,
         Mode::Template => &TEMPLATE_SPECIAL,
         Mode::JsxTag => &JSX_TAG_SPECIAL,
@@ -110,14 +119,16 @@ enum Mode {
 }
 
 /// The scan's state: the open constructs, how many of each kind are open (so a closer with no opener of its kind
-/// costs nothing), the current line, the deepest counted nesting so far, what lies just behind the scan, the `<` offsets
+/// costs nothing), the chain counters of the bracket level, the current line, the deepest counted nesting so far, what lies just behind the scan, the `<` offsets
 /// already proven not to open an element, and the lookahead still allowed.
 pub(super) struct Scan<'s> {
     src: &'s [u8],
     typescript: bool,
     jsx: bool,
+    words: bool,
     stack: Vec<Frame>,
     counts: [usize; Open::KINDS],
+    chains: Chains,
     line: u32,
     deepest: usize,
     #[cfg(test)]
@@ -133,8 +144,10 @@ impl<'s> Scan<'s> {
             src,
             typescript,
             jsx,
+            words: may_hold_keyword_run(src),
             stack: Vec::new(),
             counts: [0; Open::KINDS],
+            chains: Chains::default(),
             line: 1,
             deepest: 0,
             #[cfg(test)]
@@ -155,7 +168,7 @@ impl<'s> Scan<'s> {
         loop {
             while at < src.len() {
                 let mode = self.mode(template);
-                let table = special(mode);
+                let table = special(mode, self.words);
                 while at < src.len() && !table[src[at] as usize] {
                     at += 1;
                 }
@@ -222,6 +235,7 @@ impl<'s> Scan<'s> {
             }
             b'\n' => {
                 self.line += 1;
+                self.newline_in_chain(at);
                 Ok(at + 1)
             }
             byte => self.code_byte(byte, at),
@@ -239,6 +253,10 @@ impl<'s> Scan<'s> {
         match byte {
             b'(' | b'[' | b'{' => self.open_hard(bracket_kind(byte), at + 1),
             b'<' => self.code_less_than(at),
+            b'!' | b'~' | b'-' | b'+' => self.symbol_operator(byte, at),
+            b'?' => self.question_mark(at),
+            b'=' => self.equals(at),
+            b't' | b'v' | b'd' | b'a' => self.word(at),
             _ => self.close_or_drop(byte, at),
         }
     }
@@ -269,7 +287,11 @@ impl<'s> Scan<'s> {
                 self.close(Open::Bracket);
             }
             b'>' => self.close_angle_unless_arrow(at)?,
-            b';' => self.drop_angles(),
+            b';' => {
+                self.drop_angles();
+                self.end_chain_run();
+            }
+            b',' => self.end_chain_run(),
             _ => {}
         }
         Ok(at + 1)

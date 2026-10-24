@@ -5,7 +5,8 @@
 //! gives a caller Oxc's failed-parse shape for a refused source, so each module attaches its own located error. The
 //! pre-scan lives in `parse/scan.rs` and the files beside it, and this file is the one place that calls `Parser::new`.
 //! Two wider limits back the scan up, so a construct it misreads cannot let a pathological file through: no more than
-//! `MAX_OPEN` constructs open at once, and no more than `MAX_RAW` brackets deep in a count that reads every byte as code.
+//! `MAX_OPEN` constructs open at once, and no more than `MAX_RAW` brackets deep in a count that reads every byte as code. An
+//! unbracketed chain Oxc recurses through (`!!!x`, `a ? b : c ? …`, `a => b => c`, `a = b = c`) is held to `MAX_OPEN` links.
 //! `ScreenedSource` holds a source's text with the verdict the gate gave it, so a source read once is screened once: `screen`
 //! runs the gate, and `parse_screened` parses the stored text or returns the stored refusal without a second scan.
 //! `parse/README.md` says what the gate is for and what it leaves alone, including input crafted to defeat the lexer.
@@ -28,7 +29,8 @@ pub const MAX_NESTING: usize = 1024;
 /// The most constructs one source may hold open at once, counted or not: a generic or a JSX element that has not closed yet
 /// is on the stack without counting toward `MAX_NESTING`, and this bound refuses an unclosed nest of them. It is eight times
 /// the nesting limit, far under the tens of thousands of levels the 64 MiB production stacks hold. The same survey, bar that
-/// fixture, found none with more than 822 open at once.
+/// fixture, found none with more than 822 open at once. It also bounds the links of one unbracketed chain, which Oxc passes
+/// at this length on 8 MiB or less.
 const MAX_OPEN: usize = 8 * MAX_NESTING;
 
 /// The deepest raw bracket nesting a source may reach. The raw count reads every `(`, `[` and `{` as a bracket, strings,

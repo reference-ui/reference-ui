@@ -12,6 +12,7 @@ use super::{
     line_start, parse_bounded, refused_parser_return, scan_nesting, NestingRefusal, MAX_NESTING,
 };
 
+mod chains;
 mod generated;
 mod holes;
 mod jsx;

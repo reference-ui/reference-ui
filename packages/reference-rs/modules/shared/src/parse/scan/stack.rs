@@ -6,16 +6,19 @@
 //! at `MAX_OPEN` frames, so an unclosed nest is refused too. A closer pops down to its own kind, and a frame it pops without
 //! having closed it counts for itself only if it is a bracket.
 
+use super::chains::Chains;
 use super::{NestingRefusal, Open, Scan};
 use crate::parse::{MAX_NESTING, MAX_OPEN};
 
-/// One open construct: its kind, the line and byte offset it opened at, and the deepest nesting that has closed inside it so far.
+/// One open construct: its kind, the line and byte offset it opened at, the deepest nesting that has closed inside it so far,
+/// and the chain counters of the bracket level around it, which its closer restores.
 #[derive(Clone, Copy)]
 pub(super) struct Frame {
     pub(super) open: Open,
     pub(super) line: u32,
     pub(super) at: u32,
     pub(super) inner: u32,
+    pub(super) saved: Chains,
 }
 
 impl Scan<'_> {
@@ -66,7 +69,11 @@ impl Scan<'_> {
             line,
             at: at as u32,
             inner: 0,
+            saved: self.chains,
         });
+        if !open.is_soft() {
+            self.end_chain_run();
+        }
         self.counts[open.index()] += 1;
         #[cfg(test)]
         {
@@ -85,6 +92,9 @@ impl Scan<'_> {
     pub(super) fn take_top(&mut self) -> Option<Frame> {
         let frame = self.stack.pop()?;
         self.counts[frame.open.index()] -= 1;
+        if !frame.open.is_soft() {
+            self.chains = frame.saved;
+        }
         Some(frame)
     }
 
