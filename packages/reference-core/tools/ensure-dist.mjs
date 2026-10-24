@@ -1,15 +1,12 @@
 // core-owned freshness gate for the shipped `ref` CLI.
 // It guarantees `dist/bin/ref.js` exists and is newer than every input the compiled bin is
-// built from, so no documented caller runs stale bytes. It takes the core
-// package root from its own module location, stats the source roots plus the
-// tsc project files, and rebuilds through `tools/build-bin.mjs` only when the
-// bin is missing or older. Before a rebuild it fills the two generated inputs a
-// fresh checkout lacks: the `@reference-ui/rust` JS bindings and the gitignored
-// browser-component mirror. A `REF_PIPELINE_SKIP_DEPENDENCY_BUILDS` setting
-// exits immediately for CI opt-out, and steady state exits silently after one
-// stat walk. `--force` rebuilds regardless of mtimes. The rebuild never empties
-// dist/ in place: `build-bin.mjs` builds into a sibling folder and renames it
-// into place, so a watcher reading dist/ (the docs dev server) keeps its files.
+// built from, so no documented caller runs stale bytes. It takes the core package root from its own module location,
+// stats the source roots plus the tsc project files, and rebuilds through `tools/build-bin.mjs` only when the
+// bin is missing or older. Before a rebuild it fills the two generated inputs a fresh checkout lacks: the
+// `@reference-ui/rust` JS bindings and the gitignored browser-component mirror. A `REF_PIPELINE_SKIP_DEPENDENCY_BUILDS`
+// setting exits immediately for CI opt-out, `--force` rebuilds regardless of mtimes, and steady state exits silently
+// after one stat walk. The rebuild never empties dist/ in place: `build-bin.mjs` builds into a sibling folder and moves
+// it into place file by file, so a watcher reading dist/ (the docs dev server) keeps its files.
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, statSync } from 'node:fs'

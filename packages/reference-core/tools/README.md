@@ -135,8 +135,18 @@ then removes files the build no longer emits. A process that reads `dist/`
 during a rebuild, such as the docs dev server, therefore never finds a file
 missing; a folder swap cannot promise that, because a folder cannot be renamed
 over a non-empty one. A failed build removes its folder and leaves the previous
-`dist/` in place, and a folder a killed build left behind is removed by the next
-run.
+`dist/` in place. A folder a killed build left behind is removed by the next
+run when its pid is not running, or when the folder is older than 10 minutes (no
+build runs that long, so a live pid there was reused by another process);
+`stale-build.mjs` holds that rule and `stale-build.test.mjs` pins it
+(`node --test tools/stale-build.test.mjs`).
+
+The move into `dist/` renames file by file, so a reader that loads `dist/`
+during that window can see old and new modules together. Every gated caller is
+safe: `ensure-dist.mjs` treats `dist/` as stale until the bin, moved last, is
+newer than the inputs, and rebuilds itself. A reader with no gate, such as the
+docs dev server, can load a mixed set for that moment; a gap-free swap would need
+an immutable build plus an atomic symlink swap, which this build does not do.
 
 The run is idempotent and typechecks as it emits (tsc errors fail the
 build). Direct-source invocations (running `ref` from source, the CLI specs)

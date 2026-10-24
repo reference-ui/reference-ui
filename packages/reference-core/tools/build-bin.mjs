@@ -1,16 +1,10 @@
 // Builds the compiled ref bin into dist/, since packed installs cannot type-strip bin/ref.ts.
-// It runs tsc over the build tsconfig, asserts the alias-literal set is exactly the known one, then
-// lays the esbuild-entry twins plus the runtime-read declaration asset
-// beside the emit, repoints the emitted declarations at shipped files
-// (guarded), and makes the bin executable. All of that happens in a sibling
-// `.dist-new-<pid>` folder; only a finished build is moved into dist/, file by
-// file, each with one atomic rename over its old copy (bin last), then files
-// the build no longer emits are removed. A process reading dist/ while a
-// rebuild runs therefore never finds a file missing that the build still ships,
-// which a folder swap cannot promise: a folder cannot be renamed over a
-// non-empty one, so it takes two renames with a gap between them. A failed
-// build removes its folder and leaves the previous dist, whose older mtime
-// makes the freshness gate retry. Run from the Core package directory:
+// It runs tsc over the build tsconfig, asserts the alias-literal set is exactly the known one, lays the esbuild-entry
+// twins plus the runtime-read declaration asset beside the emit, repoints the emitted declarations at shipped files
+// (guarded), and makes the bin executable, all in a sibling `.dist-new-<pid>` folder. Only a finished build is moved
+// into dist/, file by file with one atomic rename over each old copy (bin last), and files the build no longer emits
+// are then removed. A failed build removes its folder and leaves the previous dist; a folder a killed build left
+// behind is removed by the next run (rule in stale-build.mjs). Run from the Core package directory:
 // node tools/build-bin.mjs (also the prepack/prepublishOnly hook).
 
 import {
@@ -29,6 +23,7 @@ import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isStaleBuildFolder, STALE_BUILD_NAME } from './stale-build.mjs'
 import {
   declarationSpecifierProblems,
   exportTypeProblems,
@@ -39,7 +34,6 @@ const PKG = dirname(dirname(fileURLToPath(import.meta.url)))
 const FINAL_DIST = join(PKG, 'dist')
 // The build target: a sibling of dist, renamed to dist only once complete.
 const DIST = join(PKG, `.dist-new-${process.pid}`)
-const STALE_DIST = /^\.dist-new-(\d+)$/
 // Moved into dist last, so a build killed mid-move leaves a bin older than the inputs and the gate retries.
 const LAST_MOVED = join('bin', 'ref.js')
 
@@ -184,16 +178,30 @@ function countFiles(dir) {
   return count
 }
 
-// Folders a killed build left behind belong to a pid that no longer runs.
+function pidIsAlive(pid) {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    return error.code !== 'ESRCH'
+  }
+}
+
+// Folders a killed build left behind: their pid is gone, or the folder is too old for any build (a reused pid).
 function removeStaleBuildFolders() {
+  const nowMs = Date.now()
   for (const name of readdirSync(PKG)) {
-    const match = STALE_DIST.exec(name)
-    if (match === null || Number(match[1]) === process.pid) continue
-    try {
-      process.kill(Number(match[1]), 0)
-    } catch (error) {
-      if (error.code === 'ESRCH') rmSync(join(PKG, name), { force: true, recursive: true })
-    }
+    const match = STALE_BUILD_NAME.exec(name)
+    if (match === null) continue
+    const path = join(PKG, name)
+    const stale = isStaleBuildFolder({
+      name,
+      pidAlive: pidIsAlive(Number(match[1])),
+      mtimeMs: statSync(path).mtimeMs,
+      nowMs,
+      ownPid: process.pid,
+    })
+    if (stale) rmSync(path, { force: true, recursive: true })
   }
 }
 
