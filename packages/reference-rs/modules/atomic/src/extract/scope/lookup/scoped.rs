@@ -24,7 +24,7 @@ impl<'a> Scoped<'a> {
         if self.mutated(name) {
             return &[];
         }
-        match self.chain.resolve(name, self.scope) {
+        match self.chain.resolve_value(name, self.scope) {
             Lookup::Local(binding) => local_scalars(binding),
             Lookup::Import(imp) => self.import_scalars(&imp.local),
             Lookup::Unbound => self.chain.imports.scalar_leaves(name),
@@ -47,7 +47,7 @@ impl<'a> Scoped<'a> {
         if self.mutated(name) {
             return false;
         }
-        match self.chain.resolve(name, self.scope) {
+        match self.chain.resolve_value(name, self.scope) {
             Lookup::Local(binding) => local_scalar_residue(binding),
             Lookup::Import(imp) => self.import_scalar_residue(&imp.local),
             Lookup::Unbound => self.chain.imports.scalar_residue(name),
@@ -98,7 +98,7 @@ impl<'a> Scoped<'a> {
         if self.mutated(name) {
             return None;
         }
-        match self.chain.resolve(name, self.scope) {
+        match self.chain.resolve_value(name, self.scope) {
             Lookup::Local(binding) => Self::local_pure_fn(binding),
             Lookup::Import(imp) => self.import_pure_fn(&imp.local),
             Lookup::Unbound => None,
@@ -152,7 +152,7 @@ impl<'a> Scoped<'a> {
         if self.mutated(obj) {
             return None;
         }
-        match self.chain.resolve(obj, self.scope) {
+        match self.chain.resolve_value(obj, self.scope) {
             Lookup::Local(binding) => local_object_prop(binding, prop),
             Lookup::Import(imp) => self.import_object_prop(&imp.local, prop),
             Lookup::Unbound => self.chain.imports.object_prop(obj, prop),
@@ -173,7 +173,7 @@ impl<'a> Scoped<'a> {
         if self.mutated(name) {
             return None;
         }
-        match self.chain.resolve(name, self.scope) {
+        match self.chain.resolve_value(name, self.scope) {
             Lookup::Local(binding) => local_object(binding),
             Lookup::Import(imp) => self.import_object(&imp.local),
             Lookup::Unbound => self.chain.imports.object(name),
@@ -194,7 +194,7 @@ impl<'a> Scoped<'a> {
         if self.mutated(name) {
             return None;
         }
-        match self.chain.resolve(name, self.scope) {
+        match self.chain.resolve_value(name, self.scope) {
             Lookup::Local(binding) => local_array(binding),
             Lookup::Import(imp) => self.import_array(&imp.local),
             Lookup::Unbound => self.chain.imports.array(name),
@@ -222,7 +222,7 @@ impl<'a> Scoped<'a> {
     /// write in another file never poisons them; locals and unbound names
     /// keep the name-wide write set.
     pub fn mutation(self, name: &str) -> Option<&'a MutatedBinding> {
-        let Lookup::Import(imp) = self.chain.resolve(name, self.scope) else {
+        let Lookup::Import(imp) = self.chain.resolve_value(name, self.scope) else {
             return self.chain.imports.mutation(name);
         };
         self.chain.imports.import_value(&imp.local)?.mutation()
@@ -232,7 +232,7 @@ impl<'a> Scoped<'a> {
     /// floor. Only a name that resolves to an import carries markers; locals
     /// and unbound names diagnose their own spreads at their own sites.
     pub fn import_unfoldable(self, name: &str) -> &'a [UnfoldableSpread] {
-        let Lookup::Import(imp) = self.chain.resolve(name, self.scope) else {
+        let Lookup::Import(imp) = self.chain.resolve_value(name, self.scope) else {
             return &[];
         };
         self.chain

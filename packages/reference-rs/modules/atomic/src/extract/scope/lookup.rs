@@ -9,6 +9,7 @@
 //! resolves to an unmutated export. Helpers never fall back: an import
 //! answers only its walked origin's descriptor, and an unbound callee
 //! refuses, so bindings — never the name bag — decide which helper folds.
+//! A valueless const copy of an import answers that import for values.
 //! Unknown scope ids resolve as unbound.
 
 mod scoped;
@@ -122,6 +123,46 @@ impl<'a> ScopeChain<'a> {
             cursor = self.table.parent_of(id);
         }
         Lookup::Unbound
+    }
+
+    /// Resolve a name for its value: `resolve`, except that a valueless
+    /// const copy of an import (`const copy = imported`, or a copy of that
+    /// copy) answers the import it ends at, so uses read the origin's value
+    /// and mutation exactly as they would through the import itself.
+    pub fn resolve_value(self, name: &str, at: ScopeId) -> Lookup<'a> {
+        let found = self.resolve(name, at);
+        match found {
+            Lookup::Local(binding) if binding.init.is_none() => self
+                .import_behind_copy(name, at)
+                .map_or(found, Lookup::Import),
+            _ => found,
+        }
+    }
+
+    /// The import a chain of valueless const copies ends at, if it ends at
+    /// one. A copy of a same-file binding that carries a value never reaches
+    /// here: that binding's own init already was the copy (or, for a forward
+    /// reference, stays valueless like the runtime TDZ).
+    fn import_behind_copy(self, name: &str, at: ScopeId) -> Option<&'a ImportRef> {
+        let mut seen: Vec<(ScopeId, String)> = Vec::new();
+        let mut current = name.to_string();
+        let mut scope = at;
+        loop {
+            let (decl, target) = self.table.alias_edge(&current, scope)?;
+            if seen.iter().any(|(s, n)| *s == decl && *n == current) {
+                return None;
+            }
+            seen.push((decl, current));
+            let (_, binding) = self.table.resolve_from(&target, decl)?;
+            match &binding.kind {
+                BindingKind::Import(imp) => return Some(imp),
+                BindingKind::Const if binding.init.is_none() => {
+                    current = target;
+                    scope = decl;
+                }
+                _ => return None,
+            }
+        }
     }
 
     /// Fix a use-site scope, for the walkers that resolve many names there.

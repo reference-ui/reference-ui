@@ -1,0 +1,1 @@
+{"id": "ATM-SITE-110", "name": "A const copied from an import in the same file folds to the origin's value, through a chain of copies"}
