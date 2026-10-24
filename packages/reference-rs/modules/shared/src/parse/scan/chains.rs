@@ -5,6 +5,7 @@
 //! with only whitespace and comments between them, counted only where an expression can start. The `?`, `=>` and `=` links run
 //! across operands and end at `;`, at `,`, when the bracket closes, and at a newline that does not continue the expression.
 
+use super::jsx::TYPE_ARGS_LOOKAHEAD;
 use super::{is_identifier_byte, NestingRefusal, Scan};
 use crate::parse::MAX_OPEN;
 
@@ -150,17 +151,60 @@ impl Scan<'_> {
     }
 
     /// A `<T>` in a TypeScript file that is not TSX, where an expression starts: a type assertion, which is a prefix operator
-    /// as long as its type is a plain name. A longer type is not counted.
+    /// as long as its type is made of names, `.`, spaces, `,`, `[]` and balanced nested `<…>`, as in `<Array<T>>x`. A type
+    /// with `|`, `&`, `(`, `{` or `=>` in it, or one that does not close within `TYPE_ARGS_LOOKAHEAD` bytes or the scan's
+    /// lookahead, is not counted. The part before the first nested `<` costs nothing, since no other read covers those bytes;
+    /// the part from there on is charged to the lookahead, the way type arguments are.
     pub(super) fn assertion(&mut self, at: usize) -> Result<(), NestingRefusal> {
-        let src = self.src;
-        let mut end = at + 1;
-        while end < src.len() && (is_identifier_byte(src[end]) || matches!(src[end], b'.' | b' ')) {
-            end += 1;
-        }
-        if end > at + 1 && src.get(end) == Some(&b'>') && self.prefix_start(at) {
-            self.note_prefix(at, end + 1 - at)?;
+        if let Some(end) = self.assertion_end(at) {
+            if self.prefix_start(at) {
+                self.note_prefix(at, end - at)?;
+            }
         }
         Ok(())
+    }
+
+    /// The index just past the `>` that closes the assertion type opened at `at`, or None when the text is not one.
+    fn assertion_end(&self, at: usize) -> Option<usize> {
+        let src = self.src;
+        let mut limit = src.len();
+        let mut nested_from = None;
+        let mut depth = 1usize;
+        let mut index = at + 1;
+        while index < limit {
+            match src[index] {
+                b'<' => {
+                    if nested_from.is_none() {
+                        nested_from = Some(index);
+                        let allowed = self.lookahead.get();
+                        limit = limit
+                            .min(at + TYPE_ARGS_LOOKAHEAD)
+                            .min(index.saturating_add(allowed));
+                    }
+                    depth += 1;
+                }
+                b'>' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        self.charge_assertion(nested_from, index + 1);
+                        return (index > at + 1).then_some(index + 1);
+                    }
+                }
+                byte if is_identifier_byte(byte) || matches!(byte, b'.' | b' ' | b',' | b'[' | b']') => {}
+                _ => break,
+            }
+            index += 1;
+        }
+        self.charge_assertion(nested_from, index.min(limit));
+        None
+    }
+
+    /// Charges the bytes an assertion read from its first nested `<` to the scan's lookahead.
+    fn charge_assertion(&self, nested_from: Option<usize>, end: usize) {
+        if let Some(from) = nested_from {
+            let allowed = self.lookahead.get();
+            self.lookahead.set(allowed.saturating_sub(end.saturating_sub(from)));
+        }
     }
 
     /// Whether the operator at `at` is a prefix: it follows the previous prefix operator, or an expression can start there.

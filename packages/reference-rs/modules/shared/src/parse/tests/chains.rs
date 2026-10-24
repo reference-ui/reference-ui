@@ -5,6 +5,7 @@
 //! tokens hidden in strings and comments. None of them may be refused. The stack test, which runs only when
 //! `SHARED_MEASURE_OUT` is set, parses each shape at the limit on a 16 MiB thread, the smallest stack a lane runs on.
 
+use super::measure::assert_linear;
 use super::super::{check_nesting, scan_nesting, NestingRefusal, MAX_NESTING, MAX_OPEN};
 use oxc_span::SourceType;
 
@@ -41,7 +42,7 @@ fn chain(head: &str, unit: &str, links: usize, tail: &str) -> String {
 }
 
 /// Each chain shape: its head, the unit that repeats, and the tail that ends the expression.
-const SHAPES: [(&str, &str, &str, &str); 16] = [
+const SHAPES: [(&str, &str, &str, &str); 17] = [
     ("bang", "export default ", "!", "true"),
     ("tilde", "export default ", "~", "1"),
     ("minus", "export default ", "- ", "1"),
@@ -54,6 +55,7 @@ const SHAPES: [(&str, &str, &str, &str); 16] = [
     ("readonly", "type T = ", "readonly ", "X[]"),
     ("new", "export default ", "new ", "X"),
     ("assertion", "export default ", "<any>", "x"),
+    ("assertion-generic", "export default ", "<Array<T>>", "x"),
     ("ternary", "export default ", "a ? 1 : ", "0"),
     ("arrow", "export default ", "x => ", "1"),
     ("assign", "", "b = ", "1"),
@@ -65,7 +67,7 @@ fn a_run_at_the_limit_passes_and_one_link_more_is_refused() {
     for (name, head, unit, tail) in SHAPES {
         assert_eq!(
             verdict(&chain(head, unit, MAX_OPEN, tail)),
-            Ok(if matches!(name, "await" | "readonly") {
+            Ok(if matches!(name, "await" | "readonly" | "assertion-generic") {
                 1
             } else {
                 0
@@ -220,11 +222,52 @@ fn type_operators_new_and_assertions_in_real_shapes_are_not_runs() {
     unrefused(&"x = <any>y; z = <T>(<U>w);".repeat(MANY));
     unrefused(&"if (a < b && c > d) e = a<b>c;".repeat(MANY));
     unrefused(&format!("x = [{}0];", "<any>y, ".repeat(MANY)));
+    unrefused(&"x = <Array<T>>y; z = <Map<K, V>>(w);".repeat(MANY));
+    unrefused(&"x = <A.B<C[]>>y;".repeat(MANY));
+    unrefused(&format!("x = [{}0];", "<Array<T>>y, ".repeat(MANY)));
     // JSX files read `<T>` as an element, never as an assertion, so the chain count leaves it to the element rules.
     let tsx = chain("export default ", "<any>", MAX_OPEN + 1, "x");
     assert!(!scan_nesting(&tsx, SourceType::tsx())
         .unwrap_err()
         .is_chain());
+    let generic_tsx = chain("export default ", "<Array<T>>", MAX_OPEN + 1, "x");
+    assert!(!scan_nesting(&generic_tsx, SourceType::tsx())
+        .unwrap_err()
+        .is_chain());
+}
+
+#[test]
+fn an_assertion_type_with_other_syntax_is_not_counted() {
+    for unit in [
+        "<A | B>",
+        "<A & B>",
+        "<(A)>",
+        "<{ a: A }>",
+        "<Array<A | B>>",
+        "<Array<(A)>>",
+    ] {
+        unrefused(&chain("export default ", unit, MAX_OPEN + 1, "x"));
+    }
+}
+
+#[test]
+fn an_assertion_type_that_never_closes_cannot_make_the_scan_quadratic() {
+    assert_linear(
+        "nested assertion types that never close",
+        100_000,
+        |count| "<A<".repeat(count),
+        |source| {
+            let _ = scan_nesting(source, ts());
+        },
+    );
+    assert_linear(
+        "assertions closed late",
+        50_000,
+        |count| format!("{}x", "<A<A<A<A<A".repeat(count)),
+        |source| {
+            let _ = scan_nesting(source, ts());
+        },
+    );
 }
 
 #[test]
