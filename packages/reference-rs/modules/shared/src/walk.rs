@@ -342,7 +342,7 @@ mod tests {
         workspace.write("src/c.ts", "export {}\n");
         workspace.write("node_modules/pkg/z.ts", "export {}\n");
         let root = workspace.root();
-        let scope = IncludeScope::compile(&[]);
+        let scope = IncludeScope::compile(&[]).unwrap();
         let matcher = scope.matcher(root.to_str());
         let walk = WalkScope::new(&[], &matcher);
         let mut sink = Recorder::default();

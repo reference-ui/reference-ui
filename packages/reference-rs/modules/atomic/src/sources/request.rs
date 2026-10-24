@@ -1,12 +1,13 @@
 //! Request-level source contract for `files` and `retentionToken`.
 //! It holds the exactly-one-of rule, the drained-retention path that skips the union backfill when the scan's
 //! completeness contract covers the request, and the outcome that reports how backfill settled. Takes a
-//! `CompileRequest` and emits sorted sources with a `BackfillOutcome`, or a diagnostic code for a rejected token.
+//! `CompileRequest` and emits sorted sources with a `BackfillOutcome`, or a diagnostic code for a rejected token
+//! or for an include pattern whose braces break the limits (`ATM-E-INCLUDE-BRACE-LIMIT`).
 //! Roots compare through the scope's candidate normalization so one directory never splits in two.
 
 use std::path::Path;
 
-use crate::includes::IncludeScope;
+use crate::includes::{IncludeError, IncludeScope};
 use crate::CompileRequest;
 
 use super::backfill::walk_root;
@@ -27,10 +28,15 @@ pub(crate) type CheckedSources =
     Result<(Vec<(String, String)>, BackfillOutcome), (crate::DiagnosticCode, String)>;
 
 /// Gather in-scope sources, sorted by path for deterministic extraction.
-pub(crate) fn collect(request: &CompileRequest) -> Vec<(String, String)> {
-    let mut sources = gather(request);
+pub(crate) fn collect(request: &CompileRequest) -> Result<Vec<(String, String)>, IncludeError> {
+    let mut sources = gather(request)?;
     sources.sort_unstable_by(|a, b| a.0.cmp(&b.0));
-    sources
+    Ok(sources)
+}
+
+/// The rejection a pattern past the brace limits becomes: the named code and the pattern-naming message.
+pub(crate) fn include_rejection(error: IncludeError) -> (crate::DiagnosticCode, String) {
+    (crate::DiagnosticCode::IncludeBraceLimit, error.to_string())
 }
 
 /// Gather with the scan/compile contract enforced: exactly-one-of `files` vs
@@ -40,7 +46,10 @@ pub(crate) fn collect(request: &CompileRequest) -> Vec<(String, String)> {
 /// the token path settled backfill; the legacy path always reports `Legacy`.
 pub(crate) fn collect_checked(request: &CompileRequest) -> CheckedSources {
     let Some(token) = request.retention_token else {
-        return Ok((collect(request), BackfillOutcome::Legacy));
+        return match collect(request) {
+            Ok(sources) => Ok((sources, BackfillOutcome::Legacy)),
+            Err(error) => Err(include_rejection(error)),
+        };
     };
     if request.files.as_ref().is_some_and(|files| !files.is_empty()) {
         return Err((
@@ -50,8 +59,11 @@ pub(crate) fn collect_checked(request: &CompileRequest) -> CheckedSources {
                 .to_string(),
         ));
     }
+    // The scope compiles before the drain, so a refused pattern leaves the token live for a corrected retry.
+    let patterns = request.include.as_deref().unwrap_or(&[]);
+    let scope = IncludeScope::compile(patterns).map_err(include_rejection)?;
     match crate::scan::drain(token) {
-        Ok(drained) => Ok(collect_drained(request, drained)),
+        Ok(drained) => Ok(collect_drained(request, &scope, drained)),
         Err(crate::scan::TokenError::Unknown(inner)) => Err((
             crate::DiagnosticCode::UnknownRetentionToken,
             format!(
@@ -76,10 +88,10 @@ pub(crate) fn collect_checked(request: &CompileRequest) -> CheckedSources {
 /// reads only what the list misses.
 fn collect_drained(
     request: &CompileRequest,
+    scope: &IncludeScope,
     drained: crate::scan::DrainedRetention,
 ) -> (Vec<(String, String)>, BackfillOutcome) {
     let patterns = request.include.as_deref().unwrap_or(&[]);
-    let scope = IncludeScope::compile(patterns);
     let matcher = scope.matcher(request.root_dir.as_deref());
     let skip = request
         .root_dir

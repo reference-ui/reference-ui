@@ -1,5 +1,5 @@
 //! Shared fixtures for the source-discovery tests.
-//! A process-unique temp root, the tricky disk tree with live and decoy files, and the scan and compile request builders for the retention token path. The `disk`, `disk_links` and `disk_alias` children pin the walk, `fifo` pins that neither walk nor scan opens a FIFO, and `retention` pins the completeness contract against these fixtures. Compiled only under `cfg(test)`.
+//! A process-unique temp root, the tricky disk tree with live and decoy files, and the scan and compile request builders for the retention token path. The `disk`, `disk_links` and `disk_alias` children pin the walk, `limits` pins the refusal of an include pattern past the brace limits on every path that compiles one, `fifo` pins that neither walk nor scan opens a FIFO, and `retention` pins the completeness contract against these fixtures. Compiled only under `cfg(test)`.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -9,7 +9,13 @@ mod disk;
 mod disk_alias;
 mod disk_links;
 mod fifo;
+mod limits;
 mod retention;
+
+/// `gather` for requests whose include patterns sit within the brace limits.
+pub(super) fn gathered(request: &CompileRequest) -> Vec<(String, String)> {
+    crate::sources::gather::gather(request).expect("include patterns within the brace limits")
+}
 
 /// Process-wide counter so parallel tests never share a temp root.
 static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);

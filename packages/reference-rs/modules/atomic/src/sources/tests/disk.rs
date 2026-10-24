@@ -2,7 +2,7 @@
 //! The disk scan keeps the live set, provided-everything plus a root equals the bare scan, roots compare by normalized candidate, and a provided subset without a root keeps legacy semantics. Each test runs `gather` directly over a temp tree and compares sorted pairs. The symlink walk tests live in `disk_links`. Compiled only under `cfg(test)` as a child of `sources::tests`.
 
 use super::{sorted, write_tricky_tree};
-use crate::sources::gather::gather;
+use super::gathered as gather;
 use crate::sources::request::same_root;
 use crate::{CompileRequest, VirtualSource};
 

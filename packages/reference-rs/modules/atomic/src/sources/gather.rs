@@ -1,9 +1,9 @@
 //! Gathers a compile's sources: the provided `files` union-filled from disk, or the `root_dir` scan.
-//! Takes the request's include scope and root and emits unsorted `(path, content)` pairs, which `request::collect` sorts afterwards. An empty `files` list counts as absent, so emptiness and absence both mean the caller handed nothing over.
+//! Takes the request's include scope and root and emits unsorted `(path, content)` pairs, which `request::collect` sorts afterwards, or the `IncludeError` of an include pattern whose braces break a limit. An empty `files` list counts as absent, so emptiness and absence both mean the caller handed nothing over.
 
 use std::path::Path;
 
-use crate::includes::{FileMatcher, IncludeScope};
+use crate::includes::{FileMatcher, IncludeError, IncludeScope};
 use crate::{CompileRequest, VirtualSource};
 
 use super::backfill::walk_root;
@@ -11,15 +11,16 @@ use super::walk::{scan_dir, WalkScope};
 
 /// Provided `files` union-filled from disk when present, otherwise the
 /// filtered `root_dir` scan. An empty list scans: absence and emptiness
-/// both mean "the caller handed nothing over".
-pub(super) fn gather(request: &CompileRequest) -> Vec<(String, String)> {
+/// both mean "the caller handed nothing over". An include pattern past the
+/// brace limits fails the gather before anything is read.
+pub(super) fn gather(request: &CompileRequest) -> Result<Vec<(String, String)>, IncludeError> {
     let patterns = request.include.as_deref().unwrap_or(&[]);
-    let scope = IncludeScope::compile(patterns);
+    let scope = IncludeScope::compile(patterns)?;
     let matcher = scope.matcher(request.root_dir.as_deref());
     let walk = WalkScope::new(patterns, &matcher);
     if let Some(files) = &request.files {
         if !files.is_empty() {
-            return union_sources(files, request.root_dir.as_deref(), &matcher, &walk);
+            return Ok(union_sources(files, request.root_dir.as_deref(), &matcher, &walk));
         }
     }
 
@@ -27,7 +28,7 @@ pub(super) fn gather(request: &CompileRequest) -> Vec<(String, String)> {
     if let Some(root_dir) = &request.root_dir {
         scan_dir(Path::new(root_dir), &walk, &mut sources);
     }
-    sources
+    Ok(sources)
 }
 
 /// Virtual sources inside the include scope; an open scope keeps every file.

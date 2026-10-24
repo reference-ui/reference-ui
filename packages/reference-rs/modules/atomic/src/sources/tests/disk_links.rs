@@ -2,7 +2,7 @@
 //! A loop ends once a link's directory and include state repeat, so each link is walked once per state it reaches; links into and out of the include scope list their files once, shared targets are claimed once, and links under engine-ignored directories are never walked. Each test builds real links, gathers through `gather`, and compares the listed paths. Compiled only under `cfg(test)` as a child of `sources::tests`; every test here is unix-only because links need symlink privileges.
 
 use super::{sorted, temp_root};
-use crate::sources::gather::gather;
+use super::gathered as gather;
 use crate::{CompileRequest, VirtualSource};
 
 /// The temp roots a test made, removed when the test ends, including when an assertion panics.

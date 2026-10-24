@@ -6,7 +6,7 @@
 use super::{scan_request, sorted, temp_root, token_request, tricky_paths, write_tricky_tree};
 use crate::sources::backfill::backfill_walks;
 use crate::sources::collect_checked;
-use crate::sources::gather::gather;
+use super::gathered as gather;
 use crate::sources::request::BackfillOutcome;
 use crate::CompileRequest;
 

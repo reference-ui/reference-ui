@@ -181,7 +181,8 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
 }
 
 /// Preamble-only artifact carrying a scan/compile contract rejection (the
-/// exactly-one-of and token-lifecycle failures); mirrors the napi rejection.
+/// exactly-one-of and token-lifecycle failures, and an include pattern past
+/// the brace limits); mirrors the napi rejection.
 fn token_rejection(code: DiagnosticCode, message: String) -> CompileResult {
     let preamble = stylesheet::layers::LAYER_PREAMBLE.to_string();
     CompileResult {

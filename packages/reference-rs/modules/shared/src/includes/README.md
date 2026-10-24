@@ -2,6 +2,10 @@
 
 Glob scoping for source discovery. The include patterns compile once, so a disk scan and a virtual file list honor one scope: `**` crosses directories, `*` and `?` stay in a segment, braces expand, classes match one character, and a leading `!` negates. An absent or empty list leaves the scope open. The traversal in `crate::walk` is the consumer: it keys each directory on the `GlobState` this module steps, and atomic re-exports the scope from `atomic::includes`.
 
+## Brace limits
+
+Brace expansion multiplies: `{a,b}` written 24 times is sixteen million globs. `IncludeScope::compile` therefore reads every pattern before it expands any: a pattern whose braces nest past 64 levels, or expand to more than 1,024 globs, fails compilation with an `IncludeError` naming the pattern (negated ones whole, `!` included) and the limit. These are the numbers and the counting rule core's config validation applies, so a caller that skips validation gets the same answer from the native addon. The count follows the expander's own pair, choice and commaless-literal rules, but multiplies sequential groups and adds a group's choices instead of building lists, and it walks the characters once with an explicit group stack. Thousands of sequential pairs therefore never recurse, and the expander skips literal pairs in a loop for the same reason. Atomic surfaces the error as `ATM-E-INCLUDE-BRACE-LIMIT`, tasty as `TST-E-SCAN-FAILED`.
+
 ## Two layers over one token list
 
 Each pattern is brace-expanded into alternatives, and each alternative is a token list. `glob::matches` reads that list against a whole path. A walk needs a second reading: before it enters a directory, it must know whether anything below that directory can still be included. The same token lists therefore also run as an automaton that consumes one character at a time, and the automaton's state is a plain value that can be stored and compared.

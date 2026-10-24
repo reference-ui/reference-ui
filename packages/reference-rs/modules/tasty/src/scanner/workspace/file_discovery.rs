@@ -4,13 +4,14 @@
 //! under its real path when one is in scope, else under its first link alias in walk order. A candidate needs a ts, tsx,
 //! mts or cts extension and must be a regular file through its metadata, so a dangling link is skipped, not a failure.
 //! An absent or unreadable scan root fails the scan with the walk error it always raised, and so does an include glob with
-//! an unclosed character class, which the shared scope would read as a literal `[`.
+//! an unclosed character class, which the shared scope would read as a literal `[`, and one whose braces nest past 64
+//! levels or expand past 1,024 globs, which the shared scope refuses.
 
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use shared::includes::IncludeScope;
+use shared::includes::{BraceLimit, IncludeError, IncludeScope, MAX_BRACE_DEPTH};
 use shared::walk::{walk_tree, WalkScope, WalkSink};
 
 use crate::diagnostics::scan_failed;
@@ -24,7 +25,7 @@ pub(super) fn discover_file_ids(root_dir: &Path, include: &[String]) -> Result<V
     check_scan_root(root_dir)?;
     check_include_globs(include)?;
     let root_text = root_dir.to_string_lossy().into_owned();
-    let scope = IncludeScope::compile(include);
+    let scope = IncludeScope::compile(include).map_err(|err| invalid_include(&err))?;
     let matcher = scope.matcher(Some(root_text.as_str()));
     let walk = WalkScope::new(include, &matcher);
     let mut sink = SourceSink::default();
@@ -55,6 +56,16 @@ fn root_walk_failed(root_dir: &Path, err: &std::io::Error) -> String {
         "failed to walk scan root: IO error for operation on {}: {err}",
         root_dir.display()
     ))
+}
+
+/// Fails the scan on an include glob whose braces nest past 64 levels or expand past 1,024 globs, naming the glob and
+/// the limit.
+fn invalid_include(err: &IncludeError) -> String {
+    let reason = match err.limit {
+        BraceLimit::Depth => format!("braces nest deeper than {MAX_BRACE_DEPTH} levels"),
+        BraceLimit::Alternatives => "braces expand to more than 1,024 globs".to_string(),
+    };
+    scan_failed(format!("invalid include glob '{}': {reason}", err.pattern))
 }
 
 /// Fails the scan on the first include glob with a `[` that never closes, naming the glob and the bracket's character offset.

@@ -151,6 +151,7 @@ grows an info level.
 | `ATM-E-CONFLICTING-SCAN-INPUTS` | A compile request carrying both `files` and a `retentionToken` | `modules/atomic/src/sources.rs` |
 | `ATM-E-UNKNOWN-RETENTION-TOKEN` | A `retentionToken` that names no live retention | `modules/atomic/src/sources.rs` |
 | `ATM-E-DRAINED-RETENTION-TOKEN` | A `retentionToken` drained by an earlier compile | `modules/atomic/src/sources.rs` |
+| `ATM-E-INCLUDE-BRACE-LIMIT` | An include pattern whose braces nest past 64 levels or expand past 1,024 globs | `modules/atomic/src/sources/request.rs` |
 | `ATM-W-UNKNOWN-TONE` | A named tone that is undeclared or whose value is not a usable percentage | `modules/atomic/src/resolve/tokens/mod.rs` |
 | `ATM-W-UNKNOWN-TOKEN` | A bare identifier on a spacing, radius, size or font-size prop that names no token in that category and is no CSS keyword the prop accepts | `modules/atomic/src/resolve/tokens/bare_name.rs` |
 | `ATM-W-UNBRACED-TOKEN-REF` | A whole token value that names another token without braces; printed verbatim, with the braced reference suggested | `modules/atomic/src/stylesheet/system_layers/mod.rs` |

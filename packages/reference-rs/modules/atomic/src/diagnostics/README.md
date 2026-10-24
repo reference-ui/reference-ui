@@ -122,6 +122,7 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 | `ATM-E-CONFLICTING-SCAN-INPUTS` | default | Request with both `files` and `retentionToken` |
 | `ATM-E-UNKNOWN-RETENTION-TOKEN` | default | Request with a never-minted token |
 | `ATM-E-DRAINED-RETENTION-TOKEN` | default | Request reusing a drained token |
+| `ATM-E-INCLUDE-BRACE-LIMIT` | default | `include: ['src/**/*.ts' + '{a,b}'.repeat(11)]` (more than 1,024 globs), or braces nested 65 deep |
 | `ATM-W-UNKNOWN-TONE` | default | `css({ color: 'blue.500/mediun' })` |
 | `ATM-W-UNKNOWN-TOKEN` | default | `css({ p: 'upGap' })` |
 | `ATM-W-UNBRACED-TOKEN-REF` | default | `tokens({ colors: { accent: { value: 'gray.900' } } })` |

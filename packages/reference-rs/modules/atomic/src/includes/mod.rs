@@ -3,7 +3,7 @@
 //! scope so every `crate::includes` path keeps resolving. Its tests pin the compile contract: an include list scopes
 //! the virtual files and the disk scan of one request, and an open list keeps every legacy file.
 
-pub use shared::includes::{FileMatcher, IncludeScope};
+pub use shared::includes::{FileMatcher, IncludeError, IncludeScope};
 pub(crate) use shared::includes::normalize_candidate;
 
 #[cfg(test)]

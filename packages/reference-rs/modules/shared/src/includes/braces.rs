@@ -3,35 +3,31 @@
 //! Pairs without a top-level comma stay literal, as do unmatched braces and
 //! backslash-escaped marks. Later passes handle `*`, `?`, and `[...]` matching.
 
-/// Expand `{a,b}` alternations; commaless braces stay literal.
+/// Expand `{a,b}` alternations; commaless braces stay literal. Commaless pairs are skipped in a loop, so a
+/// pattern of thousands of them never recurses; recursion follows only real alternations, which the limits in
+/// `limits.rs` keep shallow.
 pub(crate) fn expand(pattern: &str) -> Vec<String> {
     let chars: Vec<char> = pattern.chars().collect();
-    let Some((open, close)) = find_brace_pair(&chars) else {
-        return vec![pattern.to_string()];
-    };
-    let choices = split_choices(&chars[open + 1..close]);
-    if choices.len() < 2 {
-        return expand_literal_braces(&chars, close);
+    let mut head = String::new();
+    let mut rest: &[char] = &chars;
+    while let Some((open, close)) = find_brace_pair(rest) {
+        let choices = split_choices(&rest[open + 1..close]);
+        if choices.len() < 2 {
+            head.extend(rest[..=close].iter());
+            rest = &rest[close + 1..];
+            continue;
+        }
+        let mut expanded = Vec::new();
+        for choice in &choices {
+            let mut next = String::new();
+            next.extend(rest[..open].iter());
+            next.push_str(choice);
+            next.extend(rest[close + 1..].iter());
+            expanded.extend(expand(&next).into_iter().map(|tail| format!("{head}{tail}")));
+        }
+        return expanded;
     }
-    let mut expanded = Vec::new();
-    for choice in &choices {
-        let mut next = String::new();
-        next.extend(chars[..open].iter());
-        next.push_str(choice);
-        next.extend(chars[close + 1..].iter());
-        expanded.extend(expand(&next));
-    }
-    expanded
-}
-
-/// Keep a commaless brace pair literal while expanding the text after it.
-fn expand_literal_braces(chars: &[char], close: usize) -> Vec<String> {
-    let head: String = chars[..=close].iter().collect();
-    let tail: String = chars[close + 1..].iter().collect();
-    expand(&tail)
-        .into_iter()
-        .map(|rest| format!("{head}{rest}"))
-        .collect()
+    vec![format!("{head}{}", rest.iter().collect::<String>())]
 }
 
 /// First `{` with its depth-zero mate, skipping escaped characters.
@@ -162,6 +158,32 @@ fn delta_step(hit: char, escaped: bool, delta: &mut i32) -> bool {
 mod tests {
     use super::*;
 
+    /// The recursive expander the loop replaced, kept as the oracle for short patterns.
+    fn expand_reference(pattern: &str) -> Vec<String> {
+        let chars: Vec<char> = pattern.chars().collect();
+        let Some((open, close)) = find_brace_pair(&chars) else {
+            return vec![pattern.to_string()];
+        };
+        let choices = split_choices(&chars[open + 1..close]);
+        if choices.len() < 2 {
+            let head: String = chars[..=close].iter().collect();
+            let tail: String = chars[close + 1..].iter().collect();
+            return expand_reference(&tail)
+                .into_iter()
+                .map(|rest| format!("{head}{rest}"))
+                .collect();
+        }
+        let mut expanded = Vec::new();
+        for choice in &choices {
+            let mut next = String::new();
+            next.extend(chars[..open].iter());
+            next.push_str(choice);
+            next.extend(chars[close + 1..].iter());
+            expanded.extend(expand_reference(&next));
+        }
+        expanded
+    }
+
     #[test]
     fn alternations_expand() {
         assert_eq!(expand("src/*.{ts,tsx}"), vec!["src/*.ts", "src/*.tsx"]);
@@ -177,5 +199,31 @@ mod tests {
     fn commaless_braces_stay_literal() {
         assert_eq!(expand("src/{a}.ts"), vec!["src/{a}.ts"]);
         assert_eq!(expand("src/{a"), vec!["src/{a"]);
+        assert_eq!(expand("{a}{b,c}{d}"), vec!["{a}b{d}", "{a}c{d}"]);
+    }
+
+    #[test]
+    fn thousands_of_commaless_pairs_expand_without_recursing() {
+        let pattern = format!("src/{}.ts", "{x}".repeat(5000));
+        assert_eq!(expand(&pattern), vec![pattern.clone()]);
+    }
+
+    #[test]
+    fn the_loop_agrees_with_the_recursive_expander_over_every_short_pattern() {
+        let alphabet = ['{', '}', ',', 'a', '\\'];
+        let mut pattern = String::new();
+        compare(&alphabet, &mut pattern, 7);
+    }
+
+    fn compare(alphabet: &[char], pattern: &mut String, room: usize) {
+        assert_eq!(expand(pattern), expand_reference(pattern), "{pattern:?}");
+        if room == 0 {
+            return;
+        }
+        for next in alphabet {
+            pattern.push(*next);
+            compare(alphabet, pattern, room - 1);
+            pattern.pop();
+        }
     }
 }

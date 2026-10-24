@@ -2,15 +2,18 @@
 //! Compiles include patterns once so a disk scan and a virtual file list honor one scope. Patterns follow fast-glob
 //! flavor: `**` crosses directories, `*` and `?` stay inside a segment, `{a,b}` braces expand, `[...]` classes match
 //! one character, and a leading `!` negates.
+//! A pattern whose braces nest past 64 levels or expand past 1,024 globs fails compilation with an `IncludeError`.
 //! An absent or empty include list leaves the scope open, preserving scan-all.
 //! A negation-only list scopes to scan-all-minus-negatives (never open).
 //! The traversal in `crate::walk` consumes this scope's `FileMatcher` and the `GlobState` it steps.
 
 mod braces;
 mod glob;
+mod limits;
 mod nfa;
 mod state;
 
+pub use limits::{BraceLimit, IncludeError, MAX_BRACE_ALTERNATIVES, MAX_BRACE_DEPTH};
 pub(crate) use state::GlobState;
 
 /// Compiled include scope: positive alternatives with negative overrides.
@@ -20,8 +23,13 @@ pub struct IncludeScope {
 }
 
 impl IncludeScope {
-    /// Compile include patterns; irregular fragments stay literal, never panic.
-    pub fn compile(patterns: &[String]) -> Self {
+    /// Compile include patterns; irregular fragments stay literal, never panic. A pattern whose braces nest past
+    /// `MAX_BRACE_DEPTH` levels or expand past `MAX_BRACE_ALTERNATIVES` globs is refused by name, and every pattern
+    /// is read before any is expanded.
+    pub fn compile(patterns: &[String]) -> Result<Self, IncludeError> {
+        for pattern in patterns {
+            limits::check(pattern, split_negation(pattern).1)?;
+        }
         let mut positives = Vec::new();
         let mut negatives = Vec::new();
         for pattern in patterns {
@@ -35,10 +43,10 @@ impl IncludeScope {
                 target.push(glob::parse(&normalize_pattern(&expanded)));
             }
         }
-        Self {
+        Ok(Self {
             positives,
             negatives,
-        }
+        })
     }
 
     /// True when no pattern of either sign exists, so every file stays in scope.
@@ -184,7 +192,7 @@ mod tests {
 
     fn scope(patterns: &[&str]) -> IncludeScope {
         let owned: Vec<String> = patterns.iter().map(|pattern| pattern.to_string()).collect();
-        IncludeScope::compile(&owned)
+        IncludeScope::compile(&owned).expect("patterns within the brace limits")
     }
 
     #[test]

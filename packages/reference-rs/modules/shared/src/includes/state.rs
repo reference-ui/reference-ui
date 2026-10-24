@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn an_open_scope_keeps_no_state() {
-        let scope = IncludeScope::compile(&[]);
+        let scope = IncludeScope::compile(&[]).unwrap();
         let matcher = scope.matcher(Some("r"));
         assert_eq!(matcher.root_state(Path::new("r")), GlobState::default());
         assert_eq!(matcher.step(&GlobState::default(), OsStr::new("a")), GlobState::default());
@@ -228,7 +228,7 @@ mod tests {
         let mut totals = (0, 0);
         for include in INCLUDES {
             let patterns: Vec<String> = include.iter().map(|pattern| pattern.to_string()).collect();
-            let scope = IncludeScope::compile(&patterns);
+            let scope = IncludeScope::compile(&patterns).unwrap();
             for root in ROOTS {
                 let matcher = scope.matcher(Some(root));
                 for chain in &chains {

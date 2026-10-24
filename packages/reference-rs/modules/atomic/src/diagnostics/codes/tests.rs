@@ -79,6 +79,7 @@ fn every_variant_appears_exactly_once() {
         DiagnosticCode::ExternalUnbacked,
         DiagnosticCode::RecipeSlot,
         DiagnosticCode::RecipeField,
+        DiagnosticCode::IncludeBraceLimit,
     ] {
         assert!(variants.contains(&code), "missing table row: {code:?}");
     }

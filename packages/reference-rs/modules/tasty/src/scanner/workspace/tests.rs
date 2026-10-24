@@ -1,6 +1,6 @@
 //! Workspace discovery tests.
 //! Pins traversal layout, library boundaries, dangling-link tolerance, the failures for a missing or unreadable scan root
-//! and for an include glob with an unclosed class, and resolver memoization over temp-dir fixtures.
+//! and for an include glob with an unclosed class or braces past the limits, and resolver memoization over temp-dir fixtures.
 
 mod dangling_links;
 mod discovery_layout;
@@ -201,4 +201,31 @@ fn scan_workspace_fails_on_an_include_glob_with_an_unclosed_class() {
     );
     let closed = ["src/**/*.ts".to_string(), "src/[]ab].ts".to_string(), "src/\\[x.ts".to_string()];
     assert!(scan_workspace(root.path(), &closed).is_ok());
+}
+
+#[test]
+fn scan_workspace_fails_on_an_include_glob_past_the_brace_limits() {
+    let root = TempDir::new("scanner-workspace-brace-limits");
+    std::fs::create_dir_all(root.path().join("src")).expect("src dir");
+    std::fs::write(root.path().join("src/ok.ts"), "export const ok = 1;\n").expect("source");
+    let wide = format!("src/{}.ts", "{a,b}".repeat(11));
+    let err = scan_workspace(root.path(), &[wide.clone()])
+        .err()
+        .expect("a pattern expanding past 1,024 globs fails the scan");
+    assert_eq!(
+        err,
+        format!("TST-E-SCAN-FAILED: invalid include glob '{wide}': braces expand to more than 1,024 globs")
+    );
+    let deep = format!("!src/{}b{}.ts", "{a,".repeat(65), "}".repeat(65));
+    let err = scan_workspace(root.path(), &[deep.clone()])
+        .err()
+        .expect("a pattern nesting past 64 levels fails the scan");
+    assert_eq!(
+        err,
+        format!("TST-E-SCAN-FAILED: invalid include glob '{deep}': braces nest deeper than 64 levels")
+    );
+    let pairs = format!("src/{}.ts", "{x,y}".repeat(5000));
+    assert!(scan_workspace(root.path(), &[pairs]).is_err());
+    let edge = format!("src/**/*.ts{}", "{a,b}".repeat(10));
+    assert!(scan_workspace(root.path(), &[edge]).is_ok());
 }

@@ -8,7 +8,7 @@ use std::sync::mpsc;
 use std::time::Duration;
 
 use super::temp_root;
-use crate::sources::gather::gather;
+use super::gathered as gather;
 use crate::CompileRequest;
 
 /// How long one walk may run before its test fails by name.

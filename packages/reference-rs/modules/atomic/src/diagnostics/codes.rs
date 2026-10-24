@@ -181,12 +181,15 @@ pub enum DiagnosticCode {
     /// recipe's variant map or compound entry that is not inline. The whole definition is refused,
     /// with the field named and the fix hint "write <field> inline as an object literal".
     RecipeField,
+    /// `sources`: an include pattern whose braces nest past 64 levels or expand past 1,024 globs
+    /// (the limits core's config validation applies). The request is refused before any scan.
+    IncludeBraceLimit,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 57] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 58] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -304,6 +307,10 @@ const CODE_TABLE: [(DiagnosticCode, &str); 57] = [
     (DiagnosticCode::ExternalUnbacked, "ATM-W-EXTERNAL-UNBACKED"),
     (DiagnosticCode::RecipeSlot, "ATM-E-RECIPE-SLOT"),
     (DiagnosticCode::RecipeField, "ATM-E-RECIPE-FIELD"),
+    (
+        DiagnosticCode::IncludeBraceLimit,
+        "ATM-E-INCLUDE-BRACE-LIMIT",
+    ),
 ];
 
 // hints.test.ts reads the negative fixture `ATM-W-NOPE` out of this file, so the refusal
