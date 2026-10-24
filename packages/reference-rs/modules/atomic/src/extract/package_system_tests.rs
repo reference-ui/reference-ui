@@ -4,7 +4,7 @@
 //! the name alone when none), malformed text fails naming the file, and the
 //! process memo hands back one shared system until the file's mtime moves.
 //! A FIFO or directory at the published path fails naming the file instead of
-//! blocking the read.
+//! blocking the read, and a missing or unreadable file names the I/O error.
 //! On disk, a directory's verdict follows `exports["./baseSystem"]`, then the
 //! conventional path; this compile's own generated tree and a linked project
 //! directory borrowing the own runtime are own; an installed copy without a
@@ -111,7 +111,36 @@ fn a_fifo_or_directory_published_system_fails_naming_the_path() {
             .expect("the read blocked on a FIFO");
         let error = read.expect_err("a non-file published system fails");
         assert!(error.starts_with(&path), "{error}");
+        assert!(error.ends_with("not a regular file"), "{error}");
     }
+}
+
+#[test]
+fn a_missing_published_system_names_the_missing_file() {
+    let (_scratch, root) = scratch("published-missing");
+    let path = format!("{root}/baseSystem.mjs");
+    let system = published(&path);
+    let error = system.names().expect_err("a missing file fails");
+    assert!(error.starts_with(&path), "{error}");
+    assert!(error.contains("No such file or directory (os error 2)"), "{error}");
+}
+
+/// A mode-000 file answers EACCES; root reads it anyway, so the test returns early then.
+#[cfg(unix)]
+#[test]
+fn an_unreadable_published_system_names_the_permission_error() {
+    use std::os::unix::fs::PermissionsExt;
+    let (_scratch, root) = scratch("published-unreadable");
+    let path = format!("{root}/baseSystem.mjs");
+    fs::write(&path, published_system("ui")).expect("fixture");
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o000)).expect("chmod");
+    if fs::read_to_string(&path).is_ok() {
+        return;
+    }
+    let system = published(&path);
+    let error = system.names().expect_err("an unreadable file fails");
+    assert!(error.starts_with(&path), "{error}");
+    assert!(error.contains("Permission denied (os error 13)"), "{error}");
 }
 
 #[test]
