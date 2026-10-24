@@ -1,4 +1,5 @@
-//! Measurements for the nesting gate; each runs only when `SHARED_MEASURE_OUT` names a report file.
+//! Measurements for the nesting gate and the doubling check the linearity tests share. The measurements run only when
+//! `SHARED_MEASURE_OUT` names a report file; `assert_linear` runs in the unit tests and times a scan at N and at 2N.
 //! `measure_throughput` times the scan on a synthetic corpus of about 8 MB as TypeScript and as TSX, and on the adversarial
 //! `(<a<)` that makes every `<` read ahead. `measure_repo_nesting` scans every source under `SHARED_DEPTH_ROOTS` twice, once
 //! as its extension says and once with TypeScript forced on, which is how atomic and styletrace parse a `.js` file, and reports
@@ -15,6 +16,45 @@ use super::super::{check_nesting, scan_nesting, NestingRefusal};
 
 fn ts() -> SourceType {
     SourceType::ts()
+}
+
+/// The slowest time one doubling may cost; linear work doubles, quadratic work quadruples.
+const MAX_DOUBLING_RATIO: f64 = 3.0;
+
+/// The hang guard: a scan that takes this long is stuck, whatever its ratio.
+const HANG_CEILING: Duration = Duration::from_secs(60);
+
+/// Proves a scan is linear in its input by doubling: it builds the source at `size` and at `2 * size`, runs `scan` on each
+/// three times, and asserts that the fastest run at 2N is under three times the fastest run at N. Taking the minimum drops
+/// the runs a loaded machine slowed, so the ratio does not depend on how fast the machine is.
+pub(super) fn assert_linear(
+    what: &str,
+    size: usize,
+    build: impl Fn(usize) -> String,
+    scan: impl Fn(&str),
+) {
+    let fastest = |size: usize| {
+        let source = build(size);
+        (0..3)
+            .map(|_| {
+                let started = Instant::now();
+                scan(&source);
+                let took = started.elapsed();
+                assert!(
+                    took < HANG_CEILING,
+                    "{what}: one scan at {size} took {took:?}"
+                );
+                took
+            })
+            .min()
+            .expect("three runs")
+    };
+    let (single, double) = (fastest(size), fastest(size * 2));
+    let ratio = double.as_secs_f64() / single.as_secs_f64();
+    assert!(
+        ratio < MAX_DOUBLING_RATIO,
+        "{what}: doubling {size} took {single:?} then {double:?}, a ratio of {ratio:.2}"
+    );
 }
 
 /// Scan throughput on a synthetic corpus of about 8 MB, as TypeScript and as TSX (which runs the JSX rules too), and the time

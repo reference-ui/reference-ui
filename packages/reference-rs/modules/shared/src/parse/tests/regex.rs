@@ -5,6 +5,7 @@
 //! per repeat.
 
 use super::super::{scan_nesting, NestingRefusal, MAX_NESTING};
+use super::measure::assert_linear;
 use oxc_span::SourceType;
 
 fn ts() -> SourceType {
@@ -207,18 +208,19 @@ fn a_comment_between_the_operator_and_the_slash_does_not_hide_the_regex() {
 #[test]
 fn slashes_that_never_close_cannot_make_the_scan_quadratic() {
     // Each `=/[` opens a class that swallows the rest of the line, so each slash reads ahead to the end of it. The reads are
-    // charged to the scan's lookahead, which ends them after a few megabytes, not a thousand reads of eight.
-    let source = format!(
-        "{}{}{}\n",
-        "=/[".repeat(1000),
-        "x".repeat(8_000_000),
-        "]".repeat(1000)
-    );
-    let started = std::time::Instant::now();
-    assert_eq!(scan_nesting(&source, ts()), Ok(1000));
-    assert!(
-        started.elapsed() < std::time::Duration::from_secs(2),
-        "the scan took {:?}",
-        started.elapsed()
+    // charged to the scan's lookahead, which ends them after a few megabytes, not a thousand reads of eight. The source
+    // doubles in slashes and in filler together, so a read per slash across the line would quadruple the time.
+    assert_linear(
+        "unclosed regex classes",
+        250,
+        |slashes| {
+            format!(
+                "{}{}{}\n",
+                "=/[".repeat(slashes),
+                "x".repeat(slashes * 2_000),
+                "]".repeat(slashes)
+            )
+        },
+        |source| assert!(scan_nesting(source, ts()).is_ok()),
     );
 }

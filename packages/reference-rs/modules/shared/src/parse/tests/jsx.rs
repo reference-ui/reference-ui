@@ -6,6 +6,7 @@
 //! parentheses behind the shape that used to hide them.
 
 use super::super::{scan_nesting, NestingRefusal, MAX_NESTING};
+use super::measure::assert_linear;
 use oxc_span::SourceType;
 
 fn tsx() -> SourceType {
@@ -250,13 +251,11 @@ fn a_refused_element_nest_names_the_line_of_the_element_that_crosses_the_limit()
 fn type_arguments_that_never_close_cannot_make_the_scan_quadratic() {
     // Each `<a<` reads ahead for the `>` that closes its type arguments and never finds one. The reads are charged to the
     // scan's lookahead, which ends them after a few megabytes, not a thousand bytes for each of 800,000 tags.
-    let source = "(<a<)".repeat(800_000);
-    let started = std::time::Instant::now();
-    assert_eq!(scan_nesting(&source, tsx()), Ok(1));
-    assert!(
-        started.elapsed() < std::time::Duration::from_secs(5),
-        "the scan took {:?}",
-        started.elapsed()
+    assert_linear(
+        "type arguments that never close",
+        100_000,
+        |tags| "(<a<)".repeat(tags),
+        |source| assert_eq!(scan_nesting(source, tsx()), Ok(1)),
     );
 }
 
@@ -281,18 +280,19 @@ fn an_element_still_open_at_the_end_was_never_one() {
 }
 
 #[test]
-fn nested_misread_elements_are_scanned_again_once_each() {
-    let source = format!(
-        "type F = {}string{} => T;\n",
-        "<T>(a: ".repeat(2000),
-        ")".repeat(2000)
-    );
-    let started = std::time::Instant::now();
-    assert_eq!(scan_nesting(&source, tsx()), refused_at(1));
-    assert!(
-        started.elapsed() < std::time::Duration::from_secs(5),
-        "the scan took {:?}",
-        started.elapsed()
+fn nested_misread_elements_are_scanned_again_once_each_so_the_scan_is_not_quadratic() {
+    // Both sizes stay under the open-construct cap, so each is refused at the same depth after the same kind of rescan.
+    assert_linear(
+        "nested misread elements",
+        2_000,
+        |nests| {
+            format!(
+                "type F = {}string{} => T;\n",
+                "<T>(a: ".repeat(nests),
+                ")".repeat(nests)
+            )
+        },
+        |source| assert_eq!(scan_nesting(source, tsx()), refused_at(1)),
     );
 }
 
