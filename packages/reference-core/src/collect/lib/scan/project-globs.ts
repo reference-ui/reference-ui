@@ -4,6 +4,7 @@
 // compileGlobs returns undefined for any list outside the subset this model reads exactly; the walk keeps its wave-2 cut there.
 // Segment matchers read `[!b]` through negatedClassesAsCaret (glob-classes.ts), so a negated class means what it means in Rust.
 
+import { sep } from 'node:path'
 import picomatch from 'picomatch'
 import { expandBraces } from './braces.ts'
 import { negatedClassesAsCaret } from './glob-classes.ts'
@@ -219,10 +220,22 @@ export function startPositions(globs: CompiledGlobs, prefixes: FormPrefixes): st
 }
 
 // The segments a list reads before the walk's own names: the root-relative or absolute start of its form, none for a local list.
+// A relative prefix comes from path.relative, so it splits on the host's separator.
 function prefixNames(tag: GlobTag, prefixes: FormPrefixes): string[] {
-  if (tag === 'ka') return ['', ...prefixes.alias.split('/').filter((name) => name !== '')]
+  if (tag === 'ka') return absoluteSegments(prefixes.alias)
   if (tag === 'il') return []
-  return prefixes.rel === '' ? [] : prefixes.rel.split('/')
+  return prefixes.rel === '' ? [] : prefixes.rel.split(sep)
+}
+
+/**
+ * The segments an absolute path is read as. A posix path starts at the empty root segment and splits on `/`, since a
+ * backslash is a legal character in a posix name. A drive path (`C:\\repo\\src` or `C:/repo/src`) splits on either
+ * separator and starts at its drive name, as an absolute include pattern such as `C:/repo/**` does.
+ */
+export function absoluteSegments(path: string): string[] {
+  const drive = /^[A-Za-z]:[\\/]/.test(path)
+  const names = path.split(drive ? /[\\/]+/ : '/').filter((name) => name !== '')
+  return drive ? names : ['', ...names]
 }
 
 /** The positions after one name is read: each list's state moves on that name, and its closure is taken. Finished positions are kept. */

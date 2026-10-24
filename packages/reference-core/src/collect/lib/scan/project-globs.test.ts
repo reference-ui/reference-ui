@@ -5,6 +5,7 @@ import picomatch from 'picomatch'
 import { describe, expect, it } from 'vitest'
 import { expandBraces } from './braces.ts'
 import {
+  absoluteSegments,
   compileGlobs,
   startPositions,
   stepPositions,
@@ -118,6 +119,21 @@ describe('startPositions for each form and the unfinished view', () => {
     expect(startPositions(absolute, { rel: '../shared', alias: '/abs/x' })).toEqual(['ka:0:3', 'ka:0:4'])
     const ignore = modeled([{ tag: 'ir', patterns: ['src/a/**'] }])
     expect(startPositions(ignore, { rel: 'src', alias: '/root' })).toEqual(['ir:0:1'])
+  })
+
+  it('reads a win32 drive path on either separator as drive-first segments, and a posix path from its root segment', () => {
+    expect(absoluteSegments('C:\\repo\\src')).toEqual(['C:', 'repo', 'src'])
+    expect(absoluteSegments('C:/repo/src')).toEqual(['C:', 'repo', 'src'])
+    expect(absoluteSegments('d:\\repo/mixed\\src\\')).toEqual(['d:', 'repo', 'mixed', 'src'])
+    expect(absoluteSegments('/abs/x')).toEqual(['', 'abs', 'x'])
+    expect(absoluteSegments('/abs/we\\ird/x')).toEqual(['', 'abs', 'we\\ird', 'x'])
+  })
+
+  it('starts an absolute list from a win32 alias exactly as from the same path written with slashes', () => {
+    const absolute = modeled([{ tag: 'ka', patterns: ['C:/repo/src/**/*.ts'] }])
+    const fromDrive = startPositions(absolute, { rel: '../src', alias: 'C:\\repo\\src' })
+    expect(fromDrive).toEqual(startPositions(absolute, { rel: '../src', alias: 'C:/repo/src' }))
+    expect(fromDrive).toEqual(['ka:0:3', 'ka:0:4'])
   })
 
   it('starts a local list at the base and sorts the tagged lists together', () => {
