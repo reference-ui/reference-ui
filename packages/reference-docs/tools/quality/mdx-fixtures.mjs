@@ -1,6 +1,7 @@
-// Shared fixtures for the MDX gate's unit tests: page templates and helpers that write a temporary docs
-// tree, an earlier collection build, and a collection config in the app's shape. Each test file calls
-// `after(removeFixtures)` so the trees it made are deleted. It holds no tests itself.
+// Shared fixtures for the MDX gate's unit tests.
+// It holds page templates and helpers that write a temporary docs tree, an earlier collection build,
+// and a collection config in the app's shape. Each test file calls `after(removeFixtures)` so the
+// trees it made are deleted. It holds no tests itself.
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'

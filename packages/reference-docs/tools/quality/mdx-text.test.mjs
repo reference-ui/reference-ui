@@ -1,5 +1,6 @@
-// Unit tests for the MDX gate's text checks: frontmatter parsing and contract, em dashes in prose, and
-// internal link targets. They run each check's module on strings, with no docs tree. Run with
+// Unit tests for the MDX gate's text checks.
+// They cover frontmatter parsing and contract, em dashes in prose, and internal link targets. They run
+// each check's module on strings, with no docs tree. Run with
 // `pnpm --filter @reference-ui/reference-docs run quality:test`.
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'

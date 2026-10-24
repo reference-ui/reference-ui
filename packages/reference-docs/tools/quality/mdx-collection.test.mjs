@@ -1,5 +1,6 @@
-// Unit tests for the collection check of the docs gate: it builds a temporary docs tree with a collection
-// config in the app's shape and asserts which dropped pages and config failures it reports. Run with
+// Unit tests for the collection check of the docs gate.
+// Each test builds a temporary docs tree with a collection config in the app's shape and asserts which
+// dropped pages and config failures the check reports. Run with
 // `pnpm --filter @reference-ui/reference-docs run quality:test`.
 import assert from 'node:assert/strict'
 import { existsSync } from 'node:fs'

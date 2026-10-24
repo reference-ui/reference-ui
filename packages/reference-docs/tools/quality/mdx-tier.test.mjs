@@ -1,5 +1,5 @@
-// Unit tests for the MDX tier: the app's real compile pipeline and the tier run over a temporary docs
-// tree. The compile tests take a few seconds. Run with
+// Unit tests for the MDX tier of the docs gate.
+// They run the app's real compile pipeline and the tier over a temporary docs tree. The compile tests take a few seconds. Run with
 // `pnpm --filter @reference-ui/reference-docs run quality:test`.
 import assert from 'node:assert/strict'
 import path from 'node:path'
