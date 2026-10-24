@@ -112,7 +112,7 @@ pnpm agentct --help
 > [!IMPORTANT] 
 > **AGENTIC FLOW & PERSISTENT DAEMON:**
 > - **Human-readable verification output:** Do not pass `--json` for unit/CT jobs. Run `pnpm agentct` natively and parse the progress in the task logs. Catalog-only `list` and `search` may use JSON; invoke `pnpm --silent agentct ... --json` to keep package-script banners out of machine-readable stdout.
-> - **One Vite, one active job:** `agentct` auto-starts a persistent Unix-socket daemon (`/tmp/ref-ct-agent.sock`) that owns a single CT Vite gallery on `http://localhost:3101`. The gallery starts when browser evidence is needed and stays warm for later jobs. Unit-only selections do not start Vite. Concurrent invocations share this daemon and wait their turn. One daemon serves every checkout and worktree, and each job runs in its own tree: its runner, specs, stories, CSS, Vite and artifacts. The gallery restarts when the tree changes. An older daemon that runs only its own checkout is refused before anything runs (exit 2). `pnpm agentct stop` stops the daemon for every tree, so stop it only when no other agent needs it. Contact sheets come after the Playwright summary, at about 10 s per recording, and the job slot stays held while they build.
+> - **One Vite, one active job:** `agentct` auto-starts a persistent Unix-socket daemon (`/tmp/ref-ct-agent.sock`) that owns a single CT Vite gallery on `http://localhost:3101`. The gallery starts when browser evidence is needed and stays warm for later jobs. Unit-only selections do not start Vite. Concurrent invocations share this daemon and wait their turn. One daemon serves every checkout and worktree, and each job runs in its own tree: its runner, specs, stories, CSS, Vite and artifacts. The gallery restarts when the tree changes. An older daemon that runs only its own checkout is refused before anything runs (exit 2). `pnpm agentct stop` stops the daemon for every tree, so stop it only when no other agent needs it. Contact sheets come after the Playwright summary, only for failed tests unless `--all-sheets` is passed; the runner releases its test slot before building them (inside the daemon the daemon owns the slot, and the few sheets of a failing run are cheap).
 > - **Resource budget:** the global queue permits **one** active verification job, including its units and all React browser runs. Vitest and Playwright use at most **two** workers. `CT_WORKERS=1` lowers the job budget; higher overrides are capped at two. The direct fallback shares the same execution lock.
 > - **Scheduling:** run one local verification job at a time. Queue additional component work instead of launching independent browser servers or test fleets. Cancellation keeps the execution slot until the child stops and escalates the job's owned process groups, so detached Playwright server/browser leaders cannot outlive their slot. The direct fallback never takes over an existing listener on the CT port; `pnpm agentct stop` terminates active jobs and the daemon's owned groups.
 > - **Snapshot telemetry:** when `toHaveScreenshot` fails, the reporter prints bounding box (`x: min..max`, `y: min..max`) and the dominant color hex difference. Use that before writing image-parsing scripts.
@@ -176,9 +176,11 @@ The runner prints absolute paths after e2e:
 ### Stills (`frames.png`)
 
 The agent cannot play `.webm`, so the runner writes a `frames.png`
-next to each video — up to eight stills showing the moments the picture changed,
+next to the video of each **failed** test (pass `--all-sheets`, or set
+`AGENTCT_ALL_SHEETS=1`, to get one for every video; a passing test's `frames.png`
+is rarely worth the seek time) — up to eight stills showing the moments the picture changed,
 laid out left-to-right in a grid, each labelled with its timestamp. The runner
-densely seeks the recording and keeps the frames where the component actually
+seeks 16 evenly spaced points of the recording and keeps the frames where the component actually
 appears, so the sheet is not a black background. If nothing changed from the
 first frame the sheet carries a red "no change from first frame" banner and the
 runner warns on stderr. Open it with the Read tool and check:

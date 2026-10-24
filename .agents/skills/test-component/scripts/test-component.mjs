@@ -19,7 +19,7 @@ import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import net from 'node:net'
 import { loadCatalog, searchCases, selectCase } from './cases/catalog.mjs'
-import { evidenceErrors } from './cases/results.mjs'
+import { evidenceErrors, runsNeedingSheets } from './cases/results.mjs'
 import { unitDirectory, artifactsDirectory } from './cases/targets.mjs'
 import { resolveSelection, selectLegacyTarget, executionArguments } from './cases/selection.mjs'
 import { parseCatalogInvocation, formatCatalogJson, formatCatalogHuman, listingExitCode, writeCatalogOutput } from './cases/output.mjs'
@@ -1188,6 +1188,7 @@ Usage: pnpm agentct [Component] [options]
   pnpm agentct stop                 Stop the persistent daemon and Vite :3101 (for every tree)
 
   --headed                     Playwright headed
+  --all-sheets                 Build a frames.png for every video (default: failed tests only; env AGENTCT_ALL_SHEETS=1)
   --clean                      Clear this run's isolated artifact directory
   --json                       Machine-readable summary
   --update-snapshots --confirm   Rewrite React 19 baselines (human yes required)
@@ -1213,6 +1214,7 @@ let unitSelector = ''
 let ctTargets = []
 let exactVitestTarget = null
 let isHeaded = false
+let allSheets = process.env.AGENTCT_ALL_SHEETS === '1'
 let updateSnapshots = false
 let confirmSnapshotUpdate = false
 let runUnit = true
@@ -1283,6 +1285,8 @@ for (let i = 0; i < args.length; i++) {
     isClean = true
   } else if (arg === '--headed') {
     isHeaded = true
+  } else if (arg === '--all-sheets') {
+    allSheets = true
   } else if (arg === '--update-snapshots' || arg === '-u') {
     updateSnapshots = true
   } else if (arg === '--confirm') {
@@ -1830,15 +1834,22 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, onInter
 // (hoisted above) drops only the listeners that acquisition added while
 // retaining the module's own `exit` fallback. The shared cpu-gate module is
 // untouched, and the same wrapper is used by daemon startJob.
-const releaseExecution = IS_INNER && process.env.AGENTCT_JOB_SLOT_HELD === '1'
+const releaseQueueSlot = IS_INNER && process.env.AGENTCT_JOB_SLOT_HELD === '1'
   ? async () => {}
   : (await acquireQueueLock({ cmd: 'agentct', component: component || 'all' }, { isCanceled: () => interrupted })).release
-const releaseExecutionGate = IS_INNER ? async () => {} : await acquireCpuGateHoldingSignals('ct', component || 'all')
+const releaseCpuSlot = IS_INNER ? async () => {} : await acquireCpuGateHoldingSignals('ct', component || 'all')
+// Contact sheets run after the slot is released, so release must be callable twice.
+let slotsReleased = false
+const releaseSlots = async () => {
+  if (slotsReleased) return
+  slotsReleased = true
+  await releaseCpuSlot()
+  await releaseQueueSlot()
+}
 
 // A cancellation while acquiring the leases must release without spawning.
 if (interrupted) {
-  await releaseExecutionGate()
-  await releaseExecution()
+  await releaseSlots()
   process.exit(130)
 }
 
@@ -2126,19 +2137,24 @@ async function runE2eSuites() {
 
 await runE2eSuites()
 
-// Turn every recording into a stills contact sheet that text/PNG-only agents
-// can inspect. The sheets show only the frames where the picture changed, but a
-// recording that never changes still gets a bannered sheet and a loud warning.
+// Turn recordings into stills contact sheets that text/PNG-only agents can
+// inspect. By default only failed tests get one (a passing test needs no
+// stills), and `--all-sheets` builds every video's. The sheets show only the
+// frames where the picture changed, but a recording that never changes still gets
+// a bannered sheet and a loud warning. The test slot is released first: sheet
+// building is a lone Chromium, not a test, so it must not block the next job
+// (inside the daemon the daemon owns the slot, so this is a no-op there).
 // Failure is loud but never changes the test verdict, and warnings go to stderr
 // so `--json` stdout stays one parseable value.
-const videoRuns = e2eRuns.filter((entry) => entry.videoPath)
-if (videoRuns.length > 0) {
+await releaseSlots()
+const sheetRuns = runsNeedingSheets(e2eRuns, { all: allSheets })
+if (sheetRuns.length > 0) {
   const sheetsStartedAt = Date.now()
-  console.error(`[agentct] Building ${videoRuns.length} contact sheets, about 10 s each; the job slot stays held.`)
+  console.error(`[agentct] Building ${sheetRuns.length} contact sheet${sheetRuns.length === 1 ? '' : 's'}${allSheets ? '' : ' (failed tests only; --all-sheets builds every video)'}.`)
   try {
-    const sheets = await writeVideoContactSheets(videoRuns.map((entry) => entry.videoPath))
+    const sheets = await writeVideoContactSheets(sheetRuns.map((entry) => entry.videoPath))
     const sheetByVideo = new Map(sheets.map((sheet) => [path.resolve(sheet.videoPath), sheet]))
-    for (const entry of videoRuns) {
+    for (const entry of sheetRuns) {
       const sheet = sheetByVideo.get(path.resolve(entry.videoPath)) || null
       entry.framesPath = sheet?.framesPath || null
       entry.noChange = Boolean(sheet?.noChange)
@@ -2147,15 +2163,12 @@ if (videoRuns.length > 0) {
       }
     }
   } catch (err) {
-    for (const entry of videoRuns) {
+    for (const entry of sheetRuns) {
       console.warn(`[agentct] ⚠ Contact sheet failed for ${entry.videoPath}: ${err.message}`)
     }
   }
   console.error(`[agentct] Contact sheets done in ${((Date.now() - sheetsStartedAt) / 1000).toFixed(1)} s.`)
 }
-
-await releaseExecutionGate()
-await releaseExecution()
 
 const e2ePassed = e2eRuns.filter((t) => t.status === 'passed').length
 const e2eFailed = e2eRuns.filter((t) => t.status === 'failed' || t.status === 'timedOut').length
@@ -2240,7 +2253,7 @@ if (isJson) {
       console.log('-------------------------------------------------------')
 
       if (e2eRuns.some((t) => t.framesPath)) {
-        console.log('\n💡 Agents: open each `frames.png` — the stills are the moments the picture changed, labelled with their timestamps. A red banner means no frame change was detected.')
+        console.log('\n💡 Agents: open each `frames.png` — the stills are the moments the picture changed, labelled with their timestamps. A red banner means no frame change was detected. Failed tests get one by default; pass --all-sheets for passing tests too.')
         console.log('   For a failed test, read its trace with `npx playwright trace open <trace.zip>` then `actions` / `errors` / `console` / `screenshot <action-id>`.')
       }
       if (e2eRuns.some((t) => t.react && t.react !== 'react19')) {

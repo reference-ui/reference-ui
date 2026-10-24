@@ -5,12 +5,14 @@
  *
  * Playwright writes one webm per CT run, but no agent host here can play video,
  * so this module densifies each recording into a small grid of stills named
- * `frames.png` beside the source video. It does not sample evenly: CT clips are
- * mostly the blank gallery loading and the fixture unmounting, so an even spread
- * misses the interaction. Instead it seeks every 0.1s, signatures each frame as a
- * 32x20 luminance array, and keeps the frames where the picture changed
- * (`selectActiveFrameTimestamps`), labelled with their timestamps. When nothing
- * changes it still writes a loud banner so a blank recording is obvious.
+ * `frames.png` beside the source video. It does not show an even spread: CT clips
+ * are mostly the blank gallery loading and the fixture unmounting, so even stills
+ * miss the interaction. Instead it seeks a fixed 16 evenly spaced points (a seek
+ * costs far more than a decode, so the cost no longer grows with clip length),
+ * signatures each frame as a 32x20 luminance array, and keeps the frames where
+ * the picture changed (`selectActiveFrameTimestamps`), labelled with their
+ * timestamps. When nothing changes it still writes a loud banner so a blank
+ * recording is obvious. The runner builds sheets for failed tests by default.
  *
  * `writeVideoContactSheets` launches exactly ONE headless Chromium (resolved from
  * packages/reference-lib), serves each video over a fake HTTP origin so canvas
@@ -37,8 +39,7 @@ const CELL_GAP = 6
 const LABEL_HEIGHT = 26
 const DURATION_TIMEOUT_MS = 20000
 const SEEK_TIMEOUT_MS = 20000
-const SAMPLE_STEP_SECONDS = 0.1
-const MAX_SAMPLE_COUNT = 300
+const SAMPLE_COUNT = 16
 const SIGNATURE_WIDTH = 32
 const SIGNATURE_HEIGHT = 20
 
@@ -139,22 +140,18 @@ export function computeGridFrameRects({
 }
 
 /**
- * Chooses density-scan timestamps: every `stepSeconds` from 0 to the duration,
- * widened so a long clip never exceeds `maxSamples`. The first sample is always
- * 0 and the last is the duration, so the detector sees the whole recording.
+ * Chooses density-scan timestamps: `count` evenly spaced points from 0 to the
+ * duration, so a clip costs the same number of seeks however long it runs. The
+ * first sample is always 0 and the last is the duration, so the detector sees
+ * the whole recording.
  */
-export function sampleTimestamps(durationSeconds, { stepSeconds = SAMPLE_STEP_SECONDS, maxSamples = MAX_SAMPLE_COUNT } = {}) {
+export function sampleTimestamps(durationSeconds, { count = SAMPLE_COUNT } = {}) {
   if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
     throw new Error(`sampleTimestamps needs a positive finite duration, received ${durationSeconds}`)
   }
-  if (!Number.isFinite(stepSeconds) || stepSeconds <= 0) {
-    throw new Error(`sampleTimestamps needs a positive finite step, received ${stepSeconds}`)
+  if (!Number.isInteger(count) || count < 2) {
+    throw new Error(`sampleTimestamps needs an integer sample count of at least two, received ${count}`)
   }
-  if (!Number.isInteger(maxSamples) || maxSamples < 2) {
-    throw new Error(`sampleTimestamps needs an integer sample cap of at least two, received ${maxSamples}`)
-  }
-  const naturalCount = Math.floor(durationSeconds / stepSeconds) + 1
-  const count = Math.min(naturalCount, maxSamples)
   const step = durationSeconds / (count - 1)
   const timestamps = []
   for (let index = 0; index < count; index += 1) {

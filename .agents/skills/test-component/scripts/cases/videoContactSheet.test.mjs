@@ -14,6 +14,7 @@ import {
   selectActiveFrameTimestamps,
   signatureSpread,
 } from '../videoContactSheet.mjs'
+import { runsNeedingSheets } from './results.mjs'
 
 const BLANK = 10
 const LIT = 200
@@ -24,32 +25,28 @@ function sample(t, signature) {
   return { t, signature }
 }
 
-test('sampleTimestamps starts at zero, ends at the duration, and stays ascending', () => {
-  const timestamps = sampleTimestamps(2, { stepSeconds: 0.1 })
-  assert.equal(timestamps.length, 21)
+test('sampleTimestamps defaults to sixteen evenly spaced points from zero to the duration', () => {
+  const timestamps = sampleTimestamps(30)
+  assert.equal(timestamps.length, 16)
   assert.equal(timestamps[0], 0)
-  assert.equal(timestamps[timestamps.length - 1], 2)
+  assert.equal(timestamps[timestamps.length - 1], 30)
+  const step = timestamps[1] - timestamps[0]
   for (let index = 1; index < timestamps.length; index += 1) {
-    assert.ok(timestamps[index] > timestamps[index - 1])
+    assert.ok(Math.abs(timestamps[index] - timestamps[index - 1] - step) < 1e-9)
   }
 })
 
-test('sampleTimestamps widens the step to respect the sample cap', () => {
-  const timestamps = sampleTimestamps(100, { stepSeconds: 0.1, maxSamples: 300 })
-  assert.equal(timestamps.length, 300)
-  assert.equal(timestamps[0], 0)
-  assert.equal(timestamps[timestamps.length - 1], 100)
+test('sampleTimestamps costs the same number of seeks for a short and a long clip', () => {
+  assert.equal(sampleTimestamps(0.5).length, sampleTimestamps(600).length)
+  assert.equal(sampleTimestamps(100, { count: 12 }).length, 12)
 })
 
-test('sampleTimestamps rejects unusable durations, steps, and caps', () => {
+test('sampleTimestamps rejects unusable durations and counts', () => {
   for (const duration of [0, -1, Number.NaN, Infinity, -Infinity, null, undefined, '5']) {
     assert.throws(() => sampleTimestamps(duration), /positive finite duration/, String(duration))
   }
-  for (const stepSeconds of [0, -1, Number.NaN, Infinity, null, '0.1']) {
-    assert.throws(() => sampleTimestamps(5, { stepSeconds }), /positive finite step/, String(stepSeconds))
-  }
-  for (const maxSamples of [1, 0, -1, 1.5, Number.NaN, null, '300']) {
-    assert.throws(() => sampleTimestamps(5, { maxSamples }), /sample cap/, String(maxSamples))
+  for (const count of [1, 0, -1, 1.5, Number.NaN, null, '16']) {
+    assert.throws(() => sampleTimestamps(5, { count }), /sample count/, String(count))
   }
 })
 
@@ -178,4 +175,16 @@ test('selectActiveFrameTimestamps skips flat blank frames around the component',
 test('signatureSpread is zero for a flat frame and positive for content', () => {
   assert.equal(signatureSpread(blankSignature()), 0)
   assert.equal(signatureSpread([10, 200, 10]), 190)
+})
+
+test('runsNeedingSheets picks only failed or timed-out videos unless all is set', () => {
+  const runs = [
+    { title: 'a', status: 'passed', videoPath: '/v/a.webm' },
+    { title: 'b', status: 'failed', videoPath: '/v/b.webm' },
+    { title: 'c', status: 'timedOut', videoPath: '/v/c.webm' },
+    { title: 'd', status: 'failed', videoPath: null },
+  ]
+  assert.deepEqual(runsNeedingSheets(runs).map((run) => run.title), ['b', 'c'])
+  assert.deepEqual(runsNeedingSheets(runs, { all: true }).map((run) => run.title), ['a', 'b', 'c'])
+  assert.deepEqual(runsNeedingSheets([{ title: 'e', status: 'passed', videoPath: '/v/e.webm' }]), [])
 })

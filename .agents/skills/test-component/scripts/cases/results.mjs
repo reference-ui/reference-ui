@@ -2,6 +2,8 @@
  * Checks execution reports against the declarations selected from the catalog.
  * A successful process exit without complete passing evidence is a failure;
  * filtering may exclude siblings but cannot turn a missing selected case green.
+ * Also chooses which recordings get a contact sheet: failed tests by default,
+ * every video when asked.
  */
 import path from 'node:path'
 import { titlePattern } from './discover.mjs'
@@ -42,4 +44,10 @@ export function evidenceErrors(tests, cases, { runtime = '' } = {}) {
     }
   }
   return errors
+}
+
+// A failed or timed-out test is the one an agent must see; a passing test's
+// stills are opt-in because each sheet costs seconds of seeking.
+export function runsNeedingSheets(runs, { all = false } = {}) {
+  return runs.filter(run => run.videoPath && (all || run.status === 'failed' || run.status === 'timedOut'))
 }
