@@ -12,7 +12,17 @@ description: Run Reference UI in a webpack app.
 `ref sync` writes your stylesheet and packages to `.reference-ui/` before
 webpack runs. webpack reads them like any other package.
 
+These steps start from a project where you have installed Reference UI and run
+`ref init`, as in [Getting started](/initialize).
+
 <Step n={1}>Add the scripts</Step>
+
+The dev script runs two commands side by side with `concurrently`, and
+`webpack serve` comes from `webpack-dev-server`. Install both:
+
+<Install packages="concurrently webpack-dev-server" dev />
+
+Then add the scripts:
 
 ```json
 {
@@ -24,13 +34,16 @@ webpack runs. webpack reads them like any other package.
 ```
 
 The first `ref sync` makes sure the generated packages exist before webpack
-starts. `concurrently` is a separate package; any tool that runs two commands
-side by side works.
+starts. Any tool that runs two commands side by side can replace
+`concurrently`.
 
 <Step n={2}>Handle CSS files</Step>
 
-webpack needs a rule for `.css` imports. This one uses `style-loader` and
-`css-loader`:
+webpack needs a rule for `.css` imports. Install the two loaders:
+
+<Install packages="style-loader css-loader" dev />
+
+Then add a rule that uses them:
 
 ```js {6-9}
 // webpack.config.cjs
@@ -62,8 +75,8 @@ import '@reference-ui/react/styles.css'
 
 1. Run `npm run dev`. The terminal shows the sync summary, then the webpack
    dev server.
-2. Add `padding="6r"` to a `Div`. A resync line appears and the page picks
-   up the padding.
+2. Render a `Div` from `@reference-ui/react` and give it `padding="6r"`. A
+   resync line appears and the page picks up the padding.
 3. Run `npm run build`. Sync runs first, then webpack.
 
 [Sync](/sync) covers watch mode and its output in more detail.
