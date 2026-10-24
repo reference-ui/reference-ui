@@ -30,6 +30,33 @@ fn disk_scan_pins_the_tricky_set() {
     std::fs::remove_dir_all(&root).unwrap();
 }
 
+/// A generated `.content-collections` folder is never a source: the disk scan skips
+/// it at any depth while a live sibling still compiles.
+#[test]
+fn disk_scan_skips_the_content_collections_folder() {
+    let root = super::temp_root("content-collections");
+    for rel in [
+        "src/a.ts",
+        ".content-collections/generated/index.ts",
+        "src/.content-collections/nested.ts",
+    ] {
+        let path = root.join(rel);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, "export const a = 1;\n").unwrap();
+    }
+    let root_str = root.to_string_lossy().to_string();
+    let request = CompileRequest {
+        root_dir: Some(root_str.clone()),
+        ..Default::default()
+    };
+    let paths: Vec<String> = sorted(gather(&request))
+        .into_iter()
+        .map(|(path, _)| path)
+        .collect();
+    assert_eq!(paths, [format!("{root_str}/src/a.ts")]);
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
 /// Provided-everything plus a root equals the bare disk scan, and a
 /// provided subset backfills the missing disk paths to the same set.
 #[test]

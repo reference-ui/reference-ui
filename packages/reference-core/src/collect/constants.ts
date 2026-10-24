@@ -41,6 +41,7 @@ export const NATIVE_IGNORE_DIRS = new Set([
   '.reference-ui',
   '.reference',
   '.pipeline',
+  '.content-collections',
 ])
 
 // Engine-parsed extensions mirrored from sources.rs is_supported_extension:

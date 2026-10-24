@@ -1,5 +1,5 @@
 // Scanner identity lock: tricky-tree matches plus retention stay byte-exact.
-// It takes a fixture (all nine IGNORE dirs, dotfiles, d.ts variants, extension
+// It takes a fixture (all ten IGNORE dirs, dotfiles, d.ts variants, extension
 // traps, unicode, spaces, deep nesting, a file named dist) and pins the exact
 // match and retention sets, the cwd-spelling invariance, and the out-of-cwd
 // fallback — the diet contract. Semantics come from the native differential
@@ -41,6 +41,7 @@ const FIXTURE_FILES: Array<[string, string]> = [
   ['.reference-ui/x.ts', CSS],
   ['.reference/x.ts', CSS],
   ['.pipeline/x.ts', CSS],
+  ['.content-collections/x.ts', CSS],
   ['dist.ts', CSS],
   ['src/dist', CSS],
   ['src/dist-backup/keep.ts', CSS],

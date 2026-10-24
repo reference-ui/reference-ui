@@ -154,6 +154,7 @@ const IGNORE_DIRS = new Set([
   '.reference-ui',
   '.reference',
   '.pipeline',
+  '.content-collections',
 ])
 const SOURCE_EXTENSIONS = new Set(['tsx', 'ts', 'jsx', 'js'])
 

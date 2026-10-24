@@ -24,6 +24,7 @@ const IGNORE_DIRS: &[&str] = &[
     ".reference-ui",
     ".reference",
     ".pipeline",
+    ".content-collections",
 ];
 
 /// Recursively collect supported sources under `dir`, skipping fixed ignores. Nothing is claimed up front, so the

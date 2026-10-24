@@ -20,6 +20,7 @@ const SKIP_DIRS = new Set([
   '.reference-ui',
   '.reference',
   '.pipeline',
+  '.content-collections',
 ])
 
 export function collectInputSources(rootDir: string): VirtualSource[] {
