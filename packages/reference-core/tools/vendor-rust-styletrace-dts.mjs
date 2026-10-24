@@ -52,30 +52,33 @@ function collectClosure(distDir) {
     const text = readFileSync(abs, 'utf8');
     for (const spec of specifiersIn(text)) {
       if (!spec.startsWith('.')) continue;
-      const base = path.join(path.dirname(rel), spec);
-      const stripped = base.endsWith('.js') ? base.slice(0, -3) : base;
-      if (existsSync(path.join(distDir, `${stripped}.d.ts`))) queue.push(`${stripped}.d.ts`);
-      else if (existsSync(path.join(distDir, `${base}.d.ts`))) queue.push(`${base}.d.ts`);
-      else if (existsSync(path.join(distDir, base, 'index.d.ts'))) queue.push(path.join(base, 'index.d.ts'));
-      else if (existsSync(path.join(distDir, stripped, 'index.d.ts'))) queue.push(path.join(stripped, 'index.d.ts'));
-      else throw new Error(`unresolvable relative specifier '${spec}' in dist/${rel}; the RS dist shape moved.`);
+      queue.push(resolveRelativeSpecifier(distDir, rel, spec).file);
     }
   }
   return [...seen].sort();
 }
 
+// Resolve one relative specifier written in dist file `ownerRel` to the d.ts it names and to the explicit NodeNext
+// specifier the vendored copy carries. The dist writes either the extensionless form (`./x`, `./dir`) or the explicit
+// one (`./x.js`, `./dir/index.js`); both name the same declaration file.
+function resolveRelativeSpecifier(distDir, ownerRel, spec) {
+  const dir = path.dirname(ownerRel);
+  if (spec.endsWith('.js')) {
+    const file = path.join(dir, `${spec.slice(0, -'.js'.length)}.d.ts`);
+    if (existsSync(path.join(distDir, file))) return { file, specifier: spec };
+  } else {
+    const file = path.join(dir, `${spec}.d.ts`);
+    if (existsSync(path.join(distDir, file))) return { file, specifier: `${spec}.js` };
+    const index = path.join(dir, spec, 'index.d.ts');
+    if (existsSync(path.join(distDir, index))) return { file: index, specifier: `${spec}/index.js` };
+  }
+  throw new Error(`unresolvable relative specifier '${spec}' in dist/${ownerRel}; the RS dist shape moved.`);
+}
+
 // Rewrite one relative specifier to its explicit NodeNext form; externals pass through.
 function rewriteSpecifier(distDir, ownerRel, spec) {
   if (!spec.startsWith('.')) return spec;
-  const base = path.join(path.dirname(ownerRel), spec);
-  if (spec.endsWith('.js')) {
-    const stripped = base.slice(0, -3);
-    if (existsSync(path.join(distDir, `${stripped}.d.ts`))) return spec;
-    if (existsSync(path.join(distDir, stripped, 'index.d.ts'))) return spec;
-  }
-  if (existsSync(path.join(distDir, `${base}.d.ts`))) return `${spec}.js`;
-  if (existsSync(path.join(distDir, base, 'index.d.ts'))) return `${spec}/index.js`;
-  throw new Error(`unresolvable relative specifier '${spec}' in dist/${ownerRel}; the RS dist shape moved.`);
+  return resolveRelativeSpecifier(distDir, ownerRel, spec).specifier;
 }
 
 function rewriteText(distDir, rel, text) {
