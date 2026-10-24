@@ -72,6 +72,7 @@ test.describe('Showcase Suite', () => {
     // Escape unwinds Tier 2 Popover
     await page.keyboard.press('Escape')
     await expect(tier2Popover).not.toBeVisible()
+    await expect(openPopoverBtn).toBeFocused()
     await page.waitForTimeout(400)
     await snap(page, 'shebang-unwind-tier2')
 

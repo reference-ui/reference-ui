@@ -117,6 +117,7 @@ test.describe('Popover Composition Gates & Browser Proofs', () => {
     await trigger.hover()
     await page.waitForTimeout(350)
     await expect(content).toBeVisible()
+    await expect(content).toHaveCSS('max-width', '200px')
     await snap(page, 'hover-open')
   })
 })
