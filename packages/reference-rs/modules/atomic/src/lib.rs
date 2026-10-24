@@ -9,6 +9,7 @@ pub mod alloc_counters;
 pub mod alloc_trace;
 mod assembly;
 pub mod atom;
+mod depth;
 pub mod diagnostics;
 pub mod extract;
 mod extract_parallel;
@@ -254,31 +255,47 @@ pub(crate) fn screen_sources(pairs: Vec<(String, String)>) -> Vec<Source> {
 /// Parse one screened source: JSX follows the extension (`.tsx` on, `.ts` off),
 /// so `.ts`-only `<T>` assertions parse only when JSX is off.
 /// The verdict travels with the text, so this never scans. A source the gate
-/// refused is never handed to Oxc; it comes back as a failed parse.
+/// refused is never handed to Oxc, and a program whose AST nests past the
+/// depth gate is dropped before any walker sees it; both come back as a failed parse.
 pub(crate) fn parse_source<'a>(
     source: &'a ScreenedSource,
     allocator: &'a Allocator,
 ) -> ParserReturn<'a> {
     match shared::parse::parse_screened(allocator, source) {
-        Ok(parsed) => parsed,
-        Err(refusal) => refused_parse(allocator, source.as_str(), source.source_type(), refusal),
+        Ok(parsed) => match depth::check(&parsed.program) {
+            Ok(()) => parsed,
+            Err(refusal) => refused_deep(allocator, source, refusal),
+        },
+        Err(refusal) => {
+            refused_at_line(allocator, source, refusal.line, refusal.message())
+        }
     }
 }
 
-/// The failed parse for a refused source: Oxc's empty program with `panicked`
-/// set, and the refusal as its one error, located at the start of the line
-/// where nesting crossed the limit. The parse-error path reports it as ATM-E-PARSE.
-fn refused_parse<'a>(
+/// The failed parse for a program the depth gate refused, located at the start of the line of the node
+/// that crossed the limit.
+fn refused_deep<'a>(
     allocator: &'a Allocator,
-    content: &str,
-    source_type: SourceType,
-    refusal: NestingRefusal,
+    source: &ScreenedSource,
+    refusal: depth::DepthRefusal,
 ) -> ParserReturn<'a> {
-    let mut parsed = shared::parse::refused_parser_return(allocator, source_type);
-    let start = shared::parse::line_start(content, refusal.line);
+    let line = diagnostics::line_col(source.as_str(), refusal.offset).map_or(1, |(line, _)| line);
+    refused_at_line(allocator, source, line, depth::DepthRefusal::message(line))
+}
+
+/// The failed parse for a refused source: Oxc's empty program with `panicked` set, and `message` as its one error,
+/// located at the start of `line`. The parse-error path reports it as ATM-E-PARSE.
+fn refused_at_line<'a>(
+    allocator: &'a Allocator,
+    source: &ScreenedSource,
+    line: u32,
+    message: String,
+) -> ParserReturn<'a> {
+    let mut parsed = shared::parse::refused_parser_return(allocator, source.source_type());
+    let start = shared::parse::line_start(source.as_str(), line);
     parsed
         .errors
-        .push(OxcDiagnostic::error(refusal.message()).with_label(Span::new(start, start)));
+        .push(OxcDiagnostic::error(message).with_label(Span::new(start, start)));
     parsed
 }
 

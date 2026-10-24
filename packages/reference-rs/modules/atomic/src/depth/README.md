@@ -1,0 +1,3 @@
+# Depth gate tests
+
+Tests for the expression-depth gate in `../depth.rs`. They parse one chain per construct the walkers recurse through (unary, binary, logical, conditional, member, computed, optional, call, `as`, non-null, assignment, arrow, array type, `else if`) just past the limit and well under it, pin the exact limit on a binary chain, and check that the refused program comes back from `parse_source` as a failed parse with one error naming the line. Each test parses on a 256 MiB thread, because a chain that Oxc parses by recursion would otherwise overflow the harness's small stack; the gate itself never recurses past its limit. The compile-level proof is `ATM-BOUND-07`, and the stack-fit proof is `../tests/depth.rs`.
