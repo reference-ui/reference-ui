@@ -11,7 +11,7 @@ use super::{Open, Scan};
 use crate::parse::NestingRefusal;
 
 /// How far past a `<` a type-argument list may run before it is read as not closing; no real tag comes near this.
-pub(super) const TYPE_ARGS_LOOKAHEAD: usize = 2048;
+const TYPE_ARGS_LOOKAHEAD: usize = 2048;
 
 fn is_name_start(byte: u8) -> bool {
     byte.is_ascii_alphabetic() || byte == b'_' || byte == b'$'

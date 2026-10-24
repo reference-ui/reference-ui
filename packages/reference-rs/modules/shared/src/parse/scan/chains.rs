@@ -2,10 +2,10 @@
 //! Oxc recurses once per link of `!!!!x`, `typeof typeof x`, `keyof keyof T`, `<T><T>x`, `a ? b : c ? d : e`, `a => b => c` and
 //! `a = b = c`, and none of them opens a bracket the bracket count could see. The scan counts the links per bracket level and
 //! refuses a level that passes `MAX_OPEN` with `NestingRefusal::chain`. A prefix run is the operators that follow one another
-//! with only whitespace and comments between them, counted only where an expression can start. The `?`, `=>` and `=` links run
+//! with only whitespace and comments between them, counted only where an expression can start. A `<` there in a TypeScript
+//! file that is not TSX is one link whatever the type after it holds, and the run goes on past the `>` that closes it. The `?`, `=>` and `=` links run
 //! across operands and end at `;`, at `,`, when the bracket closes, and at a newline that does not continue the expression.
 
-use super::jsx::TYPE_ARGS_LOOKAHEAD;
 use super::{is_identifier_byte, NestingRefusal, Scan};
 use crate::parse::MAX_OPEN;
 
@@ -21,8 +21,8 @@ const PREFIX_WORDS: &[&[u8]] = &[
 ];
 
 /// The counters of one bracket level: the right-recursive links since the run began, the prefix operators in the current
-/// run, where that run's last operator ends, and whether the run is a TypeScript non-null `!` chain (`a!!!`), which is postfix
-/// and recurses nowhere. A bracket level starts with fresh counters, and its closer restores the
+/// run, where that run's last operator ends, whether the run is a TypeScript non-null `!` chain (`a!!!`), which is postfix
+/// and recurses nowhere, and whether a `<` type assertion is waiting for its `>`. A bracket level starts with fresh counters, and its closer restores the
 /// counters of the level around it.
 #[derive(Clone, Copy, Default)]
 pub(super) struct Chains {
@@ -30,6 +30,7 @@ pub(super) struct Chains {
     prefix: u32,
     prefix_end: u32,
     postfix: bool,
+    assertion_open: bool,
 }
 
 impl Chains {
@@ -150,60 +151,24 @@ impl Scan<'_> {
                 || matches!(self.src[at - 1], b'.' | 0x80..=0xff))
     }
 
-    /// A `<T>` in a TypeScript file that is not TSX, where an expression starts: a type assertion, which is a prefix operator
-    /// as long as its type is made of names, `.`, spaces, `,`, `[]` and balanced nested `<…>`, as in `<Array<T>>x`. A type
-    /// with `|`, `&`, `(`, `{` or `=>` in it, or one that does not close within `TYPE_ARGS_LOOKAHEAD` bytes or the scan's
-    /// lookahead, is not counted. The part before the first nested `<` costs nothing, since no other read covers those bytes;
-    /// the part from there on is charged to the lookahead, the way type arguments are.
+    /// A `<` in a TypeScript file that is not TSX where an expression starts, or right after a prefix operator, and that does
+    /// not open a generic: a type assertion, whatever its type holds. It counts as a one-byte prefix operator at once, with no
+    /// lookahead, and leaves `assertion_open` set so the `>` that closes it (`close_angle_unless_arrow`) carries the run on to
+    /// the next operator, as in `<A | B><any>x`.
     pub(super) fn assertion(&mut self, at: usize) -> Result<(), NestingRefusal> {
-        if let Some(end) = self.assertion_end(at) {
-            if self.prefix_start(at) {
-                self.note_prefix(at, end - at)?;
-            }
+        if self.prefix_start(at) {
+            self.note_prefix(at, 1)?;
+            self.chains.assertion_open = true;
         }
         Ok(())
     }
 
-    /// The index just past the `>` that closes the assertion type opened at `at`, or None when the text is not one.
-    fn assertion_end(&self, at: usize) -> Option<usize> {
-        let src = self.src;
-        let mut limit = src.len();
-        let mut nested_from = None;
-        let mut depth = 1usize;
-        let mut index = at + 1;
-        while index < limit {
-            match src[index] {
-                b'<' => {
-                    if nested_from.is_none() {
-                        nested_from = Some(index);
-                        let allowed = self.lookahead.get();
-                        limit = limit
-                            .min(at + TYPE_ARGS_LOOKAHEAD)
-                            .min(index.saturating_add(allowed));
-                    }
-                    depth += 1;
-                }
-                b'>' => {
-                    depth -= 1;
-                    if depth == 0 {
-                        self.charge_assertion(nested_from, index + 1);
-                        return (index > at + 1).then_some(index + 1);
-                    }
-                }
-                byte if is_identifier_byte(byte) || matches!(byte, b'.' | b' ' | b',' | b'[' | b']') => {}
-                _ => break,
-            }
-            index += 1;
-        }
-        self.charge_assertion(nested_from, index.min(limit));
-        None
-    }
-
-    /// Charges the bytes an assertion read from its first nested `<` to the scan's lookahead.
-    fn charge_assertion(&self, nested_from: Option<usize>, end: usize) {
-        if let Some(from) = nested_from {
-            let allowed = self.lookahead.get();
-            self.lookahead.set(allowed.saturating_sub(end.saturating_sub(from)));
+    /// The `>` at `at` closes no generic and is not part of `=>`. If an assertion is open it closes it, and the run's last
+    /// operator now ends after the `>`.
+    pub(super) fn close_assertion(&mut self, at: usize) {
+        if self.chains.assertion_open {
+            self.chains.prefix_end = (at + 1) as u32;
+            self.chains.assertion_open = false;
         }
     }
 

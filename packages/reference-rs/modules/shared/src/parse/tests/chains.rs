@@ -42,7 +42,7 @@ fn chain(head: &str, unit: &str, links: usize, tail: &str) -> String {
 }
 
 /// Each chain shape: its head, the unit that repeats, and the tail that ends the expression.
-const SHAPES: [(&str, &str, &str, &str); 17] = [
+const SHAPES: [(&str, &str, &str, &str); 19] = [
     ("bang", "export default ", "!", "true"),
     ("tilde", "export default ", "~", "1"),
     ("minus", "export default ", "- ", "1"),
@@ -56,6 +56,8 @@ const SHAPES: [(&str, &str, &str, &str); 17] = [
     ("new", "export default ", "new ", "X"),
     ("assertion", "export default ", "<any>", "x"),
     ("assertion-generic", "export default ", "<Array<T>>", "x"),
+    ("assertion-union", "export default ", "<A | B>", "x"),
+    ("assertion-object", "export default ", "<{ a: A }>", "x"),
     ("ternary", "export default ", "a ? 1 : ", "0"),
     ("arrow", "export default ", "x => ", "1"),
     ("assign", "", "b = ", "1"),
@@ -67,7 +69,10 @@ fn a_run_at_the_limit_passes_and_one_link_more_is_refused() {
     for (name, head, unit, tail) in SHAPES {
         assert_eq!(
             verdict(&chain(head, unit, MAX_OPEN, tail)),
-            Ok(if matches!(name, "await" | "readonly" | "assertion-generic") {
+            Ok(if matches!(
+                name,
+                "await" | "readonly" | "assertion-generic" | "assertion-object"
+            ) {
                 1
             } else {
                 0
@@ -237,7 +242,7 @@ fn type_operators_new_and_assertions_in_real_shapes_are_not_runs() {
 }
 
 #[test]
-fn an_assertion_type_with_other_syntax_is_not_counted() {
+fn an_assertion_run_is_counted_whatever_its_type_holds() {
     for unit in [
         "<A | B>",
         "<A & B>",
@@ -246,8 +251,22 @@ fn an_assertion_type_with_other_syntax_is_not_counted() {
         "<Array<A | B>>",
         "<Array<(A)>>",
     ] {
-        unrefused(&chain("export default ", unit, MAX_OPEN + 1, "x"));
+        let source = chain("export default ", unit, MAX_OPEN + 1, "x");
+        let refusal = scan_nesting(&source, ts()).unwrap_err();
+        assert!(refusal.is_chain(), "{unit} run");
     }
+}
+
+#[test]
+fn an_uncounted_looking_assertion_does_not_let_the_rest_of_the_run_through() {
+    let union_first = format!(
+        "export default <A|B>{}x\n",
+        "<any>".repeat(MAX_OPEN + 1)
+    );
+    assert!(scan_nesting(&union_first, ts()).unwrap_err().is_chain());
+    let unit = format!("{}<Array<{}>>", "<any>".repeat(8000), "A".repeat(2100));
+    let source = format!("export default {}x\n", unit.repeat(2));
+    assert!(scan_nesting(&source, ts()).unwrap_err().is_chain());
 }
 
 #[test]

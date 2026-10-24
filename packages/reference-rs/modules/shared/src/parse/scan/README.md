@@ -8,6 +8,6 @@ heads and children, and a `>` or `}` among the children, or the end of the sourc
 element: it is dropped, and when code surrounds it the text it swallowed is scanned again as code. The rule for where an
 expression starts decides whether a `<` opens an element and whether a `/` opens a regex. It looks past comments, takes a `/` after
 the head of an `if`, `while`, `for` or `with` as a regex, and takes one after an object literal as a division. String
-literals, regex literals, comments and escapes are opaque runs that keep the line count, and the lookahead they, the tag heads and a nested generic assertion type (`<Array<T>>x`)
+literals, regex literals, comments and escapes are opaque runs that keep the line count, and the lookahead they and the tag heads
 use is charged to one budget per source, so a hostile source cannot make the scan quadratic. The raw bracket count and the opener
 count are independent of all of it.

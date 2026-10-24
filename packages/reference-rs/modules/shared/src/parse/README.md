@@ -31,7 +31,7 @@ raw, is read as text.
 Oxc also recurses through chains that open no bracket: `!!!!x`, `typeof typeof x`, `a ? b : c ? d : e`, `a => b => c` and
 `a = b = c`. Each bracket level keeps two counters for them, and a level that passes 8,192 is refused. The prefix counter
 counts the operators (`! ~ - +`, the words `typeof`, `void`, `delete`, `await`, `keyof`, `readonly` and `new`, and in a TypeScript
-file that is not TSX a `<Name>` type assertion, whose type may hold names, `.`, `,`, `[]` and nested `<…>`, as in `<Array<T>>x`) that follow one another with only whitespace and comments between them, and only where an expression can start, so a binary `-`, a `!=` and a TypeScript non-null `a!!` are
+file that is not TSX a `<` type assertion, one link whatever its type holds, so `<A | B><any>x` counts both; the `>` that closes it carries the run on) that follow one another with only whitespace and comments between them, and only where an expression can start, so a binary `-`, a `!=` and a TypeScript non-null `a!!` are
 not prefix operators. The other counter counts the links that recurse to the right across their operands: a ternary `?`, an
 `=>` and an `=`. `?.`, `??`, `==`, `<=` and the `?` of an optional member or parameter are not links. That run ends at a `;`, at
 a `,`, at a newline unless the line ends in an operator that continues the expression, and when its bracket closes, which
@@ -86,8 +86,7 @@ test that reads a delta runs alone in its own process, as `shared/tests/gate_run
 - A hashbang line is read as code: `#!/usr/…` reads `/usr/` as a regex. Nothing in it hides.
 - A nest hidden by a mistake the rules make is caught only by the two backstops, so it passes between 1,025 and 8,192 levels.
   Production stacks hold those.
-- The gate counts brackets, template expressions, generics, JSX elements and the chains above. An assertion to a type that holds
-  `|`, `&`, `(`, `{` or `=>`, or that does not close within 2,048 bytes of lookahead, is not a chain link.
+- The gate counts brackets, template expressions, generics, JSX elements and the chains above.
 - A ternary, arrow or assignment chain that a newline breaks after an operand is counted per line, not whole, so a
   generated file that wraps such a chain line by line passes.
 - Oxc takes quadratic time on valid code such as `[a<b, a<b, …]`, about 25 s at 8,192 comparisons. That is the parser's cost.

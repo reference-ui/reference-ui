@@ -187,10 +187,15 @@ impl Scan<'_> {
     }
 
     /// A `>` closes the generic on top unless it is the `>` of an arrow (`=>`), which a generic's function type may contain.
+    /// With no generic on top it closes an open type assertion instead.
     pub(super) fn close_angle_unless_arrow(&mut self, at: usize) -> Result<(), NestingRefusal> {
-        if self.top() == Some(Open::Angle) && !self.preceded_by(at, b'=') {
+        if self.preceded_by(at, b'=') {
+            return Ok(());
+        }
+        if self.top() == Some(Open::Angle) {
             return self.confirm_top();
         }
+        self.close_assertion(at);
         Ok(())
     }
 
