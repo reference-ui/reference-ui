@@ -1,6 +1,6 @@
 // Producer-to-consumer contract for the generated declarations.
 // Every fixtures/*.golden.txt and the typegen styled types for a sample system are staged where their real consumer resolves them, with every exported type probed as style props.
-// The real compileNative runs in a child process, so a tracer crash (SIGSEGV) fails the case instead of killing the worker, and the child must exit clean, under budget, with a traced host per live probe.
+// The real compileNative runs in a child process, so a tracer crash (SIGSEGV) fails the case instead of killing the worker, and the child must exit clean, under a CPU budget, with a traced host per live probe.
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -18,7 +18,10 @@ const REACT_GOLDEN = 'react-types-none-plain.golden.txt'
 const REACT_ENTRY = '@reference-ui/react'
 const STYLED_ENTRY = '@reference-ui/styled'
 const PACKAGE_JSON = '{"name":"consumer-contract","private":true,"type":"module"}\n'
-const CHILD_BUDGET_MS = 5_000
+// The budget counts the child's CPU time around compileNative, not wall time: a loaded machine stretches wall time while the
+// work stays the same. The wall ceiling is three times the budget, so a stalled child still fails while a contended one does not.
+const CHILD_CPU_BUDGET_MS = 5_000
+const WALL_CEILING_FACTOR = 3
 const CHILD_TIMEOUT_MS = 60_000
 const TEST_TIMEOUT_MS = 120_000
 
@@ -39,10 +42,11 @@ interface TypegenModule {
   emitDtsDetailed(options: { baseSystem: EvaluatedSystemSpec }): { dts: string }
 }
 
-// The child prints one line: the traced host count and the codes of its error diagnostics.
+// The child prints one line: the traced host count, the codes of its error diagnostics and the CPU it spent compiling.
 interface ChildReport {
   readonly traced: number
   readonly errors: string[]
+  readonly cpuMs: number
 }
 
 interface CompileRun {
@@ -74,9 +78,11 @@ const CHILD_SOURCE = [
   'const { compileNative } = await import(process.argv[1])',
   'let input = ""',
   'for await (const chunk of process.stdin) input += chunk',
+  'const cpuStart = process.cpuUsage()',
   'const result = await compileNative(JSON.parse(input))',
+  'const cpu = process.cpuUsage(cpuStart)',
   'const errors = result.diagnostics.filter(d => d.severity === "error").map(d => d.code)',
-  'process.stdout.write(JSON.stringify({ traced: (result.tracedJsxHosts ?? []).length, errors }) + "\\n")',
+  'process.stdout.write(JSON.stringify({ traced: (result.tracedJsxHosts ?? []).length, errors, cpuMs: (cpu.user + cpu.system) / 1000 }) + "\\n")',
 ].join('\n')
 
 const tempRoots: string[] = []
@@ -187,7 +193,9 @@ function isChildReport(value: unknown): value is ChildReport {
     'traced' in value &&
     typeof value.traced === 'number' &&
     'errors' in value &&
-    Array.isArray(value.errors)
+    Array.isArray(value.errors) &&
+    'cpuMs' in value &&
+    typeof value.cpuMs === 'number'
   )
 }
 
@@ -239,7 +247,8 @@ function expectContract(run: CompileRun, live: number): void {
   expect(live, 'the consumer must probe at least one live type').toBeGreaterThan(0)
   expect(run.signal, `compileNative ended on ${run.signal}\n${run.stderr}`).toBeNull()
   expect(run.status, run.stderr).toBe(0)
-  expect(run.ms, 'compile wall time').toBeLessThan(CHILD_BUDGET_MS)
+  expect(run.ms, 'compile wall time').toBeLessThan(CHILD_CPU_BUDGET_MS * WALL_CEILING_FACTOR)
+  expect(run.report?.cpuMs ?? Infinity, `compile CPU time (wall ${Math.round(run.ms)} ms)`).toBeLessThan(CHILD_CPU_BUDGET_MS)
   expect(run.report?.errors ?? ['no report'], run.stderr).toEqual([])
   expect(run.report?.traced ?? 0).toBeGreaterThanOrEqual(live)
 }

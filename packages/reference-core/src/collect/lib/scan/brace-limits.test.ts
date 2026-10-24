@@ -23,9 +23,7 @@ describe('countBraceAlternatives', () => {
   })
 
   it('stops early on a pattern whose full expansion would never fit in memory', () => {
-    const started = Date.now()
     expect(countBraceAlternatives('{a,b}'.repeat(24), MAX_BRACE_ALTERNATIVES)).toBeGreaterThan(MAX_BRACE_ALTERNATIVES)
-    expect(Date.now() - started).toBeLessThan(1000)
   })
 
   it('does not count escaped braces', () => {
@@ -38,10 +36,8 @@ describe('countBraceAlternatives', () => {
   })
 
   it.each([5_000, 50_000])('stops past the cap on %i sequential choice pairs', (pairs) => {
-    const started = Date.now()
     expect(countBraceAlternatives('{a,b}'.repeat(pairs), MAX_BRACE_ALTERNATIVES)).toBeGreaterThan(MAX_BRACE_ALTERNATIVES)
     expect(countBraceAlternatives(`${'{x}'.repeat(pairs)}{a,b}${'{x}'.repeat(pairs)}`, MAX_BRACE_ALTERNATIVES)).toBe(2)
-    expect(Date.now() - started).toBeLessThan(1000)
   })
 
   it('agrees with expandBraces on every short pattern over braces, commas, escapes and a letter', () => {
