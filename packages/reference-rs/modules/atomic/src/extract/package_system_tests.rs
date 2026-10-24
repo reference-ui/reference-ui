@@ -3,6 +3,8 @@
 //! The published file parses to its name and stream names (streams first,
 //! the name alone when none), malformed text fails naming the file, and the
 //! process memo hands back one shared system until the file's mtime moves.
+//! A FIFO or directory at the published path fails naming the file instead of
+//! blocking the read.
 //! On disk, a directory's verdict follows `exports["./baseSystem"]`, then the
 //! conventional path; this compile's own generated tree and a linked project
 //! directory borrowing the own runtime are own; an installed copy without a
@@ -83,6 +85,33 @@ fn the_memo_shares_a_system_until_its_mtime_moves() {
     let broken = published(&path);
     let error = broken.names().expect_err("malformed system fails");
     assert!(error.starts_with(&path), "{error}");
+}
+
+/// A FIFO or directory at the published path answers with an error naming it. The read
+/// runs in a thread bounded by a 5 s `recv_timeout`, so a read that opens the FIFO
+/// fails by name instead of hanging.
+#[cfg(unix)]
+#[test]
+fn a_fifo_or_directory_published_system_fails_naming_the_path() {
+    let (_scratch, root) = scratch("published-fifo");
+    let fifo = format!("{root}/baseSystem.mjs");
+    let status = std::process::Command::new("mkfifo").arg(&fifo).status().expect("mkfifo");
+    assert!(status.success(), "mkfifo failed for {fifo}");
+    let folder = format!("{root}/folder.mjs");
+    fs::create_dir(&folder).expect("directory fixture");
+    for path in [fifo, folder] {
+        let (send, recv) = std::sync::mpsc::channel();
+        let probe = path.clone();
+        std::thread::spawn(move || {
+            let system = published(&probe);
+            let _ = send.send(system.names().map(|_| ()).map_err(str::to_string));
+        });
+        let read = recv
+            .recv_timeout(Duration::from_secs(5))
+            .expect("the read blocked on a FIFO");
+        let error = read.expect_err("a non-file published system fails");
+        assert!(error.starts_with(&path), "{error}");
+    }
 }
 
 #[test]

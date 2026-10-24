@@ -7,14 +7,15 @@
 //! renders through it, a linked directory that is Reference code for this
 //! compile borrows its runtime (`own_runtime`), and anything else is foreign.
 //! A published file is Core's `export const baseSystem = <JSON>`; only `name`
-//! and `streams[].name` are read, on first demand, once per path and mtime.
+//! and `streams[].name` are read, on first demand, once per path and mtime,
+//! and only from a regular file (a FIFO or directory there is a named error).
 //! That per-path memo is the one cache exempt from the "no caching: compile
 //! everything" rule; see [`published`] for why.
 
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 use std::time::SystemTime;
 
-use module_graph::{package_export_targets, FileSystem, ModuleKey};
+use module_graph::{package_export_targets, DiskFs, FileSystem, ModuleKey};
 use rustc_hash::FxHashMap;
 use serde::Deserialize;
 
@@ -225,7 +226,10 @@ pub(crate) fn published(path: &str) -> Arc<PublishedSystem> {
 
 /// Read and parse one published file, naming it in any failure.
 fn read_names(path: &str) -> Result<SystemNames, String> {
-    let text = std::fs::read_to_string(path).map_err(|error| format!("{path}: {error}"))?;
+    // DiskFs opens regular files only: a FIFO or directory here would block or fail opaquely.
+    let text = DiskFs
+        .read_to_string(path)
+        .ok_or_else(|| format!("{path}: not a readable regular file"))?;
     parse_names(&text).map_err(|error| format!("{path}: {error}"))
 }
 
