@@ -4,7 +4,8 @@
 // .js/.mjs/.cjs to a declaration and reports each `.ts` import as TST-W-UNRESOLVED-IMPORT.
 // The rewrite repoints each relative specifier at its emitted name. The guards fail the build when
 // a shipped declaration imports a file that does not ship, or when an export that TypeScript would
-// read from a `.ts` twin has no `types` condition. Comments are masked first, so prose never counts.
+// read from a `.ts` twin has no `types` condition, with comments masked first so prose never counts. Each entry point
+// reads the emit from `distDir` (default `<pkgDir>/dist`), so the build can run in a sibling folder.
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, posix, relative, resolve } from 'node:path'
@@ -43,6 +44,15 @@ const isRelative = (specifier) => specifier.startsWith('./') || specifier.starts
 const isDeclarationSpecifier = (specifier) => DECLARATION_SUFFIXES.some((suffix) => specifier.endsWith(suffix))
 const isFile = (path) => existsSync(path) && statSync(path).isFile()
 const isComment = (token) => token.startsWith('//') || token.startsWith('/*')
+
+const DIST_PREFIX = /^\.?\/?dist\//
+
+// The file an export entry names, read from the folder the emit is in: `./dist/x.js` is `<distDir>/x.js`.
+function shippedPath(relativePath, { pkgDir, distDir }) {
+  return DIST_PREFIX.test(relativePath)
+    ? join(distDir, relativePath.replace(DIST_PREFIX, ''))
+    : join(pkgDir, relativePath)
+}
 
 function listDeclarationFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -111,8 +121,8 @@ function repointSpecifiers(text, fromFile) {
   return { text: out + text.slice(last), count }
 }
 
-export function rewriteDeclarationSpecifiers({ pkgDir }) {
-  const files = listDeclarationFiles(join(pkgDir, 'dist'))
+export function rewriteDeclarationSpecifiers({ pkgDir, distDir = join(pkgDir, 'dist') }) {
+  const files = listDeclarationFiles(distDir)
   let rewritten = 0
   let filesChanged = 0
   for (const file of files) {
@@ -126,36 +136,37 @@ export function rewriteDeclarationSpecifiers({ pkgDir }) {
 }
 
 // Every relative specifier in a shipped declaration that names no shipped file, as printable problems.
-export function declarationSpecifierProblems({ pkgDir }) {
-  return listDeclarationFiles(join(pkgDir, 'dist')).flatMap((file) =>
+export function declarationSpecifierProblems({ pkgDir, distDir = join(pkgDir, 'dist') }) {
+  return listDeclarationFiles(distDir).flatMap((file) =>
     specifiersIn(readFileSync(file, 'utf8'))
       .filter(isRelative)
       .flatMap((specifier) => {
         const reason = unshippedReason(specifier, file)
-        return reason === null ? [] : [`${relative(pkgDir, file)}: "${specifier}" ${reason}`]
+        return reason === null ? [] : [`${join('dist', relative(distDir, file))}: "${specifier}" ${reason}`]
       }),
   )
 }
 
 // Whether an export entry names a types condition that resolves to a shipped file.
-const hasShippedTypes = (entry, pkgDir) => typeof entry.types === 'string' && isFile(join(pkgDir, entry.types))
+const hasShippedTypes = (entry, roots) => typeof entry.types === 'string' && isFile(shippedPath(entry.types, roots))
 
 // Null when an export needs no types condition, or already names a shipped one; otherwise why it needs one.
-function untypedExportProblem(entry, pkgDir) {
+function untypedExportProblem(entry, roots) {
   const runtime = typeof entry === 'string' ? entry : (entry.import ?? entry.default)
   if (typeof runtime !== 'string' || !runtime.endsWith('.js')) return null
-  const stem = join(pkgDir, runtime.slice(0, -'.js'.length))
+  const stem = shippedPath(runtime.slice(0, -'.js'.length), roots)
   const twin = ['.ts', '.tsx'].map((ext) => `${stem}${ext}`).find(isFile)
-  if (twin === undefined || (typeof entry !== 'string' && hasShippedTypes(entry, pkgDir))) return null
-  return `runs ${runtime} for TypeScript, but ${relative(pkgDir, twin)} shadows its declaration; add a "types" condition that names a shipped .d.ts`
+  if (twin === undefined || (typeof entry !== 'string' && hasShippedTypes(entry, roots))) return null
+  return `runs ${runtime} for TypeScript, but ${join('dist', relative(roots.distDir, twin))} shadows its declaration; add a "types" condition that names a shipped .d.ts`
 }
 
 // Every export whose runtime target has a `.ts`/`.tsx` twin beside it but no `types` condition naming a shipped
 // declaration. TypeScript reads the twin in that case, and the twin is transpiled JS with its type-only exports erased.
-export function exportTypeProblems({ pkgDir }) {
+export function exportTypeProblems({ pkgDir, distDir = join(pkgDir, 'dist') }) {
   const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'))
+  const roots = { pkgDir, distDir }
   return Object.entries(pkg.exports ?? {}).flatMap(([subpath, entry]) => {
-    const problem = untypedExportProblem(entry, pkgDir)
+    const problem = untypedExportProblem(entry, roots)
     return problem === null ? [] : [`exports["${subpath}"] ${problem}`]
   })
 }

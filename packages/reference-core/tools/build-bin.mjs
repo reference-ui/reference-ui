@@ -3,10 +3,29 @@
 // tsconfig, asserts the alias-literal set is exactly the known one, then
 // lays the esbuild-entry twins plus the runtime-read declaration asset
 // beside the emit, repoints the emitted declarations at shipped files
-// (guarded), and makes the bin executable. Run from the Core package
-// directory: node tools/build-bin.mjs (also the prepack/prepublishOnly hook).
+// (guarded), and makes the bin executable. All of that happens in a sibling
+// `.dist-new-<pid>` folder; only a finished build is moved into dist/, file by
+// file, each with one atomic rename over its old copy (bin last), then files
+// the build no longer emits are removed. A process reading dist/ while a
+// rebuild runs therefore never finds a file missing that the build still ships,
+// which a folder swap cannot promise: a folder cannot be renamed over a
+// non-empty one, so it takes two renames with a gap between them. A failed
+// build removes its folder and leaves the previous dist, whose older mtime
+// makes the freshness gate retry. Run from the Core package directory:
+// node tools/build-bin.mjs (also the prepack/prepublishOnly hook).
 
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
+import {
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmdirSync,
+  rmSync,
+  statSync,
+} from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
@@ -18,7 +37,12 @@ import {
 } from './rewrite-declaration-specifiers.mjs'
 
 const PKG = dirname(dirname(fileURLToPath(import.meta.url)))
-const DIST = join(PKG, 'dist')
+const FINAL_DIST = join(PKG, 'dist')
+// The build target: a sibling of dist, renamed to dist only once complete.
+const DIST = join(PKG, `.dist-new-${process.pid}`)
+const STALE_DIST = /^\.dist-new-(\d+)$/
+// Moved into dist last, so a build killed mid-move leaves a bin older than the inputs and the gate retries.
+const LAST_MOVED = join('bin', 'ref.js')
 
 // Path-computing sources and the exact .ts/.tsx/.d.mts literals each may
 // carry on its resolve()/coreFilePath()/runtimeModulePath() call sites.
@@ -57,8 +81,9 @@ const ASSETS = [
 function fail(message) {
   // A failed build must never leave a fresh-mtime partial dist behind: tsc
   // emits per-file despite type errors, and the core freshness gate would then
-  // see a fresh bin and skip the retry, serving failed-build bytes. Wipe dist
-  // on every failure so the next gate run rebuilds.
+  // see a fresh bin and skip the retry, serving failed-build bytes. The partial
+  // emit lives only in the build folder, which is removed here; dist keeps the
+  // last good build, older than the inputs, so the next gate run rebuilds.
   try {
     rmSync(DIST, { force: true, recursive: true })
   } catch {}
@@ -76,7 +101,7 @@ function runTsc() {
     fail('typescript is not installed (devDependency); cannot build')
   }
   if (!existsSync(tscPath)) fail(`typescript has no bin/tsc at ${tscPath}`)
-  const result = spawnSync(process.execPath, [tscPath, '-p', join(PKG, 'tsconfig.build.json')], {
+  const result = spawnSync(process.execPath, [tscPath, '-p', join(PKG, 'tsconfig.build.json'), '--outDir', DIST], {
     cwd: PKG,
     stdio: 'inherit',
   })
@@ -132,13 +157,13 @@ function layTwinsAndAssets() {
 // guards fail the build on any shipped declaration whose specifier names no shipped file, or on any export
 // TypeScript would read from a `.ts` twin without a `types` condition.
 function shipDeclarations() {
-  const rewrite = rewriteDeclarationSpecifiers({ pkgDir: PKG })
+  const rewrite = rewriteDeclarationSpecifiers({ pkgDir: PKG, distDir: DIST })
   console.log(
     `[ref build] repointed ${rewrite.rewritten} declaration specifiers in ${rewrite.filesChanged} of ${rewrite.files} .d.ts files`
   )
   const problems = [
-    ...declarationSpecifierProblems({ pkgDir: PKG }),
-    ...exportTypeProblems({ pkgDir: PKG }),
+    ...declarationSpecifierProblems({ pkgDir: PKG, distDir: DIST }),
+    ...exportTypeProblems({ pkgDir: PKG, distDir: DIST }),
   ]
   if (problems.length > 0) fail(`declaration guard failed:\n  ${problems.join('\n  ')}`)
 }
@@ -160,12 +185,62 @@ function countFiles(dir) {
   return count
 }
 
-// Wipe dist first: without a clean step, deleted sources linger as dead
-// emit beside fresh output and ship in the tarball.
+// Folders a killed build left behind belong to a pid that no longer runs.
+function removeStaleBuildFolders() {
+  for (const name of readdirSync(PKG)) {
+    const match = STALE_DIST.exec(name)
+    if (match === null || Number(match[1]) === process.pid) continue
+    try {
+      process.kill(Number(match[1]), 0)
+    } catch (error) {
+      if (error.code === 'ESRCH') rmSync(join(PKG, name), { force: true, recursive: true })
+    }
+  }
+}
+
+function listFiles(dir, prefix = '') {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const rel = join(prefix, entry.name)
+    return entry.isDirectory() ? listFiles(join(dir, entry.name), rel) : [rel]
+  })
+}
+
+// Removes folders left empty by deleted files, deepest first; never the root itself.
+function pruneEmptyFolders(dir, isRoot = true) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) pruneEmptyFolders(join(dir, entry.name), false)
+  }
+  if (!isRoot && readdirSync(dir).length === 0) rmdirSync(dir)
+}
+
+// Each finished file replaces its old copy in one rename, so a reader holds the old or the new bytes and never
+// finds the path gone. With no dist yet there is no reader, and the whole folder is renamed.
+function moveIntoPlace() {
+  if (!existsSync(FINAL_DIST)) {
+    renameSync(DIST, FINAL_DIST)
+    return
+  }
+  const built = listFiles(DIST).sort((a, b) => Number(a === LAST_MOVED) - Number(b === LAST_MOVED))
+  for (const rel of built) {
+    mkdirSync(dirname(join(FINAL_DIST, rel)), { recursive: true })
+    renameSync(join(DIST, rel), join(FINAL_DIST, rel))
+  }
+  const shipped = new Set(built)
+  for (const rel of listFiles(FINAL_DIST)) {
+    if (!shipped.has(rel)) rmSync(join(FINAL_DIST, rel), { force: true })
+  }
+  pruneEmptyFolders(FINAL_DIST)
+  rmSync(DIST, { force: true, recursive: true })
+}
+
+// A fresh build folder each run: without a clean step, deleted sources linger
+// as dead emit beside fresh output and ship in the tarball.
+removeStaleBuildFolders()
 rmSync(DIST, { force: true, recursive: true })
 runTsc()
 assertLiteralSet()
 layTwinsAndAssets()
 shipDeclarations()
 finishBin()
-console.log(`[ref build] dist ready: ${countFiles(DIST)} files, bin dist/bin/ref.js`)
+moveIntoPlace()
+console.log(`[ref build] dist ready: ${countFiles(FINAL_DIST)} files, bin dist/bin/ref.js`)

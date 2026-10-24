@@ -7,7 +7,9 @@
 // fresh checkout lacks: the `@reference-ui/rust` JS bindings and the gitignored
 // browser-component mirror. A `REF_PIPELINE_SKIP_DEPENDENCY_BUILDS` setting
 // exits immediately for CI opt-out, and steady state exits silently after one
-// stat walk.
+// stat walk. `--force` rebuilds regardless of mtimes. The rebuild never empties
+// dist/ in place: `build-bin.mjs` builds into a sibling folder and renames it
+// into place, so a watcher reading dist/ (the docs dev server) keeps its files.
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, statSync } from 'node:fs'
@@ -91,5 +93,5 @@ function build() {
 
 if (!process.env[SKIP_ENV]) {
   const built = existsSync(BIN) ? statSync(BIN).mtimeMs : 0
-  if (built === 0 || built < newestInputMtime()) build()
+  if (process.argv.includes('--force') || built === 0 || built < newestInputMtime()) build()
 }

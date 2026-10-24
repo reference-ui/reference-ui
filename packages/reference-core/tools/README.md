@@ -129,6 +129,15 @@ sources, and before any `.bin/ref` invocation in a fresh checkout:
 cd packages/reference-core && node tools/build-bin.mjs
 ```
 
+The build emits into a sibling `.dist-new-<pid>` folder and moves each
+finished file over its old copy in `dist/` with an atomic rename (bin last),
+then removes files the build no longer emits. A process that reads `dist/`
+during a rebuild, such as the docs dev server, therefore never finds a file
+missing; a folder swap cannot promise that, because a folder cannot be renamed
+over a non-empty one. A failed build removes its folder and leaves the previous
+`dist/` in place, and a folder a killed build left behind is removed by the next
+run.
+
 The run is idempotent and typechecks as it emits (tsc errors fail the
 build). Direct-source invocations (running `ref` from source, the CLI specs)
 keep working without it — only the installed-shim shape needs the emit.
@@ -150,7 +159,8 @@ the bin build only when the bin is missing or older. Before a rebuild
 it fills the two generated inputs a fresh checkout lacks: the
 `@reference-ui/rust` JS bindings (`build:js`, no Rust toolchain needed)
 and the gitignored browser-component mirror. The `agentcore run`
-bootstrap calls it, so documented callers never run stale bytes;
+bootstrap calls it, so documented callers never run stale bytes (`--force`
+rebuilds regardless of mtimes);
 `REF_PIPELINE_SKIP_DEPENDENCY_BUILDS` opts CI out, and steady state
 exits silently after one stat walk.
 
