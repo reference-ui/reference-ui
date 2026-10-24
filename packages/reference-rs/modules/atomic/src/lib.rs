@@ -60,7 +60,7 @@ use oxc_ast::ast::Program;
 use oxc_diagnostics::OxcDiagnostic;
 use oxc_parser::ParserReturn;
 use oxc_span::{SourceType, Span};
-use shared::parse::{NestingRefusal, ScreenedSource};
+use shared::parse::ScreenedSource;
 use std::path::PathBuf;
 
 use std::collections::BTreeMap;

@@ -12,5 +12,7 @@ mod walk;
 #[cfg(test)]
 mod tests;
 
-pub(crate) use request::{collect, collect_checked};
+#[cfg(test)]
+pub(crate) use request::collect;
+pub(crate) use request::collect_checked;
 pub(crate) use walk::{is_ignored_dir_name, is_supported_extension};
