@@ -8,7 +8,7 @@ use module_graph::{BindingOrigin, Refused};
 
 use crate::atom::AtomValue;
 use crate::extract::constants::{
-    ConstArrayElement, ConstObject, LocalConstants, MutatedBinding, ObjectProp,
+    strip_member_refs, ConstArrayElement, ConstObject, LocalConstants, MutatedBinding, ObjectProp,
 };
 use crate::extract::fold::fence::PureFn;
 
@@ -74,6 +74,16 @@ impl ResolvedExport {
             || self.object.is_some()
             || self.array.is_some()
             || self.pure_fn.is_some()
+    }
+
+    /// A copy for `const alias = imported`: the same values with member
+    /// references stripped from the object, since the copy left its literal.
+    pub(crate) fn copied(&self) -> Self {
+        let mut copy = self.clone();
+        if let Some(map) = copy.object.as_mut() {
+            strip_member_refs(map);
+        }
+        copy
     }
 
     /// An empty export naming the origin file's write to the binding.

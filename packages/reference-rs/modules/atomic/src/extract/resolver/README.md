@@ -17,6 +17,12 @@ transitively, helper captures resolve through the graph, and refused
 spreads record residue markers that the importing file's use sites
 diagnose — so no dropped spread is ever silent.
 
+A const copied from an import (`export const v1 = v0` over an imported `v0`)
+carries the import's resolved value through the origin file's table: the
+refined file keeps its resolved and refused imports, so the copy folds like the
+import would, and an import the origin file wrote refuses the copy with that
+write.
+
 Externals (packages and scope-excluded targets) parse once on demand into
 values-only entries with literal bags and no descriptors. Refused,
 namespace, and default imports stay out of the map; mutated origins enter

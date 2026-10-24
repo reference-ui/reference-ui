@@ -3,6 +3,7 @@
 //! file on first use by collecting its scope table against its own resolved imports. Streamed files
 //! refine by transient re-parse, and the finished table answers exports through `table_value`,
 //! `init_export`, and `descriptor_export`, falling back to the file's literal bag for externals.
+//! A const copied from an import answers through `alias_export` or refuses with the import's write.
 //! Takes origin keys from the binding walk and emits `ResolvedExport` values; it never writes the
 //! name-wide bag.
 
@@ -50,7 +51,7 @@ impl<'s> ValueGraph<'s> {
             });
         }
         match self.refined_file(&origin.file) {
-            RefineState::Ready => Ok(self.table_value(origin)),
+            RefineState::Ready => self.table_value(origin),
             RefineState::External => Ok(self.bag_value(&origin.file, &origin.name)),
             RefineState::Cycling => Err(self.cycle_refusal(origin)),
         }
@@ -133,36 +134,26 @@ impl<'s> ValueGraph<'s> {
         let probe = scope::collect(program, self.project);
         let refs = probe.import_refs();
         if refs.is_empty() {
-            return self.finish_origin(file, probe, Vec::new());
+            return self.finish_origin(file, probe, Vec::new(), OriginMaps::default());
         }
-        let (resolved, refused) = self.resolve_origin_imports(file, &refs);
+        let imports = self.resolve_origin_imports(file, &refs);
         let fill = scope::OriginFill {
             file: file.as_str(),
             content,
-            resolved: &resolved,
-            refused: &refused,
+            resolved: &imports.resolved,
+            refused: &imports.refused,
         };
         let (table, residues) = scope::collect_with(program, self.project, &fill);
-        self.finish_origin(file, table, residues)
+        self.finish_origin(file, table, residues, imports)
     }
 
     /// Resolve every import of an origin file, valuing each origin first.
-    fn resolve_origin_imports(
-        &mut self,
-        file: &ModuleKey,
-        refs: &[ImportRef],
-    ) -> (
-        FxHashMap<String, ResolvedExport>,
-        FxHashMap<String, ValueRefused>,
-    ) {
-        let mut maps = OriginMaps {
-            resolved: FxHashMap::default(),
-            refused: FxHashMap::default(),
-        };
+    fn resolve_origin_imports(&mut self, file: &ModuleKey, refs: &[ImportRef]) -> OriginMaps {
+        let mut maps = OriginMaps::default();
         for imp in refs {
             self.resolve_origin_ref(file, imp, &mut maps);
         }
-        (maps.resolved, maps.refused)
+        maps
     }
 
     /// Resolve one origin-file import into its outcome map.
@@ -188,6 +179,7 @@ impl<'s> ValueGraph<'s> {
         file: &ModuleKey,
         table: scope::ScopeTable,
         residues: Vec<scope::SpreadResidue>,
+        imports: OriginMaps,
     ) -> RefinedFile {
         let mut markers: FxHashMap<String, Vec<UnfoldableSpread>> = FxHashMap::default();
         for residue in residues {
@@ -207,21 +199,25 @@ impl<'s> ValueGraph<'s> {
         RefinedFile {
             table,
             markers,
+            imports,
             bag,
         }
     }
 
     /// Read one refined origin: the table's root init, its descriptor, or
     /// its own literal bag, with the root's markers riding along.
-    fn table_value(&mut self, origin: &BindingOrigin) -> ResolvedExport {
+    fn table_value(&mut self, origin: &BindingOrigin) -> ValueOutcome {
         let Some(refined) = self.refined.get(&origin.file) else {
-            return self.bag_value(&origin.file, &origin.name);
+            return Ok(self.bag_value(&origin.file, &origin.name));
         };
+        if let Some(write) = Self::alias_refusal(refined, &origin.name) {
+            return Err(write);
+        }
         let mut export = Self::init_export(refined, &origin.name);
         if let Some(markers) = refined.markers.get(&origin.name) {
             export.set_unfoldable(markers.clone());
         }
-        export
+        Ok(export)
     }
 
     /// One refined root init as an export, falling back to the descriptor
@@ -231,7 +227,37 @@ impl<'s> ValueGraph<'s> {
             Some(BindingInit::Scalars { leaves, residue }) => valued_scalars(leaves, residue),
             Some(BindingInit::Object(map)) => valued(Vec::new(), Some(map), None, None),
             Some(BindingInit::Array(elements)) => valued(Vec::new(), None, Some(elements), None),
-            Some(BindingInit::PureFn(_)) | None => Self::descriptor_export(refined, name),
+            Some(BindingInit::PureFn(_)) | None => Self::alias_export(refined, name)
+                .unwrap_or_else(|| Self::descriptor_export(refined, name)),
+        }
+    }
+
+    /// `export const copy = imported`: the alias target's resolved import,
+    /// copied like a same-file alias (member references stripped, since the
+    /// copy left its literal).
+    fn alias_export(refined: &RefinedFile, name: &str) -> Option<ResolvedExport> {
+        let (_, target) = refined.table.alias_edge(name, scope::ROOT_SCOPE)?;
+        refined
+            .imports
+            .resolved
+            .get(&target)
+            .map(ResolvedExport::copied)
+    }
+
+    /// The origin file's own write to the import a valueless `const copy =
+    /// imported` aliases: the copy refuses with that write, exactly like the
+    /// import would, so uses drop and name it instead of missing silently.
+    fn alias_refusal(refined: &RefinedFile, name: &str) -> Option<ValueRefused> {
+        if refined.table.root_init(name).is_some() {
+            return None;
+        }
+        let (_, target) = refined.table.alias_edge(name, scope::ROOT_SCOPE)?;
+        match refined.imports.refused.get(&target)? {
+            ValueRefused::Mutated { binding, .. } => Some(ValueRefused::Mutated {
+                name: target,
+                binding: binding.clone(),
+            }),
+            ValueRefused::Walk(_) | ValueRefused::ValueCycle { .. } => None,
         }
     }
 

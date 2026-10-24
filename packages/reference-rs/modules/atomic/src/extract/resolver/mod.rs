@@ -10,6 +10,7 @@
 //! nested spreads leave residue markers the use site diagnoses; refused,
 //! default, and namespace imports stay out of the map, and the scope chain
 //! falls back to nothing for them — imports never consult the name-wide bag.
+//! A const copied from an import answers the import's value (or its write).
 
 #[cfg(test)]
 mod differential;
@@ -77,14 +78,17 @@ type OriginOutcome = Result<BindingOrigin, module_graph::Refused>;
 type ValueOutcome = Result<ResolvedExport, ValueRefused>;
 
 /// One origin file's refined values: its graph-backed scope table, the
-/// residue markers keyed by root name, and its literal bag for table gaps.
+/// residue markers keyed by root name, its resolved and refused imports for
+/// `const copy = imported` aliases, and its literal bag for table gaps.
 struct RefinedFile {
     table: scope::ScopeTable,
     markers: FxHashMap<String, Vec<UnfoldableSpread>>,
+    imports: OriginMaps,
     bag: LocalConstants,
 }
 
 /// One origin file's resolved and refused imports, filled together.
+#[derive(Default)]
 struct OriginMaps {
     /// Resolved imports by local name, merged into the bake.
     resolved: FxHashMap<String, ResolvedExport>,

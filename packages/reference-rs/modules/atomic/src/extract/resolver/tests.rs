@@ -1,8 +1,8 @@
 //! Value-graph compiles over virtual sources: the §1 three-file fold and
 //! its cycle arm, star barrels and ambiguous twins, §3 origin precision,
-//! and refused default/namespace edges. Each case compiles whole files, so
-//! the single parse, the demand-driven bake, and the use-site floor run
-//! exactly as they do for stations.
+//! refused default/namespace edges, and consts copied from imports. Each
+//! case compiles whole files, so the single parse, the demand-driven bake,
+//! and the use-site floor run exactly as they do for stations.
 
 use crate::{compile, CompileRequest, VirtualSource};
 
@@ -262,4 +262,68 @@ fn default_and_namespace_edges_refuse_values() {
         !channel_messages_for(&res, crate::DiagnosticCode::DynamicMember).is_empty(),
         "the refused member still diagnoses"
     );
+}
+
+#[test]
+fn const_copied_from_an_import_folds_through_a_chain_of_files() {
+    let res = compile_files(&[
+        ("/v/src/f0.ts", "export const v0 = 'red'"),
+        ("/v/src/f1.ts", "import { v0 } from './f0'\nexport const v1 = v0"),
+        ("/v/src/f2.ts", "import { v1 } from './f1'\nexport const v2 = v1"),
+        (
+            "/v/src/app.ts",
+            "import { css } from '@reference-ui/react'\nimport { v2 } from './f2'\ncss({ color: v2 })",
+        ),
+    ]);
+    assert!(has_want(&res, "color", "red"));
+    assert!(res.diagnostics.is_empty(), "{:?}", res.diagnostics);
+}
+
+#[test]
+fn style_object_copied_from_an_import_folds() {
+    let res = compile_files(&[
+        ("/v/src/base.ts", "export const base = { color: 'red' }"),
+        (
+            "/v/src/copy.ts",
+            "import { base } from './base'\nexport const copy = base",
+        ),
+        (
+            "/v/src/app.ts",
+            "import { css } from '@reference-ui/react'\nimport { copy } from './copy'\ncss(copy)",
+        ),
+    ]);
+    assert!(has_want(&res, "color", "red"));
+    assert!(res.diagnostics.is_empty(), "{:?}", res.diagnostics);
+}
+
+#[test]
+fn const_copied_from_a_mutated_import_names_the_write() {
+    let res = compile_files_logs(&[
+        ("/v/src/f0.ts", "export let v0 = 'red'\nv0 = 'blue'"),
+        ("/v/src/f1.ts", "import { v0 } from './f0'\nexport const v1 = v0"),
+        (
+            "/v/src/app.ts",
+            "import { css } from '@reference-ui/react'\nimport { v1 } from './f1'\ncss({ color: v1 })",
+        ),
+    ]);
+    assert!(!has_want(&res, "color", "red"));
+    let poisoned = channel_messages_for(&res, crate::DiagnosticCode::MutatedBinding);
+    assert_eq!(poisoned.len(), 1, "{poisoned:?}");
+    assert!(
+        poisoned[0].contains("reassigned at /v/src/f0.ts:2:1"),
+        "{poisoned:?}"
+    );
+}
+
+#[test]
+fn const_copies_that_import_each_other_terminate_without_a_value() {
+    let res = compile_files(&[
+        ("/v/src/a.ts", "import { b } from './b'\nexport const a = b"),
+        ("/v/src/b.ts", "import { a } from './a'\nexport const b = a"),
+        (
+            "/v/src/app.ts",
+            "import { css } from '@reference-ui/react'\nimport { a } from './a'\ncss({ color: a })",
+        ),
+    ]);
+    assert!(!has_site_want(&res, "color", "red"));
 }
