@@ -8,6 +8,8 @@
 //! compile borrows its runtime (`own_runtime`), and anything else is foreign.
 //! A published file is Core's `export const baseSystem = <JSON>`; only `name`
 //! and `streams[].name` are read, on first demand, once per path and mtime.
+//! That per-path memo is the one cache exempt from the "no caching: compile
+//! everything" rule; see [`published`] for why.
 
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 use std::time::SystemTime;
@@ -191,11 +193,19 @@ fn is_installed(dir: &str) -> bool {
 
 /// Published systems by path for the life of the process, each beside the
 /// mtime it was opened under, so a re-sync of the package reads it afresh.
+///
+/// This is the one cache exempt from the "no caching: compile everything"
+/// rule (owner ruling 2026-10-24,
+/// `decisions:20261024-123500-owner-ruling-2026-10-24-the-published-system-cache-stays`).
+/// It holds an installed package's published manifest, never user source, is
+/// keyed on mtime, and saves a re-read on every watch rebuild. A replacement
+/// file whose mtime did not move is served stale until restart; that is accepted.
 type PublishedMemo = Mutex<FxHashMap<Box<str>, (Option<SystemTime>, Arc<PublishedSystem>)>>;
 
 static PUBLISHED: OnceLock<PublishedMemo> = OnceLock::new();
 
 /// The published system at `path`, shared until the file's mtime moves.
+/// Exempt from the no-caching rule; see [`PublishedMemo`].
 pub(crate) fn published(path: &str) -> Arc<PublishedSystem> {
     let stamp = std::fs::metadata(path).and_then(|meta| meta.modified()).ok();
     let memo = PUBLISHED.get_or_init(PublishedMemo::default);
