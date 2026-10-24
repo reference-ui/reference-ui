@@ -1,7 +1,7 @@
 // Vite app config for the reference-docs site.
 // It wires MDX (GFM + frontmatter + section ids + build-time Shiki highlighting),
-// content-collections metadata, and React Fast Refresh, pre-bundles the linked lib and icons
-// barrels, and serves on 5174 while ignoring the compiled baseSystem re-export.
+// content-collections metadata, and React Fast Refresh, pre-bundles the linked lib
+// barrel, and serves on 5174 while ignoring the compiled baseSystem re-export.
 import { defineConfig, type PluginOption } from 'vite'
 import { fileURLToPath } from 'node:url'
 import contentCollections from '@content-collections/vite'
@@ -27,7 +27,7 @@ export default defineConfig(() => {
       // imports every icon, so that was ~7,900 module requests per page load.
       // Pre-bundling collapses them to a few chunks. A rebuilt lib dist needs
       // a dev-server restart (or `--force`) to show up here.
-      include: ['@reference-ui/lib', '@reference-ui/icons'],
+      include: ['@reference-ui/lib'],
     },
     server: {
       port: Number(process.env.PORT) || 5174,
