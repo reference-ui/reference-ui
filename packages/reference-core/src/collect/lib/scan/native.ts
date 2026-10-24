@@ -15,7 +15,8 @@ import {
   type ScannedSource,
 } from './scanner.ts'
 import { listProjectFiles } from './project-files.ts'
-import { expandBraces, hasWalkStarSegments, hasWalkableChars, modeledAlternative } from './project-globs.ts'
+import { expandBraces } from './braces.ts'
+import { hasWalkStarSegments, hasWalkableChars, modeledAlternative } from './project-globs.ts'
 import type { ScanOptions } from '../types.ts'
 
 /**

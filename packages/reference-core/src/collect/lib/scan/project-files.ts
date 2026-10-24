@@ -14,9 +14,9 @@ import picomatch from 'picomatch'
 import { negatedClassesAsCaret } from './glob-classes.ts'
 import { NATIVE_IGNORE_DIRS } from '../../constants.ts'
 import { kindOf, linkOnceAdmission, liveAdmission, liveDirectories, sortedEntries, type Admission, type KeepFn } from './project-admission.ts'
+import { expandBraces } from './braces.ts'
 import {
   compileGlobs,
-  expandBraces,
   startPositions,
   stepPositions,
   unfinishedPositions,

@@ -346,4 +346,16 @@ describe('validateConfig include brace limits', () => {
   it('does not count escaped braces', () => {
     expect(() => validateConfig(withInclude([`src/${'\\{a,b\\}'.repeat(24)}`]))).not.toThrow()
   })
+
+  it.each([5_000, 50_000])('refuses %i sequential {a,b} pairs by name, not with a RangeError', (pairs) => {
+    const wide = `src/${'{a,b}'.repeat(pairs)}`
+
+    expect(() => validateConfig(withInclude([wide]))).toThrowError(
+      `Config field 'include' is invalid.\ninclude pattern '${wide}' expands to more than 1,024 globs`
+    )
+  })
+
+  it.each([5_000, 50_000])('passes %i sequential commaless {x} pairs', (pairs) => {
+    expect(() => validateConfig(withInclude([`src/${'{x}'.repeat(pairs)}`]))).not.toThrow()
+  })
 })

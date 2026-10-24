@@ -5,6 +5,7 @@
 // Segment matchers read `[!b]` through negatedClassesAsCaret (glob-classes.ts), so a negated class means what it means in Rust.
 
 import picomatch from 'picomatch'
+import { expandBraces } from './braces.ts'
 import { negatedClassesAsCaret } from './glob-classes.ts'
 
 /** The lists a walk decides with: keep over the root-relative path (`kr`) or the absolute path (`ka`), ignore over the root-relative path (`ir`) or the scope-local path (`il`). */
@@ -44,129 +45,6 @@ export interface CompiledGlobs {
   nodes: Node[]
   /** The node id of each position text. */
   ids: Map<string, number>
-}
-
-/**
- * Expands `{a,b}` alternations as atomic's braces.rs does: the same alternatives in the same order, with commaless braces
- * kept literal and unmatched braces left as they are.
- */
-export function expandBraces(pattern: string): string[] {
-  const chars = Array.from(pattern)
-  const pair = findBracePair(chars)
-  if (pair === undefined) return [pattern]
-  const [open, close] = pair
-  const choices = splitChoices(chars.slice(open + 1, close))
-  if (choices.length < 2) return expandLiteralBraces(chars, close)
-  const before = chars.slice(0, open).join('')
-  const after = chars.slice(close + 1).join('')
-  return choices.flatMap((choice) => expandBraces(before + choice + after))
-}
-
-// Keeps a commaless brace pair literal while expanding the text after it.
-function expandLiteralBraces(chars: readonly string[], close: number): string[] {
-  const head = chars.slice(0, close + 1).join('')
-  const tail = chars.slice(close + 1).join('')
-  return expandBraces(tail).map((rest) => head + rest)
-}
-
-// The first `{` with its depth-zero mate; a `{` without a mate leaves the whole pattern unexpanded, as the Rust port does.
-export function findBracePair(chars: readonly string[]): [number, number] | undefined {
-  const open = findUnescaped(chars, 0, '{')
-  if (open === undefined) return undefined
-  const close = findMate(chars, open)
-  return close === undefined ? undefined : [open, close]
-}
-
-function findUnescaped(chars: readonly string[], from: number, want: string): number | undefined {
-  let at = from
-  while (at < chars.length) {
-    if (chars[at] === '\\') {
-      at += 2
-      continue
-    }
-    if (chars[at] === want) return at
-    at += 1
-  }
-  return undefined
-}
-
-function findMate(chars: readonly string[], open: number): number | undefined {
-  let depth = 0
-  let at = open
-  while (at < chars.length) {
-    if (chars[at] === '\\') {
-      at += 2
-      continue
-    }
-    depth = trackBrace(chars[at] ?? '', depth)
-    if (depth === 0) return at
-    at += 1
-  }
-  return undefined
-}
-
-function trackBrace(hit: string, depth: number): number {
-  if (hit === '{') return depth + 1
-  if (hit === '}') return depth - 1
-  return depth
-}
-
-// Splits the innards of a brace on its top-level commas: a part that closes its own braces ends a choice.
-export function splitChoices(chars: readonly string[]): string[] {
-  const choices: string[] = []
-  let current = ''
-  let depth = 0
-  for (const part of splitUnescapedCommas(chars)) {
-    if (current !== '') current += ','
-    current += part
-    depth += braceDelta(part)
-    if (depth === 0) {
-      choices.push(current)
-      current = ''
-    }
-  }
-  if (current !== '') choices.push(current)
-  return choices
-}
-
-// Splits on every unescaped comma, keeping the escapes intact for the later passes.
-function splitUnescapedCommas(chars: readonly string[]): string[] {
-  const parts: string[] = []
-  let current = ''
-  let at = 0
-  while (at < chars.length) {
-    if (chars[at] === '\\' && at + 1 < chars.length) {
-      current += (chars[at] ?? '') + (chars[at + 1] ?? '')
-      at += 2
-      continue
-    }
-    if (chars[at] === ',') {
-      parts.push(current)
-      current = ''
-    } else {
-      current += chars[at] ?? ''
-    }
-    at += 1
-  }
-  parts.push(current)
-  return parts
-}
-
-// The net unescaped `{` minus `}` depth of one comma-separated part: a backslash escapes the character after it.
-function braceDelta(part: string): number {
-  let delta = 0
-  let escaped = false
-  for (const hit of part) {
-    if (!escaped) delta += braceStep(hit)
-    escaped = !escaped && hit === '\\'
-  }
-  return delta
-}
-
-function braceStep(hit: string): number {
-  if (hit === '{') return 1
-  if (hit === '}') return -1
-  return 0
 }
 
 /** True when a pattern body uses only the syntax the walk model reads like picomatch: no parens, pipes, backslashes or POSIX classes. */

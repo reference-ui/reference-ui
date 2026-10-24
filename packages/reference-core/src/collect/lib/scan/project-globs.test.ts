@@ -3,9 +3,9 @@
 // picomatch on every short pattern and path it generates.
 import picomatch from 'picomatch'
 import { describe, expect, it } from 'vitest'
+import { expandBraces } from './braces.ts'
 import {
   compileGlobs,
-  expandBraces,
   startPositions,
   stepPositions,
   unfinishedPositions,

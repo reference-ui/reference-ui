@@ -13,7 +13,7 @@ import picomatch from 'picomatch'
 import { RETENTION_EXCLUDE } from '../collect/constants.ts'
 import { listPlannedFiles, planProjectWalk, prunesDescent } from '../collect/lib/scan/project-files.ts'
 import { negatedClassesAsCaret } from '../collect/lib/scan/glob-classes.ts'
-import { expandBraces } from '../collect/lib/scan/project-globs.ts'
+import { expandBraces } from '../collect/lib/scan/braces.ts'
 import type { NativeDiagnostic } from '../native/contract.ts'
 
 /** The positive include patterns that match no file under cwd. Negations never count. Each pattern is planned on its own walk. */
