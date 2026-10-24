@@ -1,1 +1,1 @@
-{"id": "ATM-BOUND-07", "name": "a css() value chained 20,000 to 100,000 operators deep, with no brackets to count, is refused with a located ATM-E-PARSE beside its siblings, and a chain just under the limit compiles"}
+{"id": "ATM-BOUND-07", "name": "a css() value chained 20,000 to 100,000 operators deep, or an else-if chain 10,000 branches long, with no brackets to count, is refused with a located ATM-E-PARSE beside its siblings, and chains just under the limit, a 2,100-branch else-if chain among them, compile"}

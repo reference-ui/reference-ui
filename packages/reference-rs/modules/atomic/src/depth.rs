@@ -15,10 +15,12 @@ use oxc_span::GetSpan;
 /// node, so `(((x)))` is four levels, and a call argument inside a statement inside an arrow body counts each step.
 /// Real sources stay far below it (the nesting survey found 36 bracket levels at most, and a chain of a few hundred
 /// operands is already unusual), and the bracket gate's own limit of 1,024 bracket levels fits beneath it.
-/// Measured in a release build (`tests/depth.rs`), the whole compile of the costliest chain shape at this depth needs
-/// between 1.5 and 2 MiB of stack: a quarter of the 8 MiB a Node main thread gives, an eighth of the 16 MiB floor a native
-/// thread falls back to, and a hundredth of the 256 MiB an N-API export runs on.
-pub(crate) const MAX_DEPTH: usize = 2048;
+/// The limit is sized to the smallest stack any atomic parse or walk runs on: 16 MiB, the floor a lane or an N-API
+/// export falls back to when the OS refuses a bigger thread. It is the largest power of two whose costliest chain
+/// shape compiles in half that floor, 8 MiB. Measured in a release build (`tests/depth.rs`), a `||` chain of 8,170
+/// links, the costliest shape, needs about 6.9 MiB for the whole compile (about 0.85 KiB per level), and the next power
+/// of two, 16,384, would need about 14 MiB.
+pub(crate) const MAX_DEPTH: usize = 8192;
 
 /// A program the gate refused: the byte offset where its AST first nested past `MAX_DEPTH`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,7 +32,7 @@ impl DepthRefusal {
     /// The sentence the parse-error path reports for a refused program, given the 1-based line of `offset`.
     pub(crate) fn message(line: u32) -> String {
         format!(
-            "expression nested deeper than {MAX_DEPTH} levels at line {line}; split or flatten the long chain of operators"
+            "code nested deeper than {MAX_DEPTH} levels at line {line}; split or flatten the long chain of operators, else-if branches or conditional types"
         )
     }
 }

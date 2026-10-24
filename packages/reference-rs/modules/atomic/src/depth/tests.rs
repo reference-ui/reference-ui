@@ -1,4 +1,4 @@
-//! Depth-gate tests: a chain per construct past the limit, the exact limit, and the located failed parse.
+//! Depth-gate tests: a chain per construct past the limit, the exact limit, and the located refusal.
 //! Each test parses on a 256 MiB thread, so a chain that Oxc parses by recursion stays clear of the harness's small
 //! stack. The tests take inline sources, run the gate or `parse_source` on them, and emit assertion failures that
 //! name the chain shape the gate let through or refused wrongly.
@@ -54,6 +54,7 @@ fn chains(count: usize) -> Vec<(&'static str, String)> {
         ("arrow chain", at("", "() => ", "1")),
         ("type array chain", format!("export type Z = number{};\n", "[]".repeat(count))),
         ("else-if chain", format!("if (a) {{}}{}\n", " else if (a) {}".repeat(count))),
+        ("conditional type chain", format!("export type Z<X> = {}2;\n", "X extends string ? 1 : ".repeat(count))),
     ]
 }
 
@@ -106,7 +107,9 @@ fn the_refusal_names_the_line_of_the_node_that_crossed() {
         assert_eq!(parsed.errors.len(), 1);
         assert_eq!(
             parsed.errors[0].message,
-            format!("expression nested deeper than {MAX_DEPTH} levels at line 3; split or flatten the long chain of operators")
+            format!(
+                "code nested deeper than {MAX_DEPTH} levels at line 3; split or flatten the long chain of operators, else-if branches or conditional types"
+            )
         );
     });
 }
