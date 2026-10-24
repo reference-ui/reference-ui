@@ -1816,11 +1816,17 @@ async function actionVerify(componentName) {
     }
 
     // 2. Unit
-    console.log(`\n[agent] === verify ${componentName} (Phase 2: Unit) ===`)
+    console.log(`\n[agent] === verify ${componentName} (Phase 2: Unit + lib core target) ===`)
     const ctScript = path.join(repoRoot, '.agents/skills/test-component/scripts/test-component.mjs')
     const unitRes = await runCommand('node', [ctScript, componentName, '--unit'], { skipQueue: true, cwd: repoRoot })
     if (unitRes.code !== 0) {
       finishAgent({ ok: false, message: `verify FAILED during unit tests (code ${unitRes.code})`, code: unitRes.code })
+    }
+
+    // The lib's unit tests outside components (src/core, scripts) belong to no component directory.
+    const coreRes = await runCommand('node', [ctScript, 'core'], { skipQueue: true, cwd: repoRoot })
+    if (coreRes.code !== 0) {
+      finishAgent({ ok: false, message: `verify FAILED during lib core unit tests (code ${coreRes.code})`, code: coreRes.code })
     }
 
     // 3. Build lib dist if missing

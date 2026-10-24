@@ -100,7 +100,7 @@ pnpm agent pw chain/T6                 # matrix/tests/chain/T6
 pnpm agent vt packages/reference-mcp   # MCP server unit tests
 pnpm agent vt packages/reference-lib/src/components/Accordion/Accordion.test.tsx
 
-# 2. Full component verification in one shot (typecheck -> unit -> lib build -> component CT E2E; final check before completion):
+# 2. Full component verification in one shot (typecheck -> component unit + `agentct core` -> lib build -> component CT E2E; final check before completion):
 pnpm agent verify <ComponentName>
 # e.g.: pnpm agent verify Toast
 

@@ -53,7 +53,7 @@ pnpm agent vitest -t "Overlay"
 pnpm agent vt packages/reference-lib/src/components/Dialog/__tests__/Dialog.test.tsx
 
 # 4. Fast 4-Phase Component Verification (lib, after the Core or reference-rs proof is already green):
-# (Runs typecheck -> vitest -> build -> targeted Playwright E2E spec in one command)
+# (Runs typecheck -> component vitest + the lib `agentct core` target (src/core, scripts) -> build -> targeted Playwright E2E spec in one command)
 pnpm agent verify Toast
 pnpm agent verify Combobox
 
