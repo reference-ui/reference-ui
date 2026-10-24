@@ -4,6 +4,7 @@
 import picomatch from 'picomatch'
 import { describe, expect, it } from 'vitest'
 import { expandBraces } from './braces.ts'
+import { negatedClassesAsCaret } from './glob-classes.ts'
 import {
   absoluteSegments,
   compileGlobs,
@@ -157,6 +158,10 @@ describe('compileGlobs unmodeled detection', () => {
     'src/{!a,b}/x.ts',
     'src/!a/*.ts',
     'src/[ab]/x.ts',
+    'src/[:alpha:]/*.ts',
+    'src/[:a]/*.ts',
+    'src/[(]x[)]/*.ts',
+    'src/[a(|)]/*.ts',
     '**/node_modules/**',
     '../shared/**/*.ts',
     '/abs/x/**/*.ts',
@@ -165,10 +170,13 @@ describe('compileGlobs unmodeled detection', () => {
   })
 
   it.each([
+    // The parens are read as {a,b} once, by config validation (include-shapes.ts); the model never reads them.
     'src/(a|b)/*.ts',
+    'src/(x)/*.ts',
     'src/a|b/*.ts',
     'src\\a/*.ts',
-    'src/[:alpha:]/*.ts',
+    'src/[[:alpha:]]/*.ts',
+    'src/[a[:digit:]]/*.ts',
     'src/**x/*.ts',
     'src/***/*.ts',
     // A bracket or brace that spans a slash: picomatch reads one class or literal across two segments.
@@ -263,5 +271,25 @@ describe('the segment model agrees with picomatch', () => {
   // Paths up to depth two already share states; the deeper set ran past vitest's five-second budget under a full-package run.
   it('gives every path with the same unfinished state the same verdict on each next name', () => {
     for (const pattern of patterns) checkStateDecides(pattern, everyPath(2))
+  })
+})
+
+// Segments with a colon or a paren in a class, against names that exercise them: the model must accept exactly what picomatch does.
+describe('the segment model agrees with picomatch on colon and paren classes', () => {
+  const classSegments = ['a', '*', '[:a]', '[(]', '[:alpha:]', '[(]x[)]', '[!(]']
+  const classNames = ['a', ':', '(', ')', 'x', 'l', '(x)', '.a']
+
+  it('accepts a path exactly when picomatch does', () => {
+    const patterns = classSegments.flatMap((first) => [first, ...classSegments.map((second) => `${first}/${second}`)])
+    const paths = classNames.flatMap((first) => [[first], ...classNames.map((second) => [first, second])])
+    for (const pattern of patterns) {
+      const globs = modeled([{ tag: 'kr', patterns: [pattern] }])
+      const finished = `kr:0:${pattern.split('/').length}`
+      const match = picomatch(negatedClassesAsCaret(pattern), { dot: true })
+      for (const path of paths) {
+        const accepted = walkNames(globs, ROOT, path).includes(finished)
+        expect(accepted, `${pattern} against ${path.join('/')}`).toBe(match(path.join('/')))
+      }
+    }
   })
 })

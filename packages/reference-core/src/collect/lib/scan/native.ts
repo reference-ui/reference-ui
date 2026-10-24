@@ -16,7 +16,7 @@ import {
 } from './scanner.ts'
 import { listProjectFiles } from './project-files.ts'
 import { expandBraces } from './braces.ts'
-import { hasWalkStarSegments, hasWalkableChars, modeledAlternative } from './project-globs.ts'
+import { hasWalkStarSegments, wholeSegment } from './project-globs.ts'
 import type { ScanOptions } from '../types.ts'
 
 /**
@@ -119,6 +119,17 @@ function stripWalkNegation(pattern: string): string | null {
   return body.startsWith('!') ? null : body
 }
 
+// The walk-completeness character rule, kept as it was before the glob model learned classes: any paren, pipe, backslash or `[:`
+// disqualifies a pattern, even inside a bracket class. The completeness battery proved only this narrower subset.
+function hasPlainWalkChars(body: string): boolean {
+  return !/[()|\\]/.test(body) && !body.includes('[:')
+}
+
+// An alternative the completeness battery covers: plain characters, whole star segments and whole segments.
+function isCompleteAlternative(alternative: string): boolean {
+  return hasPlainWalkChars(alternative) && hasWalkStarSegments(alternative) && alternative.split('/').every(wholeSegment)
+}
+
 // Walk-completeness subset: the include shapes where the shared listing provably
 // covers every file the native scope matches, so compile may skip its union
 // backfill walk. Every brace alternative must be one the glob model covers, or
@@ -129,11 +140,11 @@ function isCompleteWalkPattern(pattern: string): boolean {
   const body = stripWalkNegation(pattern)
   if (body === null) return false
   return (
-    hasWalkableChars(body) &&
+    hasPlainWalkChars(body) &&
     hasWalkStarSegments(body) &&
     hasNoBraceRanges(body) &&
     hasClosedWalkBraces(body) &&
-    expandBraces(body).every(modeledAlternative)
+    expandBraces(body).every(isCompleteAlternative)
   )
 }
 

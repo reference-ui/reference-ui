@@ -2,6 +2,7 @@
 
 Each case gives Core an input that once crashed or ran away, and proves it ends inside its budget. A child process runs the real work, so a signal or an overrun is a named failure, not a dead worker.
 
+- `CORE-BOUND-08` — an include glob the walk cannot model fails ref sync inside 10 s with a config error naming the pattern and the form to write, and `src/(a|b)/*.ts` syncs the CSS of src/a and src/b but not src/c.
 - `CORE-BOUND-07` — a src tree holding a FIFO named pipe.ts and a link to it syncs in under 10 s with the CSS of the tree without them.
 - `CORE-BOUND-06` — a src tree with a 7-directory link clique, a 16-level link lattice and a file reached only through a loop-closing link syncs in under 10 s with the CSS of the same tree written out with no links.
 - `CORE-BOUND-05` — a real ref sync of 70 files and one file at 2,000 nesting exits 0 with no signal, inside 10 s, and its stylesheet has both colours.

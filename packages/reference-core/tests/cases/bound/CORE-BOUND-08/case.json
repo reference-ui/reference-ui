@@ -1,0 +1,1 @@
+{"id": "CORE-BOUND-08", "name": "an include glob the walk cannot model fails ref sync inside 10 s with a config error naming the pattern and the form to write, and `src/(a|b)/*.ts` syncs the CSS of src/a and src/b but not src/c", "sync": false}

@@ -2,7 +2,7 @@
 // They also check that picomatch then reads each rewritten glob as Rust does: negated classes, unclosed `[` and in-class backslashes.
 import picomatch from 'picomatch'
 import { describe, expect, it } from 'vitest'
-import { negatedClassesAsCaret } from './glob-classes.ts'
+import { classEnd, hasPosixClass, negatedClassesAsCaret, splitClasses } from './glob-classes.ts'
 
 describe('negatedClassesAsCaret', () => {
   it('rewrites only a [! that opens a class, as the Rust parse_class reads it', () => {
@@ -36,5 +36,33 @@ describe('negatedClassesAsCaret', () => {
     expect(['ac', 'ab', 'a!'].map((name) => negated(name))).toEqual([true, false, true])
     const bracket = picomatch(negatedClassesAsCaret('a[!]a]'), { dot: true })
     expect(['ab', 'a]', 'aa'].map((name) => bracket(name))).toEqual([true, false, false])
+  })
+})
+
+describe('classEnd', () => {
+  it('finds the closing bracket as the Rust parse_class does, or nothing', () => {
+    const end = (glob: string, open = 0) => classEnd(Array.from(glob), open)
+    expect(end('[ab]')).toBe(3)
+    expect(end('[!a]')).toBe(3)
+    expect(end('[]a]')).toBe(3)
+    expect(end('[!]a]')).toBe(4)
+    expect(end('[ab')).toBeUndefined()
+    expect(end('x[(]', 1)).toBe(3)
+  })
+})
+
+describe('splitClasses and hasPosixClass', () => {
+  it('splits the text outside every class from the inside of each class', () => {
+    expect(splitClasses('src/[(]x[)]/a.ts')).toEqual({ outside: 'src/x/a.ts', inside: ['(', ')'] })
+    expect(splitClasses('a[!b]c')).toEqual({ outside: 'ac', inside: ['!b'] })
+    expect(splitClasses('a[b')).toEqual({ outside: 'a[b', inside: [] })
+    expect(splitClasses('a\\[b]')).toEqual({ outside: 'a\\[b]', inside: [] })
+  })
+
+  it('reads [[:alpha:]] as a class that holds a POSIX name, and [:alpha:] as a plain class', () => {
+    expect(splitClasses('[[:alpha:]]').inside.some(hasPosixClass)).toBe(true)
+    expect(splitClasses('[:alpha:]').inside.some(hasPosixClass)).toBe(false)
+    expect(hasPosixClass('a[:digit:')).toBe(true)
+    expect(hasPosixClass('a[:nope:')).toBe(false)
   })
 })

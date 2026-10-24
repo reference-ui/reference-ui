@@ -343,8 +343,8 @@ describe('validateConfig include brace limits', () => {
     )
   })
 
-  it('does not count escaped braces', () => {
-    expect(() => validateConfig(withInclude([`src/${'\\{a,b\\}'.repeat(24)}`]))).not.toThrow()
+  it('does not count escaped braces, so the backslash is what refuses them', () => {
+    expect(() => validateConfig(withInclude([`src/${'\\{a,b\\}'.repeat(24)}`]))).toThrowError(/uses a backslash/)
   })
 
   it.each([5_000, 50_000])('refuses %i sequential {a,b} pairs by name, not with a RangeError', (pairs) => {

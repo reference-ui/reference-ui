@@ -1,7 +1,9 @@
 // Validation and normalization for the evaluated Core config object.
 // It takes the raw module export and emits a ReferenceUIConfig or throws.
-// Include patterns are refused here when their braces expand past 1,024 globs or nest past
-// 64 levels, before any later stage expands them.
+// Each include pattern is normalized (`(a|b)` becomes `{a,b}`, a parenthesised name becomes the literal `[(]x[)]`), then refused
+// when its braces expand past 1,024 globs or nest past 64 levels, before any later stage expands them, or when its shape is one
+// picomatch and the Rust grammar read differently. The returned config carries the normalized patterns, so every reader sees
+// an include the project walk models.
 
 import type { ReferenceUIConfig, StrictCategory } from './types.ts'
 import type { BaseSystemField } from '../system/base/validate.ts'
@@ -12,6 +14,7 @@ import {
   MAX_BRACE_ALTERNATIVES,
   MAX_BRACE_DEPTH,
 } from '../collect/lib/scan/brace-limits.ts'
+import { includeShapeProblem, normalizeIncludePattern } from '../collect/lib/scan/include-shapes.ts'
 import {
   isSafeSystemName,
   validateBaseSystemEntries,
@@ -32,18 +35,26 @@ function mustBeObject(raw: unknown): ConfigRecord {
   return config as ConfigRecord
 }
 
-function validateInclude(cfg: ConfigRecord): void {
+// The include list with every string pattern normalized and checked; entries that are not strings pass through unchanged.
+function validateInclude(cfg: ConfigRecord): unknown[] {
   if (!cfg.include || !Array.isArray(cfg.include)) {
     throw ConfigValidationError.mustHaveInclude()
   }
-  for (const pattern of cfg.include) {
-    if (typeof pattern === 'string') validateIncludeBraces(pattern)
-  }
+  return cfg.include.map((pattern: unknown) => (typeof pattern === 'string' ? validateIncludePattern(pattern) : pattern))
+}
+
+// The normalized pattern, once its braces and its shape pass. Errors name the pattern as written.
+function validateIncludePattern(pattern: string): string {
+  const normalized = normalizeIncludePattern(pattern)
+  validateIncludeBraces(pattern, normalized)
+  const problem = includeShapeProblem(normalized, pattern)
+  if (problem !== undefined) throw ConfigValidationError.invalidConfig('include', problem)
+  return normalized
 }
 
 // A negated pattern expands its body, so the limits read the body and the error names the pattern whole.
-function validateIncludeBraces(pattern: string): void {
-  const body = pattern.startsWith('!') ? pattern.slice(1) : pattern
+function validateIncludeBraces(pattern: string, normalized: string): void {
+  const body = normalized.startsWith('!') ? normalized.slice(1) : normalized
   if (braceDepth(body) > MAX_BRACE_DEPTH) {
     throw ConfigValidationError.invalidConfig(
       'include',
@@ -166,12 +177,15 @@ function validateBaseFields(cfg: ConfigRecord, ownName: string): void {
  */
 export function validateConfig(raw: unknown): ReferenceUIConfig {
   const cfg = mustBeObject(raw)
-  validateInclude(cfg)
+  const include = validateInclude(cfg)
   const ownName = validateName(cfg)
   validateConfigJsxElements(cfg)
   validateLogs(cfg)
   validateStaticCss(cfg)
   validateStrict(cfg)
   validateBaseFields(cfg, ownName)
-  return cfg as unknown as ReferenceUIConfig
+  // The evaluator hands every sync of an unchanged bundle the same object, so a config whose include needs no rewrite is returned as
+  // it is; one that did is copied, never written to.
+  const unchanged = include.every((pattern, index) => pattern === (cfg.include as unknown[])[index])
+  return (unchanged ? cfg : { ...cfg, include }) as unknown as ReferenceUIConfig
 }

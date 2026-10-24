@@ -5,7 +5,8 @@
 // class, prunes node_modules, then applies the native directory ignores, so every predicate here mirrors that listing.
 // Enumeration goes through the shared project listing, so a symlink loop cannot hang a resync and each file is listed once
 // under its representative path, the rule the sync walk applies. The ownership walk that picks the directories to watch
-// follows the first link per target.
+// follows the first link per target, so it is polynomial in the links; it prunes by the in-root include patterns' static
+// prefixes, so it does not walk a sibling tree no include reaches, and it is not the modeled walk of the project listing.
 
 import { realpathSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
@@ -13,6 +14,7 @@ import picomatch from 'picomatch'
 import { NATIVE_IGNORE_DIRS, RETENTION_EXCLUDE } from '../../collect/constants.ts'
 import { negatedClassesAsCaret } from '../../collect/lib/scan/glob-classes.ts'
 import { listProjectFiles, planProjectWalk } from '../../collect/lib/scan/project-files.ts'
+import { isOutside, normalizePattern as walkPattern } from '../../collect/lib/scan/project-patterns.ts'
 
 export type IncludeMatcher = (relativePath: string) => boolean
 
@@ -189,9 +191,12 @@ function dirGlobsOf(include: string[]): string[] {
 // Every symlinked directory the include globs reach, empty or not. A file walk cannot find a link with no match yet,
 // so a directory-only walk does: each real target is subscribed, and maps back to its link so a new file there resyncs.
 function scanSymlinkedDirs(watchRoot: string, include: string[], snapshot: MatchSnapshot): void {
+  // A link can be owned only under an in-root positive pattern, so with none the walk has nothing to find.
+  const inRoot = include.filter((pattern) => !isNegated(pattern) && !isOutside(walkPattern(pattern)))
+  if (inRoot.length === 0) return
   // The first link whose directory the globs reach owns its target, so an out-of-scope link never hides an in-scope one.
   const inDirScope = picomatch(dirGlobsOf(include).map(negatedClassesAsCaret), { dot: true })
-  const plan = planProjectWalk(watchRoot, [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS], [], (rel) => inDirScope(rel))
+  const plan = planProjectWalk(watchRoot, [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS], inRoot, (rel) => inDirScope(rel))
   for (const [alias, real] of plan.links) {
     snapshot.targetDirs.set(real, toPosix(relative(plan.root, alias)))
     snapshot.linkDirs.push(real)

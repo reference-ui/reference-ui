@@ -68,6 +68,15 @@ A pattern whose braces expand to more than 1,024 globs, or nest deeper than 64
 levels, is refused with `ATM-E-INCLUDE-BRACE-LIMIT`. Split it into several shorter
 patterns.
 
+Sync reads these glob parts: `/` between folders, `*` for part of a name, `**`
+as a whole folder name, `?`, classes such as `[ab]` and `[!_]`, and `{a,b}`
+for alternatives. `(a|b)` is read as `{a,b}`, and a name in parentheses, such as
+`app/(marketing)/**`, matches the folder with the parentheses in its name. A
+pattern in any other shape is refused when the config loads, and the error names
+the pattern and the form to write: `{a,b}` for alternatives, `[(]` and `[)]` for
+literal parentheses, `**/*x` or `x*/**` where `**x` or `x**` was written, and a
+class such as `[a-zA-Z]` in place of `[[:alpha:]]`.
+
 ## Composing systems
 
 `extends` and `layers` both take the `baseSystem` export of another synced

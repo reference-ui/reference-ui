@@ -2,12 +2,13 @@
 // picomatch decides one segment at a time. A walk state is the sorted set of unfinished positions after the names read so far:
 // two directories with one canonical path and one state have the same future, so the walk visits each such pair once.
 // compileGlobs returns undefined for any list outside the subset this model reads exactly; the walk keeps its wave-2 cut there.
+// Config validation (include-shapes.ts) refuses every include shape outside that subset, so a validated include is always modeled.
 // Segment matchers read `[!b]` through negatedClassesAsCaret (glob-classes.ts), so a negated class means what it means in Rust.
 
 import { sep } from 'node:path'
 import picomatch from 'picomatch'
 import { expandBraces } from './braces.ts'
-import { negatedClassesAsCaret } from './glob-classes.ts'
+import { hasPosixClass, negatedClassesAsCaret, splitClasses } from './glob-classes.ts'
 
 /** The lists a walk decides with: keep over the root-relative path (`kr`) or the absolute path (`ka`), ignore over the root-relative path (`ir`) or the scope-local path (`il`). */
 export type GlobTag = 'kr' | 'ka' | 'ir' | 'il'
@@ -48,15 +49,13 @@ export interface CompiledGlobs {
   ids: Map<string, number>
 }
 
-/** True when a pattern body uses only the syntax the walk model reads like picomatch: no parens, pipes, backslashes or POSIX classes. */
+/**
+ * True when a pattern body uses only the syntax the walk model reads like picomatch: no parens, pipes or backslashes outside a
+ * bracket class, and no POSIX class. The inside of a class is read as Rust reads it, so `[(]` and `[:alpha:]` are plain classes.
+ */
 export function hasWalkableChars(body: string): boolean {
-  return (
-    !body.includes('(') &&
-    !body.includes(')') &&
-    !body.includes('|') &&
-    !body.includes('\\') &&
-    !body.includes('[:')
-  )
+  const { outside, inside } = splitClasses(body)
+  return !/[()|\\]/.test(outside) && !inside.some(hasPosixClass)
 }
 
 // Globstars agree only as whole segments (`**/`, `/**/`); adjacent or tripled
@@ -86,8 +85,8 @@ export function modeledAlternative(alternative: string): boolean {
   return hasWalkableChars(alternative) && hasWalkStarSegments(alternative) && alternative.split('/').every(wholeSegment)
 }
 
-// A segment is whole when every brace it opens it closes, and every bracket class it opens closes after its first member.
-function wholeSegment(segment: string): boolean {
+/** True when every brace the segment opens it closes, and every bracket class it opens closes after its first member. */
+export function wholeSegment(segment: string): boolean {
   let depth = 0
   for (const char of segment) {
     if (char === '{') depth += 1

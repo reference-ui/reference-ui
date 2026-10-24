@@ -1,7 +1,8 @@
 // Bracket-class reading for every picomatch the scan, include check and watch matcher build. picomatch
 // reads `[!b]` as the members `!` and `b`, while the Rust walk and fast-glob read it as a negated class. negatedClassesAsCaret
 // takes a glob and emits the same glob with each class-opening `[!` written as `[^`, each unclosed `[` escaped and each
-// backslash inside a class doubled, so all of them agree with Rust.
+// backslash inside a class doubled, so all of them agree with Rust. splitClasses and hasPosixClass read a pattern's classes
+// the same way for the include-shape check and the walk model: what lies outside every class, and which class holds a POSIX name.
 
 /**
  * Rewrites each `[!` that opens a class to `[^`, which picomatch reads as a negated class while it reads `[!b]` as `!` or `b`.
@@ -35,11 +36,38 @@ function readToken(chars: readonly string[], at: number): [string, number] {
   return [body.startsWith('!') ? `[^${body.slice(1)}` : `[${body}`, end]
 }
 
-// The index of the `]` that closes the class opened at `open`, or undefined when none does.
-function classEnd(chars: readonly string[], open: number): number | undefined {
+/** The index of the `]` that closes the class opened at `open`, or undefined when none does. */
+export function classEnd(chars: readonly string[], open: number): number | undefined {
   let at = open + 1
   if (chars[at] === '!' || chars[at] === '^') at += 1
   if (chars[at] === ']') at += 1
   const close = chars.indexOf(']', at)
   return close === -1 ? undefined : close
+}
+
+// Picomatch's POSIX class names: `[[:alpha:]]` is a letter class there and a class of `[:alph` followed by `]` in Rust.
+const POSIX_OPENER = /\[:(?:alnum|alpha|ascii|blank|cntrl|digit|graph|lower|print|punct|space|upper|word|xdigit):/
+
+/** True when a class body holds a POSIX class name, written `[:alpha:]` inside the class. */
+export function hasPosixClass(body: string): boolean {
+  return POSIX_OPENER.test(body)
+}
+
+/** The body split by the Rust parse_class reading: the text outside every bracket class, and the inside of each class. */
+export function splitClasses(body: string): { outside: string; inside: string[] } {
+  const chars = Array.from(body)
+  const split = { outside: '', inside: [] as string[] }
+  let at = 0
+  while (at < chars.length) {
+    if (chars[at] === '\\') {
+      split.outside += chars[at] + (chars[at + 1] ?? '')
+      at += 2
+      continue
+    }
+    const end = chars[at] === '[' ? classEnd(chars, at) : undefined
+    if (end === undefined) split.outside += chars[at]
+    else split.inside.push(chars.slice(at + 1, end).join(''))
+    at = end === undefined ? at + 1 : end + 1
+  }
+  return split
 }

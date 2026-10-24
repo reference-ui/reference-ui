@@ -7,7 +7,8 @@
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { ProjectPlan } from '../../collect/lib/scan/project-files.ts'
 import {
   canonicalPath,
   createIncludeMatcher,
@@ -19,9 +20,25 @@ import {
   scanMatches,
 } from './match.ts'
 
+// Every plan the watch matcher's own ownership walk returns; the listing's walks run inside project-files and are not recorded.
+const ownershipPlans = vi.hoisted((): ProjectPlan[] => [])
+
+vi.mock('../../collect/lib/scan/project-files.ts', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../../collect/lib/scan/project-files.ts')>()
+  return {
+    ...original,
+    planProjectWalk: (...args: Parameters<typeof original.planProjectWalk>) => {
+      const plan = original.planProjectWalk(...args)
+      ownershipPlans.push(plan)
+      return plan
+    },
+  }
+})
+
 const tempDirs: string[] = []
 
 afterEach(() => {
+  ownershipPlans.length = 0
   for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true })
 })
 
@@ -148,6 +165,23 @@ describe('match snapshot', () => {
     const snapshot = scanMatches(root, ['theme/**/*.ts'])
     expect(snapshot.targetDirs.get(join(root, 'shared', 'empty'))).toBe('theme/linkdir')
     expect(snapshot.linkDirs).toContain(join(root, 'shared', 'empty'))
+  })
+
+  it('walks only the directories an include reaches when it looks for linked directories', () => {
+    const root = makeTree({ 'src/a.ts': 'a', 'shared/seed.md': 's', 'other/b.ts': 'b', 'other/deep/c.ts': 'c' })
+    symlinkSync(join('..', 'shared'), join(root, 'src', 'linkdir'), 'dir')
+    symlinkSync(join('..', 'shared'), join(root, 'other', 'outlink'), 'dir')
+    const snapshot = scanMatches(root, ['src/**'])
+    expect(snapshot.targetDirs.get(join(root, 'shared'))).toBe('src/linkdir')
+    const entered = ownershipPlans.flatMap((plan) => [...plan.dirs.keys()])
+    expect(entered).toContain(join(root, 'src'))
+    expect(entered.filter((dir) => dir.startsWith(join(root, 'other')))).toEqual([])
+  })
+
+  it('skips the linked-directory walk when no positive include sits inside the root', () => {
+    const root = makeTree({ 'src/a.ts': 'a' })
+    scanMatches(root, ['../shared/**', '!src/**'])
+    expect(ownershipPlans).toEqual([])
   })
 
   it('scans exact file includes without walking into the files as directories', () => {
