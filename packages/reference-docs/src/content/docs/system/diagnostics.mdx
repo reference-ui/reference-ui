@@ -246,10 +246,15 @@ the code in any tooling you build.
 
 ### Components and files
 
-- `ATM-E-PARSE`: a file in `include` has a syntax error. Fix the syntax.
-  A file nested deeper than 1,024 levels fails with `nesting deeper than 1024
-  levels at line 3; split or flatten the deeply nested expression`. Split or
-  flatten the deeply nested expression that contains that line.
+- `ATM-E-PARSE`: a file in `include` has a syntax error, or nests so deeply
+  that sync cannot read it safely, such as one very long chain of operators or
+  `else if` branches. Sync fails on the whole file. Fix the syntax, or split or
+  flatten the nested code. The message names the line.
+- `ATM-E-INCLUDE-BRACE-LIMIT`: an `include` pattern whose braces nest deeper
+  than 64 levels or expand to more than 1,024 globs, like `src/{a,b}` written
+  eleven times in a row. Sync fails, and the message names the pattern. Split
+  the pattern into several shorter ones. The config check refuses the same
+  patterns first, so a normal `ref sync` reports a config error instead.
 - `STT-W-SKIPPED-FILE`: sync skipped a file while looking for components that
   pass style props on. The message says why. The rest of the files are still
   read. Fix the file so it parses and can be read. A file nested deeper than
@@ -325,6 +330,11 @@ API reference documents. Its warnings carry the `[ref]` tag.
   read. Fix the syntax. A file nested deeper than 1,024 levels contributes no
   declarations. The message names the line; split or flatten the deeply nested
   expression.
+- `TST-E-SCAN-FAILED`: the scan cannot read a folder or file, or an `include`
+  glob is invalid. A glob whose braces nest deeper than 64 levels or expand to
+  more than 1,024 globs is one. A one-off sync fails with exit code 1, and the
+  message names the path or pattern. Make the path readable, or fix the
+  pattern.
 - `TST-W-UNRESOLVED-IMPORT`: an import or re-export path names a file that
   does not exist. Create the file or fix the path.
 - `TST-W-UNSUPPORTED-SYNTAX`: `declare global`, `import x = require()` or

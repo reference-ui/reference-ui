@@ -140,7 +140,7 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
 - [x] (A) ScreenedSource landed 2026-10-23 (ff to 74a32679f, 5 commits): atomic runs the nesting gate once per source
       per compile and every later atomic parse reads the verdict the text carries (no caching: owner principle). Gate:
       agentrs t x3 (1,796 Rust, 909 vitest in 68), 356 cases, core vt 1,128, dogfood 1/0/100/6. Open: styletrace still
-      re-gates staged text it re-parses (A4, deferred); `hosts::collect_hosts` has no callers.
+      re-gates staged text it re-parses (A4, deferred).
 - [x] (B) Alias-aware walk landed 2026-10-23 (ff to 35d93c98b, 18 commits): Rust and JS walks key on (canonical dir,
       glob state), which ends symlink clique blowups (wave 3 visit cap dropped); tasty shares the walk. JS negated
       includes drop paths and prune only `<dir>/**`; `[!x]` is a negated class (orchestrator rulings 2026-10-23).
@@ -159,9 +159,7 @@ core unit suite, real sync of docs/lib/book, git status clean) -> xhigh review f
 - [x] Docs from map.md (2026-10-22): nested sidebar section > group > page, 288px (6d786c095, e62a72731); all 9 P1–P3
       pages landed (b59c4b673 … 079dc46f4, 7e14bd98a). Rulings: groups sort with pages by `order`; no sub-section icons
       (indent + rule reads cleaner); docs-only commits gate on agentdocs q + real docs sync + clean render.
-      Open: map.md "Tones" -> "Tones and opacity" retitle; Vite/webpack "Verify the setup" not re-run; Sizes shows literal
-      `8.5r` (unverified that sync reads lib's `controlHeight`); system exports gaps -> small fixes 13/18; frontmatter
-      colon drops a page silently -> small fix 19.
+      Open: system exports gaps -> small fixes 13/18; frontmatter colon drops a page silently -> small fix 19.
 - [x] Owner decisions (2026-10-22, owner "yes" to recommendations; orchestrator filled the rest):
   1. Imports: ui.config.ts -> @reference-ui/core; theme files -> @reference-ui/system (give it the real
      TokenConfig/FontOptions/... types); components -> @reference-ui/react. Imports and packages page documents it.
