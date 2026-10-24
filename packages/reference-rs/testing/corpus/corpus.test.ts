@@ -2,7 +2,7 @@
  * Corpus termination suite for reference-rs. Runs the three walkers over real trees: the tasty display walk over every
  * symbol of each declaration corpus, a styletrace probe for each corpus with importable exports (it imports and wraps
  * them), and the atlas analysis of reference-lib. Every run goes through runIsolated in its own child process, so a
- * hang or a crash ends as a reported outcome, and fails when a run ends by signal or timeout, exceeds its budget, reports
+ * hang or a crash ends as a reported outcome, and fails when a run ends by signal or timeout, exceeds its CPU budget, reports
  * a walk limit (a truncated display, a runtime notice, a type-expansion guard), or resolves to too few symbols or
  * components. Corpus roots come from the installed packages, so a moved or emptied tree fails instead of passing.
  */
@@ -23,12 +23,15 @@ const SYNC_ROOT = path.join(PACKAGE_DIR, 'modules', 'styletrace', 'fixtures', 's
 const TASTY_BUILD = path.join(PACKAGE_DIR, 'dist', 'tasty', 'build.mjs')
 
 // Each budget is a fixed ceiling roughly five to ten times the measured cost on the reference machine (numbers in the README).
+// Budgets count the child's CPU time, not wall time: a loaded machine stretches wall time (17 s against a 15 s tasty budget
+// once, with three suites sharing the CPU) while the work done stays the same. A looser wall ceiling still catches a stall.
 const TASTY_BUDGET_MS = 15_000
 const TASTY_SYMBOL_BUDGET_MS = 150
 const TASTY_KILL_MS = 60_000
 const STYLETRACE_BUDGET_MS = 5_000
 const STYLETRACE_KILL_MS = 30_000
 const ATLAS_BUDGET_MS = 15_000
+const WALL_CEILING_FACTOR = 3
 const ATLAS_KILL_MS = 60_000
 const ATLAS_MIN_COMPONENTS = 250
 
@@ -67,6 +70,44 @@ function typescriptLibRoot(): string {
   return path.join(path.dirname(platformJson), 'lib')
 }
 
+interface CpuMeasured<T> {
+  value: T
+  cpuMs: number
+}
+
+/** The child's program for a CPU-measured call: import the dist module, call the export, report user plus system CPU. */
+const CPU_DRIVER_SOURCE = `import { pathToFileURL } from 'node:url'
+export async function measure(modulePath, fnName, args) {
+  const mod = await import(pathToFileURL(modulePath).href)
+  const cpuStart = process.cpuUsage()
+  const value = await mod[fnName](...args)
+  const cpu = process.cpuUsage(cpuStart)
+  return { value, cpuMs: (cpu.user + cpu.system) / 1000 }
+}
+`
+
+/**
+ * Calls one dist export in an isolated child and holds it to a CPU budget instead of a wall budget. The wall ceiling is
+ * three times the budget, so a stalled child still fails while a contended one does not.
+ */
+function runCpuBounded<T>(call: { module: string; fn: string; args: unknown[]; timeoutMs: number }, budgetMs: number): T {
+  return withTempDir('rs-corpus-cpu-', dir => {
+    const driver = path.join(dir, 'measure.mjs')
+    fs.writeFileSync(driver, CPU_DRIVER_SOURCE)
+    const run = runIsolated<CpuMeasured<T>>({
+      module: driver,
+      fn: 'measure',
+      args: [path.join(PACKAGE_DIR, 'dist', `${call.module}.mjs`), call.fn, call.args],
+      timeoutMs: call.timeoutMs,
+    })
+    const measured = expectBounded(run, { ms: budgetMs * WALL_CEILING_FACTOR })
+    if (measured.cpuMs > budgetMs) {
+      throw new Error(`isolated call exceeded ${budgetMs} ms of CPU: used ${Math.round(measured.cpuMs)} ms (wall ${run.ms} ms)`)
+    }
+    return measured.value
+  })
+}
+
 const DTS = ['**/*.d.ts']
 const DTS_ALL = ['**/*.d.ts', '**/*.d.mts', '**/*.d.cts']
 
@@ -90,6 +131,8 @@ const TASTY_CORPORA: TastyCorpus[] = [
 
 interface TastyReport {
   symbols: number
+  /** User plus system CPU milliseconds from the start of the build to the end of the walk. */
+  cpuMs: number
   slowest: { id: string; name: string; ms: number }
   truncated: string[]
   notices: string[]
@@ -99,24 +142,29 @@ interface TastyReport {
 /**
  * The child's whole program: build tasty over one corpus, then project every symbol's display walk in this process.
  * getDisplayMembers() is getDisplayResult(...).members, so the result carries the walk limits that cut each walk.
+ * Costs are CPU milliseconds (process.cpuUsage), so a loaded machine does not read as a slow walk; the report's
+ * `slowest.ms` is the CPU a single symbol took.
  */
 function tastyDriverSource(): string {
   return `const { buildTasty } = await import(${JSON.stringify(pathToFileURL(TASTY_BUILD).href)})
+const cpuMs = (since) => { const u = process.cpuUsage(since); return (u.user + u.system) / 1000 }
 export async function walkCorpus(rootDir, include, outputDir) {
+  const cpuStart = process.cpuUsage()
   const built = await buildTasty({ rootDir, include, outputDir })
   const api = built.api
   const ids = Object.keys((await api.loadManifest()).symbolsById).sort()
-  const report = { symbols: ids.length, slowest: { id: '', name: '', ms: 0 }, truncated: [], notices: [], runtimeNotices: [] }
+  const report = { symbols: ids.length, cpuMs: 0, slowest: { id: '', name: '', ms: 0 }, truncated: [], notices: [], runtimeNotices: [] }
   for (const id of ids) {
-    const t0 = performance.now()
+    const symbolStart = process.cpuUsage()
     const symbol = await api.loadSymbolById(id)
     const display = await api.graph.getDisplayResult(symbol)
-    const ms = performance.now() - t0
+    const ms = cpuMs(symbolStart)
     if (ms > report.slowest.ms) report.slowest = { id, name: symbol.getName(), ms }
     if (display.truncated) report.truncated.push(id)
     report.notices.push(...display.notices)
   }
   report.runtimeNotices = api.getRuntimeNotices()
+  report.cpuMs = cpuMs(cpuStart)
   return report
 }
 `
@@ -132,7 +180,11 @@ function walkTastyCorpus(corpus: TastyCorpus): TastyReport {
       args: [corpus.root, corpus.include, path.join(dir, 'out')],
       timeoutMs: TASTY_KILL_MS,
     })
-    return expectBounded(run, { ms: TASTY_BUDGET_MS })
+    const report = expectBounded(run, { ms: TASTY_BUDGET_MS * WALL_CEILING_FACTOR })
+    if (report.cpuMs > TASTY_BUDGET_MS) {
+      throw new Error(`isolated call exceeded ${TASTY_BUDGET_MS} ms of CPU: used ${Math.round(report.cpuMs)} ms (wall ${run.ms} ms)`)
+    }
+    return report
   })
 }
 
@@ -146,7 +198,7 @@ describe('corpus termination: tasty display walks', () => {
       expect(report.runtimeNotices, 'runtime notices').toEqual([])
       expect(
         report.slowest.ms,
-        `slowest symbol ${report.slowest.name} (${report.slowest.id})`,
+        `slowest symbol ${report.slowest.name} (${report.slowest.id}), CPU ms`,
       ).toBeLessThanOrEqual(TASTY_SYMBOL_BUDGET_MS)
     })
   }
@@ -239,13 +291,10 @@ function traceProbe(probe: StyletraceProbe): StyletraceDetailedResult {
     // A realpath root: on macOS, /var is a link to /private/var, and the walkers count a linked root differently.
     const root = fs.realpathSync(dir)
     writeStyletraceProbe(root, probe)
-    const run = runIsolated<StyletraceDetailedResult>({
-      module: 'styletrace',
-      fn: 'traceDetailed',
-      args: [root, SYNC_ROOT],
-      timeoutMs: STYLETRACE_KILL_MS,
-    })
-    return expectBounded(run, { ms: STYLETRACE_BUDGET_MS })
+    return runCpuBounded<StyletraceDetailedResult>(
+      { module: 'styletrace', fn: 'traceDetailed', args: [root, SYNC_ROOT], timeoutMs: STYLETRACE_KILL_MS },
+      STYLETRACE_BUDGET_MS,
+    )
   })
 }
 
@@ -270,13 +319,10 @@ describe('corpus termination: styletrace probes', () => {
 
 describe('corpus termination: atlas over reference-lib', () => {
   it('analyzes every component inside its budget with no scan error', () => {
-    const run = runIsolated<AtlasAnalysisResult>({
-      module: 'atlas',
-      fn: 'analyzeDetailed',
-      args: [REFLIB_ROOT],
-      timeoutMs: ATLAS_KILL_MS,
-    })
-    const result = expectBounded(run, { ms: ATLAS_BUDGET_MS })
+    const result = runCpuBounded<AtlasAnalysisResult>(
+      { module: 'atlas', fn: 'analyzeDetailed', args: [REFLIB_ROOT], timeoutMs: ATLAS_KILL_MS },
+      ATLAS_BUDGET_MS,
+    )
     expect(result.components.length, 'components found').toBeGreaterThanOrEqual(ATLAS_MIN_COMPONENTS)
     const scanErrors = result.diagnostics.map(diagnostic => diagnostic.code).filter(code => code.startsWith('ATL-E-'))
     expect(scanErrors, 'atlas scan errors').toEqual([])

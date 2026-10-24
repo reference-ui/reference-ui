@@ -1,6 +1,6 @@
 # Corpus termination
 
-Runs the three walkers over real trees, each run in a child process. The other suites use small inputs, so this one covers declaration packages a Reference UI app loads, the TypeScript lib declarations, and reference-lib's own source. Each run goes through `runIsolated`, so a hang or a crash ends as a reported outcome rather than a dead Vitest worker, and a run that exceeds its budget fails with the measured time.
+Runs the three walkers over real trees, each run in a child process. The other suites use small inputs, so this one covers declaration packages a Reference UI app loads, the TypeScript lib declarations, and reference-lib's own source. Each run goes through `runIsolated`, so a hang or a crash ends as a reported outcome rather than a dead Vitest worker, and a run that exceeds its CPU budget fails with the measured CPU and wall time.
 
 ## Where the corpora come from
 
@@ -36,7 +36,7 @@ Measured on this machine (x86_64 macOS, this worktree's `dist`), before the budg
 
 Styletrace probes take about 50 ms each in a child, and the reference-lib probe about 650 ms. Atlas over the reference-lib root takes about 1.5 s, finds 526 components, and reports 44 warnings and no errors.
 
-The budgets are fixed ceilings sitting roughly five to ten times those numbers: 15 s per tasty corpus, 150 ms per symbol, 5 s per styletrace probe, and 15 s for atlas. Each child also gets a kill timeout (60 s for tasty and atlas, 30 s for styletrace) that ends the run before the budget is judged.
+The budgets are fixed ceilings sitting roughly five to ten times those numbers: 15 s per tasty corpus, 150 ms per symbol, 5 s per styletrace probe, and 15 s for atlas. Every budget counts the child's CPU time (`process.cpuUsage`: user plus system, native threads included), not wall time, so a loaded machine cannot fail a run that did the same work; one run once took 17 s of wall time against the 15 s budget while three suites shared the CPU. A wall ceiling of three times the budget still fails a stalled child, and the kill timeout below ends a hung one. With 128 busy loops on 32 cores the whole suite took 152 s of wall time and passed; the wall-time budgets failed six runs in the same conditions. Each child also gets a kill timeout (60 s for tasty and atlas, 30 s for styletrace) that ends the run before the budget is judged.
 
 Suite budget: under 15 s of test time; measured 8.8–12.4 s on 2026-10-22.
 
