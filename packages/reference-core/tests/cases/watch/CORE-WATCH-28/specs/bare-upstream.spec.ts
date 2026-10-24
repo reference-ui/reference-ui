@@ -2,14 +2,18 @@
 // and drives watchSync() in-process over temp trees. Two legs run in turn: a linked upstream, reached through a symlink
 // in the consumer's node_modules, and an installed upstream, a real directory there. Each leg syncs the upstream and the
 // consumer, starts the watch, re-syncs the upstream alone with a new ink, and requires a consumer resync whose sheet
-// carries the new ink and not the old one. Emits nothing on success; throws naming the failed leg on failure.
+// carries the new ink and not the old one. Before a leg removes its temp trees it drains the background tasty build
+// (cold build and warm lane) of the upstream and the consumer and asserts nothing is pending, so no writer meets the
+// removal. Emits nothing on success; throws naming the failed leg on failure.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import type { CoreCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
+import { flushReferenceBuild, isReferenceBuildPending } from '../../../../../src/reference/bridge/index.ts';
 import { sync } from '../../../../../src/sync/index.ts';
+import { flushTastyLanding } from '../../../../../src/sync/tasty-phase.ts';
 import { watchSync } from '../../../../../src/lib/watch/index.ts';
 import { disposeWorld, makeWorld, sleep } from '../../shared/commit-world.ts';
 
@@ -128,11 +132,41 @@ async function waitFor(cond: () => boolean, label: string): Promise<void> {
   }
 }
 
+// sync() never awaits its background tasty build, so a tree is only safe to remove once that build has landed.
+// The cold build is drained first because its follow-up warm run starts when it settles; the loop covers a sync
+// that started another cold build meanwhile. Nothing is retried on removal: a writer left running fails the leg here.
+async function drainTasty(dir: string): Promise<void> {
+  for (let round = 0; round < 5; round += 1) {
+    await flushReferenceBuild(dir);
+    await flushTastyLanding(dir);
+    if (!isReferenceBuildPending(dir)) return;
+  }
+  assert.fail(`the tasty build for ${dir} is still pending after draining`);
+}
+
+function listing(dir: string): string {
+  try {
+    return fs.readdirSync(dir, { recursive: true }).join(', ');
+  } catch {
+    return '(unreadable)';
+  }
+}
+
+// No retry: a failed removal means a writer is still running, so the failure carries what the tree still holds.
+function removeTree(leg: Leg, root: string): void {
+  try {
+    fs.rmSync(root, { recursive: true, force: true });
+  } catch (error) {
+    throw new Error(`${leg.name}: removing the temp tree failed (${String(error)}); it still holds: ${listing(root)}`);
+  }
+}
+
 async function runLeg(leg: Leg): Promise<void> {
   const app = makeWorld();
   const root = fs.realpathSync(fs.mkdtempSync(path.join(tmpdir(), 'core-watch-28-')));
+  let upDir = '';
   try {
-    const upDir = leg.placeUpstream(app, root);
+    upDir = leg.placeUpstream(app, root);
     writeUpstream(upDir, INK_V1);
     await sync(upDir);
     fs.writeFileSync(path.join(app, 'ui.config.ts'), consumerConfig());
@@ -163,8 +197,13 @@ async function runLeg(leg: Leg): Promise<void> {
       await handle.stop();
     }
   } finally {
-    disposeWorld(app);
-    fs.rmSync(root, { recursive: true, force: true });
+    try {
+      if (upDir !== '') await drainTasty(upDir);
+      await drainTasty(app);
+    } finally {
+      disposeWorld(app);
+      removeTree(leg, root);
+    }
   }
 }
 

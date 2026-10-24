@@ -10,6 +10,9 @@ The spec runs two legs in one process. Each builds a temp consumer whose config 
 upstream package that exports its real the published base system, and syncs both for real. The linked leg
 symlinks the upstream into the consumer's `node_modules`, and the installed leg places it there as a real directory. Each
 leg starts `watchSync()` on the consumer, re-syncs the upstream alone with a new ink, and requires a consumer resync whose
-sheet carries the new ink and not the old one. Both temp trees are removed in a `finally`.
+sheet carries the new ink and not the old one. `sync()` never awaits its background tasty build, so before a leg removes
+its temp trees it drains the cold build and the warm lane of the upstream and the consumer (`flushReferenceBuild`,
+`flushTastyLanding`) and asserts no cold build is pending; the removal has no retry, and a failed removal names what the
+tree still holds. Both temp trees are removed in a `finally`.
 
 > Search terms: bare specifier, package specifier, node_modules, linked upstream, installed upstream, base system, inlined base system, watch dependency, upstream re-sync, downstream watch, parcel ignore, collapse roots, CORE-WATCH-28, CORE-LAYERS-06, CORE-LAYERS-15
