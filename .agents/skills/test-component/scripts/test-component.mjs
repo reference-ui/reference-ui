@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 import net from 'node:net'
 import { loadCatalog, searchCases, selectCase } from './cases/catalog.mjs'
 import { evidenceErrors, runsNeedingSheets } from './cases/results.mjs'
-import { unitDirectory, artifactsDirectory } from './cases/targets.mjs'
+import { unitDirectory, artifactsDirectory, CORE_TARGET, CORE_UNIT_PATHS } from './cases/targets.mjs'
 import { resolveSelection, selectLegacyTarget, executionArguments } from './cases/selection.mjs'
 import { parseCatalogInvocation, formatCatalogJson, formatCatalogHuman, listingExitCode, writeCatalogOutput } from './cases/output.mjs'
 import { canAcquireJob, MAX_ACTIVE_JOBS, workerBudget, selectOwnedGroups, isListenerOwnedByGroups, findWorkspaceRoot, resolveJobTree, galleryServes, jobTreeProblem } from './cases/resources.mjs'
@@ -405,7 +405,7 @@ async function acquireDaemonStartLock() {
 function parseJobRuntime(argv = []) {
   const args = Array.isArray(argv) ? argv : []
   const unitOnly = args.includes('--unit') && !args.includes('--e2e')
-  if (unitOnly) return null
+  if (unitOnly || args[0] === CORE_TARGET) return null
   const i = args.indexOf('--react')
   if (i < 0) return '19'
   const raw = String(args[i + 1] || '19').trim()
@@ -1179,6 +1179,7 @@ Usage: pnpm agentct [Component] [options]
   pnpm agentct run LIB-POPOVER-001    Execute the precise registered evidence
   pnpm agentct Popover                 Unit then e2e on React 19 (snapshots on)
   pnpm agentct Popover --unit        Vitest only (always workspace React 19)
+  pnpm agentct core                  Vitest for the lib unit tests outside components (src/core, scripts)
   pnpm agentct Popover --e2e        Playwright CT only
   pnpm agentct Popover --react 18   CT against @ct-runtime/react-18 (no snapshots)
   pnpm agentct Popover --react all   CT on 17, then 18, then 19
@@ -1344,8 +1345,20 @@ Only update snapshots if they are genuinely updating styling, and it always has 
 if (unitOnly && !e2eOnly) runE2e = false
 if (e2eOnly && !unitOnly) runUnit = false
 
+// `core` is a target of its own: unit tests outside any component, so no catalog
+// declarations, no CT, and no Vite.
+const coreTarget = component === CORE_TARGET && !catalogCommand && !isList && !targetId && !Number.isInteger(targetLine)
+if (coreTarget && e2eOnly) {
+  console.error('[agentct] core has no component tests; remove --e2e.')
+  process.exit(2)
+}
+if (coreTarget) runE2e = false
+
 let catalog
-try {
+if (coreTarget) {
+  catalog = { components: [], cases: [] }
+  unitSelector = grep ? grep : ''
+} else try {
   catalog = loadCatalog(libDir)
 
   if (catalogCommand === 'check') {
@@ -1865,7 +1878,9 @@ let unitResult = {
 
 if (runUnit) {
   const vitestArgs = ['exec', 'vitest', 'run', '--maxWorkers', String(WORKERS_PER_SLOT), '--reporter=default', '--reporter=json', '--outputFile', vitestJsonPath]
-  if (exactVitestTarget) {
+  if (coreTarget) {
+    vitestArgs.push(...CORE_UNIT_PATHS)
+  } else if (exactVitestTarget) {
     vitestArgs.push(exactVitestTarget)
   } else if (component) {
     vitestArgs.push(unitDirectory(component))

@@ -95,6 +95,7 @@ Always run **unit first**, then e2e on React 19, then inspect artifacts. From th
 pnpm agentct                         # Run ALL components through the single-job daemon
 pnpm agentct Popover                 # unit → e2e (React 19 + snapshots)
 pnpm agentct Popover --unit
+pnpm agentct core                    # lib unit tests outside components: src/core and scripts/*.test.mjs
 pnpm agentct Popover --e2e
 pnpm agentct Popover --e2e --react 18
 pnpm agentct Popover --e2e --react 17,19
@@ -117,6 +118,8 @@ pnpm agentct --help
 > - **Scheduling:** run one local verification job at a time. Queue additional component work instead of launching independent browser servers or test fleets. Cancellation keeps the execution slot until the child stops and escalates the job's owned process groups, so detached Playwright server/browser leaders cannot outlive their slot. The direct fallback never takes over an existing listener on the CT port; `pnpm agentct stop` terminates active jobs and the daemon's owned groups.
 > - **Snapshot telemetry:** when `toHaveScreenshot` fails, the reporter prints bounding box (`x: min..max`, `y: min..max`) and the dominant color hex difference. Use that before writing image-parsing scripts.
 > - **Triaging Full Suite Failures:** Run `pnpm agentct` (no arguments) only when full-suite proof is needed. Read the failures, fix the relevant components, then verify each affected component through the same single-job queue.
+
+`pnpm agentct <Component>` and `pnpm agent verify <Component>` unit-test only that component's directory. The lib's other unit tests (`src/core/**` and `scripts/*.test.mjs`) run under `pnpm agentct core` (Vitest only, no Vite, no CT; `-g` filters by test name), so run it after changing `src/core` or the lib build scripts.
 
 Never pass `--update-snapshots` during this loop. Snapshot writes are a separate, human-gated step (see below).
 
