@@ -1,6 +1,6 @@
 # CORE-WATCH-28 — a bare-specifier upstream that re-syncs through node_modules resyncs the downstream watch, linked or installed
 
-Evidence: the config bundler (`normalizeConfigDependencyPaths`) and the watch matcher (`collapseRoots`). The
+Evidence: `normalizeConfigDependencyPaths` (config bundler) and `collapseRoots` (watch matcher). The
 bundler inlines a published base system imported by bare specifier, and before this claim the inlined file was left out
 of the config's watch dependencies. An upstream re-sync then wrote a file no watch was subscribed to. Two layouts make
 the file's real path sit under a directory the watch cannot use: a linked upstream is outside the consumer, and an
