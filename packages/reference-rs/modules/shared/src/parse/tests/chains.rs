@@ -5,7 +5,7 @@
 //! tokens hidden in strings and comments. None of them may be refused. The stack test, which runs only when
 //! `SHARED_MEASURE_OUT` is set, parses each shape at the limit on a 16 MiB thread, the smallest stack a lane runs on.
 
-use super::super::{check_nesting, scan_nesting, NestingRefusal, MAX_OPEN};
+use super::super::{check_nesting, scan_nesting, NestingRefusal, MAX_NESTING, MAX_OPEN};
 use oxc_span::SourceType;
 
 fn ts() -> SourceType {
@@ -13,10 +13,19 @@ fn ts() -> SourceType {
 }
 
 fn refused(line: u32) -> Result<usize, NestingRefusal> {
-    Err(NestingRefusal {
-        depth: MAX_OPEN + 1,
-        line,
-    })
+    Err(NestingRefusal::chain(MAX_OPEN + 1, line))
+}
+
+#[test]
+fn a_chain_refusal_names_the_chain_and_its_own_limit() {
+    let refusal = scan_nesting(&chain("x = ", "!", MAX_OPEN + 1, "y"), ts()).unwrap_err();
+    assert!(refusal.is_chain());
+    assert_eq!(
+        refusal.message(),
+        "operator chain longer than 8192 links at line 1; split or flatten the long chain of operators"
+    );
+    let nested = scan_nesting(&"(".repeat(MAX_NESTING + 1), ts()).unwrap_err();
+    assert!(!nested.is_chain());
 }
 
 /// The scan's and the gate's verdicts on `source`, which must agree.
@@ -32,7 +41,7 @@ fn chain(head: &str, unit: &str, links: usize, tail: &str) -> String {
 }
 
 /// Each chain shape: its head, the unit that repeats, and the tail that ends the expression.
-const SHAPES: [(&str, &str, &str, &str); 12] = [
+const SHAPES: [(&str, &str, &str, &str); 16] = [
     ("bang", "export default ", "!", "true"),
     ("tilde", "export default ", "~", "1"),
     ("minus", "export default ", "- ", "1"),
@@ -41,6 +50,10 @@ const SHAPES: [(&str, &str, &str, &str); 12] = [
     ("void", "export default ", "void ", "1"),
     ("delete", "export default ", "delete ", "x"),
     ("await", "async function f() { return ", "await ", "1 }"),
+    ("keyof", "type T = ", "keyof ", "X"),
+    ("readonly", "type T = ", "readonly ", "X[]"),
+    ("new", "export default ", "new ", "X"),
+    ("assertion", "export default ", "<any>", "x"),
     ("ternary", "export default ", "a ? 1 : ", "0"),
     ("arrow", "export default ", "x => ", "1"),
     ("assign", "", "b = ", "1"),
@@ -52,7 +65,11 @@ fn a_run_at_the_limit_passes_and_one_link_more_is_refused() {
     for (name, head, unit, tail) in SHAPES {
         assert_eq!(
             verdict(&chain(head, unit, MAX_OPEN, tail)),
-            Ok(if name == "await" { 1 } else { 0 }),
+            Ok(if matches!(name, "await" | "readonly") {
+                1
+            } else {
+                0
+            }),
             "{name} at the limit"
         );
         let refusal = verdict(&chain(head, unit, MAX_OPEN + 1, tail));
@@ -193,6 +210,21 @@ fn chain_tokens_in_strings_comments_templates_and_regexes_are_hidden() {
     unrefused(&format!("// {}\nx = 1;", hidden("a = ")));
     unrefused(&format!("x = /{}/;", hidden("!")));
     unrefused(&format!("x = `${{a}} {} ${{b}}`;", hidden("= ")));
+}
+
+#[test]
+fn type_operators_new_and_assertions_in_real_shapes_are_not_runs() {
+    unrefused(&"const a = new Foo(new Bar());\n".repeat(MANY));
+    unrefused(&"interface A { readonly a: string; readonly b: keyof T }\n".repeat(MANY));
+    unrefused(&"type K = keyof typeof x;".repeat(MANY));
+    unrefused(&"x = <any>y; z = <T>(<U>w);".repeat(MANY));
+    unrefused(&"if (a < b && c > d) e = a<b>c;".repeat(MANY));
+    unrefused(&format!("x = [{}0];", "<any>y, ".repeat(MANY)));
+    // JSX files read `<T>` as an element, never as an assertion, so the chain count leaves it to the element rules.
+    let tsx = chain("export default ", "<any>", MAX_OPEN + 1, "x");
+    assert!(!scan_nesting(&tsx, SourceType::tsx())
+        .unwrap_err()
+        .is_chain());
 }
 
 #[test]

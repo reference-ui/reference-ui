@@ -27,11 +27,11 @@ pub(in crate::parse) fn can_refuse(src: &[u8]) -> bool {
 }
 
 /// Whether `src` holds enough keyword letters for a run of more than `MAX_OPEN` keyword operators. Each of `typeof`, `void`,
-/// `delete` and `await` holds a `y`, `v`, `l` or `w`, so a run of them holds that many such letters. Only then does the scan
-/// look at words.
+/// `delete`, `await`, `keyof`, `readonly` and `new` holds a `y`, `v`, `l`, `w` or `k`, so a run of them holds that many such
+/// letters. Only then does the scan look at words.
 pub(in crate::parse) fn may_hold_keyword_run(src: &[u8]) -> bool {
     exceeds(src, MAX_OPEN, |byte| {
-        matches!(byte, b'y' | b'v' | b'l' | b'w')
+        matches!(byte, b'y' | b'v' | b'l' | b'w' | b'k')
     })
 }
 

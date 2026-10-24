@@ -1,17 +1,23 @@
 //! The unbracketed chains Oxc recurses through: prefix operators, `?:`, `=>` and assignment.
-//! Oxc recurses once per link of `!!!!x`, `typeof typeof x`, `a ? b : c ? d : e`, `a => b => c` and `a = b = c`, and none of
-//! those chains opens a bracket the bracket count could see. The scan counts the links per bracket level and refuses a level
-//! that passes `MAX_OPEN`. A prefix run is the operators that follow one another with only whitespace and comments between
-//! them. The right-recursive links (`?`, `=>`, `=`) run across operands, and the run ends at `;`, at `,`, when its bracket
-//! closes, and at a newline unless the line ends in an operator that continues the expression. A prefix operator counts only
-//! where an expression can start. `?.`, `??`, and the `?` of an optional member never count. Keyword operators are found only
-//! when the source holds enough keyword letters to make a run possible (`raw::may_hold_keyword_run`).
+//! Oxc recurses once per link of `!!!!x`, `typeof typeof x`, `keyof keyof T`, `<T><T>x`, `a ? b : c ? d : e`, `a => b => c` and
+//! `a = b = c`, and none of them opens a bracket the bracket count could see. The scan counts the links per bracket level and
+//! refuses a level that passes `MAX_OPEN` with `NestingRefusal::chain`. A prefix run is the operators that follow one another
+//! with only whitespace and comments between them, counted only where an expression can start. The `?`, `=>` and `=` links run
+//! across operands and end at `;`, at `,`, when the bracket closes, and at a newline that does not continue the expression.
 
 use super::{is_identifier_byte, NestingRefusal, Scan};
 use crate::parse::MAX_OPEN;
 
-/// The prefix operators that are words.
-const PREFIX_WORDS: &[&[u8]] = &[b"typeof", b"void", b"delete", b"await"];
+/// The prefix operators that are words: the expression operators and the type operators `keyof` and `readonly`, and `new`.
+const PREFIX_WORDS: &[&[u8]] = &[
+    b"typeof",
+    b"void",
+    b"delete",
+    b"await",
+    b"keyof",
+    b"readonly",
+    b"new",
+];
 
 /// The counters of one bracket level: the right-recursive links since the run began, the prefix operators in the current
 /// run, where that run's last operator ends, and whether the run is a TypeScript non-null `!` chain (`a!!!`), which is postfix
@@ -143,6 +149,20 @@ impl Scan<'_> {
                 || matches!(self.src[at - 1], b'.' | 0x80..=0xff))
     }
 
+    /// A `<T>` in a TypeScript file that is not TSX, where an expression starts: a type assertion, which is a prefix operator
+    /// as long as its type is a plain name. A longer type is not counted.
+    pub(super) fn assertion(&mut self, at: usize) -> Result<(), NestingRefusal> {
+        let src = self.src;
+        let mut end = at + 1;
+        while end < src.len() && (is_identifier_byte(src[end]) || matches!(src[end], b'.' | b' ')) {
+            end += 1;
+        }
+        if end > at + 1 && src.get(end) == Some(&b'>') && self.prefix_start(at) {
+            self.note_prefix(at, end + 1 - at)?;
+        }
+        Ok(())
+    }
+
     /// Whether the operator at `at` is a prefix: it follows the previous prefix operator, or an expression can start there.
     fn prefix_start(&self, at: usize) -> bool {
         self.joins_prefix_run(at) || self.starts_expression(at)
@@ -166,10 +186,7 @@ impl Scan<'_> {
     fn check_chains(&self, next: usize) -> Result<usize, NestingRefusal> {
         let links = self.chains.right.max(self.chains.prefix) as usize;
         if links > MAX_OPEN {
-            return Err(NestingRefusal {
-                depth: links,
-                line: self.line,
-            });
+            return Err(NestingRefusal::chain(links, self.line));
         }
         Ok(next)
     }

@@ -41,7 +41,12 @@ const MAX_RAW: usize = 8 * MAX_NESTING;
 /// `ScreenedSource::screen` both count.
 static GATE_RUNS: AtomicU64 = AtomicU64::new(0);
 
-/// A source the pre-scan refused: the depth it reached and the 1-based line where the limit was crossed.
+/// The bit that marks a chain refusal in `NestingRefusal::depth`, which keeps the struct's shape for every caller that
+/// builds one by hand.
+const CHAIN_BIT: usize = !(usize::MAX >> 1);
+
+/// A source the pre-scan refused: the depth it reached and the 1-based line where the limit was crossed. A refusal for an
+/// unbracketed chain (`NestingRefusal::chain`) carries its link count in `depth`, marked by the top bit.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NestingRefusal {
     pub depth: usize,
@@ -49,9 +54,28 @@ pub struct NestingRefusal {
 }
 
 impl NestingRefusal {
+    /// The refusal for a chain of `links` operators that crossed `MAX_OPEN` on `line`.
+    pub(crate) fn chain(links: usize, line: u32) -> Self {
+        Self {
+            depth: links | CHAIN_BIT,
+            line,
+        }
+    }
+
+    /// Whether this refusal is for an unbracketed chain, whose limit is `MAX_OPEN` links, not `MAX_NESTING` levels.
+    pub fn is_chain(&self) -> bool {
+        self.depth & CHAIN_BIT != 0
+    }
+
     /// The sentence every module reports for a refused source. It names the line and says what to do; the file it
     /// came from locates it.
     pub fn message(&self) -> String {
+        if self.is_chain() {
+            return format!(
+                "operator chain longer than {MAX_OPEN} links at line {}; split or flatten the long chain of operators",
+                self.line
+            );
+        }
         format!(
             "nesting deeper than {MAX_NESTING} levels at line {}; split or flatten the deeply nested expression",
             self.line

@@ -22,15 +22,20 @@ const BUDGET_MS = 15_000
 const KILL_MS = 60_000
 const MESSAGE =
   'code nested deeper than 8192 levels at line 2; split or flatten the long chain of operators, else-if branches or conditional types'
+// The shared pre-scan refuses the prefix and ternary chains, which Oxc recurses through, before atomic's depth gate runs.
+const CHAIN_MESSAGE = 'operator chain longer than 8192 links at line 2; split or flatten the long chain of operators'
 
 // Links per chain. The shapes the parser reads in a loop reach 100,000; the ones it recurses through stay at 20,000, which
-// is well past the limit and inside every stack the parser can run on.
+// is past both limits (8,192 levels for the depth gate, 8,192 links for the shared chain gate) and, being refused before the
+// parser or the walkers see it, inside every stack.
 const LOOPED = 100_000
 const RECURSIVE = 20_000
 
 interface Shape {
   file: string
   value: string
+  // The gate that refuses the file: atomic's depth gate unless the shared chain gate catches the shape first.
+  gate?: 'shared'
 }
 
 const chain = (head: string, link: string, tail: string, count: number): string => `${head}${link.repeat(count)}${tail}`
@@ -44,10 +49,10 @@ const SHAPES: Shape[] = [
   { file: 'call', value: chain('pick', '()', '', LOOPED) },
   { file: 'as', value: chain("'red'", ' as string', '', LOOPED) },
   { file: 'nonnull', value: chain('flag', '!', '', LOOPED) },
-  { file: 'conditional', value: chain('', 'flag ? ' + "'red'" + ' : ', "'blue'", RECURSIVE) },
-  { file: 'unary', value: chain('', '!', 'flag', RECURSIVE) },
-  { file: 'negation', value: chain('', '- ', '1', RECURSIVE) },
-  { file: 'void', value: chain('', 'void ', '1', RECURSIVE) },
+  { file: 'conditional', value: chain('', 'flag ? ' + "'red'" + ' : ', "'blue'", RECURSIVE), gate: 'shared' },
+  { file: 'unary', value: chain('', '!', 'flag', RECURSIVE), gate: 'shared' },
+  { file: 'negation', value: chain('', '- ', '1', RECURSIVE), gate: 'shared' },
+  { file: 'void', value: chain('', 'void ', '1', RECURSIVE), gate: 'shared' },
 ]
 
 const UNDER_VALUE = chain('', "'' + ", "'green'", 8_000)
@@ -103,7 +108,8 @@ const spec: AtomicCaseSpec = {
     expect(refused).toEqual([...SHAPES.map(shape => `${shape.file}.ts`), 'branchesdeep.ts'].sort())
     for (const error of parseErrors) {
       expect(error.line, error.file).toBe(2)
-      expect(error.message, error.file).toBe(MESSAGE)
+      const shape = SHAPES.find(candidate => `${candidate.file}.ts` === path.basename(error.file ?? ''))
+      expect(error.message, error.file).toBe(shape?.gate === 'shared' ? CHAIN_MESSAGE : MESSAGE)
     }
     expect(Object.keys(result.css?.classes ?? {}).sort()).toEqual(['color:blue', 'color:green', 'color:purple', 'color:red'])
   },

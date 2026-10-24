@@ -37,9 +37,9 @@ use super::NestingRefusal;
 /// Every other byte only advances the scan.
 const CODE_SPECIAL: [bool; 256] = special_bytes(b"\"'`/\\\n()[]{}<>;,!~-+?=");
 
-/// `CODE_SPECIAL` plus the first letters of the keyword operators `typeof`, `void`, `delete` and `await`, for a source with
-/// enough keyword letters to hold a run of them.
-const CODE_SPECIAL_WORDS: [bool; 256] = special_bytes(b"\"'`/\\\n()[]{}<>;,!~-+?=tvda");
+/// `CODE_SPECIAL` plus the first letters of the keyword operators `typeof`, `void`, `delete`, `await`, `keyof`, `readonly` and
+/// `new`, for a source with enough keyword letters to hold a run of them.
+const CODE_SPECIAL_WORDS: [bool; 256] = special_bytes(b"\"'`/\\\n()[]{}<>;,!~-+?=tvdakrn");
 
 /// Bytes that can change the scan's state in template text: the backtick, `$` (for `${`), escapes and newlines.
 const TEMPLATE_SPECIAL: [bool; 256] = special_bytes(b"`$\\\n");
@@ -256,7 +256,7 @@ impl<'s> Scan<'s> {
             b'!' | b'~' | b'-' | b'+' => self.symbol_operator(byte, at),
             b'?' => self.question_mark(at),
             b'=' => self.equals(at),
-            b't' | b'v' | b'd' | b'a' => self.word(at),
+            b't' | b'v' | b'd' | b'a' | b'k' | b'r' | b'n' => self.word(at),
             _ => self.close_or_drop(byte, at),
         }
     }
@@ -271,6 +271,9 @@ impl<'s> Scan<'s> {
         }
         if self.opens_generic(at) {
             return self.open_soft(Open::Angle, at, at + 1);
+        }
+        if self.typescript && !self.jsx {
+            self.assertion(at)?;
         }
         Ok(at + 1)
     }
