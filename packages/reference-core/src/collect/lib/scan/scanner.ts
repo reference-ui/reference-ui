@@ -60,7 +60,7 @@ function matchesAnyPattern(content: string, patterns: DiscoveryPattern[]): boole
  *
  * @example
  * await scanForFragments({
- *   include: ['src/(glob).{ts,tsx}'],
+ *   include: ['src/{app,lib}/*.{ts,tsx}'],
  *   importFrom: '@reference-ui/core',
  * })
  */
@@ -166,7 +166,7 @@ function matchesCandidate(
  *
  * @example
  * await scanForFragments({
- *   include: ['src/(glob).{ts,tsx}'],
+ *   include: ['src/{app,lib}/*.{ts,tsx}'],
  *   importFrom: '@reference-ui/core',
  * })
  */
