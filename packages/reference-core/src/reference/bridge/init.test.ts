@@ -1,7 +1,8 @@
 // Reference tasty phase scheduler suite: it takes the mocked runner plus the
 // mocked session cache and emits the pins — scheduling never blocks,
 // cold start pays once per source dir, cached builds skip, failures retry.
-// A result drains exactly once, whether pending or settled at the drain.
+// A result drains exactly once, whether pending or settled at the drain; a
+// rejected build is reported once as an error when it settles.
 // The background loop here is real setImmediate, drained, never faked.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -143,6 +144,23 @@ describe('reference/bridge/init drain', () => {
       message: 'background exploded',
     })
     await expect(flushReferenceBuild(sourceDir)).resolves.toBeUndefined()
+  })
+
+  it('reports a rejected build once as an error and drains it once', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { initReference, flushReferenceBuild } = await importInitModule({
+      runImpl: async () => {
+        throw new Error('background exploded')
+      },
+    })
+    const sourceDir = '/workspace/scheduler-reported'
+
+    initReference(testPayload(sourceDir))
+    await expect(flushReferenceBuild(sourceDir)).resolves.toEqual({ status: 'failed', message: 'background exploded' })
+    await expect(flushReferenceBuild(sourceDir)).resolves.toBeUndefined()
+
+    expect(error).toHaveBeenCalledTimes(1)
+    expect(String(error.mock.calls[0]?.[0])).toContain('reference tasty build failed: background exploded')
   })
 
   it('drains the retry result after a settled failure', async () => {

@@ -26,7 +26,9 @@ The letter after the prefix gives the severity.
 - **`W`, warning**: sync finished and wrote its output, but a style may have
   no CSS, or may be printed as written. Warnings never change the exit code.
 - **`E`, error**: sync fails with exit code 1. It keeps the output of the
-  last good sync, so your app keeps its previous stylesheet.
+  last good sync, so your app keeps its previous stylesheet. The one
+  exception is `TST-E-SCAN-FAILED` from the API reference build: sync reports
+  it as an error, still writes your stylesheet, and exits with code 0.
 
 The prefix names the part of sync that raised the code: `ATM` for the style
 compiler, `TGN` for the generated types, `TST` for the API reference build,
@@ -62,6 +64,21 @@ Errors always print, with every code and location:
 [ref] sync failed: native compile failed:
 - ATM-E-UNKNOWN-TOKEN: unknown token reference `{colors.nope}` (src/App.tsx:8:7)
 ```
+
+An error from the API reference build prints once, with its code, and a
+one-off sync names it in an `Errors:` row at the end of the output. Sync
+finishes and exits with code 0:
+
+```text
+  [ref] TST-E-SCAN-FAILED: reference tasty build failed: failed to read src/broken.ts: stream did not contain valid UTF-8
+
+  REF  v0.0.0  ready in 412 ms
+
+  ➜  CSS:       38.2 KB
+  ➜  Errors:    1 tasty error, sync finished
+```
+
+With `--quiet` or `--json`, one stderr line, `[ref] sync finished with 1 tasty error`, names it instead.
 
 ## Compiler diagnostics
 
@@ -101,6 +118,8 @@ Each entry has `severity`, `code` and `message`, plus `file`, `line`,
 In watch mode, each resync prints its own array.
 
 When a one-off sync fails, stdout stays empty and the error goes to stderr.
+An API reference build error does not fail the sync: the array carries it as
+an `error` entry, and the exit code is 0.
 
 ## Codes
 
@@ -340,9 +359,10 @@ API reference documents. Its warnings carry the `[ref]` tag.
   The message names the line; split or flatten the nested expression.
 - `TST-E-SCAN-FAILED`: the scan cannot read a folder or file, or an `include`
   glob is invalid. A glob whose braces nest deeper than 64 levels or expand to
-  more than 1,024 globs is one. A one-off sync fails with exit code 1, and the
-  message names the path or pattern. Make the path readable, or fix the
-  pattern.
+  more than 1,024 globs is one. Sync reports it as an error that names the
+  path or pattern, writes your stylesheet, and exits with code 0; watch mode
+  reports it and keeps running. The API reference documents are missing until
+  you make the path readable or fix the pattern.
 - `TST-W-UNRESOLVED-IMPORT`: an import or re-export path names a file that
   does not exist. Create the file or fix the path.
 - `TST-W-UNSUPPORTED-SYNTAX`: `declare global`, `import x = require()` or

@@ -13,6 +13,10 @@ bridge), or any compile/publish/link logic (subsystem calls, never
 inlined). Commander.js owns argv shape only; the law above is
 unchanged by the framework.
 
+A tasty failure is metadata, so it never decides the one-shot exit code: the bridge reports it once as an
+error, the summary names it (an `Errors:` row, or one stderr line under `--quiet` and `--json`), and the exit stays 0
+when everything else succeeded. Watch mode reports it and keeps running.
+
 Init is the one writer outside the generated folder: it drops a default
 `ui.config` and refuses when config discovery already finds one.
 

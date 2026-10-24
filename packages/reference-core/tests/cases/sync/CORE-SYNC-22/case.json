@@ -1,1 +1,1 @@
-{"id": "CORE-SYNC-22", "name": "a tasty build that fails and settles before the one-shot drain is still drained as that failure, once", "sync": false}
+{"id": "CORE-SYNC-22", "name": "a one-shot sync reports a tasty failure once as an error and still exits 0, whether the build settled or was pending at drain", "sync": false}

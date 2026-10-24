@@ -3,7 +3,7 @@
 The watch drains the folded tasty landing after every sync (`drainFoldedLanding`).
 A failed landing prints its own `[ref] watch error: reference tasty build failed:` line instead of exiting. The
 one-shot twin is CORE-SYNC-22 (settled before the drain) and CORE-SYNC-23 (pending at the drain): there the same failure
-exits 1. Watch mode reports and continues; one-shot exits 1.
+is reported once as an error and the exit stays 0. Watch mode reports and continues; one-shot reports and exits 0.
 
 The spec copies the world to a temp project and adds `src/broken.ts`, a source that is not valid UTF-8 (the CORE-WATCH-08
 trick), so the CSS sync succeeds but the cold tasty build fails. Leg one runs `sync()` in-process, waits until the cold

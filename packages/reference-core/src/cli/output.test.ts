@@ -7,7 +7,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cssSizeBytes, dedupeDiagnostics, foldedWarningCount, formatBootBlock, formatSyncLine, formatWarningSummary, printBootBlock, printSyncLine, refVersion } from './output.ts'
+import { cssSizeBytes, dedupeDiagnostics, foldedWarningCount, formatBootBlock, formatSyncLine, formatTastyErrorCount, formatWarningSummary, printBootBlock, printSyncLine, refVersion } from './output.ts'
 import { warning } from './__fixtures__/output-fixtures.ts'
 
 const PLAIN_LINE = '⎔ ref sync ⫶ 100 ms ⫶ 1.0 MB'
@@ -119,6 +119,15 @@ describe('formatBootBlock', () => {
     expect(formatBootBlock({ version: '1.0.0', elapsedMs: 104, cssBytes: 1024 * 1024, warnings: 3 })).toBe(
       '\n  \x1b[1m\x1b[94mREF \x1b[0m \x1b[94mv1.0.0\x1b[0m  \x1b[2mready in\x1b[0m \x1b[1m104 ms\x1b[0m\n\n  \x1b[94m➜\x1b[0m  \x1b[1mCSS:     \x1b[0m  \x1b[32m1.0 MB\x1b[0m\n  \x1b[94m➜\x1b[0m  \x1b[1mWarnings:\x1b[0m  \x1b[33m3\x1b[0m [--verbose]'
     )
+  })
+
+  it('names a tasty error on its own red row after the warnings row', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    expect(formatBootBlock({ version: '1.0.0', elapsedMs: 7, cssBytes: 512, warnings: 2, errors: 1 })).toBe(
+      '\n  REF  v1.0.0  ready in 7 ms\n\n  ➜  CSS:       512 B\n  ➜  Warnings:  2 [--verbose]\n  ➜  Errors:    1 tasty error, sync finished'
+    )
+    expect(formatTastyErrorCount(1)).toBe('1 tasty error')
+    expect(formatTastyErrorCount(2)).toBe('2 tasty errors')
   })
 
   it('lets NO_COLOR win over FORCE_COLOR', () => {

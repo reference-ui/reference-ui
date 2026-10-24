@@ -1,19 +1,15 @@
-// CLI sync command: it takes the project dir plus the sync flags and emits
-// a fresh generated folder or the resident watcher. One-shot sync runs the
-// world's own sync, drains the session-owned tasty phase with a single
-// subsystem call, and prints the boot block with its folded warnings;
-// --watch routes to the watch runner and --quiet prints nothing on
-// success in either mode. --debug traces watch file events on
-// the dev-only channel. --json replaces the human stdout with the
-// canonical diagnostics array and moves every human line to stderr, so
-// agents parse stdout without a filter. No build logic lives here — the
-// command calls subsystems and reports.
+// CLI sync command: it takes the project dir and the sync flags and emits the generated folder or the watcher.
+// One-shot sync runs the world's sync, drains the tasty phase with one subsystem call, and prints the boot block.
+// A tasty failure never fails the sync: the bridge reports it once as an error, the summary names it, and the exit stays 0.
+// --watch routes to the watch runner, and --quiet prints nothing on success beyond that one stderr line.
+// --json prints the canonical diagnostics array on stdout and moves every human line to stderr.
+// No build logic lives here — the command calls subsystems and reports.
 import type { Command } from 'commander'
 import { resolve } from 'node:path'
 import type { ReferenceBuildResult } from '../reference/bridge/events.ts'
 import type { SyncResult } from '../sync/index.ts'
 import { SyncCoveredByWatchError } from '../sync/session-owner.ts'
-import { foldedWarningCount, formatJsonDiagnostics, messageOf, printBootBlock, reportedSyncEntries } from './output.ts'
+import { foldedWarningCount, formatJsonDiagnostics, formatTastyErrorCount, messageOf, printBootBlock, reportedSyncEntries } from './output.ts'
 import { runWatch } from './watch.ts'
 
 export interface SyncCommandOptions {
@@ -40,28 +36,60 @@ export async function runSyncCommand(dir: string | undefined, options: SyncComma
     const { sync } = await import('../sync/index.ts')
     const started = Date.now()
     const result = await sync(cwd, { breakLock, verbose, foldRefDiagnostics: true, json })
-    const { flushReferenceBuild } = await import('../reference/bridge/init.ts')
-    const build = await flushReferenceBuild(cwd)
-    if (build?.status === 'failed') {
-      return fail(`[ref] sync failed: reference tasty build failed: ${build.message}`)
-    }
-    if (json) {
-      await reportJsonRun(build, result)
-      return 0
-    }
-    reportOneShotSuccess({ build, result, started, verbose, quiet })
-    return 0
+    return await finishOneShotSync(cwd, result, { started, verbose, quiet, json })
   } catch (err) {
     if (err instanceof SyncCoveredByWatchError) return reportCoveredByWatch(err, json)
     return fail(`[ref] sync failed: ${messageOf(err)}`)
   }
 }
 
+interface OneShotFinish {
+  started: number
+  verbose: boolean
+  quiet: boolean
+  json: boolean
+}
+
+/**
+ * Drain the cold tasty build for a finished sync and report the run. A tasty
+ * failure is metadata: the bridge runner already printed it once as an error
+ * (code kept), and the run only names it in the summary and exits 0 because
+ * the CSS and the rest of the sync landed. Exported so a case can drive the
+ * settled-before-drain order in-process.
+ */
+export async function finishOneShotSync(dir: string, result: SyncResult, finish: OneShotFinish): Promise<number> {
+  const { flushReferenceBuild } = await import('../reference/bridge/init.ts')
+  const build = await flushReferenceBuild(dir)
+  const tastyErrors = build?.status === 'failed' ? 1 : 0
+  if (finish.json) {
+    await reportJsonRun(build, result)
+    reportErrorLine(tastyErrors)
+    return 0
+  }
+  if (finish.quiet) {
+    reportErrorLine(tastyErrors)
+    return 0
+  }
+  reportOneShotSuccess({ build, result, started: finish.started, verbose: finish.verbose, tastyErrors })
+  return 0
+}
+
+// --quiet and --json print no summary block, so a tasty error is named on stderr in one line.
+function reportErrorLine(tastyErrors: number): void {
+  if (tastyErrors > 0) console.error(`[ref] sync finished with ${formatTastyErrorCount(tastyErrors)}`)
+}
+
 // The JSON one-shot report: canonical sync diagnostics, plus the reference-build entries
-// when that build completed. Stdout carries only the array.
+// when that build completed, or its failure as an error row. Stdout carries only the array.
 async function reportJsonRun(build: ReferenceBuildResult | undefined, result: SyncResult): Promise<void> {
   const { tastyDiagnosticToNative } = await import('../reference/bridge/build-report.ts')
-  const refEntries = build?.status === 'complete' ? build.diagnostics.map(tastyDiagnosticToNative) : []
+  const { referenceFailureEntry } = await import('../reference/bridge/logging.ts')
+  const refEntries =
+    build?.status === 'complete'
+      ? build.diagnostics.map(tastyDiagnosticToNative)
+      : build?.status === 'failed'
+        ? [referenceFailureEntry(build.message)]
+        : []
   const reported = reportedSyncEntries(result.diagnostics, result.compilerDiagnostics)
   console.log(formatJsonDiagnostics([...reported, ...refEntries]))
 }
@@ -83,19 +111,19 @@ interface OneShotSuccess {
   result: SyncResult
   started: number
   verbose: boolean
-  quiet: boolean
+  tastyErrors: number
 }
 
 // The one-shot success report: folds the drained tasty warnings into the
-// boot block, or prints nothing under --quiet. Pure reporting — the sync
-// and the drain already ran.
+// boot block and names a tasty error on its own row. Pure reporting — the
+// sync and the drain already ran.
 function reportOneShotSuccess(report: OneShotSuccess): void {
-  if (report.quiet) return
   const refWarnings = report.build?.status === 'complete' ? report.build.reportedWarningCount : 0
   printBootBlock({
     elapsedMs: Date.now() - report.started,
     outDir: report.result.outDir,
     warnings: foldedWarningCount(report.result.warningCount + refWarnings, report.verbose),
+    errors: report.tastyErrors,
   })
 }
 

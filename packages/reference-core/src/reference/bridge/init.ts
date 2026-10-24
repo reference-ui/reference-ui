@@ -11,6 +11,7 @@
 import { resolve } from 'node:path'
 import type { ReferenceBuildResult } from './events.ts'
 import { onRunBuild, type ReferenceBuildPayload } from './run.ts'
+import { logReferenceError } from './logging.ts'
 import { getReferenceTastyBuild } from './tasty-build.ts'
 import type { ReferenceTastyPayload } from './types.ts'
 
@@ -43,6 +44,7 @@ export function initReference(
       onRunBuild(payload, build ?? {}).then(
         (result) => resolvePending(settle(sourceDir, result)),
         (reason: unknown) => {
+          logReferenceError(reason)
           const message = reason instanceof Error ? reason.message : String(reason)
           resolvePending(settle(sourceDir, { status: 'failed', message }))
         }

@@ -19,6 +19,11 @@ export function formatReferenceFailure(error: unknown): string {
   return formatVerboseWarningLine({ entry: failureEntry(text), count: 1 }, 'ref')
 }
 
+/** The failure as one error row for the JSON report, with its engine code when the message leads with one. */
+export function referenceFailureEntry(message: string): CoreDiagnostic {
+  return failureEntry(message.replace(/\s*\n\s*/g, ' ').trim())
+}
+
 function failureEntry(text: string): CoreDiagnostic {
   const match = CODED_FAILURE.exec(text)
   if (match === null || match[1] === undefined) {

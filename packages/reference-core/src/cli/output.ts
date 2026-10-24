@@ -37,6 +37,7 @@ const RESET = '\x1b[0m'
 const BOLD = '\x1b[1m'
 const FAINT = '\x1b[2m'
 const GREEN = '\x1b[32m'
+const RED = '\x1b[31m'
 const YELLOW = '\x1b[33m'
 const CYAN = '\x1b[36m'
 // Bright blue reads on dark terminals; plain blue (34) does not, so the
@@ -156,7 +157,15 @@ export interface BootBlockOptions {
   elapsedMs: number
   cssBytes: number
   warnings?: number
+  errors?: number
   watch?: boolean
+}
+
+// The tasty error count as the summary names it: "1 tasty error". A tasty
+// failure is reported as an error but never fails the sync.
+export function formatTastyErrorCount(count: number): string {
+  const total = Math.max(0, Math.floor(count))
+  return `${total} tasty ${total === 1 ? 'error' : 'errors'}`
 }
 
 // The boot block: brand + version + ready time, a blank line, then the
@@ -170,6 +179,8 @@ export function formatBootBlock(options: BootBlockOptions): string {
   const rows = [`${paint(ARROW, BLUE)}  ${paint('CSS:'.padEnd(9), BOLD)}  ${paint(formatBytes(options.cssBytes), GREEN)}`]
   const folded = Math.max(0, Math.floor(options.warnings ?? 0))
   if (folded > 0) rows.push(`${paint(ARROW, BLUE)}  ${paint('Warnings:'.padEnd(9), BOLD)}  ${paint(String(folded), YELLOW)} [--verbose]`)
+  const errors = Math.max(0, Math.floor(options.errors ?? 0))
+  if (errors > 0) rows.push(`${paint(ARROW, BLUE)}  ${paint('Errors:'.padEnd(9), BOLD)}  ${paint(formatTastyErrorCount(errors), RED)}, sync finished`)
   if (options.watch === true) rows.push(`${paint(ARROW, BLUE)}  ${paint('Watch:'.padEnd(9), BOLD)}  on`)
   return `\n  ${head}\n\n  ${rows.join('\n  ')}`
 }
@@ -178,6 +189,7 @@ export interface PrintBootBlockOptions {
   elapsedMs: number
   outDir: string
   warnings?: number
+  errors?: number
   watch?: boolean
 }
 
@@ -190,6 +202,7 @@ export function printBootBlock(options: PrintBootBlockOptions): void {
     elapsedMs: options.elapsedMs,
     cssBytes: cssSizeBytes(options.outDir),
     warnings: options.warnings ?? 0,
+    errors: options.errors ?? 0,
     watch: options.watch ?? false,
   }))
 }

@@ -1,1 +1,1 @@
-{"id": "CORE-SYNC-23", "name": "a tasty build still pending at the one-shot drain is drained as a failure, and a spawned ref sync on that world exits 1 with the tasty failure line", "sync": false}
+{"id": "CORE-SYNC-23", "name": "a one-shot sync reports a tasty failure once as an error and still exits 0, whether the build settled or was pending at drain", "sync": false}
