@@ -7,6 +7,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   assertFragmentTree,
+  MAX_FRAGMENT_TREE_NODES,
   mergeTokenTree,
   stripPrivateTokensDeep,
   TokenTreeError,
@@ -226,6 +227,27 @@ describe('assertFragmentTree', () => {
     expect(() => assertFragmentTree(nestedTree(101), SOURCE)).toThrow(
       new TokenTreeError(`token tree nests deeper than 100 levels at ${path} (src/tokens.ts)`)
     )
+  })
+
+  it('refuses a shared-subtree tree whose path count is exponential, fast, naming the budget', () => {
+    let node: Record<string, unknown> = { value: '#000' }
+    for (let level = 0; level < 40; level += 1) node = { a: node, b: node }
+    const started = Date.now()
+
+    expect(() => assertFragmentTree({ colors: node }, SOURCE)).toThrow(TokenTreeError)
+    expect(() => assertFragmentTree({ colors: node }, SOURCE)).toThrow(
+      /^token tree visits more than 100,000 nodes at colors\..* \(src\/tokens\.ts\)$/
+    )
+    expect(Date.now() - started).toBeLessThan(1000)
+  })
+
+  it('passes a wide real-sized tree and a shared subtree reached within the budget', () => {
+    const wide = Object.fromEntries(Array.from({ length: 5_000 }, (_, at) => [`t${at}`, { value: '#000' }]))
+    let shared: Record<string, unknown> = { value: '#000' }
+    for (let level = 0; level < 10; level += 1) shared = { a: shared, b: shared }
+
+    expect(() => assertFragmentTree({ wide, shared }, SOURCE)).not.toThrow()
+    expect(MAX_FRAGMENT_TREE_NODES).toBe(100_000)
   })
 
   it('refuses keyframes and globalCss cycles under their own call names', () => {

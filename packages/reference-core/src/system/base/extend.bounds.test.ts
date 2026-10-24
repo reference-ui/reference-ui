@@ -1,7 +1,8 @@
 // Bounds tests for extendSystem: an override tree the recursive merge cannot finish. A token tree that
 // holds itself, or nests past MAX_FRAGMENT_TREE_DEPTH, must fail with a TokenTreeError that names the
 // call, the dotted path and the base, before mergeTokenTree walks it. Without the guard a cycle overflows
-// the stack as a RangeError during config evaluation.
+// the stack as a RangeError during config evaluation. A tree of shared subtrees (a DAG) fails on the node
+// budget in well under a second instead of walking its exponential path count.
 
 import { describe, expect, it } from 'vitest'
 import { MAX_FRAGMENT_TREE_DEPTH, TokenTreeError } from '../../collect/lib/merge.ts'
@@ -39,5 +40,15 @@ describe('extendSystem override bounds', () => {
     expect(call).toThrow(
       new RegExp(`^extendSystem tree nests deeper than ${MAX_FRAGMENT_TREE_DEPTH} levels at colors\\.deep.* \\(${NAME}\\)$`)
     )
+  })
+
+  it('refuses a 40-level shared-subtree override tree on the node budget, fast', () => {
+    let node: Record<string, unknown> = { value: '#000' }
+    for (let level = 0; level < 40; level += 1) node = { a: node, b: node }
+    const started = Date.now()
+    const call = () => extendSystem(BASE, { tokens: { colors: node } })
+    expect(call).toThrow(TokenTreeError)
+    expect(call).toThrow(new RegExp(`^extendSystem tree visits more than 100,000 nodes at colors\\..* \\(${NAME}\\)$`))
+    expect(Date.now() - started).toBeLessThan(1000)
   })
 })

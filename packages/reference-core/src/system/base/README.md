@@ -59,7 +59,8 @@ or `pending` (case being added, not yet in the tree):
   and `extendSystem`; under extends, an `extendSystem` result contributes
   one named fragment node, `extend:<base>`, after the base's nodes.
   `extendSystem` runs its overrides through `assertFragmentTree` first, so a
-  cyclic or over-deep override throws `TokenTreeError` naming the path and base.
+  cyclic, over-deep or over-wide override (more than 100,000 node visits, a
+  shared subtree counted per path) throws `TokenTreeError` naming the path and base.
   (`merge.test.ts`; CORE-CHAIN-13; `extend.test.ts`; `extend.bounds.test.ts`;
   CORE-LAYERS-18.)
 - E15 Legacy entries. Legacy `{name, fragment}` entries are accepted as

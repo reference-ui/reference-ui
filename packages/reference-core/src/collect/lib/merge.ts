@@ -3,7 +3,7 @@
 // A token leaf replaces the earlier leaf whole, groups merge recursively, and
 // upstream `_private` subtrees strip at merge time so the owning package keeps
 // its internals while downstream extenders never see them. Fragments are live
-// objects, so assertFragmentTree refuses a cyclic or over-deep tree by name
+// objects, so assertFragmentTree refuses a cyclic, over-deep or over-wide (shared-subtree) tree by name
 // before any of these recursive walks reads it; extendSystem guards its overrides the same way.
 
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -149,7 +149,15 @@ export function tokenLeafPaths(tokens: Record<string, unknown>): string[] {
 /** The deepest a fragment tree may nest: an object at a dotted path of more keys is refused. */
 export const MAX_FRAGMENT_TREE_DEPTH = 100
 
-/** A fragment tree the merge cannot walk: it holds itself, or nests past the depth limit. */
+/**
+ * The most object nodes one fragment tree may visit, a shared subtree counted at every path that reaches it. A tree built
+ * from shared subtrees (a DAG) has a path count exponential in its depth, and each recursive walk follows every path.
+ * The largest real systems hold a few thousand tokens, so 100,000 visits leaves them a wide margin and keeps every walk
+ * over an accepted tree to a fraction of a second.
+ */
+export const MAX_FRAGMENT_TREE_NODES = 100_000
+
+/** A fragment tree the merge cannot walk: it holds itself, nests past the depth limit, or visits more nodes than the budget. */
 export class TokenTreeError extends Error {
   constructor(message: string) {
     super(message)
@@ -166,16 +174,24 @@ export interface FragmentTreeSource {
 interface TreeWalk {
   active: WeakSet<object>
   at: FragmentTreeSource
+  visited: number
 }
 
 // One object node at `path`, `depth` keys deep. The active set holds only the objects on the
-// path from the root, entered and left in step, so a subtree shared by two keys still passes.
+// path from the root, entered and left in step, so a subtree shared by two keys still passes;
+// the visit count is not reset on leaving, so shared subtrees cost every time they are reached.
 function walkFragmentNode(node: Record<string, unknown>, path: string, depth: number, walk: TreeWalk): void {
   const { call, source } = walk.at
   if (walk.active.has(node)) throw new TokenTreeError(`${call} tree cycles at ${path} (${source})`)
   if (depth > MAX_FRAGMENT_TREE_DEPTH) {
     throw new TokenTreeError(
       `${call} tree nests deeper than ${MAX_FRAGMENT_TREE_DEPTH} levels at ${path} (${source})`
+    )
+  }
+  walk.visited += 1
+  if (walk.visited > MAX_FRAGMENT_TREE_NODES) {
+    throw new TokenTreeError(
+      `${call} tree visits more than ${MAX_FRAGMENT_TREE_NODES.toLocaleString('en-US')} nodes at ${path} (${source})`
     )
   }
   walk.active.add(node)
@@ -187,10 +203,11 @@ function walkFragmentNode(node: Record<string, unknown>, path: string, depth: nu
 
 /**
  * Refuse a fragment tree that the recursive walks above cannot finish: one that holds
- * itself, or one with an object more than MAX_FRAGMENT_TREE_DEPTH keys deep. Throws a
+ * itself, one with an object more than MAX_FRAGMENT_TREE_DEPTH keys deep, or one that visits more
+ * than MAX_FRAGMENT_TREE_NODES objects (shared subtrees counted per path). Throws a
  * TokenTreeError naming the call, the dotted path and the file; returns nothing otherwise.
  */
 export function assertFragmentTree(tree: unknown, at: FragmentTreeSource): void {
   if (!isPlainObject(tree)) return
-  walkFragmentNode(tree, '', 0, { active: new WeakSet(), at })
+  walkFragmentNode(tree, '', 0, { active: new WeakSet(), at, visited: 0 })
 }
