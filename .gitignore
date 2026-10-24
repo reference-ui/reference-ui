@@ -9,6 +9,7 @@ vendor/*
 !vendor/README.md
 # Build outputs
 dist
+.dist-new-*
 target
 tmp
 .stencil
