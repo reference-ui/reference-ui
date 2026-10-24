@@ -1,9 +1,9 @@
 # CORE-WATCH — watch lifecycle case group
 
-This group proves the lifecycle of `ref sync --watch` and the syncs it drives:
-how the generated folder is published and replaced, who holds it, what a watch
-sees and when it resyncs, how the types build keeps up, and how the processes
-stop. Browser paint after a watched edit is one leg of that lifecycle, not the
+This group proves the lifecycle of `ref sync --watch` and the syncs it drives.
+It covers how the generated folder is published and replaced, who holds it, what
+a watch sees and when it resyncs, how the types build keeps up, and how the
+processes stop. Browser paint after a watched edit is one leg of that lifecycle, not the
 whole group.
 
 The browser-paint leg — file mutation → watch resync → browser paint —

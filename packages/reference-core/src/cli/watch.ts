@@ -1,5 +1,5 @@
-// CLI watch runner: it takes a resolved project dir and emits the resident
-// watcher behind `ref sync --watch`. The runner owns the process half only —
+// CLI watch runner for `ref sync --watch`: takes a resolved project dir, emits the resident watcher.
+// The runner owns the process half only —
 // boot block, resync/error prints, stall reports, signal shutdown, and the
 // never-promise that holds the process open. File events and shutdown steps
 // print only under --debug, the dev-only channel; --json moves every human line

@@ -1,4 +1,5 @@
-//! Retention-contract tests: a complete scan skips the union backfill, an incomplete flag or a scope or
+//! Retention-contract tests for the backfill skip.
+//! A complete scan skips the union backfill, an incomplete flag or a scope or
 //! root mismatch keeps the walk, and the skip and walk arms agree byte for byte. Each test scans a
 //! fixture into a retention token, drains it through `collect_checked`, then asserts the outcome and
 //! the sources. Compiled only under `cfg(test)` as a child of `sources::tests`.

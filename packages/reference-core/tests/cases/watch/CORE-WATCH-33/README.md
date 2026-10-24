@@ -1,7 +1,7 @@
 # CORE-WATCH-33 — a tasty failure that settles before the watch drain is reported once and the watch keeps running
 
-The watch drains the folded tasty landing after every sync (`drainFoldedLanding` in `src/cli/watch.ts`),
-and a failed landing prints its own `[ref] watch error: reference tasty build failed:` line instead of exiting. The
+The watch drains the folded tasty landing after every sync (`drainFoldedLanding`).
+A failed landing prints its own `[ref] watch error: reference tasty build failed:` line instead of exiting. The
 one-shot twin is CORE-SYNC-22 (settled before the drain) and CORE-SYNC-23 (pending at the drain): there the same failure
 exits 1. Watch mode reports and continues; one-shot exits 1.
 

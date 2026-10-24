@@ -1,5 +1,6 @@
 /**
- * Input-tree walker for the atomic case helpers: the source files a case folder holds, sorted by
+ * Input-tree walker for the atomic case helpers.
+ * It lists the source files a case folder holds, sorted by
  * path, with build and metadata directories skipped. Takes a root directory and returns virtual
  * sources ready to hand to `compile` as `files`, so the order-independence gauge can reverse them
  * and compare the artifacts that come back.

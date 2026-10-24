@@ -6,15 +6,14 @@
 // device or a link to one, and a file reached through several paths is listed once, under its first path in walk order.
 // Directories the Rust walk prunes by name are walked for their real files only, and a scope outside the root (`../shared/**`,
 // an absolute glob) walks its own base. A negated include drops the paths it matches; the Rust walk never prunes on one, and
-// this walk prunes only at `<dir>/**`, where every path beneath is dropped anyway.
+// this walk prunes only at `<dir>/**`, where every path beneath is dropped anyway (the glob-string helpers: project-patterns.ts).
 
 import { realpathSync, type Dirent } from 'node:fs'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
-import picomatch from 'picomatch'
-import { negatedClassesAsCaret } from './glob-classes.ts'
 import { NATIVE_IGNORE_DIRS } from '../../constants.ts'
 import { kindOf, linkOnceAdmission, liveAdmission, liveDirectories, sortedEntries, type Admission, type KeepFn } from './project-admission.ts'
 import { expandBraces } from './braces.ts'
+import { ignoreMatcher, isNegated, isOutside, keepMatcher, normalizePattern, prunesDescent, staticPrefix } from './project-patterns.ts'
 import {
   compileGlobs,
   startPositions,
@@ -23,6 +22,8 @@ import {
   type CompiledGlobs,
   type GlobListInput,
 } from './project-globs.ts'
+
+export { prunesDescent }
 
 /** One directory the walk enters: its canonical path, and whether a link carried the walk to it. */
 interface PlannedDir {
@@ -253,11 +254,6 @@ function isIgnored(entry: EntryRef, matches: (relativePath: string) => boolean):
   return entry.local !== undefined && entry.local !== entry.rel && matches(entry.local)
 }
 
-/** True when a negated alternative may prune the walk: it negates everything beneath a directory (`**` or `<dir>/**`). */
-export function prunesDescent(alternative: string): boolean {
-  return alternative === '**' || alternative.endsWith('/**')
-}
-
 // The identity is the canonical directory holding the entry joined with its name: computed only for a kept file.
 function keepFile(entry: EntryRef, frame: DirFrame, state: WalkState): void {
   if (isIgnored(entry, state.ignored) || !state.keep(entry.rel, entry.alias)) return
@@ -340,42 +336,4 @@ function canonicalOrSelf(path: string): string {
   } catch {
     return path
   }
-}
-
-function isNegated(pattern: string): boolean {
-  return pattern.startsWith('!')
-}
-
-// fast-glob reads a leading `./` as the root itself, so the matchers see the same relative spelling.
-function normalizePattern(pattern: string): string {
-  return pattern.replace(/^\.\//, '')
-}
-
-// A pattern that leaves the root (`../shared/**`) or names an absolute base walks that base instead of the root.
-function isOutside(pattern: string): boolean {
-  return isAbsolute(pattern) || pattern === '..' || pattern.startsWith('../')
-}
-
-// The leading segments with no glob magic: the directory a pattern starts from.
-function staticPrefix(pattern: string): string {
-  const segments: string[] = []
-  for (const segment of pattern.split('/')) {
-    if (/[*?[\]{}()!]/.test(segment)) break
-    segments.push(segment)
-  }
-  return segments.join('/') || '.'
-}
-
-// Relative patterns match the root-relative path; absolute patterns match the absolute path, as fast-glob returns them.
-function keepMatcher(include: readonly string[]): KeepFn {
-  const relativePatterns = include.filter((pattern) => !isAbsolute(pattern)).map(negatedClassesAsCaret)
-  const absolutePatterns = include.filter((pattern) => isAbsolute(pattern)).map(negatedClassesAsCaret)
-  const relativeMatch = relativePatterns.length > 0 ? picomatch(relativePatterns, { dot: true }) : () => false
-  const absoluteMatch = absolutePatterns.length > 0 ? picomatch(absolutePatterns, { dot: true }) : () => false
-  return (rel, alias) => relativeMatch(rel) || absoluteMatch(alias)
-}
-
-function ignoreMatcher(ignore: readonly string[]): (relativePath: string) => boolean {
-  if (ignore.length === 0) return () => false
-  return picomatch(ignore.map((pattern) => negatedClassesAsCaret(normalizePattern(pattern))), { dot: true })
 }
