@@ -21,7 +21,10 @@ A const copied from an import (`export const v1 = v0` over an imported `v0`)
 carries the import's resolved value through the origin file's table: the
 refined file keeps its resolved and refused imports, so the copy folds like the
 import would, and an import the origin file wrote refuses the copy with that
-write.
+write. A same-file copy of an import (`const S = NS`) answers through the import itself, so
+it keeps the origin's member refs, as a direct import does; a copy made in the exporting file strips them.
+No reader sees the difference: member refs are read only for a same-file const object literal
+(ATM-SITE-111).
 
 Externals (packages and scope-excluded targets) parse once on demand into
 values-only entries with literal bags and no descriptors. Refused,
