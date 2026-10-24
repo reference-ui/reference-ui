@@ -12,8 +12,10 @@ Lib ships one control height and three icon sizes. Lib's controls and menus
 share the control height, so a button, an input and a menu item line up in a
 row.
 
-Sizes are in `r`, the [spacing unit](/spacing): `1r` is `0.25rem`, 4px at the
-browser's default font size.
+Sizes are written in `r`, the [spacing unit](/spacing): a multiplier of
+`--spacing-root`, which is `0.25rem` (4px at the browser's default font size).
+So `8.5r` is 8.5 × 4px = 34px. Sync turns it into
+`calc(8.5 * var(--spacing-root))`, and the browser computes the pixels.
 
 ## Import
 
@@ -29,11 +31,11 @@ import {
 
 ## Control height
 
-| Export | Value |
-| --- | --- |
-| `controlHeight` | `'8.5r'` (34px) |
-| `controlHeightPx` | `'34px'` |
-| `controlSize` | `{ height: '8.5r', paddingBlock: '0.75r' }` |
+| Export | Value | Computed |
+| --- | --- | --- |
+| `controlHeight` | `'8.5r'` | 34px |
+| `controlHeightPx` | `'34px'` | 34px |
+| `controlSize` | `{ height: '8.5r', paddingBlock: '0.75r' }` | 34px tall, 3px of padding above and below |
 
 These elements are `controlHeight` tall:
 
@@ -61,14 +63,14 @@ import { controlHeightPx } from '@reference-ui/lib'
 
 ## Icon sizes
 
-| Key | Value |
-| --- | --- |
-| `small`, `sm` | `'4r'` (16px) |
-| `base`, `md` | `'5r'` (20px) |
-| `large`, `lg` | `'6r'` (24px) |
+| Key | Value | Computed |
+| --- | --- | --- |
+| `small`, `sm` | `'4r'` | 16px |
+| `base`, `md` | `'5r'` | 20px |
+| `large`, `lg` | `'6r'` | 24px |
 
 `iconSizes` holds these values under both spellings. `defaultIconSize` is
-`'5r'`.
+`'5r'` (20px).
 
 The keys match the `size` prop on [icons](/icons), and `md` is the icons'
 default. A `5r` icon fits inside a `controlHeight` control.
