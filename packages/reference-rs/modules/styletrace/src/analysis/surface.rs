@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 
 use oxc_ast::ast::Program;
 use rustc_hash::FxHashMap;
+use shared::parse::ScreenedSource;
 
 use crate::diagnostics::{push_skipped, unresolved_surface, StyletraceDiagnostic};
 use crate::output::StyletraceDetailedResult;
@@ -94,14 +95,14 @@ pub struct TraceOutcome {
     pub local_owned: BTreeMap<PathBuf, BTreeMap<String, BTreeSet<String>>>,
 }
 
-/// Caller-held module inputs for one entry-listed trace: staged bytes by
-/// path plus already-parsed programs by path. A path present in `programs`
+/// Caller-held module inputs for one entry-listed trace: staged screened
+/// sources by path plus already-parsed programs by path. A path present in `programs`
 /// reuses its program instead of re-parsing; every other path parses from
-/// `staged` bytes (or disk) exactly as before. Reused programs must come
+/// the `staged` source's stored verdict (or a gated disk read) exactly as before. Reused programs must come
 /// from the same bytes with identical parser options, so the walk observes
 /// exactly what a fresh parse would produce.
 pub struct TraceSources<'a> {
-    pub staged: &'a FxHashMap<PathBuf, &'a str>,
+    pub staged: &'a FxHashMap<PathBuf, &'a ScreenedSource>,
     pub programs: &'a FxHashMap<PathBuf, &'a Program<'a>>,
 }
 

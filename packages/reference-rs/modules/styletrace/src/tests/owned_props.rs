@@ -1,16 +1,17 @@
-//! Owned-props tracing for the §14 host shadow: a host's own declared
-//! prop names land on the outcome keyed by export name, surface
+//! Owned-props tracing for the §14 host shadow.
+//! A host's own declared prop names land on the outcome keyed by export name, surface
 //! references prune, and unannotated hosts own nothing. Scratch sources
 //! plus a hand-built surface keep the test hermetic: no fixture tree,
 //! no declaration root.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use rustc_hash::FxHashMap;
+use shared::parse::ScreenedSource;
 
 use crate::analysis::{trace_style_bindings_with_surface, StyleSurface, SurfaceTrace};
 
@@ -214,6 +215,18 @@ fn input_seeds_union_with_traced_owned() {
     );
 }
 
+/// Each file's text screened once, under its absolute path.
+fn screen_files(files: &[(&str, &str)], root: &Path) -> Vec<(PathBuf, ScreenedSource)> {
+    files
+        .iter()
+        .map(|(rel, content)| {
+            let path = root.join(rel);
+            let source_type = SourceType::from_path(&path).unwrap_or_default().with_typescript(true);
+            (path, ScreenedSource::screen((*content).to_string(), source_type))
+        })
+        .collect()
+}
+
 #[test]
 fn staged_content_matches_disk_trace() {
     let surface = test_surface();
@@ -235,10 +248,8 @@ fn staged_content_matches_disk_trace() {
             programs: &no_programs,
         },
     });
-    let staged: FxHashMap<PathBuf, &str> = files
-        .iter()
-        .map(|(rel, content)| (scratch.root().join(rel), *content))
-        .collect();
+    let screened = screen_files(&files, scratch.root());
+    let staged: FxHashMap<PathBuf, &ScreenedSource> = screened.iter().map(|(path, source)| (path.clone(), source)).collect();
     let from_staged = trace_style_bindings_with_surface(SurfaceTrace {
         entries: &entries,
         source_root: scratch.root(),
@@ -262,10 +273,8 @@ fn reused_programs_match_fresh_parse_trace() {
     }
     let button = scratch.root().join("Button.tsx");
     let entries = vec![button.clone()];
-    let staged: FxHashMap<PathBuf, &str> = files
-        .iter()
-        .map(|(rel, content)| (scratch.root().join(rel), *content))
-        .collect();
+    let screened = screen_files(&files, scratch.root());
+    let staged: FxHashMap<PathBuf, &ScreenedSource> = screened.iter().map(|(path, source)| (path.clone(), source)).collect();
     let no_programs = FxHashMap::default();
     let fresh = trace_style_bindings_with_surface(SurfaceTrace {
         entries: &entries,

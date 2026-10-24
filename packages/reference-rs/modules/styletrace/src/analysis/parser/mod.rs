@@ -1,6 +1,7 @@
 //! Main entry point for Oxc-based TSX parsing and trace generation.
 //! Orchestrates the parsing phase of styletrace.
 //! Discovers exports, components, factories, class components and style signal dependencies.
+//! A staged source parses from the verdict its compile already holds (`parse_screened`); only a disk read is gated here (`parse_bounded`).
 
 pub mod classes;
 pub mod component;
@@ -25,7 +26,7 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     ExportAllDeclaration, ImportOrExportKind, Program, Statement,
 };
-use shared::parse::parse_bounded;
+use shared::parse::{parse_bounded, parse_screened, NestingRefusal, ScreenedSource};
 use oxc_span::{GetSpan, SourceType};
 
 use crate::analysis::model::{
@@ -69,18 +70,14 @@ pub(super) fn parse_trace_module(
         return fold_trace_module(ModuleFold {
             path,
             workspace_root,
-            source: &source,
+            source: source.text(),
             program,
             surface,
         });
     }
 
     let allocator = Allocator::default();
-    // Same options as the main-phase parse (atomic `parse_source`): TS on
-    // for every extension, so a file the main phase accepts never fails
-    // the trace re-parse (C1 keep-alive soundness).
-    let source_type = SourceType::from_path(path).unwrap_or_default().with_typescript(true);
-    let parsed = parse_bounded(&allocator, &source, source_type)
+    let parsed = parse_module_source(&allocator, &source, path)
         .map_err(|refusal| StyleTraceError::new(refusal.message()))?;
     if !parsed.errors.is_empty() {
         return Err(StyleTraceError::new(format!(
@@ -93,7 +90,7 @@ pub(super) fn parse_trace_module(
     fold_trace_module(ModuleFold {
         path,
         workspace_root,
-        source: &source,
+        source: source.text(),
         program: &parsed.program,
         surface,
     })
@@ -161,18 +158,49 @@ pub fn fold_trace_module(input: ModuleFold<'_, '_>) -> Result<TraceModule, Style
     })
 }
 
-/// One module's bytes: the staged compile content when present, else a
+/// One module's bytes: the staged compile source with the verdict atomic screened it with, else a
 /// disk read for edge targets beyond the entries.
+enum ModuleSource<'a> {
+    Staged(&'a ScreenedSource),
+    Disk(String),
+}
+
+impl ModuleSource<'_> {
+    fn text(&self) -> &str {
+        match self {
+            Self::Staged(source) => source.as_str(),
+            Self::Disk(text) => text,
+        }
+    }
+}
+
 fn module_source<'a>(
     path: &Path,
-    staged: &'a FxHashMap<PathBuf, &'a str>,
-) -> Result<std::borrow::Cow<'a, str>, StyleTraceError> {
-    if let Some(content) = staged.get(path) {
-        return Ok(std::borrow::Cow::Borrowed(content));
+    staged: &FxHashMap<PathBuf, &'a ScreenedSource>,
+) -> Result<ModuleSource<'a>, StyleTraceError> {
+    if let Some(source) = staged.get(path) {
+        return Ok(ModuleSource::Staged(source));
     }
     fs::read_to_string(path)
-        .map(std::borrow::Cow::Owned)
+        .map(ModuleSource::Disk)
         .map_err(|error| StyleTraceError::new(format!("failed to read {}: {error}", path.display())))
+}
+
+/// Parses one module: a staged source reads its stored verdict, a disk read is gated here.
+fn parse_module_source<'a>(
+    allocator: &'a Allocator,
+    source: &'a ModuleSource<'_>,
+    path: &Path,
+) -> Result<oxc_parser::ParserReturn<'a>, NestingRefusal> {
+    match source {
+        ModuleSource::Staged(screened) => parse_screened(allocator, screened),
+        ModuleSource::Disk(text) => {
+            // Same options as the main-phase parse (atomic `source_type_of`): TS on for every
+            // extension, so a file the main phase accepts never fails the trace re-parse (C1).
+            let source_type = SourceType::from_path(path).unwrap_or_default().with_typescript(true);
+            parse_bounded(allocator, text, source_type)
+        }
+    }
 }
 
 fn collect_statement(

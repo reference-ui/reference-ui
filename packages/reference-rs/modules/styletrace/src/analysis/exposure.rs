@@ -2,10 +2,13 @@
 //! A module exposes its own exports, the names behind its `export *` barrels (which skip `default` and any name the module exports itself), its compound-member aliases, the aliases of its re-exported namespaces, and each `export * as Name` namespace, whose names read `Name.<exposed name>`.
 //! An export whose target traces is a traced exposure and lists a binding; one that does not trace, but whose declared component owns props, is a declared exposure that only feeds the owned map.
 //! A default re-export takes the name of the binding it re-exports, since a JSX consumer spells that name; a local default keeps the literal `default`.
+//! At the top level, a declared same-name re-export of a module the outer loop also visits is skipped: that module's own exposure carries the same owned props under the same key, so a chain of such re-exports costs one hop per module.
 //! Emits unlabelled exposures: the caller stamps the module label, lists bindings for the traced ones and records owned props for both, so a namespace's names never leak under their bare spelling.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+
+use rustc_hash::FxHashSet;
 
 use super::aliases::{alias_exposures, remapped_aliases, WalkModule};
 use super::analyzer::StyleTraceAnalyzer;
@@ -57,10 +60,12 @@ fn star_reexports(module: &TraceModule, name: &str) -> bool {
 impl StyleTraceAnalyzer<'_> {
     /// Every name `module_path` exposes. `expanding` lists the modules whose namespaces are
     /// being expanded, so a namespace cycle yields nothing instead of recursing forever.
+    /// `top_level` is false only under a namespace expansion, where names change spelling.
     pub(super) fn module_exposures(
         &mut self,
         module_path: &Path,
         expanding: &mut Vec<PathBuf>,
+        top_level: bool,
     ) -> Result<Vec<Exposure>, StyleTraceError> {
         let Some(module) = self.modules.get(module_path).cloned() else {
             return Ok(Vec::new());
@@ -69,7 +74,7 @@ impl StyleTraceAnalyzer<'_> {
             return Ok(Vec::new());
         }
         expanding.push(module_path.to_path_buf());
-        let exposures = self.expose_module(module_path, &module, expanding);
+        let exposures = self.expose_module(module_path, &module, expanding, top_level);
         expanding.pop();
         exposures
     }
@@ -79,9 +84,10 @@ impl StyleTraceAnalyzer<'_> {
         module_path: &Path,
         module: &TraceModule,
         expanding: &mut Vec<PathBuf>,
+        top_level: bool,
     ) -> Result<Vec<Exposure>, StyleTraceError> {
-        let mut exposures = self.own_exposures(module_path, module)?;
-        exposures.extend(self.export_all_exposures(module_path, module)?);
+        let mut exposures = self.own_exposures(module_path, module, top_level)?;
+        exposures.extend(self.export_all_exposures(module_path, module, top_level)?);
         exposures.extend(self.alias_names(module_path, module, &module.member_aliases)?);
         exposures.extend(self.reexported_alias_exposures(module_path, module)?);
         exposures.extend(self.namespace_exposures(module_path, module, expanding)?);
@@ -93,24 +99,31 @@ impl StyleTraceAnalyzer<'_> {
         &mut self,
         module_path: &Path,
         module: &TraceModule,
+        top_level: bool,
     ) -> Result<Vec<Exposure>, StyleTraceError> {
         let mut exposures = Vec::new();
         for export_name in module.exports.keys() {
-            exposures.extend(self.export_exposure(module_path, export_name)?);
+            exposures.extend(self.export_exposure(module_path, export_name, top_level)?);
         }
         Ok(exposures)
     }
 
     /// One export's exposure: traced when its target traces, declared when its component keeps
-    /// owned props without tracing, and nothing when it keeps none.
+    /// owned props without tracing, and nothing when it keeps none. At the top level, a declared
+    /// same-name re-export of a module the outer loop also visits adds nothing: that module's own
+    /// exposure carries the same owned props under the same key.
     fn export_exposure(
         &mut self,
         module_path: &Path,
         export_name: &str,
+        top_level: bool,
     ) -> Result<Option<Exposure>, StyleTraceError> {
         if let Some(owned) = self.export_is_traced(module_path, export_name, &mut Vec::new())? {
             let name = self.exposed_name(module_path, export_name)?;
             return Ok(Some(Exposure::traced(name, owned)));
+        }
+        if top_level && self.is_outer_same_name_reexport(module_path, export_name)? {
+            return Ok(None);
         }
         let Some(owned) =
             self.declared_export_owned(module_path, export_name, &mut Vec::new())?
@@ -121,12 +134,47 @@ impl StyleTraceAnalyzer<'_> {
         Ok(Some(Exposure::declared(name, owned)))
     }
 
+    /// Whether `export_name` in `module_path` is `export { name } from 'source'` under its own name,
+    /// where `source` is a module the outer loop visits and that exports `name` directly. Defaults
+    /// are excluded: a re-exported default takes the binding's name.
+    fn is_outer_same_name_reexport(
+        &self,
+        module_path: &Path,
+        export_name: &str,
+    ) -> Result<bool, StyleTraceError> {
+        let Some(ExportTarget::Imported {
+            source,
+            imported_name,
+        }) = self
+            .modules
+            .get(module_path)
+            .and_then(|module| module.exports.get(export_name))
+        else {
+            return Ok(false);
+        };
+        if export_name == DEFAULT_EXPORT || imported_name != export_name {
+            return Ok(false);
+        }
+        let Some(target) =
+            self.resolver
+                .resolve_imported_module(module_path, source, &self.sync_root)?
+        else {
+            return Ok(false);
+        };
+        Ok(self.outer_modules.contains(&target)
+            && self
+                .modules
+                .get(&target)
+                .is_some_and(|module| module.exports.contains_key(export_name)))
+    }
+
     /// The names behind `export *` sources. One level deep, as the export-star walk has always been.
     /// A star source skips `default` and any name `module` exports itself, which shadows it.
     fn export_all_exposures(
         &mut self,
         module_path: &Path,
         module: &TraceModule,
+        top_level: bool,
     ) -> Result<Vec<Exposure>, StyleTraceError> {
         let mut exposures = Vec::new();
         for source in &module.export_all_sources {
@@ -142,7 +190,7 @@ impl StyleTraceAnalyzer<'_> {
             };
             for export_name in target_module.exports.keys() {
                 if star_reexports(module, export_name) {
-                    exposures.extend(self.export_exposure(&target, export_name)?);
+                    exposures.extend(self.export_exposure(&target, export_name, top_level)?);
                 }
             }
             let aliases = &target_module.member_aliases;
@@ -218,7 +266,7 @@ impl StyleTraceAnalyzer<'_> {
                 continue;
             };
             self.ensure_module_loaded(&target)?;
-            for exposure in self.module_exposures(&target, expanding)? {
+            for exposure in self.module_exposures(&target, expanding, false)? {
                 let Exposure { name, owned, traced } = exposure;
                 exposures.push(Exposure {
                     name: format!("{}.{}", namespace.namespace, name),
@@ -252,9 +300,8 @@ impl StyleTraceAnalyzer<'_> {
     /// modules. An anonymous default names no binding, and a cycle of re-exports names nothing.
     fn default_binding_name(&mut self, module_path: &Path) -> Result<Option<String>, StyleTraceError> {
         let mut current = module_path.to_path_buf();
-        let mut visited = Vec::new();
-        while !visited.contains(&current) {
-            visited.push(current.clone());
+        let mut visited = FxHashSet::default();
+        while visited.insert(current.clone()) {
             match self.default_hop(&current)? {
                 DefaultHop::Settled(name) => return Ok(name),
                 DefaultHop::Follow(next) => current = next,

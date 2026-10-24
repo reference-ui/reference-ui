@@ -16,6 +16,7 @@ use std::path::{Path, PathBuf};
 
 use oxc_ast::ast::Program;
 use rustc_hash::{FxHashMap, FxHashSet};
+use shared::parse::ScreenedSource;
 use styletrace::{
     trace_style_bindings_with_modules, trace_style_bindings_with_surface, ModulesTraceInputs,
     StyleSurface, SurfaceTrace, TraceModule, TraceOutcome, TraceSources,
@@ -218,7 +219,7 @@ struct TraceOpen<'a> {
     root: &'a str,
     package_root: &'a str,
     entries: Vec<PathBuf>,
-    staged: FxHashMap<PathBuf, &'a str>,
+    staged: FxHashMap<PathBuf, &'a ScreenedSource>,
 }
 
 /// Open the trace when a root and at least one entry exist.
@@ -235,7 +236,7 @@ fn open_trace<'a>(
     let package_root = request.declaration_root.as_deref().unwrap_or(root);
     let staged = sources
         .iter()
-        .map(|(path, source)| (PathBuf::from(path), source.as_str()))
+        .map(|(path, source)| (PathBuf::from(path), source))
         .collect();
     Some(TraceOpen {
         root,

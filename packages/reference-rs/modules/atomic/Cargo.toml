@@ -1,3 +1,4 @@
+# Manifest of the atomic crate: the style compiler, its benches and its tests under tests/rust.
 [package]
 name = "atomic"
 version.workspace = true
@@ -68,12 +69,20 @@ name = "harvest_pool"
 path = "tests/rust/harvest_pool.rs"
 
 [[test]]
+name = "reexport_chain"
+path = "tests/rust/reexport_chain.rs"
+
+[[test]]
 name = "scan_retention"
 path = "tests/rust/scan_retention.rs"
 
 [[test]]
 name = "screen_once"
 path = "tests/rust/screen_once.rs"
+
+[[test]]
+name = "screen_once_rooted"
+path = "tests/rust/screen_once_rooted.rs"
 
 [[test]]
 name = "serializer_parity"

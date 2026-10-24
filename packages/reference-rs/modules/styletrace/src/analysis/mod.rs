@@ -13,6 +13,8 @@ mod model;
 mod module_resolution;
 mod parser;
 mod report;
+#[cfg(test)]
+mod same_name_skip_tests;
 pub(crate) mod primitive_metadata;
 mod source_files;
 mod surface;

@@ -1,10 +1,12 @@
 //! Walks the parsed wrapper graph to decide which exported components are style-traced.
 //! It takes parsed modules plus the surface sets and follows local, imported, and factory edges back to Reference primitives.
 //! Emits the exported bindings whose style props reach a primitive, plus the warnings the walk owns: class components and higher-order arguments it could not resolve.
-//! Entry parsing and surface acquisition live in `surface.rs`, name exposure in `exposure.rs`, declared-only owned props in `declared.rs`, and higher-order application in `hoc.rs`; this file stays the walker.
+//! Entry parsing and surface acquisition live in `surface.rs`, name exposure in `exposure.rs`, binding collection and the owned-props report in `report.rs`, declared-only owned props in `declared.rs`, and higher-order application in `hoc.rs`; this file stays the walker.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+
+use rustc_hash::FxHashSet;
 
 use crate::diagnostics::{push_skipped, StyletraceDiagnostic};
 use crate::resolver::StyleTraceError;
@@ -12,11 +14,10 @@ use crate::resolver::StyleTraceError;
 use super::hoc::{HocCall, UnresolvedHocs};
 use super::memo::{TraceMemo, Verdict};
 use super::model::{
-    EdgeTarget, ExportTarget, FactoryTarget, TraceComponent, TraceModule, TracedBinding,
+    EdgeTarget, ExportTarget, FactoryTarget, TraceComponent, TraceModule,
 };
 use super::module_resolution::ModuleResolver;
 use super::parser::parse_trace_module;
-use super::source_files::format_relative_module;
 use super::surface::{StyleSurface, TraceSources};
 
 pub(super) struct StyleTraceAnalyzer<'s> {
@@ -26,6 +27,8 @@ pub(super) struct StyleTraceAnalyzer<'s> {
     sources: &'s TraceSources<'s>,
     pub(super) resolver: ModuleResolver<'s>,
     pub(super) memo: TraceMemo,
+    /// The modules the outer loop of `collect_exported_bindings` visits, fixed when it starts.
+    pub(super) outer_modules: FxHashSet<PathBuf>,
     pub(super) unresolved_hocs: UnresolvedHocs,
     pub(super) owned_props: BTreeMap<String, BTreeSet<String>>,
     pub(super) diagnostics: Vec<StyletraceDiagnostic>,
@@ -45,50 +48,11 @@ impl<'s> StyleTraceAnalyzer<'s> {
             sources,
             resolver: ModuleResolver::new(sources.staged),
             memo: TraceMemo::default(),
+            outer_modules: FxHashSet::default(),
             unresolved_hocs: UnresolvedHocs::new(),
             owned_props: BTreeMap::new(),
             diagnostics: Vec::new(),
         }
-    }
-
-    pub(super) fn collect_exported_bindings(
-        &mut self,
-        source_root: &Path,
-    ) -> Result<Vec<TracedBinding>, StyleTraceError> {
-        let mut bindings = BTreeSet::new();
-        let module_paths = self.modules.keys().cloned().collect::<Vec<_>>();
-        let source_root_is_file = source_root.is_file();
-        for module_path in module_paths {
-            self.collect_module_bindings(
-                &module_path,
-                source_root,
-                source_root_is_file,
-                &mut bindings,
-            )?;
-        }
-        Ok(bindings.into_iter().collect())
-    }
-
-    /// Stamp one module's traced names with its label and list them as bindings, then record the
-    /// owned props of every exposure, traced or declared-only.
-    fn collect_module_bindings(
-        &mut self,
-        module_path: &Path,
-        source_root: &Path,
-        source_root_is_file: bool,
-        bindings: &mut BTreeSet<TracedBinding>,
-    ) -> Result<(), StyleTraceError> {
-        if !self.modules.contains_key(module_path) {
-            return Ok(());
-        }
-        let rel_module = format_relative_module(module_path, source_root, source_root_is_file);
-        for exposure in self.module_exposures(module_path, &mut Vec::new())? {
-            if exposure.traced {
-                bindings.insert(TracedBinding::new(&rel_module, &exposure.name));
-            }
-            self.record_owned(&exposure.name, exposure.owned);
-        }
-        Ok(())
     }
 
     /// Body of one export node. The export's owned props when its target

@@ -1,17 +1,72 @@
-//! Gathers what the walk reports beyond its bindings: the owned props each traced name keeps, the owned props each module's own components keep, and the warnings the finished walk owns.
+//! Collects the walk's bindings and the owned props and warnings it reports beyond them.
+//! The report holds the owned props each traced name keeps, the owned props each module's own components keep, and the warnings the finished walk owns.
 //! Edge-target skips are recorded while walking; class components and prop-type limit cuts are read from the parsed modules, and unresolved higher-order arguments from the walk's facts, once the walk has settled.
 //! Takes the analyzer's accumulated state and emits the drained owned-props map and the diagnostics in a stable order.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::diagnostics::{
     class_component, type_expansion_limit, unresolved_hoc_argument, StyletraceDiagnostic,
 };
+use crate::resolver::StyleTraceError;
 
 use super::analyzer::StyleTraceAnalyzer;
+use super::model::TracedBinding;
+use super::source_files::format_relative_module;
 
 impl StyleTraceAnalyzer<'_> {
+    pub(super) fn collect_exported_bindings(
+        &mut self,
+        source_root: &Path,
+    ) -> Result<Vec<TracedBinding>, StyleTraceError> {
+        let module_paths = self.modules.keys().cloned().collect::<Vec<_>>();
+        self.outer_modules = module_paths.iter().cloned().collect();
+        self.collect_bindings(&module_paths, source_root)
+    }
+
+    /// Lists the bindings of every module in `module_paths`, in order. Exposure skips a declared
+    /// same-name re-export only when its source is in `outer_modules`.
+    pub(super) fn collect_bindings(
+        &mut self,
+        module_paths: &[PathBuf],
+        source_root: &Path,
+    ) -> Result<Vec<TracedBinding>, StyleTraceError> {
+        let mut bindings = BTreeSet::new();
+        let source_root_is_file = source_root.is_file();
+        for module_path in module_paths {
+            self.collect_module_bindings(
+                module_path,
+                source_root,
+                source_root_is_file,
+                &mut bindings,
+            )?;
+        }
+        Ok(bindings.into_iter().collect())
+    }
+
+    /// Stamp one module's traced names with its label and list them as bindings, then record the
+    /// owned props of every exposure, traced or declared-only.
+    fn collect_module_bindings(
+        &mut self,
+        module_path: &Path,
+        source_root: &Path,
+        source_root_is_file: bool,
+        bindings: &mut BTreeSet<TracedBinding>,
+    ) -> Result<(), StyleTraceError> {
+        if !self.modules.contains_key(module_path) {
+            return Ok(());
+        }
+        let rel_module = format_relative_module(module_path, source_root, source_root_is_file);
+        for exposure in self.module_exposures(module_path, &mut Vec::new(), true)? {
+            if exposure.traced {
+                bindings.insert(TracedBinding::new(&rel_module, &exposure.name));
+            }
+            self.record_owned(&exposure.name, exposure.owned);
+        }
+        Ok(())
+    }
+
     /// Drain the walk's diagnostics: edge-target skips recorded while walking, then the class,
     /// limit-cut and unresolved-argument warnings that the finished walk owns.
     pub(super) fn take_diagnostics(&mut self) -> Vec<StyletraceDiagnostic> {

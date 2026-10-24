@@ -12,6 +12,7 @@ use module_graph::{
     DiskFs, ExtensionPolicy, FileSystem, ModuleKey, ProbeMemo, SpecifierLadder,
 };
 use rustc_hash::FxHashMap;
+use shared::parse::ScreenedSource;
 
 use crate::resolver::{
     is_ignorable_module_specifier, prefer_sync_root_source_module, StyleTraceError,
@@ -30,10 +31,10 @@ pub(super) struct ModuleResolver<'s> {
 impl<'s> ModuleResolver<'s> {
     /// A resolver over the session's staged bytes, keyed raw: probes
     /// hit the raw form and normalize only on miss.
-    pub(super) fn new(staged: &'s FxHashMap<PathBuf, &'s str>) -> Self {
+    pub(super) fn new(staged: &'s FxHashMap<PathBuf, &'s ScreenedSource>) -> Self {
         let staged = staged
             .iter()
-            .map(|(path, content)| (path.to_string_lossy().to_string(), *content))
+            .map(|(path, source)| (path.to_string_lossy().to_string(), source.as_str()))
             .collect();
         Self {
             staged,
@@ -127,13 +128,15 @@ impl FileSystem for ModuleResolver<'_> {
 mod tests {
     use super::*;
 
+    fn screened(text: &str) -> ScreenedSource {
+        ScreenedSource::screen(text.to_string(), oxc_span::SourceType::ts())
+    }
+
     /// Staged bytes answer probes; disk answers the rest, memoized.
     #[test]
     fn staged_first_disk_memoized() {
-        let staged = FxHashMap::from_iter([(
-            PathBuf::from("/p/src/app.ts"),
-            "export const a = 1;",
-        )]);
+        let app = screened("export const a = 1;");
+        let staged = FxHashMap::from_iter([(PathBuf::from("/p/src/app.ts"), &app)]);
         let resolver = ModuleResolver::new(&staged);
         assert!(resolver.is_file("/p/src/app.ts"));
         assert!(resolver.is_file("/p/src/./app.ts"));
@@ -162,10 +165,8 @@ mod tests {
         std::fs::create_dir_all(&src).expect("expected fixture dir");
         std::fs::write(src.join("app.ts"), "import './b';\n").expect("expected app");
         std::fs::write(src.join("b.ts"), "export const b = 1;\n").expect("expected b");
-        let staged = FxHashMap::from_iter([
-            (src.join("app.ts"), "import './b';"),
-            (src.join("b.ts"), "export const b = 1;"),
-        ]);
+        let (app, b) = (screened("import './b';"), screened("export const b = 1;"));
+        let staged = FxHashMap::from_iter([(src.join("app.ts"), &app), (src.join("b.ts"), &b)]);
         let resolver = ModuleResolver::new(&staged);
         let hit = resolver
             .resolve_relative_module(&src.join("app.ts"), "./b")
