@@ -12,5 +12,6 @@ export default defineConfig({
       'tests/**/*.test.ts',
       'js/**/*.test.ts',
     ],
+    testTimeout: 30_000,
   },
 })

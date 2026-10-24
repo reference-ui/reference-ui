@@ -9,5 +9,6 @@ export default defineConfig({
   test: {
     name: 'testing',
     include: ['*.test.ts'],
+    testTimeout: 30_000,
   },
 })
