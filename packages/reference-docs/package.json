@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "sync": "content-collections build --config src/collections/content-collections.ts && node ../reference-core/tools/ensure-dist.mjs && node ../reference-core/dist/bin/ref.js sync",
-    "dev": "pnpm run sync && concurrently --kill-others --success first \"content-collections watch --config src/collections/content-collections.ts\" \"node ../reference-core/dist/bin/ref.js sync --watch\" \"vite\"",
+    "dev": "pnpm run sync && concurrently --kill-others --success first \"node ../reference-core/dist/bin/ref.js sync --watch\" \"vite\"",
     "build": "pnpm run sync && vite build",
     "build:pages": "pnpm build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
