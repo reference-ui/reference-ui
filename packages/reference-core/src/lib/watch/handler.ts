@@ -54,15 +54,21 @@ export function createWatcherErrorHandler(
 
 /**
  * One parcel callback over every root: each classified event reports through
- * onChange, and a batch with any match schedules one debounced resync. An
+ * onChange, and a batch with any match no pass has read yet schedules one
+ * debounced resync. An
  * error batch goes to reportError, which owns its own resync policy.
  */
-export function createParcelHandler(
-  state: ClassifyState,
-  onChange: (change: WatchChange) => void,
-  triggers: ResyncTriggers,
-  reportError: (error: Error) => void,
-): ParcelHandler {
+/** Where one parcel callback sends what it classifies. */
+export interface ParcelSinks {
+  onChange: (change: WatchChange) => void
+  triggers: ResyncTriggers
+  reportError: (error: Error) => void
+  /** True for a path last written before the latest pass started: that pass read it. */
+  wasRead?: (path: string) => boolean
+}
+
+export function createParcelHandler(state: ClassifyState, sinks: ParcelSinks): ParcelHandler {
+  const { onChange, triggers, reportError, wasRead = () => false } = sinks
   return (error: Error | null, events: ParcelEvent[]) => {
     if (error) {
       reportError(toError(error))
@@ -72,8 +78,9 @@ export function createParcelHandler(
     for (const event of events) {
       const change = classifyEvent(event, state)
       if (!change) continue
-      matched = true
       onChange(change)
+      // A late event for a write a pass already read still reports, but resyncs nothing.
+      if (!wasRead(event.path)) matched = true
     }
     if (matched) triggers.schedule()
   }

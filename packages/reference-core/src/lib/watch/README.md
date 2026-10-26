@@ -47,6 +47,12 @@ globs.
   max-wait ceiling counted from a burst's first event, so a steady
   stream of saves still resyncs; a burst behind a slow sync costs one
   extra pass, never a backlog
+- the stat-poll backstop (`poll.ts`): once the baseline lands, every
+  matched file, every directory above one, and every config dependency is
+  statted each second and compared with the previous tick, so an edit the
+  OS event stream delays or drops still schedules the same debounced
+  resync. Saturated macOS FSEvents does both: parcel can sit on an edit for
+  tens of seconds, or until the next event under the root delivers it
 - the trigger scope follows each sync: a successful sync narrows it to
   the latest loaded config, and a failed sync widens it to the union of
   the live scope and that config, so the save that fixes

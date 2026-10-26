@@ -59,13 +59,13 @@ describe('createParcelHandler', () => {
     watchRoot: '/project',
     isMatch: createIncludeMatcher(['theme/**/*.ts']),
     dependencyFiles: new Set(),
-    snapshot: { dirs: new Set(), links: new Map(), linkDirs: [], targetDirs: new Map() },
+    snapshot: { files: new Set(), dirs: new Set(), links: new Map(), linkDirs: [], targetDirs: new Map() },
   }
 
   it('reports each matched change and schedules one resync for the batch', () => {
     const onChange = vi.fn()
     const triggers = triggersMock()
-    const handler = createParcelHandler(state, onChange, triggers, vi.fn())
+    const handler = createParcelHandler(state, { onChange, triggers, reportError: vi.fn() })
     const events: ParcelEvent[] = [
       { type: 'update', path: '/project/theme/a.ts' },
       { type: 'create', path: '/project/theme/b.ts' },
@@ -79,14 +79,24 @@ describe('createParcelHandler', () => {
 
   it('schedules nothing for a batch with no match', () => {
     const triggers = triggersMock()
-    createParcelHandler(state, vi.fn(), triggers, vi.fn())(null, [{ type: 'update', path: '/project/notes.md' }])
+    createParcelHandler(state, { onChange: vi.fn(), triggers, reportError: vi.fn() })(null, [{ type: 'update', path: '/project/notes.md' }])
+    expect(triggers.schedule).not.toHaveBeenCalled()
+  })
+
+  it('reports a change a pass already read, but schedules nothing for it', () => {
+    const onChange = vi.fn()
+    const triggers = triggersMock()
+    createParcelHandler(state, { onChange, triggers, reportError: vi.fn(), wasRead: () => true })(null, [
+      { type: 'update', path: '/project/theme/a.ts' },
+    ])
+    expect(onChange).toHaveBeenCalledTimes(1)
     expect(triggers.schedule).not.toHaveBeenCalled()
   })
 
   it('routes a watcher error to the error policy instead of classifying it', () => {
     const reportError = vi.fn()
     const onChange = vi.fn()
-    createParcelHandler(state, onChange, triggersMock(), reportError)(new Error(DROPPED), [])
+    createParcelHandler(state, { onChange, triggers: triggersMock(), reportError })(new Error(DROPPED), [])
     expect(reportError).toHaveBeenCalledWith(expect.objectContaining({ message: DROPPED }))
     expect(onChange).not.toHaveBeenCalled()
   })

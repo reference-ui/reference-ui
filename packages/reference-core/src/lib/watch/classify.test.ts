@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import type { Event as ParcelEvent } from '@parcel/watcher'
 import { afterEach, describe, expect, it } from 'vitest'
-import { classifyEvent, type ClassifyState } from './classify.ts'
+import { classifyDrift, classifyEvent, type ClassifyState } from './classify.ts'
 import { canonicalPath, createIncludeMatcher, scanMatches } from './match.ts'
 
 const INCLUDE = ['theme/**/*.{ts,tsx}']
@@ -119,6 +119,25 @@ describe('classifyEvent', () => {
   it('never reports a path outside the watch root', () => {
     const root = makeTree({ 'theme/base.ts': 'b' })
     expect(classifyEvent(event('create', join(dirname(root), 'elsewhere.ts')), stateOf(root))).toBeNull()
+  })
+})
+
+describe('classifyDrift', () => {
+  it('reports a drifted file as change or unlink, and a drifted directory by the matches it gained', () => {
+    const root = makeTree({ 'theme/base.ts': 'b' })
+    const state = stateOf(root)
+    writeFileSync(join(root, 'theme', 'late.ts'), 'l')
+    writeFileSync(join(root, 'theme', 'notes.md'), 'n')
+    const drifted = new Map([
+      [join(root, 'theme', 'base.ts'), '1:2'],
+      [join(root, 'theme', 'gone.ts'), 'missing'],
+      [join(root, 'theme'), '1:96'],
+    ])
+    expect(classifyDrift(drifted, state).map(change => `${change.event}:${change.relativePath}`)).toEqual([
+      'change:theme/base.ts',
+      'unlink:theme/gone.ts',
+      'add:theme/late.ts',
+    ])
   })
 })
 

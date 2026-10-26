@@ -2,6 +2,7 @@
 // It takes a project root plus callbacks and emits a handle whose stop() ends the session and whose baseline carries the first sync's result.
 // The watcher subscribes before the baseline, so an edit made during the boot is buffered and resynced once the baseline lands.
 // Matched events, and directory events that can carry matches in or out of scope, settle through a debounced, max-wait-capped trailing edge into one serial sync() (scheduler.ts), over the engine's own scope (classify.ts, match.ts, scope.ts).
+// A stat-poll backstop (poll.ts) schedules the same resync when OS events lag or drop, as saturated macOS FSEvents does.
 // The session holds the sync lock for its life, re-asserts it if the generated folder is deleted under it, and publishes the handshake a one-shot poke reads (handshake.ts).
 
 import { resolve } from 'node:path'
@@ -10,12 +11,13 @@ import { loadUserConfigWithDependencies, type LoadedUserConfig } from '../../con
 import { sync, type SyncOptions, type SyncResult } from '../../sync/index.ts'
 import { getSyncLockDir } from '../../sync/session-owner.ts'
 import { acquireSyncSession, reassertHeldSession, type SyncSession } from '../../sync/session.ts'
-import type { ClassifyState, WatchChange } from './classify.ts'
+import { reportDrift, type ClassifyState, type WatchChange } from './classify.ts'
 import { createParcelHandler, createWatcherErrorHandler, toError, type ResyncTriggers } from './handler.ts'
 import { createWatchStatePublisher, type WatchStatePublisher } from './handshake.ts'
 import { canonicalPath, ENGINE_IGNORE_GLOBS } from './match.ts'
+import { createPassClock, startPollBackstop, type PassClock, type PollBackstop } from './poll.ts'
 import { createResyncScheduler, type ResyncScheduler } from './scheduler.ts'
-import { deriveScope, refreshTriggerScope, unsubscribeAll, type TriggerScope } from './scope.ts'
+import { deriveScope, pollTargets, refreshTriggerScope, unsubscribeAll, type TriggerScope } from './scope.ts'
 
 export type { WatchChange, WatchEvent } from './classify.ts'
 export { deriveWatchRoots } from './match.ts'
@@ -210,24 +212,25 @@ interface TriggerScopeSetup {
   triggers: ResyncTriggers
   report: (error: Error) => void
   callbacks: WatchCallbacks
+  clock: PassClock
 }
 
 // The classifier state and the trigger scope one run shares. The parcel handler feeds the
 // triggers; the scope records the subscriptions and the roots the watcher currently covers.
 function createTriggerScope(setup: TriggerScopeSetup): TriggerScope {
-  const { projectRoot, watchRoot, initial, subscriptions, triggers, report, callbacks } = setup
+  const { projectRoot, watchRoot, initial, subscriptions, triggers, report, callbacks, clock } = setup
   const state: ClassifyState = {
     watchRoot,
     isMatch: initial.isMatch,
     dependencyFiles: initial.dependencyFiles,
     snapshot: initial.snapshot,
   }
-  const onEvent = createParcelHandler(
-    state,
-    (change) => callbacks.onChange?.(change),
+  const onEvent = createParcelHandler(state, {
+    onChange: (change) => callbacks.onChange?.(change),
     triggers,
-    createWatcherErrorHandler(report, triggers),
-  )
+    reportError: createWatcherErrorHandler(report, triggers),
+    wasRead: clock.wasRead,
+  })
   return { projectRoot, watchRoot, state, subscriptions, onEvent, report, currentRoots: initial.roots }
 }
 
@@ -243,8 +246,11 @@ function createWatchRun(setup: WatchSetup): WatchRun {
   const flags: RunFlags = { stopped: false, live: false, pending: { schedule: false, request: false } }
   const handshake = createWatchStatePublisher(getSyncLockDir(projectRoot), session.owner, report)
   let stopGuard: () => Promise<void> = async () => {}
+  let poll: PollBackstop | null = null
   const triggers = gateTriggers(flags, () => scheduler)
-  const scope = createTriggerScope({ projectRoot, watchRoot, initial, subscriptions, triggers, report, callbacks })
+  // When the latest pass (the baseline included) started: an event for a write before it needs no resync.
+  const clock = createPassClock()
+  const scope = createTriggerScope({ projectRoot, watchRoot, initial, subscriptions, triggers, report, callbacks, clock })
   // Re-asserting a vanished lock dir recreates the owner, not the watch-state
   // file, so the counters are published again once the owner is back.
   const reassert = async (): Promise<void> => {
@@ -261,7 +267,12 @@ function createWatchRun(setup: WatchSetup): WatchRun {
     triggers,
     reassert,
   }
-  const scheduler: ResyncScheduler = createResyncScheduler(() => resyncPass(env))
+  // A pass reads every drift the poll has seen, so its start settles them.
+  const scheduler: ResyncScheduler = createResyncScheduler(() => {
+    clock.started()
+    poll?.settled()
+    return resyncPass(env)
+  })
 
   // The poke is published before its resync is scheduled: a one-shot that
   // reads the new count knows the watch has taken its request.
@@ -276,6 +287,7 @@ function createWatchRun(setup: WatchSetup): WatchRun {
   async function teardown(): Promise<void> {
     flags.stopped = true
     handshake.stopping()
+    poll?.stop()
     await stopGuard()
     await scheduler.settle()
     await unsubscribeAll(subscriptions)
@@ -291,9 +303,12 @@ function createWatchRun(setup: WatchSetup): WatchRun {
     for (const root of scope.currentRoots) {
       subscriptions.set(root, await subscribe(root, scope.onEvent, { ignore: ENGINE_IGNORE_GLOBS }))
     }
+    clock.started()
     const baseline = await stampedSync(projectRoot, env.reporting)
     const catchUp = await rebuildScope(env, false)
     flags.live = true
+    const onDrift = (drifted: Map<string, string>) => reportDrift(drifted, scope.state, (change) => callbacks.onChange?.(change))
+    poll = startPollBackstop(() => pollTargets(scope), { onDrift, onStale: triggers.schedule }, { clock })
     if (flags.pending.request) scheduler.request()
     else if (flags.pending.schedule || catchUp) scheduler.schedule()
     return { stop: teardown, baseline }

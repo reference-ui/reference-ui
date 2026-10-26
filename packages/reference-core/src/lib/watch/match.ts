@@ -124,6 +124,8 @@ export function canonicalPath(path: string): string {
 }
 
 export interface MatchSnapshot {
+  /** Every matched file, relative and posix, so the poll backstop can stat it. */
+  files: Set<string>
   /** Directories above some match, relative and posix, so a directory event that drops one resyncs. */
   dirs: Set<string>
   /** Real path of a match reached through a symlink, mapped to its relative link path. */
@@ -137,6 +139,7 @@ export interface MatchSnapshot {
 // The union of two snapshots: a widened scope keeps every match either one knew.
 export function mergeSnapshots(a: MatchSnapshot, b: MatchSnapshot): MatchSnapshot {
   return {
+    files: new Set([...a.files, ...b.files]),
     dirs: new Set([...a.dirs, ...b.dirs]),
     links: new Map([...a.links, ...b.links]),
     linkDirs: [...new Set([...a.linkDirs, ...b.linkDirs])],
@@ -163,10 +166,11 @@ function realTargetOf(absolute: string): string | undefined {
 // One walk of the include globs, the engine's own enumeration: the directories
 // above every match, plus the real targets of matches reached through a link.
 export function scanMatches(watchRoot: string, include: string[]): MatchSnapshot {
-  const snapshot: MatchSnapshot = { dirs: new Set(), links: new Map(), linkDirs: [], targetDirs: new Map() }
+  const snapshot: MatchSnapshot = { files: new Set(), dirs: new Set(), links: new Map(), linkDirs: [], targetDirs: new Map() }
   const found = listProjectFiles(watchRoot, include, [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS])
   for (const entry of found) {
     const relativePath = toPosix(relative(watchRoot, entry))
+    snapshot.files.add(relativePath)
     for (const dir of ancestorsOf(relativePath)) snapshot.dirs.add(dir)
     const real = realTargetOf(join(watchRoot, relativePath))
     if (real === undefined) continue

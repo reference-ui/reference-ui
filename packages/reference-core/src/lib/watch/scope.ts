@@ -173,6 +173,14 @@ export async function refreshTriggerScope(scope: TriggerScope, widen: boolean): 
   return subscribed > 0
 }
 
+// Every path the poll backstop stats, read per tick so it follows each scope rebuild:
+// the watch roots, the matched files, the directories above them, and the config dependency files.
+export function pollTargets(scope: TriggerScope): string[] {
+  const { watchRoot, state } = scope
+  const scoped = [...state.snapshot.files, ...state.snapshot.dirs].map((path) => join(watchRoot, path))
+  return [...scope.currentRoots, ...scoped, ...state.dependencyFiles]
+}
+
 export async function unsubscribeAll(subscriptions: Map<string, AsyncSubscription>): Promise<void> {
   await Promise.all([...subscriptions.values()].map(async (subscription) => {
     try {

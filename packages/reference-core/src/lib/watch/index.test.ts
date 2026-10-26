@@ -112,6 +112,9 @@ describe('watchSync boot', () => {
     let subscribedBeforeBaseline = false
     vi.mocked(sync).mockImplementationOnce(async () => {
       subscribedBeforeBaseline = mocks.subscriptions.length > 0
+      // A real edit: written after the baseline started, so the baseline may have missed it.
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      writeFileSync(join(dir, 'theme', 'a.ts'), 'edited during the baseline')
       deliver([{ type: 'update', path: join(dir, 'theme', 'a.ts') }])
       return resultOf()
     })
