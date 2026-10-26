@@ -1,7 +1,7 @@
 // Vite app config for the reference-docs site.
 // It wires MDX (GFM + frontmatter + section ids + build-time Shiki highlighting),
 // content-collections metadata, and React Fast Refresh, pre-bundles the linked lib
-// barrel, and serves on 5174 while ignoring the compiled baseSystem re-export.
+// barrel, and serves on 5174 with a polling watcher that skips sync's scratch output.
 import { defineConfig, type PluginOption } from 'vite'
 import { fileURLToPath } from 'node:url'
 import contentCollections from '@content-collections/vite'
@@ -9,6 +9,8 @@ import react from '@vitejs/plugin-react'
 import mdx from '@mdx-js/rollup'
 // The MDX plugin list lives in src/mdx/pipeline.ts, where the docs quality gate reads it too.
 import { mdxOptions } from './src/mdx/pipeline'
+
+const generatedDir = fileURLToPath(new URL('./.reference-ui/', import.meta.url))
 
 export default defineConfig(() => {
   const plugins: PluginOption[] = [
@@ -32,14 +34,25 @@ export default defineConfig(() => {
     server: {
       port: Number(process.env.PORT) || 5174,
       watch: {
-        // `ref sync` rewrites the compiled system on every StyleProp it scans,
-        // which otherwise full-reloads the app. The client only ever consumes
-        // the collector API from `@reference-ui/system`; the `baseSystem`
-        // re-export is compile-time only. Ignoring it lets a stylesheet-only
-        // change ride `styles.css` HMR instead. A genuine token change still
-        // reloads, because the fragment module that declares it is watched.
+        // macOS FSEvents lags or drops events outright when fseventsd is
+        // saturated, and the watcher then never hears about a saved page or a
+        // rewritten stylesheet. Polling a few hundred files stays cheap and
+        // cannot miss a change.
+        usePolling: true,
+        interval: 250,
         ignored: [
-          fileURLToPath(new URL('./.reference-ui/system/baseSystem.mjs', import.meta.url)),
+          // Sync's scratch output: every sync rewrites hundreds of type files
+          // and stages the next folder beside the live one.
+          `${generatedDir}types/**`,
+          `${generatedDir}tmp/**`,
+          `${generatedDir}sync.*/**`,
+          `${generatedDir}**/*.tmp-*/**`,
+          // `ref sync` rewrites the compiled system on every StyleProp it scans.
+          // The client only consumes the collector API from `@reference-ui/system`;
+          // the `baseSystem` re-export is compile-time only, so a rewrite there
+          // must not full-reload the app. A genuine token change still reloads,
+          // because the fragment module that declares it is watched.
+          `${generatedDir}system/baseSystem.mjs`,
         ],
       },
     },
