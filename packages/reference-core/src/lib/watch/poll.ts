@@ -2,7 +2,7 @@
 // It takes a function naming the paths to poll (the matched files, the directories above them, and the
 // config dependency files) plus two sinks, and emits a handle whose settled() marks a resync pass
 // starting and whose stop() clears the timer. Each tick stats every path against the previous tick and
-// reports what drifted; a drift written after the latest pass started that no pass has read once it is
+// reports what drifted, a newly named path written after the latest pass included; a drift written after the latest pass started that no pass has read once it is
 // a grace period old goes stale, so an edit FSEvents delays or drops still resyncs. Parcel stays the
 // fast path: a drift it already delivered is settled by that pass before the grace runs out.
 
@@ -78,15 +78,22 @@ export interface PollOptions {
   clock?: PassClock
 }
 
-// One tick's stat pass: every target's signature now, and the targets whose signature moved since the last tick.
-function statPass(targets: Iterable<string>, previous: Map<string, string>): { next: Map<string, string>; drifted: Map<string, string> } {
+// One tick's stat pass: every target's signature now, and the targets that drifted since the last tick. A path the
+// scope newly names has no last signature, so it drifts only when present and written after the latest pass started:
+// a save into a just-widened scope that lands before this tick must not become its silent baseline.
+function statPass(
+  targets: Iterable<string>,
+  previous: Map<string, string>,
+  clock: PassClock,
+): { next: Map<string, string>; drifted: Map<string, string> } {
   const next = new Map<string, string>()
   const drifted = new Map<string, string>()
   for (const path of targets) {
     const signature = signatureOf(path)
     next.set(path, signature)
     const before = previous.get(path)
-    if (before !== undefined && before !== signature) drifted.set(path, signature)
+    const moved = before === undefined ? signature !== MISSING && !clock.readSignature(signature) : before !== signature
+    if (moved) drifted.set(path, signature)
   }
   return { next, drifted }
 }
@@ -114,7 +121,7 @@ export function startPollBackstop(
   }
 
   const tick = (): void => {
-    const { next, drifted } = statPass(targets(), previous)
+    const { next, drifted } = statPass(targets(), previous, clock)
     previous = next
     if (drifted.size > 0) {
       arm(sinks.onDrift(drifted))

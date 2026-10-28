@@ -1,13 +1,14 @@
 // Unit tests for the stat-poll backstop over a temp dir with fake timers. They pin that an
 // edit, a deletion, and a new entry in a polled directory each drift on the next tick, that a
-// quiet tick and a path the scope newly names stay silent, that a drift waits out its grace and
+// quiet tick, a missing new path and a new path a pass already read stay silent, that a new path
+// written after the latest pass drifts, that a drift waits out its grace and
 // a pass settles it, and that stop() ends the polling.
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { startPollBackstop } from './poll.ts'
+import { createPassClock, startPollBackstop } from './poll.ts'
 
 const TICK = 100
 const NOW = { intervalMs: TICK, graceMs: 0 }
@@ -69,16 +70,41 @@ describe('startPollBackstop', () => {
     poll.stop()
   })
 
-  it('records a path the scope newly names without drifting', () => {
+  // A shared clock whose latest pass started at `at`: a write before it is read, one after it is not.
+  function clockAt(at: number) {
+    const clock = createPassClock(() => at)
+    clock.started()
+    return clock
+  }
+
+  it('records a path the scope newly names without drifting when a pass already read it', () => {
     const onStale = vi.fn()
     const onDrift = vi.fn((drifted: Map<string, string>) => drifted)
     const extra = join(dir, 'src', 'extra.tsx')
     writeFileSync(extra, 'x')
-    const targets = [file]
-    const poll = startPollBackstop(() => targets, { onDrift, onStale }, NOW)
+    const targets = [file, join(dir, 'src', 'never.tsx')]
+    const poll = startPollBackstop(() => targets, { onDrift, onStale }, { ...NOW, clock: clockAt(Date.now() + 60_000) })
     targets.push(extra)
     vi.advanceTimersByTime(TICK * 2)
+    expect(onDrift).not.toHaveBeenCalled()
     expect(onStale).not.toHaveBeenCalled()
+    poll.stop()
+  })
+
+  it('drifts a path the scope newly names when it was written after the latest pass started', () => {
+    const onStale = vi.fn()
+    const onDrift = vi.fn((drifted: Map<string, string>) => drifted)
+    const extra = join(dir, 'src', 'extra.tsx')
+    const missing = join(dir, 'src', 'missing.tsx')
+    const targets = [file]
+    const poll = startPollBackstop(() => targets, { onDrift, onStale }, { ...NOW, clock: clockAt(0) })
+    writeFileSync(extra, 'x')
+    targets.push(extra, missing)
+    vi.advanceTimersByTime(TICK)
+    expect([...(onDrift.mock.calls[0]?.[0].keys() ?? [])]).toEqual([extra])
+    expect(onStale).toHaveBeenCalledTimes(1)
+    vi.advanceTimersByTime(TICK * 2)
+    expect(onDrift).toHaveBeenCalledTimes(1)
     poll.stop()
   })
 
