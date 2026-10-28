@@ -6,9 +6,9 @@
 // directory event counts when it can carry matches in or out of scope, the one
 // case parcel never reports per file. A poll drift classifies the same way: a
 // drifted path is a change or an unlink, and a drifted directory adds the
-// matched files the snapshot did not hold.
+// matched files the snapshot did not hold and unlinks the ones it lost.
 
-import { readdirSync, statSync, type Dirent } from 'node:fs'
+import { existsSync, readdirSync, statSync, type Dirent } from 'node:fs'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 import type { Event as ParcelEvent } from '@parcel/watcher'
 import { dirHoldsMatch, isEngineIgnoredDir, type IncludeMatcher, type MatchSnapshot } from './match.ts'
@@ -120,15 +120,30 @@ function addedUnder(dir: string, state: ClassifyState): WatchChange[] {
   return added
 }
 
-// The watch changes one poll drift stands for, keyed by absolute path with each path's new
-// signature. A drifted directory reports what it gained; its own mtime is not an edit.
-export function classifyDrift(drifted: Map<string, string>, state: ClassifyState): WatchChange[] {
-  return [...drifted].flatMap(([path, signature]) => driftChanges(path, signature, state))
+// The snapshot's matched files under a drifted directory that are gone. A file deleted before
+// any tick recorded it has no drift of its own, so only its directory's drift can report it;
+// a gone file that drifted itself is skipped, because its own drift reports it.
+function removedUnder(dir: string, state: ClassifyState, drifted: Map<string, string>): WatchChange[] {
+  const relativeDir = toPosix(relative(state.watchRoot, dir))
+  const prefix = relativeDir === '' ? '' : `${relativeDir}/`
+  const removed: WatchChange[] = []
+  for (const relativePath of state.snapshot.files) {
+    if (!relativePath.startsWith(prefix)) continue
+    const path = join(state.watchRoot, relativePath)
+    if (!drifted.has(path) && !existsSync(path)) removed.push({ event: 'unlink', path, relativePath })
+  }
+  return removed
 }
 
-function driftChanges(path: string, signature: string, state: ClassifyState): WatchChange[] {
+// The watch changes one poll drift stands for, keyed by absolute path with each path's new
+// signature. A drifted directory reports what it gained and lost; its own mtime is not an edit.
+export function classifyDrift(drifted: Map<string, string>, state: ClassifyState): WatchChange[] {
+  return [...drifted].flatMap(([path, signature]) => driftChanges(path, signature, state, drifted))
+}
+
+function driftChanges(path: string, signature: string, state: ClassifyState, drifted: Map<string, string>): WatchChange[] {
   const relativePath = toPosix(relative(state.watchRoot, path))
-  if (signature !== MISSING && isDirectory(path)) return addedUnder(path, state)
+  if (signature !== MISSING && isDirectory(path)) return [...addedUnder(path, state), ...removedUnder(path, state, drifted)]
   return [{ event: signature === MISSING ? 'unlink' : 'change', path, relativePath }]
 }
 
@@ -141,7 +156,7 @@ export function reportDrift(
 ): Map<string, string> {
   const real = new Map<string, string>()
   for (const [path, signature] of drifted) {
-    const changes = driftChanges(path, signature, state)
+    const changes = driftChanges(path, signature, state, drifted)
     for (const change of changes) onChange(change)
     if (changes.length > 0) real.set(path, signature)
   }

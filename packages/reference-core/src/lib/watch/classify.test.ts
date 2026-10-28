@@ -139,6 +139,23 @@ describe('classifyDrift', () => {
       'add:theme/late.ts',
     ])
   })
+
+  it('unlinks a snapshot file gone from a drifted directory once, whether or not it drifted itself', () => {
+    const root = makeTree({ 'theme/base.ts': 'b', 'theme/gone.ts': 'g', 'theme/box/inner.ts': 'i' })
+    const state = stateOf(root)
+    rmSync(join(root, 'theme', 'gone.ts'))
+    rmSync(join(root, 'theme', 'box'), { recursive: true })
+    const quiet = new Map([[join(root, 'theme'), '1:64']])
+    expect(classifyDrift(quiet, state).map(change => `${change.event}:${change.relativePath}`)).toEqual([
+      'unlink:theme/box/inner.ts',
+      'unlink:theme/gone.ts',
+    ])
+    const both = new Map([[join(root, 'theme', 'gone.ts'), 'missing'], ...quiet])
+    expect(classifyDrift(both, state).map(change => `${change.event}:${change.relativePath}`)).toEqual([
+      'unlink:theme/gone.ts',
+      'unlink:theme/box/inner.ts',
+    ])
+  })
 })
 
 describe('classifyEvent over a symlinked directory', () => {
