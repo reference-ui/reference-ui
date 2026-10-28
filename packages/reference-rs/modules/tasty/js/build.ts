@@ -1,9 +1,10 @@
 /**
  * Artifact builder module compiling Tasty TypeScript ASTs into disk-persisted bundles.
  * Coordinates native scanning, manifest generation, and type declaration emission.
- * Stages generated chunks and index maps in a sibling temp dir, then swaps them into
- * the output dir file by file. The manifest is swapped last and stale outputs are removed
- * after it, so a concurrent reader never sees the output dir or a file this build emits missing.
+ * Diffs emitted files against the live tree in memory, so an unchanged build writes nothing
+ * and creates no temp dir. Changed files are staged in a sibling temp dir, then swapped in
+ * one by one; the manifest goes last and stale outputs are removed after it, so a concurrent
+ * reader never sees the output dir or a file this build emits missing.
  * Provides caching session wrappers for efficient incremental compiler workflows.
  */
 import {
@@ -224,36 +225,61 @@ async function writeEmittedArtifacts(
   emitted: EmittedModulesPayload
 ): Promise<void> {
   const manifestRelativePath = findManifestRelativePath(emitted)
-  const files = { ...emitted.modules, ...emitted.type_declarations }
-  await mkdir(dirname(outputDir), { recursive: true })
+  const files = normalizeEmittedFiles({ ...emitted.modules, ...emitted.type_declarations })
+  // The live dir itself is never removed, so a poller on it never sees it vanish.
+  await mkdir(outputDir, { recursive: true })
 
+  const changed = await findChangedFiles(outputDir, files)
+  if (changed.size > 0) await stageAndSwapChanged(outputDir, changed, manifestRelativePath)
+  await removeStaleOutputs(outputDir, [...files.keys()])
+}
+
+/** Applies the trailing-newline rule once, so the diff and the written bytes agree. */
+function normalizeEmittedFiles(files: Record<string, string>): Map<string, Buffer> {
+  return new Map(
+    Object.entries(files).map(([relativePath, source]) => [
+      stripRelativePrefix(relativePath),
+      Buffer.from(source.endsWith('\n') ? source : `${source}\n`, 'utf-8'),
+    ])
+  )
+}
+
+/** Diffs in memory, so an unchanged build writes no file and creates no temp dir. */
+async function findChangedFiles(
+  outputDir: string,
+  files: Map<string, Buffer>
+): Promise<Map<string, Buffer>> {
+  const entries = [...files]
+  const live = await Promise.all(
+    entries.map(([relativePath]) => readFileIfPresent(join(outputDir, relativePath)))
+  )
+  return new Map(entries.filter(([, bytes], index) => !live[index]?.equals(bytes)))
+}
+
+async function stageAndSwapChanged(
+  outputDir: string,
+  changed: Map<string, Buffer>,
+  manifestRelativePath: string
+): Promise<void> {
   // The pid lets a sync commit tell a live writer's stage from a killed one's.
   const tempDir = await mkdtemp(
     join(dirname(outputDir), `${basename(outputDir)}.tmp-${process.pid}-`)
   )
 
   try {
-    await stageEmittedFiles(tempDir, files)
-    await swapStagedFiles(
-      outputDir,
-      tempDir,
-      Object.keys(files).map(path => stripRelativePrefix(path)),
-      manifestRelativePath
-    )
+    await stageFiles(tempDir, changed)
+    await swapStagedFiles(outputDir, tempDir, [...changed.keys()], manifestRelativePath)
   } finally {
     await rm(tempDir, { recursive: true, force: true })
   }
 }
 
-async function stageEmittedFiles(
-  tempDir: string,
-  files: Record<string, string>
-): Promise<void> {
+async function stageFiles(tempDir: string, files: Map<string, Buffer>): Promise<void> {
   await Promise.all(
-    Object.entries(files).map(async ([relativePath, source]) => {
-      const stagedPath = join(tempDir, stripRelativePrefix(relativePath))
+    [...files].map(async ([relativePath, bytes]) => {
+      const stagedPath = join(tempDir, relativePath)
       await mkdir(dirname(stagedPath), { recursive: true })
-      await writeFile(stagedPath, source.endsWith('\n') ? source : `${source}\n`, 'utf-8')
+      await writeFile(stagedPath, bytes)
     })
   )
 }
@@ -265,14 +291,11 @@ async function swapStagedFiles(
   relativePaths: string[],
   manifestRelativePath: string
 ): Promise<void> {
-  // The live dir itself is never removed, so a poller on it never sees it vanish.
-  await mkdir(outputDir, { recursive: true })
-
   const otherPaths = relativePaths.filter(path => path !== manifestRelativePath)
   await Promise.all(otherPaths.map(path => swapFileIn(outputDir, tempDir, path)))
-  await swapFileIn(outputDir, tempDir, manifestRelativePath)
-
-  await removeStaleOutputs(outputDir, relativePaths)
+  if (relativePaths.includes(manifestRelativePath)) {
+    await swapFileIn(outputDir, tempDir, manifestRelativePath)
+  }
 }
 
 async function swapFileIn(
@@ -280,19 +303,10 @@ async function swapFileIn(
   tempDir: string,
   relativePath: string
 ): Promise<void> {
-  const stagedPath = join(tempDir, relativePath)
   const livePath = join(outputDir, relativePath)
-  // Unchanged files stay untouched so bundler watchers see no mtime churn.
-  if (await hasSameBytes(stagedPath, livePath)) return
-
   await mkdir(dirname(livePath), { recursive: true })
   // rename over an existing file is atomic: readers see the old bytes or the new ones.
-  await rename(stagedPath, livePath)
-}
-
-async function hasSameBytes(stagedPath: string, livePath: string): Promise<boolean> {
-  const live = await readFileIfPresent(livePath)
-  return live !== undefined && live.equals(await readFile(stagedPath))
+  await rename(join(tempDir, relativePath), livePath)
 }
 
 async function readFileIfPresent(path: string): Promise<Buffer | undefined> {

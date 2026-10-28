@@ -2,9 +2,10 @@
  * Tests that artifact rebuilds swap atomically under concurrent readers.
  * Tests that a build swaps its artifacts atomically: a reader polling in a worker never sees the
  * manifest or runtime missing across rebuilds, and no temp directory from another process leaks.
+ * Tests that an unchanged rebuild touches nothing and a changed one lands only the differing files.
  */
 import { once } from 'node:events'
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
+import { cp, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -110,7 +111,85 @@ async function buildTree(
   return readTree(outputDir)
 }
 
+interface FileStamp {
+  ino: number
+  mtimeMs: number
+}
+
+/** Maps every file under dir to its inode and mtime. */
+async function stampTree(dir: string): Promise<Map<string, FileStamp>> {
+  const stamps = new Map<string, FileStamp>()
+  for (const key of (await readTree(dir)).keys()) {
+    const { ino, mtimeMs } = await stat(join(dir, key))
+    stamps.set(key, { ino, mtimeMs })
+  }
+  return stamps
+}
+
+/** The parent dir's mtime and sorted entry names: both move when a temp dir comes and goes. */
+async function snapshotDir(dir: string): Promise<{ mtimeMs: number; names: string[] }> {
+  return { mtimeMs: (await stat(dir)).mtimeMs, names: (await readdir(dir)).sort() }
+}
+
 describe('buildTasty', () => {
+  it('an unchanged rebuild leaves every file and the parent dir untouched', async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-noop-'))
+    const outputDir = join(tempRoot, 'tasty-output')
+    const include = ['cases/TST-IMP-06/input/**/*.{ts,tsx,mts,cts}']
+
+    try {
+      await buildTasty({ rootDir: tastyDir, include, outputDir })
+      const stamps = await stampTree(outputDir)
+      const parent = await snapshotDir(tempRoot)
+      expect(stamps.size).toBeGreaterThan(1)
+
+      // Past the filesystem's timestamp granularity, so any write would move an mtime.
+      await new Promise(done => setTimeout(done, 25))
+      await buildTasty({ rootDir: tastyDir, include, outputDir })
+
+      expect(await stampTree(outputDir)).toEqual(stamps)
+      expect(await snapshotDir(tempRoot)).toEqual(parent)
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true })
+    }
+  })
+
+  it('editing one source lands only the files whose bytes changed', async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-delta-'))
+    const rootDir = join(tempRoot, 'project')
+    const outputDir = join(tempRoot, 'tasty-output')
+    const include = ['src/**/*.{ts,tsx,mts,cts}']
+
+    try {
+      await cp(join(tastyDir, 'cases', 'TST-IMP-06', 'input'), join(rootDir, 'src'), {
+        recursive: true,
+      })
+      await buildTasty({ rootDir, include, outputDir })
+      const beforeTree = await readTree(outputDir)
+      const beforeStamps = await stampTree(outputDir)
+
+      await new Promise(done => setTimeout(done, 25))
+      await writeFile(
+        join(rootDir, 'src', 'icon.ts'),
+        'export interface IconProps {\n  glyph: number\n}\n'
+      )
+      await buildTasty({ rootDir, include, outputDir })
+      const afterTree = await readTree(outputDir)
+      const afterStamps = await stampTree(outputDir)
+
+      const unchanged = [...afterTree.keys()].filter(
+        key => beforeTree.get(key) === afterTree.get(key)
+      )
+      const changed = [...afterTree.keys()].filter(key => !unchanged.includes(key))
+      expect(changed.length).toBeGreaterThan(0)
+      expect(unchanged.length).toBeGreaterThan(0)
+      for (const key of unchanged) expect(afterStamps.get(key)).toEqual(beforeStamps.get(key))
+      expect((await readdir(tempRoot)).sort()).toEqual(['project', 'tasty-output'])
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true })
+    }
+  })
+
   it('a polling reader never sees the manifest missing across rebuilds', async () => {
     const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-swap-'))
     const outputDir = join(tempRoot, 'tasty-output')
