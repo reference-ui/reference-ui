@@ -79,7 +79,7 @@ describe('tasty utilities', () => {
     ).toBe('(event: MouseEvent) => void')
   })
 
-  it('classifies constructor-like members without inventing missing signature data', async () => {
+  it('classifies constructor-like members and keeps their parameters', async () => {
     const api = createTastyApi({
       manifestPath: manifestPath('TST-SIG-01'),
     })
@@ -88,7 +88,9 @@ describe('tasty utilities', () => {
     const ctor = constructible.getMembers().find(member => member.getName() === '[new]')
 
     expect(ctor?.getKind()).toBe('construct')
-    expect(ctor?.getParameters()).toEqual([])
+    expect(ctor?.getParameters()).toEqual([
+      { name: 'value', type: 'number', optional: false, description: undefined },
+    ])
   })
 
   it('exposes neutral semantic kinds for members and types', async () => {

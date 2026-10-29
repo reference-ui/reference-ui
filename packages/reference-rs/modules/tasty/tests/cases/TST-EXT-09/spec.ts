@@ -23,8 +23,8 @@ const spec: StationSpec<TastyCaseResult> = {
       const symbol = await api.loadSymbolByName(name)
       expect(await typeOf(symbol, 'keep'), `${name}.keep`).toEqual(numberType)
       expect(await typeOf(symbol, 'run'), `${name}.run`).toMatchObject({
-        name: 'A',
-        typeParameter: true,
+        kind: 'function',
+        returnType: { name: 'A', typeParameter: true },
       })
     }
   },

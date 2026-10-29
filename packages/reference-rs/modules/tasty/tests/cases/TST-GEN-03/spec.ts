@@ -29,7 +29,9 @@ const spec: StationSpec<TastyCaseResult> = {
     const wrapValue = findMember(wrap, 'value').getType()?.getRaw() as RefJson
     expect(wrapValue).toMatchObject({ name: 'Item', id: 'Item' })
 
-    const runReturn = findMember(holder, 'run').getType()?.getRaw() as RefJson
+    const runType = findMember(holder, 'run').getType()?.getRaw() as { kind: string; returnType: RefJson }
+    expect(runType.kind).toBe('function')
+    const runReturn = runType.returnType
     expect(runReturn).toMatchObject({ name: 'Item', id: 'Item' })
 
     const makeReturn = (makeItem.getUnderlyingType()?.getRaw() as { returnType?: RefJson }).returnType

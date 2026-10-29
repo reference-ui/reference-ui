@@ -13,7 +13,9 @@ use crate::shared::type_ref_util::property_key_name as property_key_name_opt;
 
 use super::super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::super::slice_span;
-use super::super::types::member_type_to_ref;
+use super::super::types::{
+    member_type_to_ref, signature_to_constructor_ref, signature_to_function_ref, SignatureParts,
+};
 use super::super::ExtractionContext;
 use crate::model::{TsMember, TsMemberKind};
 
@@ -61,14 +63,15 @@ pub(crate) fn method_signature_to_member(
         method.span(),
         exclude_starts_between,
     ));
-    let type_ref = method.return_type.as_ref().map(|annotation| {
-        member_type_to_ref(
-            &annotation.type_annotation,
-            ctx,
-            binders,
-            method.type_parameters.as_deref(),
-        )
-    });
+    let type_ref = Some(signature_to_function_ref(
+        &SignatureParts {
+            params: &method.params,
+            return_type: method.return_type.as_deref(),
+            type_parameters: method.type_parameters.as_deref(),
+        },
+        ctx,
+        binders,
+    ));
 
     TsMember {
         name,
@@ -134,14 +137,15 @@ pub(crate) fn call_signature_to_member(
         call.span(),
         exclude_starts_between,
     ));
-    let type_ref = call.return_type.as_ref().map(|annotation| {
-        member_type_to_ref(
-            &annotation.type_annotation,
-            ctx,
-            binders,
-            call.type_parameters.as_deref(),
-        )
-    });
+    let type_ref = Some(signature_to_function_ref(
+        &SignatureParts {
+            params: &call.params,
+            return_type: call.return_type.as_deref(),
+            type_parameters: call.type_parameters.as_deref(),
+        },
+        ctx,
+        binders,
+    ));
 
     TsMember {
         name: "[call]".to_string(),
@@ -167,14 +171,15 @@ pub(crate) fn construct_signature_to_member(
         decl.span(),
         exclude_starts_between,
     ));
-    let type_ref = decl.return_type.as_ref().map(|annotation| {
-        member_type_to_ref(
-            &annotation.type_annotation,
-            ctx,
-            binders,
-            decl.type_parameters.as_deref(),
-        )
-    });
+    let type_ref = Some(signature_to_constructor_ref(
+        &SignatureParts {
+            params: &decl.params,
+            return_type: decl.return_type.as_deref(),
+            type_parameters: decl.type_parameters.as_deref(),
+        },
+        ctx,
+        binders,
+    ));
 
     TsMember {
         name: "[new]".to_string(),

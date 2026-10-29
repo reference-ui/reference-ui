@@ -15,6 +15,7 @@ import { ReferenceEmptyState, ReferenceErrorState, ReferenceLoadingState } from 
 import { ReferenceDocument } from './document/ReferenceDocument'
 import { ReferenceHeadingLevelProvider } from './document/ReferenceHeadingLevel'
 import { ReferenceMemberRow } from './components/ReferenceMemberRow'
+import { ReferenceMemberList } from './components/ReferenceMemberList'
 import { isCodeLiteralDefault } from './components/MemberDefault'
 import { splitInlineCode } from './components/shared/InlineCode'
 
@@ -188,6 +189,56 @@ describe('Reference member rows', () => {
     expect(html).not.toContain('nextState')
     expect(html).toContain('reason')
     expect(html).toContain('Why it changed.')
+  })
+
+  it('names a call signature in words and keeps a method name verbatim', () => {
+    const call = renderToStaticMarkup(
+      <ReferenceMemberRow member={member({ name: '[call]', kind: 'call' as MemberData['kind'] })} />,
+    )
+    const method = renderToStaticMarkup(
+      <ReferenceMemberRow member={member({ name: 'success', kind: 'method' as MemberData['kind'] })} />,
+    )
+    expect(call).toContain('Call signature')
+    expect(call).not.toContain('[call]')
+    expect(method).toContain('success')
+  })
+
+  it('renders the signature and documented params of a method', () => {
+    const html = renderToStaticMarkup(
+      <ReferenceMemberRow
+        member={member({
+          name: 'success',
+          kind: 'method' as MemberData['kind'],
+          typeLabel: 'function',
+          summary: {
+            description: 'Shows a success toast.',
+            memberTypeSummary: { kind: 'callSignature', text: '(message: string, options?: Options) => string' },
+            paramDocs: [
+              { name: 'message', optional: false, description: 'The text to show.' },
+              { name: 'options', optional: true },
+            ],
+          } as MemberData['summary'],
+        })}
+      />,
+    )
+    expect(html).toContain('(message: string, options?: Options) =&gt; string')
+    expect(html).toContain('The text to show.')
+    expect(html).not.toContain('>options<')
+  })
+
+  it('renders every overload of a method as its own row', () => {
+    const overload = (text: string) =>
+      member({
+        id: 'method:find',
+        name: 'find',
+        kind: 'method' as MemberData['kind'],
+        summary: { paramDocs: [], memberTypeSummary: { kind: 'callSignature', text } } as MemberData['summary'],
+      })
+    const html = renderToStaticMarkup(
+      <ReferenceMemberList members={[overload('(id: string) => string'), overload('(id: number) => number')]} />,
+    )
+    expect(html).toContain('(id: string) =&gt; string')
+    expect(html).toContain('(id: number) =&gt; number')
   })
 
   it('shows no JSDoc block when every param is undocumented', () => {

@@ -1,6 +1,7 @@
 /**
  * Member identity and dedupe helpers for tasty members.
- * Reads member ids and default values and drops duplicate members by id, keeping the last occurrence.
+ * Reads member ids and default values and drops duplicate members by id, keeping the last declaration. The
+ * overloads of one method sit next to each other, so a run of neighbours sharing an id is one declaration and is kept whole.
  */
 import type { TastyMember } from './api-types.js'
 
@@ -9,13 +10,18 @@ export function getTastyMemberId(member: TastyMember): string {
 }
 
 export function dedupeTastyMembers(members: TastyMember[]): TastyMember[] {
-  const byId = new Map<string, TastyMember>()
+  const byId = new Map<string, TastyMember[]>()
+  let previousId: string | undefined
 
   for (const member of members) {
-    byId.set(getTastyMemberId(member), member)
+    const id = getTastyMemberId(member)
+    const run = id === previousId ? byId.get(id) : undefined
+    if (run) run.push(member)
+    else byId.set(id, [member])
+    previousId = id
   }
 
-  return [...byId.values()]
+  return [...byId.values()].flat()
 }
 
 export function getTastyMemberDefaultValue(member: TastyMember): string | undefined {

@@ -22,7 +22,12 @@ mod infer_binders;
 mod lower_composites;
 mod lower_keywords;
 mod lower_references;
+mod lower_signatures;
 mod lower_tuples;
+
+pub(super) use lower_signatures::{
+    signature_to_constructor_ref, signature_to_function_ref, SignatureParts,
+};
 
 /// Lowering state: the extraction inputs and the names bound by the enclosing declarations and binders.
 struct LoweringContext<'a> {

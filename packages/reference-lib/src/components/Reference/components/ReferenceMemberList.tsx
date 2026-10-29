@@ -86,9 +86,9 @@ function ReferenceMemberRows({
 }) {
   return (
     <Div css={css}>
-      {members.map(member => (
+      {members.map((member, index) => (
         <ReferenceMemberRow
-          key={member.id}
+          key={`${member.id}-${index}`}
           member={member}
         />
       ))}
