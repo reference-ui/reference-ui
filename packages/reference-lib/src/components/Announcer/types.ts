@@ -6,11 +6,6 @@
  * mounting anything or pulling in React.
  */
 
-export interface AnnounceOptions {
-  politeness?: 'polite' | 'assertive'
-  document?: Document
-}
-
 export interface PendingAnnouncement {
   politeness: 'polite' | 'assertive'
   message: string
@@ -26,4 +21,18 @@ export interface AnnouncerStore {
   assertiveToken: number
   pending: PendingAnnouncement[]
   activated: boolean
+}
+
+/** Options for `announce()`. */
+export interface AnnounceOptions {
+  /**
+   * `assertive` interrupts the screen reader. Keep it for urgent messages.
+   * @default 'polite'
+   */
+  politeness?: 'polite' | 'assertive'
+  /**
+   * The document whose live region speaks.
+   * @default the current document
+   */
+  document?: Document
 }

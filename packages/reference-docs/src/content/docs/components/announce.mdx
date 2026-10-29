@@ -7,6 +7,8 @@ slug: announce
 description: Send a message to screen readers without showing anything on screen.
 ---
 
+import { Reference } from '@reference-ui/lib'
+
 # announce
 
 `announce()` sends a message to screen readers through a live region. Nothing
@@ -35,10 +37,7 @@ import { announce, type AnnounceOptions } from '@reference-ui/lib'
 announce(message: string, options?: AnnounceOptions): void
 ```
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `politeness` | `'polite' \| 'assertive'` | `'polite'` | `assertive` interrupts the screen reader. Keep it for urgent messages. |
-| `document` | `Document` | current document | The document whose live region speaks. |
+<Reference name="AnnounceOptions" headingLevel={3} />
 
 ## Behaviour
 
