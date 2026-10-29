@@ -1,9 +1,12 @@
 //! Leading comment extraction and normalization for JSDoc and block comments.
 //! Returns the contiguous block before a span with normalized text. A comment that trails code on
 //! its own line (`a: string // note`) documents that line, so it is never part of the next node's block.
+//! A file header (see `file_header`) is never part of any node's block.
 
 use oxc_ast::ast::Comment;
 use oxc_span::Span;
+
+use super::file_header::file_header_end;
 
 #[derive(Debug, Clone)]
 pub(crate) struct LeadingComment {
@@ -18,9 +21,11 @@ pub(crate) fn leading_comment_for_span(
     exclude_starts_between: Option<&[u32]>,
 ) -> Option<LeadingComment> {
     let node_start = node_span.start;
+    let header_end = file_header_end(source, comments);
     let mut candidates: Vec<&Comment> = comments
         .iter()
         .filter(|c| c.span.end <= node_start && !is_trailing_comment(source, c))
+        .filter(|c| header_end.is_none_or(|end| c.span.end > end))
         .collect();
     if candidates.is_empty() {
         return None;
@@ -262,5 +267,19 @@ mod tests {
         assert!(meta.description_raw.is_none());
         assert!(meta.description.is_none());
         assert!(meta.jsdoc.is_none());
+    }
+
+    #[test]
+    fn file_header_before_first_declaration_is_not_its_doc() {
+        let source = "/** File header. */\n\ninterface X {}\n";
+        let meta = metadata_for_nth_interface(source, 0);
+        assert!(meta.description_raw.is_none() && meta.description.is_none());
+    }
+
+    #[test]
+    fn file_header_is_dropped_but_own_doc_after_it_attaches() {
+        let source = "/** File header. */\n\n/** Own doc. */\ninterface X {}\n";
+        let meta = metadata_for_nth_interface(source, 0);
+        assert_eq!(meta.description.as_deref(), Some("Own doc."));
     }
 }
