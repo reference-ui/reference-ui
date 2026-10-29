@@ -47,7 +47,7 @@ function readWorldTsconfig(worldDir: string): Record<string, string[]> {
 // System literals assign at the ColorToken position and at the style-props
 // color position, StylePropName carries a compiled member while staying
 // neither never nor string, a narrowed css object assigns, and a string
-// variant assigns at the open per-tag position.
+// variant assigns at the per-tag position (PrimitiveVariant).
 const POSITIVE = `import type { ColorToken, DivProps, StyleProps, StylePropName } from '@reference-ui/react'
 
 const known: ColorToken = 'brand'
@@ -89,8 +89,8 @@ export { bad }
 
 // This world declares no recipes, so the bound bake types the exported
 // variant alias as never and a variant selection object fails against it
-// with TS2322. Per-tag variant stays open unknown: user-space components
-// spread their own open props into it, so precision lives at the alias.
+// with TS2322. Per-tag variant is PrimitiveVariant, a string: the runtime
+// stamps it into data-variant, so recipe precision lives at the alias.
 const NEVER_VARIANT = `import type { PrimitiveVariantProp } from '@reference-ui/react'
 
 const bad: PrimitiveVariantProp = { tone: 'accent' }

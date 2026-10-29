@@ -2,8 +2,8 @@
 
 A valid selection assigns at the exported variant alias, and a valid
 recipe call assigns through the inferred variants: precision lives at the
-alias and the call, never at per-tag DivProps, which stays open unknown by
-user-space law. Related: CORE-PGEN-22 (the bound narrowing that flips it),
+alias and the call, never at per-tag DivProps, whose variant is the plain
+PrimitiveVariant string. Related: CORE-PGEN-22 (the bound narrowing that flips it),
 CORE-PGEN-15 (the css twin of this openness story).
 
 The world's tone recipe fragment mints the tone-axis union, and the per-system narrowing now covers all three negatives: a wrong axis value fails with TS2322 at

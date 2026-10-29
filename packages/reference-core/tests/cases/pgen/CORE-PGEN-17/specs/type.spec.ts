@@ -2,8 +2,8 @@
 // { page, case } from the runner with the world freshly synced and the page
 // already navigated to it. Emits nothing on success; throws naming the alias
 // or call position that stopped proving, the tsc diagnostic that broke a
-// negative, or the unpainted root on failure. Per-tag variant stays open
-// unknown by user-space law, so precision lives at the exported alias and at
+// negative, or the unpainted root on failure. Per-tag variant is the plain
+// PrimitiveVariant string, so recipe precision lives at the exported alias and at
 // recipe calls; this case proves both, never DivProps.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

@@ -73,15 +73,28 @@ const STYLE_PROPS_WIRING = [
   '}',
 ]
 
+const PRIMITIVE_VARIANT = [
+  '/** What `variant` takes: a string, stamped on the element as `data-variant`. */',
+  'export type PrimitiveVariant = string',
+]
+
+/** The three primitive extras with their docs, shared by PrimitiveProps and every per-tag props type. */
+const PRIMITIVE_EXTRAS = [
+  '  /** Style object for this element, applied like `css()`. It wins over a style prop for the same property. */',
+  '  css?: PrimitiveCssProp',
+  '  /** Sets the color mode for this element and everything inside it, whatever the page uses. Stamps `data-color-mode`. */',
+  "  colorMode?: 'light' | 'dark'",
+  '  /** Sets `data-variant` on the element, for `globalCss()` rules that select on it. */',
+  '  variant?: PrimitiveVariant',
+]
+
 const PRIMITIVE_PROPS = [
   '/** Shared prop shape every primitive accepts: native props for one tag plus style props and primitive extras. */',
   'export type PrimitiveProps<T extends PrimitiveTag> = Omit<',
   '  React.ComponentPropsWithoutRef<T>,',
   "  StylePropName | 'css' | 'colorMode' | 'variant'",
   '> & StyleProps & {',
-  '  css?: PrimitiveCssProp',
-  "  colorMode?: 'light' | 'dark'",
-  '  variant?: unknown',
+  ...PRIMITIVE_EXTRAS,
   '}',
 ]
 
@@ -174,7 +187,9 @@ function perTagDecls(elements: readonly ElementRow[]): string[] {
   for (const row of ordered) {
     const tag = JSON.stringify(row.dom)
     lines.push(
-      `export type ${row.jsx}Props = Omit<React.ComponentPropsWithoutRef<${tag}>, StylePropName | 'css' | 'colorMode' | 'variant'> & StyleProps & { css?: PrimitiveCssProp; colorMode?: 'light' | 'dark'; variant?: unknown }`,
+      `export type ${row.jsx}Props = Omit<React.ComponentPropsWithoutRef<${tag}>, StylePropName | 'css' | 'colorMode' | 'variant'> & StyleProps & {`,
+      ...PRIMITIVE_EXTRAS,
+      '}',
       `export declare const ${row.jsx}: (props: ${row.jsx}Props & { ref?: React.Ref<React.ComponentRef<${tag}>> }) => React.ReactNode`,
       ''
     )
@@ -195,6 +210,7 @@ export function buildPrimitivesDts(model: VocabularyModel): string {
     `export type StylePropName = ${unionOf(model.vocab.stylePropNames)}`,
     ...STYLE_PROPS_WIRING,
     'export type PrimitiveCssProp = Record<string, unknown> | Array<Record<string, unknown>>',
+    ...PRIMITIVE_VARIANT,
     '',
     '/** Every platform tag the generated primitives cover. */',
     `export type PrimitiveTag = ${unionOf(tags.map(row => row.dom))}`,

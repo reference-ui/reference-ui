@@ -2,7 +2,7 @@
 // { case } from the runner with the world freshly synced. Emits nothing on
 // success; throws naming the tsc diagnostic that broke the augmented
 // consumer on failure. Core declares no PrimitiveVariantRegistry of its own
-// (variant?: unknown), so P7 proves the matrix augment-and-use consumer file
+// (variant?: PrimitiveVariant), so P7 proves the matrix augment-and-use consumer file
 // shape typechecks green against the generated entry; P16 rides the same
 // consumer with spacing-union negatives.
 import assert from 'node:assert/strict';

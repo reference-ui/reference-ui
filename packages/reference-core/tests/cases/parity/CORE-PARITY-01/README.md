@@ -18,7 +18,7 @@ lowers breakpoint keys through queries (RS-28/LAYER-13), and the P5 empty
 arm is refused with a warning diagnostic (RS-29/COND-21). No
 `createPortal` exists on the generated entry, so P1 renders a second root
 into a body-child host — same island semantics. No
-`PrimitiveVariantRegistry` exists in Core types (`variant?: unknown`), so
+`PrimitiveVariantRegistry` exists in Core types (`variant?: PrimitiveVariant`), so
 P7 proves the matrix augment-and-use consumer file typechecks green.
 Capital-W `WebkitBoxOrient` (whose Panda output is the dashless
 non-property `webkit-box-orient`) is dropped; P18 pins the Core lowercase-w

@@ -151,15 +151,15 @@ describe('generateReactTypesSource bound bake', () => {
       `export type PrimitiveCssProp = Omit<SystemStyleObject, 'font' | 'weight'> & { font?: unknown; weight?: unknown }`
     )
     expect(source).toContain('export type DivProps = ')
-    const divLine = source.split('\n').find(line => line.startsWith('export type DivProps = '))
-    expect(divLine).toContain('css?: PrimitiveCssProp')
+    expect(source).toMatch(/export type DivProps = [\s\S]*?\n  css\?: PrimitiveCssProp\n/)
   })
 
-  it('types the variant alias as never with no recipes while per-tag variant stays open', () => {
+  it('types the variant alias as never with no recipes while per-tag variant is the named string', () => {
     const source = typesSource()
     expect(source).toContain('export type PrimitiveVariantProp = never')
-    const divLine = source.split('\n').find(line => line.startsWith('export type DivProps = '))
-    expect(divLine).toContain('variant?: unknown')
+    expect(source).toContain('export type PrimitiveVariant = string')
+    expect(source).toMatch(/export type DivProps = [\s\S]*?\n  variant\?: PrimitiveVariant\n/)
+    expect(source).not.toContain('variant?: unknown')
     expect(source).not.toContain('VariantProps } from')
   })
 

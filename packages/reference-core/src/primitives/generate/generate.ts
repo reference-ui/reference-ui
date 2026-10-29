@@ -8,8 +8,9 @@
 // decides the SyncedSystem register: a publisher declares it, a consumer
 // fills it, and the default role keeps the pre-register output byte-identical.
 
-import { ELEMENT_DOM_TAGS, ELEMENT_JSX_NAMES, ELEMENT_ROSTER } from '../../native/element-vocabulary.ts'
+import { ELEMENT_DOM_TAGS, ELEMENT_JSX_NAMES } from '../../native/element-vocabulary.ts'
 import type { SyncedRole } from '../../packager/synced-role.ts'
+import { PRIMITIVE_EXTRAS, PRIMITIVE_VARIANT_LINES, perTagDecls } from './primitive-props.ts'
 
 export interface ReactEntryInput {
   systemName: string
@@ -193,18 +194,6 @@ function consumerFillLines(role: SyncedRole): string[] {
   ]
 }
 
-function perTagDecls(): string[] {
-  const lines: string[] = []
-  for (const { dom: tag, jsx: name } of ELEMENT_ROSTER) {
-    lines.push(
-      `export type ${name}Props = Omit<React.ComponentPropsWithoutRef<${JSON.stringify(tag)}>, StylePropName | 'css' | 'colorMode' | 'variant'> & StyleProps & { css?: PrimitiveCssProp; colorMode?: 'light' | 'dark'; variant?: unknown }`,
-      `export declare const ${name}: (props: ${name}Props & { ref?: React.Ref<React.ComponentRef<${JSON.stringify(tag)}>> }) => React.ReactNode`,
-      ''
-    )
-  }
-  return lines
-}
-
 /** `'base'` plus each recipe breakpoint, quoted and deduplicated in scale order. */
 function recipeBreakpointUnion(breakpoints: readonly string[]): string {
   return [...new Set(['base', ...breakpoints])].map(name => JSON.stringify(name)).join(' | ')
@@ -281,9 +270,7 @@ function namedGraphLines(breakpointUnion: string): string[] {
     '  React.ComponentPropsWithoutRef<T>,',
     `  StylePropName | 'css' | 'colorMode' | 'variant'`,
     '> & StyleProps & {',
-    '  css?: PrimitiveCssProp',
-    "  colorMode?: 'light' | 'dark'",
-    '  variant?: unknown',
+    ...PRIMITIVE_EXTRAS,
     '}',
     'export declare function css(...styles: Array<CssStyles | CssStyles[]>): string',
     '/** Wide authoring object for recipe configs: recipes are authored TS, not typegen. */',
@@ -318,11 +305,13 @@ function namedGraphLines(breakpointUnion: string): string[] {
  * props type plus a ref-as-prop component signature; the styled wiring and
  * the named graph arrive complete, so no later leg rewrites this file.
  * StylePropName is the compiled list verbatim (the splitter's list);
- * css narrows to SystemStyleObject; per-tag variant stays open
- * unknown so user-space spreads compile, while the exported
- * PrimitiveVariantProp alias carries the union of this system's typegen
- * recipe aliases, never when recipes are absent. PrimitiveProps<T>
- * reuses the primitive types text verbatim.
+ * css narrows to SystemStyleObject; per-tag variant is the exported
+ * PrimitiveVariant (a string, as the runtime stamps String(variant) into
+ * data-variant), while the exported PrimitiveVariantProp alias carries the
+ * union of this system's typegen recipe aliases, never when recipes are
+ * absent. The three primitive extras carry JSDoc, in PrimitiveProps and in
+ * every per-tag props type. PrimitiveProps<T> reuses the primitive types
+ * text verbatim.
  */
 export function generateReactTypesSource(input: ReactTypesInput): string {
   const role = input.role ?? 'none'
@@ -336,6 +325,7 @@ export function generateReactTypesSource(input: ReactTypesInput): string {
     ...styleTypeLines(union, variantStems, role),
     '/** Per-system variant selection: this system recipe unions, never when recipes are absent. */',
     `export type PrimitiveVariantProp = ${variantUnion}`,
+    ...PRIMITIVE_VARIANT_LINES,
     '',
     '/** Every platform tag the generated primitives cover. */',
     `export type PrimitiveTag = ${primitiveTagUnion()}`,

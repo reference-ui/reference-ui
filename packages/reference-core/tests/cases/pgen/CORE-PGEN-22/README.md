@@ -6,14 +6,14 @@ vendored E4), and proves the per-system bake narrowed rather than widened. Syste
 literals assign at the `ColorToken` position and at the style-props color
 position; `StylePropName` is the exact compiled union (a member assigns, and
 it is neither `never` nor `string`); a narrowed `css` object assigns, and a
-string variant assigns at the open per-tag position. Four negatives go red
+string variant assigns at the per-tag position. Four negatives go red
 in temp dirs: a foreign-system token (`accent`, a live color leaf of
 CORE-COND-07's world, unknown here) fails TS2322 at the `ColorToken`
 position, a bogus prop name fails TS2322 at the `StylePropName` position, a
 bogus key inside `css` fails TS2353, and a variant selection object fails
 TS2322 at the exported `PrimitiveVariantProp` alias, which this recipe-less
-world bakes as `never`. Per-tag `variant` stays open (`unknown`) so
-user-space spreads compile; precision lives at the alias. Related: CORE-TYPE-01
+world bakes as `never`. Per-tag `variant` is the exported `PrimitiveVariant` (a string, as the
+runtime stamps it into `data-variant`); recipe precision lives at the alias. Related: CORE-TYPE-01
 (the bound-entry consumer pattern), CORE-TYPE-02 (the ColorToken precedent),
 CORE-PGEN-16 (the E4 token positions this bake narrows per system),
 CORE-PGEN-15 and CORE-PGEN-17 (whose open css/variant probes flip onto this
@@ -21,7 +21,7 @@ narrowed surface in S5).
 
 The bake shape under test: `StylePropName` is the compiled list verbatim
 (the splitter's list), `PrimitiveCssProp` is `SystemStyleObject`, per-tag
-`variant` stays open as `unknown`, the exported `PrimitiveVariantProp`
+`variant` is `PrimitiveVariant`, the exported `PrimitiveVariantProp`
 alias is the union of this system's typegen recipe aliases (`never` here),
 and `PrimitiveProps<T>` reuses the E4 text verbatim. Nothing red
 lives in the repo: every consumer is materialized into a temp dir at spec
