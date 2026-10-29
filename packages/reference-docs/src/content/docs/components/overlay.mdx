@@ -8,6 +8,7 @@ description: Puts content above the page, such as dialogs, drawers, sheets and a
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { OverlayAnchoredDemo, OverlayDemo, OverlaySheetDemo } from './overlay-demo'
 
 # Overlay
@@ -187,21 +188,7 @@ See [Presence](/presence) for what counts as an exit.
 
 Holds the open state and the settings every part reads.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `open` | `boolean` | — | Controlled open state. |
-| `defaultOpen` | `boolean` | `false` | Open state on first render, when `open` is omitted. |
-| `onOpenChange` | `(open: boolean) => void` | — | Called with the requested state on every open or close request. |
-| `onOpen` | `() => void` | — | Called when the Trigger asks to open. |
-| `onDismiss` | `() => void` | — | Called when Overlay asks to close an open layer: Trigger, Escape, outside press, Handle, or scroll. |
-| `onEscape` | `(event: KeyboardEvent) => void` | — | Runs before closing on Escape. `preventDefault()` keeps the layer open. |
-| `onOutsidePress` | `(event: PointerEvent) => void` | — | Runs before closing on a press outside. `preventDefault()` keeps the layer open. |
-| `onInteractOutside` | `(event: PointerEvent \| FocusEvent) => void` | — | Runs after `onOutsidePress`. `preventDefault()` keeps the layer open. |
-| `isolation` | `boolean \| { focus?, inert?, scroll? }` | `true` | Focus lock, inert page, and scroll lock. An object turns single settings off. |
-| `anchor` | element, ref, `{ x, y, width?, height? }`, or `{ getBoundingClientRect }` | — | Positions Content against this reference. |
-| `edge` | `'top' \| 'right' \| 'bottom' \| 'left'` | — | Binds Content to a viewport edge. |
-| `closeOnScroll` | `boolean` | `false` | Close when a scrolling ancestor moves the anchor. |
-| `presence` | `boolean` | `true` | `false` unmounts Content as soon as it closes, with no exit animation. |
+<Reference name="OverlayProps" />
 
 ### Overlay.Trigger
 
@@ -226,20 +213,7 @@ layer. Takes every `div` prop and style prop.
 
 The layer itself. Takes every `div` prop and style prop, plus:
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `placement` | `'top' \| 'right' \| 'bottom' \| 'left'`, each with an optional `-start` or `-end` | `'bottom-start'` | Side and alignment when anchored. |
-| `offset` | `number` | `8` | Gap in pixels from the anchor, or from the edge. |
-| `collisionPadding` | `number` | `8` | Space in pixels kept from the boundary. |
-| `boundary` | element, ref, `'viewport'`, or `null` | `'viewport'` | Area Content flips and shifts to stay inside. |
-| `flip` | `boolean` | `true` | Move to the opposite side when there is no room. |
-| `shift` | `boolean` | `true` | Slide along the side to stay in the boundary. |
-| `fallbackPlacements` | `Placement[]` | — | Placements to try, in order, when flipping. |
-| `strategy` | `'absolute' \| 'fixed'` | `'absolute'` | CSS position used when anchored. |
-| `animationFrame` | `boolean` | `false` | Reposition every frame. Only for anchors moved by `transform`. |
-| `onPositionChange` | `(data) => void` | — | Called with `{ placement, side, align, nudgedLeft, nudgedTop }` when the position changes. |
-| `initialFocus` | element, ref, `() => element`, or `boolean` | first tabbable | Where focus goes on open. `false` leaves focus where it is. |
-| `restoreFocus` | element, ref, `() => element`, or `boolean` | `true` | Where focus goes after close. `true` returns it to where it was before opening. |
+<Reference name="OverlayContentProps" />
 
 `initialFocus` and `restoreFocus` apply while `isolation.focus` is on.
 Placement props apply only when Content is anchored; `offset` also applies
@@ -272,9 +246,7 @@ A `div` that Overlay moves to point at the anchor. It renders a 2r square
 with no shape; draw the arrow with your own styles. Takes every `div` prop
 and style prop, plus:
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `edgePadding` | `number` | `4` | Closest the arrow gets to a corner of Content, in pixels. |
+<Reference name="OverlayArrowProps" />
 
 ### Overlay.Handle
 
@@ -286,9 +258,7 @@ style prop.
 
 Sets where Backdrop and Content render. It renders only its children.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `container` | element, ref, `() => element`, or `null` | `document.body` | Destination. See [Portal](/portal). |
+<Reference name="OverlayPortalProps" />
 
 ## Accessibility
 

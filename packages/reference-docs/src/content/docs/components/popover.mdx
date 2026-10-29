@@ -8,6 +8,7 @@ description: Interactive content in a panel anchored to a trigger.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { PopoverDemo, PopoverHoverDemo } from './popover-demo'
 
 # Popover
@@ -134,22 +135,7 @@ popover open.
 
 Holds the open state. Renders only its children.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `open` | `boolean` | — | Controlled open state. Omit it to let Popover manage its own. |
-| `defaultOpen` | `boolean` | `false` | Open state on first render when `open` is omitted. |
-| `onOpenChange` | `(open: boolean) => void` | — | Called on every open and close request. |
-| `onOpen` | `() => void` | — | Called when the popover opens. |
-| `onDismiss` | `() => void` | — | Called when the popover closes. |
-| `openOnHover` | `boolean` | `false` | Also open on pointer hover and keyboard focus. |
-| `openDelay` | `number` | `700` | Milliseconds of hover before it opens, with `openOnHover`. |
-| `closeDelay` | `number` | `300` | Milliseconds before it closes after the pointer leaves, with `openOnHover`. |
-| `anchor` | element, ref, or `{ x, y, width?, height? }` | trigger | What Content is positioned against. |
-| `closeOnScroll` | `boolean` | `false` | Close when an ancestor of the anchor scrolls. Otherwise Content follows it. |
-| `presence` | `boolean` | `true` | When `false`, Content unmounts as soon as it closes. |
-| `onEscape` | `(event: KeyboardEvent) => void` | — | Called on Escape. `preventDefault()` keeps it open. |
-| `onOutsidePress` | `(event: PointerEvent) => void` | — | Called on a press outside. `preventDefault()` keeps it open. |
-| `onInteractOutside` | `(event: PointerEvent \| FocusEvent) => void` | — | Called with the same outside press. `preventDefault()` keeps it open. |
+<Reference name="PopoverProps" />
 
 ### Popover.Trigger
 
@@ -162,17 +148,7 @@ it.
 The panel. Takes `div` props and style props, plus the positioning props of
 [`Overlay.Content`](/overlay). Outside a `Popover` it renders nothing.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `placement` | placement | `'bottom-start'` | Side and alignment against the anchor. |
-| `offset` | `number` | `8` | Distance from the anchor in pixels. |
-| `collisionPadding` | `number` | `8` | Space kept between Content and the viewport edge. |
-| `flip` | `boolean` | `true` | Move to the opposite side when there is no room. |
-| `shift` | `boolean` | `true` | Slide along the side to stay in view. |
-| `initialFocus` | focus target or `boolean` | — | Where focus goes when it opens. |
-| `restoreFocus` | `boolean` or focus target | trigger | Where focus returns when it closes with focus inside. `false` leaves focus where it is. |
-| `role` | `string` | `'dialog'` | The content's role. |
-| `id` | `string` | generated | Replaces the generated id the trigger points to. |
+<Reference name="PopoverContentProps" />
 
 | Data attribute | Values |
 | --- | --- |
@@ -197,18 +173,14 @@ Calling `preventDefault()` in your `onClick` keeps it open.
 
 Optional. Sets where Content is portalled.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `container` | element, ref, or function | trigger's root | Element to render Content into. |
+<Reference name="PopoverPortalProps" />
 
 ### Popover.Arrow
 
 An optional box positioned against the anchor. Takes `div` props and style
 props. Give it a shape with your own styles.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `edgePadding` | `number` | `4` | Smallest distance in pixels between the arrow and a corner of Content. |
+<Reference name="PopoverArrowProps" />
 
 ## Accessibility
 

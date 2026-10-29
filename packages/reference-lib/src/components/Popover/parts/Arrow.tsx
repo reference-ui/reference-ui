@@ -7,6 +7,10 @@ import { type PrimitiveProps } from '@reference-ui/react'
 import { Overlay } from '../../Overlay'
 
 export type PopoverArrowProps = PrimitiveProps<'div'> & {
+  /**
+   * Smallest distance in pixels between the arrow and a corner of Content.
+   * @default 4
+   */
   edgePadding?: number
 }
 

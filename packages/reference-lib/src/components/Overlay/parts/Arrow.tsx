@@ -9,6 +9,10 @@ import { OverlayContext } from '../context'
 import { assignRef } from '../shared/refs'
 
 export type OverlayArrowProps = PrimitiveProps<'div'> & {
+  /**
+   * Closest the arrow gets to a corner of Content, in pixels.
+   * @default 4
+   */
   edgePadding?: number
 }
 

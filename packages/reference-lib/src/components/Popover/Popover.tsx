@@ -29,6 +29,7 @@ export {
 export type { PopoverProps } from './types'
 export type { PopoverTriggerProps } from './parts/Trigger'
 export type { PopoverContentProps } from './parts/Content'
+export type { PopoverPortalProps } from './parts/Portal'
 export type { PopoverArrowProps } from './parts/Arrow'
 export type { PopoverCloseProps } from './parts/Close'
 

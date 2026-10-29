@@ -6,6 +6,14 @@
 import { Overlay } from '../../Overlay'
 import { type PortalProps } from '../../Portal'
 
-export function TooltipPortal({ children, container }: PortalProps) {
+export type TooltipPortalProps = PortalProps & {
+  /**
+   * Element to render Content into.
+   * @default the trigger's root
+   */
+  container?: PortalProps['container']
+}
+
+export function TooltipPortal({ children, container }: TooltipPortalProps) {
   return <Overlay.Portal container={container}>{children}</Overlay.Portal>
 }

@@ -16,9 +16,11 @@ import type * as React from 'react'
  */
 
 export interface PresenceProps {
+  /** One element. It must pass its `ref` to a DOM node. */
   children?: React.ReactElement | null | false
+  /** Required. Whether the child is shown. */
   present: boolean
-  /** Fires exactly once when content unmounts after a completed exit. Never on interrupted exits or initial mount. */
+  /** Called once when the child unmounts after a finished exit. Not called for an interrupted exit or on first mount. */
   onExitComplete?: () => void
 }
 

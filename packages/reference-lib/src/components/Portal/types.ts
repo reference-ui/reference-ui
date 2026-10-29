@@ -15,7 +15,12 @@ export type PortalContainerRef = {
 }
 
 export interface PortalProps {
+  /** Content to render in the container. */
   children?: React.ReactNode
+  /**
+   * Where the children render. `null` means `document.body`.
+   * @default document.body
+   */
   container?:
     | PortalContainer
     | PortalContainerRef

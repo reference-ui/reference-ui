@@ -4,10 +4,10 @@
  * follows the trigger's root via `portal-container`.
  */
 import * as React from 'react'
-import type { PortalProps } from '../../Portal'
+import type { OverlayPortalProps } from '../types'
 import { OverlayContext } from '../context'
 
-export function OverlayPortal({ children, container }: PortalProps) {
+export function OverlayPortal({ children, container }: OverlayPortalProps) {
   const context = React.useContext(OverlayContext)
 
   React.useLayoutEffect(() => {

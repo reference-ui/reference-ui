@@ -8,6 +8,7 @@ description: Renders children in a different part of the DOM.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { PortalDemo } from './portal-demo'
 
 # Portal
@@ -62,10 +63,7 @@ Inside an Overlay, set the container with
 
 ## API reference
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `children` | `ReactNode` | — | Content to render in the container. |
-| `container` | element, `DocumentFragment`, ref, `() => element`, or `null` | `document.body` | Where the children render. `null` means `document.body`. |
+<Reference name="PortalProps" />
 
 ## Behaviour
 

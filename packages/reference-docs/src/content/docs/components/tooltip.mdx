@@ -8,6 +8,7 @@ description: A short description of a control, shown on hover or keyboard focus.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { TooltipDemo, TooltipGroupDemo } from './tooltip-demo'
 
 # Tooltip
@@ -106,18 +107,7 @@ const [open, setOpen] = React.useState(false)
 
 Holds the open state and the hover timers. Renders only its children.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `open` | `boolean` | — | Controlled open state. Omit it to let Tooltip manage its own. |
-| `defaultOpen` | `boolean` | `false` | Open state on first render when `open` is omitted. |
-| `onOpenChange` | `(open: boolean) => void` | — | Called on every open and close request. |
-| `onOpen` | `() => void` | — | Called when the tooltip opens. |
-| `onDismiss` | `() => void` | — | Called when the tooltip closes. |
-| `openDelay` | `number` | `700` | Milliseconds the pointer must rest on the trigger before it opens. |
-| `closeDelay` | `number` | `300` | Milliseconds after the pointer leaves before it closes. |
-| `onEscape` | `(event: KeyboardEvent) => void` | — | Called on Escape. `preventDefault()` keeps it open. |
-| `onOutsidePress` | `(event: PointerEvent) => void` | — | Called on a press outside. `preventDefault()` keeps it open. |
-| `onInteractOutside` | `(event: PointerEvent \| FocusEvent) => void` | — | Called with the same outside press. |
+<Reference name="TooltipProps" />
 
 ### Tooltip.Trigger
 
@@ -132,11 +122,7 @@ The tooltip itself. Takes `div` props and style props, plus the positioning
 props of [`Overlay.Content`](/overlay). Outside a `Tooltip` it renders
 nothing.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `placement` | placement | `'top'` | Side and alignment against the trigger, such as `'top'` or `'bottom-start'`. |
-| `offset` | `number` | `8` | Distance from the trigger in pixels. |
-| `id` | `string` | generated | Replaces the generated id the trigger points to. |
+<Reference name="TooltipContentProps" />
 
 Content has a small dark style by default. Style props you pass override it.
 
@@ -150,9 +136,7 @@ Content has a small dark style by default. Style props you pass override it.
 
 Optional. Sets where Content is portalled.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `container` | element, ref, or function | trigger's root | Element to render Content into. |
+<Reference name="TooltipPortalProps" />
 
 ### Tooltip.Arrow
 

@@ -8,6 +8,7 @@ description: Keeps an element mounted until its exit animation finishes.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { PresenceDemo } from './presence-demo'
 
 # Presence
@@ -47,11 +48,7 @@ import { Presence } from '@reference-ui/lib'
 
 ## API reference
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `present` | `boolean` | — | Required. Whether the child is shown. |
-| `children` | `ReactElement \| null \| false` | — | One element. It must pass its `ref` to a DOM node. |
-| `onExitComplete` | `() => void` | — | Called once when the child unmounts after a finished exit. |
+<Reference name="PresenceProps" />
 
 ## Behaviour
 

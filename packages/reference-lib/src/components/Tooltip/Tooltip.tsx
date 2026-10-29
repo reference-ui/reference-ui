@@ -18,6 +18,7 @@ import { TooltipArrow } from './parts/Arrow'
 export { TooltipTrigger, TooltipPortal, TooltipContent, TooltipArrow }
 export type { TooltipProps } from './types'
 export type { TooltipContentProps } from './parts/Content'
+export type { TooltipPortalProps } from './parts/Portal'
 export type { TooltipArrowProps } from './parts/Arrow'
 
 export function Tooltip({

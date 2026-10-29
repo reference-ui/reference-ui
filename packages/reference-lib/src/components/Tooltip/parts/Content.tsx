@@ -5,10 +5,26 @@
  * and renders nothing outside a Tooltip subtree.
  */
 import * as React from 'react'
-import { Overlay, type OverlayContentProps } from '../../Overlay'
+import { Overlay, type OverlayContentProps, type OverlayPlacement } from '../../Overlay'
 import { TooltipContext } from '../context'
 
-export type TooltipContentProps = OverlayContentProps
+export type TooltipContentProps = OverlayContentProps & {
+  /**
+   * Side and alignment against the trigger, such as `'top'` or `'bottom-start'`.
+   * @default 'top'
+   */
+  placement?: OverlayPlacement
+  /**
+   * Distance from the trigger in pixels.
+   * @default 8
+   */
+  offset?: number
+  /**
+   * Replaces the generated id the trigger points to.
+   * @default generated
+   */
+  id?: string
+}
 
 export function TooltipContent({
   children,
