@@ -175,6 +175,8 @@ export interface TastyApi {
     prefetchSymbolById(id: string): Promise<void>;
     prefetchSymbolByName(name: string): Promise<void>;
     searchSymbols(query: string): Promise<TastySymbolSearchResult[]>;
+    /** Wraps a raw member (for example one synthesized from several union branches) in the runtime member API. */
+    createMember(raw: RawTastyMember): TastyMember;
     graph: TastyGraphApi;
 }
 export interface TastyRuntimeModule {

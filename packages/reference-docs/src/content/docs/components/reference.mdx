@@ -7,6 +7,7 @@ slug: reference
 description: Render the API reference for a TypeScript type by name.
 ---
 
+import { Reference } from '@reference-ui/lib'
 import { Preview } from '../../../mdx/Preview'
 import { ReferenceDemo } from './reference-demo'
 
@@ -42,9 +43,7 @@ import { Reference } from '@reference-ui/types'
 
 ## API reference
 
-| Prop | Type | Description |
-| --- | --- | --- |
-| `name` | `string` | The type's name. |
+<Reference name="ReferenceComponentProps" headingLevel={3} />
 
 ## Behaviour
 

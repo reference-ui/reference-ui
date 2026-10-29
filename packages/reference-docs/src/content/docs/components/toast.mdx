@@ -150,18 +150,7 @@ ProjectSaved.update(id, { name: 'Atlas v2' })
 
 ### toast
 
-| Call | Returns | Description |
-| --- | --- | --- |
-| `toast(message, options?)` | `string` | Shows a default toast. `toast.message` and `toast.show` are the same call. |
-| `toast.success / error / warning / info(message, options?)` | `string` | Shows a typed toast. |
-| `toast.loading(message, options?)` | `string` | Shows a loading toast with no duration. |
-| `toast.promise(promise, data, options?)` | the promise | Shows `data.loading`, then `data.success` or `data.error`. `data.finally` runs once after. |
-| `toast.custom(render, options?)` | `string` | Shows `render(id)` as the toast. |
-| `toast.define({ render, duration?, position? })` | definition | Returns a callable toast with `update(id, props)` and `dismiss(id)`. |
-| `toast.update(id, message, options?)` | `void` | Replaces a visible toast's content and options. |
-| `toast.dismiss(id?)` | `void` | Dismisses one toast, or all of them when `id` is omitted. |
-| `toast.dismissAll()` | `void` | Dismisses every toast. |
-| `toast.getToasts()` | records | The toasts in the queue. |
+<Reference name="ToastApi" headingLevel={4} />
 
 ### Options
 

@@ -5,11 +5,8 @@
  * level.
  */
 import * as React from 'react'
-import {
-  ReferenceRuntimeProvider,
-  createDefaultReferenceRuntime,
-  type ReferenceComponentProps,
-} from '@reference-ui/types'
+import { ReferenceRuntimeProvider, createDefaultReferenceRuntime } from '@reference-ui/types'
+import type { ReferenceComponentProps } from './types'
 import { ReferenceView } from './ReferenceView'
 
 const runtime = createDefaultReferenceRuntime()

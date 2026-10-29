@@ -58,6 +58,10 @@ export interface TreeItemContextValue {
 }
 
 export type TreeItemProps = PrimitiveProps<'div'> & {
+  /**
+   * Used as the item's id when `value` is omitted. Also names its group, `<id>-group`.
+   * @default a generated id
+   */
   id?: string
   /** The item's id, used by `value` and `expanded`. Also set as its DOM `id`. */
   value?: string
@@ -85,10 +89,19 @@ export type TreeExpanderProps = PrimitiveProps<'button'> & {
   children?: React.ReactNode
   /**
    * Accessible name. Defaults follow the branch state.
-   * @default 'Expand' or 'Collapse'
+   * @default `'Expand'` when closed, `'Collapse'` when open
    */
   'aria-label'?: string
+  /**
+   * Sets the open state the button shows. When passed, a click calls `onToggle` and leaves the tree's own expansion alone.
+   * @default the item's expanded state
+   */
   expanded?: boolean
+  /** Called when the button is clicked. */
   onToggle?: () => void
+  /**
+   * The item whose branch it toggles.
+   * @default the id of the enclosing `Tree.Item`
+   */
   itemId?: string
 }

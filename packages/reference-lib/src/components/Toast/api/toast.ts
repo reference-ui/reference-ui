@@ -15,6 +15,7 @@ import { defineToastDefinition } from './define'
 import type {
   DefaultToastOptions,
   PromiseData,
+  ToastApi,
   ToastControls,
   ToastDefinition,
   ToastOptions,
@@ -42,7 +43,7 @@ const toastCallable = (message: React.ReactNode, options?: DefaultToastOptions):
   return showToast(message, options)
 }
 
-export const toast = Object.assign(toastCallable, {
+export const toast: ToastApi = Object.assign(toastCallable, {
   show(content: React.ReactNode, options?: DefaultToastOptions): string {
     return showToast(content, options)
   },

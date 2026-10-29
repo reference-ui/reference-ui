@@ -21,6 +21,8 @@ initFocusVisible()
 // Core emits @reference-ui/types, so the Reference browser export below is kept
 // and the tsconfig exclude is dropped.
 export { Reference, ReferenceView, referenceBrowserTokenConfig } from './components/Reference/index'
+export type { ReferenceComponentProps } from './components/Reference/index'
+export type { MaterialSymbolIconProps } from './core/icon/types'
 export * from './components/Slot/index'
 export * from './components/Presence/index'
 export * from './motion/index'

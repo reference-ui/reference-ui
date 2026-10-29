@@ -145,6 +145,88 @@ export interface ToastDefinition<P = void> {
   dismiss: (id: string) => void
 }
 
+/** The `toast` function and its methods. */
+export interface ToastApi {
+  /**
+   * Shows a default toast. `toast.message` and `toast.show` are the same call.
+   * @param message The toast's title. A React element shows as the whole toast.
+   * @param options Options for this toast.
+   * @returns The toast's id.
+   */
+  (message: React.ReactNode, options?: DefaultToastOptions): string
+  /** Shows a default toast. Same as calling `toast` directly. */
+  show(content: React.ReactNode, options?: DefaultToastOptions): string
+  /** Shows a default toast. Same as calling `toast` directly. */
+  message(message: React.ReactNode, options?: DefaultToastOptions): string
+  /** Shows a success toast. */
+  success(message: React.ReactNode, options?: DefaultToastOptions): string
+  /** Shows an error toast. */
+  error(message: React.ReactNode, options?: DefaultToastOptions): string
+  /** Shows a warning toast. */
+  warning(message: React.ReactNode, options?: DefaultToastOptions): string
+  /** Shows an info toast. */
+  info(message: React.ReactNode, options?: DefaultToastOptions): string
+  /** Shows a loading toast with no duration. */
+  loading(message: React.ReactNode, options?: DefaultToastOptions): string
+  /**
+   * Shows `data.loading`, then `data.success` or `data.error`. `data.finally` runs once after.
+   * @param promise The promise, or a function that returns it.
+   * @param data What to show for each outcome.
+   * @param options Options for the toast.
+   * @returns The promise, with an `unwrap` method that returns its result.
+   */
+  promise<T>(
+    promise: Promise<T> | (() => Promise<T>),
+    data: PromiseData<T>,
+    options?: ToastOptions
+  ): Promise<T> & { unwrap: () => Promise<T> }
+  /**
+   * Shows `render(id)` as the toast.
+   * @param render Returns the toast's content from its id.
+   * @param options Options for the toast.
+   * @returns The toast's id.
+   */
+  custom(render: (id: string) => React.ReactNode, options?: ToastOptions): string
+  /**
+   * Returns a callable toast with `update(id, props)` and `dismiss(id)`.
+   * @param config The `render` function, and an optional default `duration` and `position`.
+   * @returns The toast definition.
+   */
+  define<P = void>(config: {
+    duration?: number | false
+    position?: ToastPosition
+    render: (props: P, controls: ToastControls) => React.ReactNode
+  }): ToastDefinition<P>
+  /**
+   * Replaces a visible toast's content and options.
+   * @param id The toast's id.
+   * @param content The new message, or a React element.
+   * @param options The new options.
+   */
+  update(id: string, content: React.ReactNode, options?: DefaultToastOptions): void
+  /**
+   * Dismisses one toast, or all of them when `id` is omitted.
+   * @param id The toast's id.
+   * @param options Pass `document` to target another document.
+   */
+  dismiss(id?: string, options?: { document?: Document }): void
+  /**
+   * Dismisses every toast.
+   * @param options Pass `document` to target another document.
+   */
+  dismissAll(options?: { document?: Document }): void
+  /**
+   * The toasts in the queue.
+   * @param doc The document to read.
+   */
+  getToasts(doc?: Document): ToastHistoryRecord[]
+  /**
+   * Records of the toasts shown, dismissed ones included.
+   * @param doc The document to read.
+   */
+  getHistory(doc?: Document): ToastHistoryRecord[]
+}
+
 export type ToastOffset =
   | number
   | string

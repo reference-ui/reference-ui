@@ -20,13 +20,13 @@ export function TreeDemo() {
     >
       <Tree.Item value="src">
         <Tree.Expander />
-        <Span fontWeight="600">src</Span>
+        <Span weight="sans.semibold">src</Span>
         <Tree.Group>
           <Tree.Item value="src/index">index.ts</Tree.Item>
           <Tree.Item value="src/tree">tree.ts</Tree.Item>
           <Tree.Item value="src/parts">
             <Tree.Expander />
-            <Span fontWeight="600">parts</Span>
+            <Span weight="sans.semibold">parts</Span>
             <Tree.Group>
               <Tree.Item value="src/parts/item">item.ts</Tree.Item>
               <Tree.Item value="src/parts/group">group.ts</Tree.Item>

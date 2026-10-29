@@ -9,10 +9,11 @@ import type { PrimitiveProps } from '@reference-ui/react'
 import type { CalendarWeekday, ISOMonth, ISOYear } from './dates/iso'
 
 export type CalendarMode = 'day' | 'range' | 'month' | 'year'
-/** Calendar-private interaction state (FEATURES #10): which collection is
- * shown. Never a controlled prop — the application does not branch on it. */
+/** Which collection the calendar shows: days, months or years. Calendar tracks
+ * it itself; it is not a controlled prop. */
 export type CalendarView = 'day' | 'month' | 'year'
-export type ISODate = string // YYYY-MM-DD
+/** A date as `YYYY-MM-DD`. */
+export type ISODate = string
 export interface DateRangeValue {
   start: ISODate
   end: ISODate | null
@@ -62,12 +63,10 @@ export interface CalendarDayState {
   preview: boolean
 }
 
-/** Custom day-cell renderer (FEATURES #5): called once per rendered date
- * with its exact ten-field state. Must return exactly one
- * `<Calendar.Day date={day.date}>` — a missing, multiple, foreign, or
- * date-mismatched return emits one dev diagnostic and renders that cell
- * non-interactive (CA-DAY-08..11). The `ReactElement` return keeps
- * nullish/multiple returns a type error; runtime casts still diagnose. */
+/** Renders the cell for one date from its state. Return exactly one
+ * `<Calendar.Day date={day.date}>`. A missing, multiple, other or
+ * date-mismatched return logs a development warning, and the cell renders
+ * non-interactive. */
 export type CalendarDaysRenderer = (day: CalendarDayState) => React.ReactElement
 
 export type CalendarSharedProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
@@ -79,10 +78,10 @@ export type CalendarSharedProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'valu
    */
   firstDayOfWeek?: CalendarWeekday
   /**
-   * The visible month, when you control it.
+   * The visible month as `YYYY-MM`, when you control it.
    * @default follows `value`
    */
-  month?: ISOMonth // YYYY-MM
+  month?: ISOMonth
   /** Called when the user moves to another month. */
   onMonthChange?: (month: ISOMonth) => void
   /** Earliest selectable date. */
@@ -100,10 +99,10 @@ export type CalendarSharedProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'valu
   today?: ISODate
 }
 
-/** Discriminated mode props (FEATURES #1): one `mode` discriminant, four
- * branches. `value` is required controlled with explicit `null` as the
- * empty state; `onChange` is typed per branch. There is no `defaultValue`
- * and no whole-calendar `disabled` (removed, FEATURES #14). */
+/** Props of Calendar. `mode` sets what a selection picks: a day, a range, a
+ * month or a year. `value` is required, with `null` for empty, and `onChange`
+ * receives the value type of that mode. Calendar has no `defaultValue` and no
+ * `disabled`. */
 export type CalendarProps =
   | (CalendarSharedProps & {
       /**
@@ -170,8 +169,8 @@ export type CalendarDayProps = Omit<PrimitiveProps<'button'>, 'children'> & {
   date: ISODate
   /** The button content. */
   children?: React.ReactNode
-  /** Managed data attributes (CA-DAY-06): declared so conflicting
-   * consumer values typecheck; the managed value always wins. */
+  /** Data attributes the day sets itself. They are declared so a value you
+   * pass typechecks, but the day's own value always wins. */
   'data-date'?: string
   'data-selected'?: string
   'data-in-range'?: string

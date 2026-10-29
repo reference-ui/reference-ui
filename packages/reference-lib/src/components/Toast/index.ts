@@ -27,6 +27,7 @@ export type {
   ToastAction as ToastActionButton,
   ToastActionOption,
   ToastActionProps,
+  ToastApi,
   ToastClassNames,
   ToastCloseProps,
   ToastControls,

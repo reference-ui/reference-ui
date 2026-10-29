@@ -29,15 +29,12 @@ interface BranchMembers {
   owners: Map<string, TastySymbol | undefined>
 }
 
-/** The tasty API plus the member factory its runtime class carries but its interface does not yet declare. */
-type MemberFactoryApi = TastyApi & { createMember(raw: RawTastyMember): TastyMember }
-
 export async function loadUnionAliasMembers(
   api: TastyApi,
   symbol: TastySymbol,
   cutNotices: Set<string>,
 ): Promise<UnionMemberMerge | undefined> {
-  if (symbol.getKind() !== 'typeAlias' || !hasMemberFactory(api)) return undefined
+  if (symbol.getKind() !== 'typeAlias') return undefined
   const raw = symbol.getUnderlyingType()?.getRaw()
   if (!raw || !isRawUnion(raw)) return undefined
 
@@ -50,7 +47,7 @@ export async function loadUnionAliasMembers(
   return mergeBranches(api, branches)
 }
 
-function mergeBranches(api: MemberFactoryApi, branches: BranchMembers[]): UnionMemberMerge {
+function mergeBranches(api: TastyApi, branches: BranchMembers[]): UnionMemberMerge {
   const names = new Set<string>()
   for (const branch of branches) for (const name of branch.raws.keys()) names.add(name)
 
@@ -134,7 +131,7 @@ function printedType(type: RawTastyTypeRef): string {
 
 /** A branch's members, or undefined when the branch is not an object type. */
 async function loadBranchMembers(
-  api: MemberFactoryApi,
+  api: TastyApi,
   raw: RawTastyTypeRef,
   cutNotices: Set<string>,
 ): Promise<BranchMembers | undefined> {
@@ -151,7 +148,7 @@ async function loadBranchMembers(
 }
 
 async function loadIntersectionMembers(
-  api: MemberFactoryApi,
+  api: TastyApi,
   parts: RawTastyTypeRef[],
   cutNotices: Set<string>,
 ): Promise<BranchMembers | undefined> {
@@ -207,10 +204,6 @@ export async function resolveReferenceTypeSourceSymbol(
   const matches = await api.findSymbolsByName(reference.name)
   if (matches.length === 1) return api.loadSymbolById(matches[0]!.id)
   return undefined
-}
-
-function hasMemberFactory(api: TastyApi): api is MemberFactoryApi {
-  return typeof (api as Partial<MemberFactoryApi>).createMember === 'function'
 }
 
 function isRawUnion(raw: RawTastyTypeRef): raw is Extract<RawTastyTypeRef, { kind: 'union' }> {

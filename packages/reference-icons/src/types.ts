@@ -13,10 +13,23 @@ export type MaterialSymbolIconShellProps = Omit<DivProps, 'size'> & {
   size?: IconSizeValue
 }
 
-/** Icon shell is a {@link Div}; style props use the design-system surface (not raw `style` only). */
-export type MaterialSymbolIconProps = Omit<DivProps, 'size'> & {
+/** Props of every Material Symbols icon: the `div` props and style props, plus `variant` and `size`. */
+export type MaterialSymbolIconProps = Omit<DivProps, 'size' | 'color'> & {
+  /**
+   * Glyph style.
+   * @default 'outline'
+   */
   variant?: IconVariant
+  /**
+   * Width and height. Numbers are pixels. `small`, `base` and `large` also work.
+   * @default 'md'
+   */
   size?: IconSizeValue
+  /**
+   * Glyph colour.
+   * @default 'inherit'
+   */
+  color?: DivProps['color']
 }
 
 export type MaterialSymbolIconComponent = React.ForwardRefExoticComponent<

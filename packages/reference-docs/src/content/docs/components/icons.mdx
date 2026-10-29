@@ -7,6 +7,7 @@ slug: icons
 description: The Material Symbols icon set, one React component per icon.
 ---
 
+import { Reference } from '@reference-ui/lib'
 import { Preview } from '../../../mdx/Preview'
 import { IconsDemo } from './icons-demo'
 
@@ -107,11 +108,7 @@ either way.
 
 ## API reference
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `size` | `'sm' \| 'md' \| 'lg' \| number \| string` | `'md'` | Width and height. Numbers are pixels. `small`, `base` and `large` also work. |
-| `variant` | `'outline' \| 'filled'` | `'outline'` | Glyph style. |
-| `color` | colour token or CSS colour | `'inherit'` | Glyph colour. |
+<Reference name="MaterialSymbolIconProps" headingLevel={3} />
 
 An icon renders an inline-flex `div` around an `svg`, and takes the `div`'s
 props, style props and a `ref`.

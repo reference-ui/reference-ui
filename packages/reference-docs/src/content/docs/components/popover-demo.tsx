@@ -12,7 +12,7 @@ export function PopoverDemo() {
       <Popover.Trigger>Open filters</Popover.Trigger>
       <Popover.Content className={floatingSurface}>
         <Div display="flex" flexDirection="column" gap="2r">
-          <Span fontWeight="600">Filters</Span>
+          <Span weight="sans.semibold">Filters</Span>
           <Span>Interactive content anchored to the trigger.</Span>
           <Div>
             <Popover.Close>Close</Popover.Close>
@@ -30,7 +30,7 @@ export function PopoverHoverDemo() {
       <Popover.Trigger>@reference-ui</Popover.Trigger>
       <Popover.Content className={floatingSurface}>
         <Div display="flex" flexDirection="column" gap="1r">
-          <Span fontWeight="600">Reference UI</Span>
+          <Span weight="sans.semibold">Reference UI</Span>
           <Span>Components and a design system compiled at build time.</Span>
         </Div>
       </Popover.Content>
