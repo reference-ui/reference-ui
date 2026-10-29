@@ -4,8 +4,10 @@
  * empty, or document states; hosts install the provider themselves.
  */
 import * as React from 'react'
-import { useReferenceDocumentFromContext } from '@reference-ui/types'
-import type { ReferenceComponentProps } from './types'
+import {
+  useReferenceDocumentFromContext,
+  type ReferenceComponentProps,
+} from '@reference-ui/types'
 import { ReferenceDocument } from './document/index'
 import { ReferenceHeadingLevelProvider } from './document/ReferenceHeadingLevel'
 import { ReferenceFrame } from './components/ReferenceFrame'

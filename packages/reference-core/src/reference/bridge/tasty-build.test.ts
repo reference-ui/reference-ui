@@ -66,4 +66,23 @@ describe('reference/bridge/tasty-build scan options', () => {
 
     expect(options.include).toEqual(['src/**/*.{ts,tsx}', '!node_modules/**', DECL_STYLE_PROPS])
   })
+
+  it('keeps the package barrel in the scan when the style include negates it by exact path', () => {
+    const project = makeProject(false)
+
+    const options = buildReferenceTastyScanOptions(project, [
+      'src/**/*.{ts,tsx}',
+      '!src/index.ts',
+      '!index.tsx',
+      '!src/**/*.test.{ts,tsx}',
+      '!src/**/index.ts',
+    ])
+
+    expect(options.include).toEqual([
+      'src/**/*.{ts,tsx}',
+      '!src/**/*.test.{ts,tsx}',
+      '!src/**/index.ts',
+      '!node_modules/**',
+    ])
+  })
 })

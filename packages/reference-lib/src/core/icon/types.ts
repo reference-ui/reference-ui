@@ -1,9 +1,11 @@
 /**
  * Icon props in the library: the props every Material Symbols icon takes.
- * It declares the same shape as `@reference-ui/icons` in the library's own files, because
- * the Reference docs index only types declared here, not types re-exported from the icons
- * package. The assertion below fails the typecheck if `variant` or `size` drift apart; the
- * style props differ by environment (the icons build is unsynced), so they are not compared.
+ * It declares the same shape as `@reference-ui/icons` in the library's own files because the
+ * icons package publishes its own bundled style system: indexed from there, the Reference docs
+ * would list all ~1,370 style props, where this declaration builds on the library's `DivProps`
+ * and lists only the props that matter. The assertion below fails the typecheck if `variant` or
+ * `size` drift apart; the style props differ by environment (the icons build is unsynced), so
+ * they are not compared.
  */
 import type { DivProps } from '@reference-ui/react'
 import type {

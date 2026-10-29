@@ -40,6 +40,15 @@ export interface ReferenceTastyScanOptions {
 /** Prunes dependency trees from the follow-links Rust walker (see below). */
 const NODE_MODULES_EXCLUDE = '!node_modules/**'
 
+/**
+ * A negation that names one barrel file by exact path (`!src/index.ts`). Style
+ * scopes drop a barrel for compile speed because it holds no style call-sites,
+ * but the barrel is where a package re-exports from other packages, and those
+ * re-exports are the only edge the tasty scan follows into the dependency. The
+ * scan keeps the barrel; a glob negation (`!src/**\/index.ts`) is untouched.
+ */
+const BARREL_NEGATION = /^!(?:[^*?{}[\]]*\/)?index\.[cm]?tsx?$/
+
 const tastyBuildSession = createTastyBuildSession()
 
 export function getReferenceTastyBuild(
@@ -79,6 +88,9 @@ export async function rebuildReferenceTastyBuild(
  * by the walker and named by the sync's include check (CORE-WATCH-24).
  * Re-export discovery resolves linked packages through node resolution, not
  * the walker, and is unaffected.
+ *
+ * An exact-path barrel negation is dropped (see BARREL_NEGATION), so a type the
+ * package re-exports from another package reaches the index with its members.
  */
 export function buildReferenceTastyScanOptions(
   sourceDir: string,
@@ -86,7 +98,7 @@ export function buildReferenceTastyScanOptions(
 ): ReferenceTastyScanOptions {
   const root = resolve(sourceDir)
   const outDir = getOutDirPath(root)
-  const include = [...configInclude]
+  const include = configInclude.filter(pattern => !BARREL_NEGATION.test(pattern))
   if (!include.includes(NODE_MODULES_EXCLUDE)) {
     include.push(NODE_MODULES_EXCLUDE)
   }

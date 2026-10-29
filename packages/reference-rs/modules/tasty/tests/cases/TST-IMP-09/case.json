@@ -1,0 +1,1 @@
+{"id": "TST-IMP-09", "name": "A type re-exported from another package is emitted with its members, JSDoc and @default tags"}
