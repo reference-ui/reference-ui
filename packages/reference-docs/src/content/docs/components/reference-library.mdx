@@ -7,6 +7,8 @@ slug: reference-library
 description: Mounts the document-level runtimes behind Toast, announce() and Tooltip, once near your app root.
 ---
 
+import { Reference } from '@reference-ui/lib'
+
 # ReferenceLibrary
 
 ReferenceLibrary mounts the document-level runtimes: the [Toast](/toast)
@@ -33,23 +35,15 @@ import { ReferenceLibrary } from '@reference-ui/lib'
 
 ## Props
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `children` | `ReactNode` | — | Your app. |
-| `toaster` | object | see below | Defaults for every toast. |
-| `tooltip.skipDelay` | `number` | `300` | Window in milliseconds during which neighbouring tooltips open without delay. |
+<Reference name="ReferenceLibraryProps" headingLevel={3} />
 
 ### `toaster`
 
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `defaultPosition` | toast position | `'bottom-end'` | Where toasts appear. |
-| `defaultDuration` | `number \| false` | `5000` | Auto-dismiss time in milliseconds. |
-| `limit` | `number` | `4` | Most toasts visible at once. |
-| `closeButton` | `boolean` | — | Show a close button on every toast. |
-| `richColors` | `boolean` | — | Use coloured backgrounds for typed toasts. |
-| `theme` | toast theme | `'light'` | Toast chrome theme. Toast colours follow this, not color mode. |
-| `hotkey` | `string[] \| false` | `['altKey', 'KeyT']` | Key combination that moves focus into the toasts; `false` turns it off. |
+<Reference name="ReferenceLibraryToaster" headingLevel={4} />
+
+### `tooltip`
+
+<Reference name="ReferenceLibraryTooltip" headingLevel={4} />
 
 ## Behaviour
 

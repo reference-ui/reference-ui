@@ -8,6 +8,7 @@ description: Make a group of controls one Tab stop and move between them with th
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { RovingFocusDemo } from './roving-focus-demo'
 
 # RovingFocus
@@ -64,20 +65,11 @@ attributes and style props, pass through to the child, and a `ref` reaches it.
 
 ### RovingFocus.Root
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `orientation` | `'horizontal' \| 'vertical' \| 'both'` | `'horizontal'` | Which arrow keys move focus. `both` moves through a grid by layout. |
-| `loop` | `boolean` | `false` | Wrap from the last item to the first and back. |
-| `typeahead` | `boolean` | `false` | Typing moves focus to the next item whose text starts with the typed characters. |
+<Reference name="RovingFocusRootProps" headingLevel={4} />
 
 ### RovingFocus.Item
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | Removes the item from arrow-key movement and the Tab stop. |
-| `textValue` | `string` | text content | Text matched by typeahead. |
-| `id` | `string` | generated | Stable identity for the item within the group. |
-| `getNode` | `() => HTMLElement \| null` | — | Returns the item's element when its child can't take a ref. |
+<Reference name="RovingFocusItemProps" headingLevel={4} />
 
 ## Behaviour
 

@@ -8,6 +8,7 @@ description: Keep keyboard focus inside one element and return it when the lock 
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { FocusLockDemo } from './focus-lock-demo'
 
 # FocusLock
@@ -44,13 +45,7 @@ import { FocusLock } from '@reference-ui/lib'
 FocusLock takes one element child and adds no wrapper. A `ref` passes through
 to that child.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | Turns the lock off. |
-| `initialFocus` | `FocusTarget \| boolean` | first tabbable | Where focus goes when the lock starts. `false` leaves focus where it is. |
-| `restoreFocus` | `FocusTarget \| boolean` | `true` | Where focus goes when the lock ends. `false` leaves it. |
-| `defaultRestoreTarget` | `FocusTarget` | — | Where focus returns if nothing outside the lock had focus when it started. |
-| `shards` | `Array<HTMLElement \| RefObject>` | — | Elements outside the child that belong to the lock, such as a portalled popover. |
+<Reference name="FocusLockProps" headingLevel={3} />
 
 A `FocusTarget` is an element, a ref to one, or a function that returns one.
 

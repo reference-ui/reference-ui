@@ -4,4 +4,8 @@
  * warmup, hooks, and parts private.
  */
 export { ReferenceLibrary } from './ReferenceLibrary'
-export type { ReferenceLibraryProps, ReferenceLibraryToaster } from './types'
+export type {
+  ReferenceLibraryProps,
+  ReferenceLibraryToaster,
+  ReferenceLibraryTooltip,
+} from './types'

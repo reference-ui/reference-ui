@@ -19,19 +19,40 @@ export type ReferenceSlotPartProps = Omit<PrimitiveProps<'div'>, 'children'> & {
 }
 
 export type RovingFocusRootProps = ReferenceSlotPartProps & {
+  /**
+   * Which arrow keys move focus. `both` moves through a grid by layout.
+   * @default 'horizontal'
+   */
   orientation?: RovingFocusOrientation
+  /**
+   * Wrap from the last item to the first and back.
+   * @default false
+   */
   loop?: boolean
+  /**
+   * Typing moves focus to the next item whose text starts with the typed characters.
+   * @default false
+   */
   typeahead?: boolean
 }
 
 export type RovingFocusItemProps = ReferenceSlotPartProps & {
+  /**
+   * Stable identity for the item within the group.
+   * @default generated
+   */
   id?: string
+  /**
+   * Removes the item from arrow-key movement and the Tab stop.
+   * @default false
+   */
   disabled?: boolean
+  /**
+   * Text matched by typeahead.
+   * @default the item's text content
+   */
   textValue?: string
-  /** Portable node resolver. React 17/18 strip `ref` through plain-function
-   * children, so the kernel ref never resolves there (Menu `MenuTrigger`
-   * precedent); consumers in that position resolve the mounted node by id
-   * and hand it back here. The live ref always wins when set. */
+  /** Returns the item's element when its child can't take a ref. The live ref wins when set. */
   getNode?: () => HTMLElement | null
 }
 

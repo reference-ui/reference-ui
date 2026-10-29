@@ -7,9 +7,25 @@ import type * as React from 'react'
 import type { ToastClassNames, ToastOffset, ToastTheme } from '../Toast'
 
 export interface ReferenceLibraryToaster {
+  /**
+   * Where toasts appear.
+   * @default 'bottom-end'
+   */
   defaultPosition?: string
+  /**
+   * Auto-dismiss time in milliseconds.
+   * @default 5000
+   */
   defaultDuration?: number | false
+  /**
+   * Most toasts visible at once.
+   * @default 4
+   */
   limit?: number
+  /**
+   * Key combination that moves focus into the toasts; `false` turns it off.
+   * @default ['altKey', 'KeyT']
+   */
   hotkey?: string[] | false
   expand?: boolean
   gap?: number
@@ -19,10 +35,16 @@ export interface ReferenceLibraryToaster {
     bottom?: string | number
     left?: string | number
   }
+  /** Show a close button on every toast. */
   closeButton?: boolean
+  /** Use coloured backgrounds for typed toasts. */
   richColors?: boolean
   invert?: boolean
   dir?: 'rtl' | 'ltr' | 'auto'
+  /**
+   * Toast chrome theme. Toast colours follow this, not color mode.
+   * @default 'light'
+   */
   theme?: ToastTheme
   mobileOffset?: ToastOffset
   containerAriaLabel?: string
@@ -44,10 +66,19 @@ export interface ReferenceLibraryToaster {
   }
 }
 
+export interface ReferenceLibraryTooltip {
+  /**
+   * Window in milliseconds during which neighbouring tooltips open without delay.
+   * @default 300
+   */
+  skipDelay?: number
+}
+
 export interface ReferenceLibraryProps {
+  /** Your app. */
   children?: React.ReactNode
+  /** Defaults for every toast. The options are listed below. */
   toaster?: ReferenceLibraryToaster
-  tooltip?: {
-    skipDelay?: number
-  }
+  /** Tooltip group settings. */
+  tooltip?: ReferenceLibraryTooltip
 }
