@@ -6,6 +6,7 @@
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type { ReferenceMemberDocument } from '@reference-ui/types'
+import { MemberDefault } from './MemberDefault'
 import { MemberDescription } from './MemberDescription'
 import { MemberJsDoc } from './MemberJsDoc'
 import { MemberName } from './MemberName'
@@ -33,6 +34,7 @@ export function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument
 
       <Div display="grid" gap="3r" minWidth="0">
         <MemberTypeSummary summary={member.summary.memberTypeSummary} />
+        <MemberDefault defaultValue={member.defaultValue} />
         <MemberDescription description={member.summary.description} />
         <MemberJsDoc
           memberId={member.id}

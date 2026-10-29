@@ -5,6 +5,7 @@
 import * as React from 'react'
 import { Div, H2, P } from '@reference-ui/react'
 import { formatReferenceTypeParameter, type ReferenceDocument } from '@reference-ui/types'
+import { InlineCode } from '../components/shared/InlineCode'
 import { MonoText } from '../components/shared/MonoText'
 
 type TitleRowProps = {
@@ -45,7 +46,7 @@ type DescriptionProps = {
 function ReferenceDocumentHeaderDescription({ description }: DescriptionProps) {
   return (
     <P margin="0" color="reference.text" mb="4r">
-      {description}
+      <InlineCode text={description} />
     </P>
   )
 }

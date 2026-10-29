@@ -3,4 +3,4 @@
 // declared in `types.ts` still land in the built manifest.
 // (Vendored from the TST-DOC-01-jsdoc case input; compiled at test time.)
 
-export type { ButtonProps, CreateButton } from './types.ts'
+export type { ButtonProps, CreateButton, DefaultsProp } from './types.ts'

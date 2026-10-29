@@ -163,13 +163,14 @@ function normalizeReferenceValueOption(value: string): string {
   return normalizeTastyInlineValue(value) ?? value
 }
 
+/** Only literals and literal unions become chips; a default never forces them (it has its own line). */
 function shouldUseReferenceValueSet(type: TastyTypeRef, options: ReferenceValueOption[]): boolean {
   if (options.length === 0) return false
   if (type.isLiteral()) return true
   if (type.isUnion()) {
     return type.getUnionTypes().every(isReferenceUnionBranchForValueSet)
   }
-  return options.some((option) => option.isDefault)
+  return false
 }
 
 /** Literal unions plus intrinsic widen-any (`string`, `object`, …). */

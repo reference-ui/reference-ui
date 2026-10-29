@@ -96,6 +96,36 @@ describe('union display type label', () => {
   })
 })
 
+describe('default values and value sets', () => {
+  it('uses chips only for literal types and keeps the default on the member for every type', async () => {
+    const defaultsProp = await api.loadSymbolByName('DefaultsProp')
+    const members = await api.graph.getDisplayMembers(defaultsProp)
+    const doc = createReferenceDocument(defaultsProp, members)
+    const byName = (name: string) => doc.members.find((m) => m.name === name)
+
+    const open = byName('open')
+    expect(open?.defaultValue).toBe('false')
+    expect(open?.summary.memberTypeSummary?.kind).not.toBe('valueSet')
+
+    const icon = byName('icon')
+    expect(icon?.defaultValue).toBe('a chevron icon')
+    expect(icon?.summary.memberTypeSummary?.kind).not.toBe('valueSet')
+
+    const count = byName('count')
+    expect(count?.defaultValue).toBe('3')
+    expect(count?.summary.memberTypeSummary).toBeUndefined()
+
+    const size = byName('size')
+    expect(size?.defaultValue).toBeDefined()
+    const sizeSummary = size?.summary.memberTypeSummary
+    expect(sizeSummary?.kind).toBe('valueSet')
+    if (sizeSummary?.kind === 'valueSet') {
+      expect(sizeSummary.options.filter((o) => o.isDefault)).toHaveLength(1)
+      expect(sizeSummary.options.map((o) => o.label)).toEqual(expect.arrayContaining(['sm', 'lg']))
+    }
+  })
+})
+
 const DIAMOND_DEPTH = 16
 
 function diamondSource(depth: number): string {

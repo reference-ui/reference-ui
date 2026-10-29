@@ -52,3 +52,21 @@ export interface WideningComboProp {
  * @returns A normalized button props object.
  */
 export type CreateButton = (props: ButtonProps) => ButtonProps
+
+/** Members with a `@default`: only literal types get value chips; the rest keep their plain type. */
+export interface DefaultsProp {
+  /** @default false */
+  open?: boolean
+
+  /**
+   * Leading icon.
+   * @default a chevron icon
+   */
+  icon?: React.ReactNode
+
+  /** @default "sm" */
+  size?: 'sm' | 'lg'
+
+  /** @default 3 */
+  count?: number
+}
