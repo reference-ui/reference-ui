@@ -8,6 +8,7 @@ description: Pick a number, or a range of numbers, along a track.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { SliderDemo, SliderRangeDemo, SliderVerticalDemo } from './slider-demo'
 
 # Slider
@@ -125,17 +126,7 @@ yourself:
 
 Contains the parts. Renders a `div` and takes its props and style props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `number \| number[]` | — | Required. The controlled value. An array gives one thumb per entry. |
-| `onChange` | `(value) => void` | — | Called with every new value while dragging or stepping. |
-| `onChangeEnd` | `(value) => void` | — | Called once, with the last value, when a drag or key press ends. |
-| `min` | `number` | `0` | Lowest value. |
-| `max` | `number` | `100` | Highest value. |
-| `step` | `number` | `1` | Distance between values. |
-| `minStepsBetweenThumbs` | `number` | `0` | Smallest gap between neighbouring thumbs, in steps. |
-| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Direction of the track. |
-| `disabled` | `boolean` | `false` | Stops all interaction and ends any drag in progress. |
+<Reference name="SliderProps" />
 
 `onChange` and `onChangeEnd` receive a number when `value` is a number, and
 an array when it is an array. Neither fires when you change `value` yourself.
@@ -172,10 +163,7 @@ outer thumbs of a range. Renders a `div`. A slider has at most one.
 
 The handle for one value. Renders a `div` with `role="slider"`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `valueText` | `string` | — | Text screen readers announce instead of the number. |
-| `formatValue` | `(value: number) => string` | — | Builds that text from the value. |
+<Reference name="SliderThumbProps" />
 
 | Data attribute | Values |
 | --- | --- |

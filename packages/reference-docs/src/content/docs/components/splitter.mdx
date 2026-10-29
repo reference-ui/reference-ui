@@ -8,6 +8,7 @@ description: Resizable panels with a draggable handle between them.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { SplitterDemo, SplitterNestedDemo } from './splitter-demo'
 
 # Splitter
@@ -139,12 +140,7 @@ Panel in order, for content inside that wants to follow the split.
 The root. Renders a `div` that fills its parent and lays the Panels out
 with flexbox.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `number[]` | — | Required. Panel sizes as percentages, in order, summing to 100. |
-| `onChange` | `(value: number[]) => void` | — | Called with the new sizes as a Handle moves. |
-| `onChangeEnd` | `(value: number[]) => void` | — | Called once when a drag or key press ends. |
-| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Lay Panels out in a row or a column. |
+<Reference name="SplitterProps" />
 
 | Attribute | Values |
 | --- | --- |
@@ -155,13 +151,7 @@ with flexbox.
 
 One resizable region. Renders a `div` that scrolls its overflow.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `min` | `number \| string` | — | Smallest size: a percentage, or a CSS length. |
-| `max` | `number \| string` | — | Largest size: a percentage, or a CSS length. |
-| `collapsible` | `boolean` | `false` | Allow the Panel to collapse. |
-| `collapsedSize` | `number` | `0` | Size in percent when collapsed. |
-| `id` | `string` | generated | The Handle before it points at this id. Collapse memory is kept per id. |
+<Reference name="SplitterPanelProps" />
 
 | Attribute | Values |
 | --- | --- |
@@ -174,10 +164,7 @@ One resizable region. Renders a `div` that scrolls its overflow.
 The separator between two Panels. Renders a focusable `div` with a line
 and a `Splitter.Thumb`. Children without a Thumb replace both.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | Stops the Handle from resizing. It stays focusable. |
-| `withThumb` | `boolean` | `true` | Draw the grip. |
+<Reference name="SplitterHandleProps" />
 
 | Attribute | Values |
 | --- | --- |
@@ -192,11 +179,7 @@ and a `Splitter.Thumb`. Children without a Thumb replace both.
 The grip a Handle centres on itself. It shows while the Handle is hovered,
 focused or dragged.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dots` | `number` | `3` | Number of grip dots. |
-| `dotHoverColor` | `string` | — | Dot colour while not dragged. |
-| `dotActiveColor` | `string` | — | Dot colour while dragged. |
+<Reference name="SplitterThumbProps" />
 
 | Attribute | Values |
 | --- | --- |

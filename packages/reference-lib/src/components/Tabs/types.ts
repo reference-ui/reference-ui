@@ -23,32 +23,64 @@ export type TabsVariantProp = TabsVariant | (string & {})
 
 export interface TabsProps {
   children?: React.ReactNode
-  /** Optional value. Omitted = uncontrolled (self-managed from the first tab). */
+  /**
+   * Controlled selection. Omit it to let Tabs manage its own.
+   * @default the first enabled tab
+   */
   value?: string
-  /** Optional notification; fires on user-driven selection changes in both modes. */
+  /** Called when the user selects a different tab, controlled or not. */
   onChange?: (value: string) => void
+  /**
+   * Which arrow keys move between tabs.
+   * @default 'horizontal'
+   */
   orientation?: TabsOrientation
+  /**
+   * `automatic` selects a tab on focus. `manual` waits for `Enter` or `Space`.
+   * @default 'automatic'
+   */
   activation?: TabsActivation
+  /**
+   * Built-in look, or your own variant name.
+   * @default 'line'
+   */
   variant?: TabsVariantProp
   /**
-   * Keep every panel mounted when inactive (Base UI parity).
-   * Default false (current behavior: inactive panels unmount their
-   * children). True keeps all children alive under native `hidden`.
-   * OR-ed with the per-panel `keepMounted` on `TabPanel`.
+   * Keep every inactive panel's children mounted.
+   * @default false
    */
   keepMounted?: boolean
 }
 
 export type TabsListProps = PrimitiveProps<'div'> & {
+  /**
+   * Overrides the root's variant for the list.
+   * @default the root's `variant`
+   */
   variant?: TabsVariantProp
 }
 
 export type TabProps = Omit<PrimitiveProps<'button'>, 'value'> & {
+  /** Required. Unique within the Tabs; matches a `Tabs.Panel`. */
   value: string
+  /**
+   * Can't be selected, and arrow keys skip it.
+   * @default false
+   */
+  disabled?: boolean
+  /**
+   * Overrides the root's variant for this tab.
+   * @default the root's `variant`
+   */
   variant?: TabsVariantProp
 }
 
 export type TabPanelProps = Omit<PrimitiveProps<'div'>, 'value'> & {
+  /** Required. Matches a `Tabs.Tab`. */
   value: string
+  /**
+   * Keep this panel's children mounted while inactive.
+   * @default false
+   */
   keepMounted?: boolean
 }

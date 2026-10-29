@@ -8,21 +8,23 @@ import type { PrimitiveProps } from '@reference-ui/react'
 import type * as React from 'react'
 
 export type TreeProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
-  /**
-   * Controlled selection. Required standalone (omission throws); optional
-   * inside Combobox, where it displays `combobox.value` when omitted and
-   * the root owns commits either way (TR-CB-04).
-   */
+  /** Required. The selected item; `null` for none. */
   value?: string | null
-  /**
-   * Selection requests. Required standalone (omission throws); forbidden
-   * inside Combobox — a nested onChange diagnoses and is never invoked,
-   * because activation commits only through root onChange (TR-CB-04).
-   */
+  /** Required. Called when an item is selected. */
   onChange?: (value: string | null) => void
+  /** Controlled expanded branches. */
   expanded?: string[]
+  /**
+   * Branches expanded on first render when `expanded` is omitted.
+   * @default []
+   */
   defaultExpanded?: string[]
+  /** Called when a branch opens or closes. */
   onExpandedChange?: (expanded: string[]) => void
+  /**
+   * Disables every item.
+   * @default false
+   */
   disabled?: boolean
 }
 
@@ -57,15 +59,35 @@ export interface TreeItemContextValue {
 
 export type TreeItemProps = PrimitiveProps<'div'> & {
   id?: string
+  /** The item's id, used by `value` and `expanded`. Also set as its DOM `id`. */
   value?: string
+  /**
+   * Disables the item.
+   * @default false
+   */
   disabled?: boolean
+  /**
+   * Treat the item as a branch without a Group child.
+   * @default false
+   */
   isBranch?: boolean
+  /** Text used for typeahead instead of the item's content. */
   textValue?: string
 }
 
 export type TreeGroupProps = PrimitiveProps<'div'>
 
 export type TreeExpanderProps = PrimitiveProps<'button'> & {
+  /**
+   * Replaces the default chevron icon.
+   * @default a chevron icon
+   */
+  children?: React.ReactNode
+  /**
+   * Accessible name. Defaults follow the branch state.
+   * @default 'Expand' or 'Collapse'
+   */
+  'aria-label'?: string
   expanded?: boolean
   onToggle?: () => void
   itemId?: string

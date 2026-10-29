@@ -8,6 +8,7 @@ description: A nested, collapsible list with single selection.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { TreeDemo } from './tree-demo'
 
 # Tree
@@ -126,14 +127,7 @@ the Tree.
 
 The root. Renders a `div` with `role="tree"`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string \| null` | — | Required. The selected item; `null` for none. |
-| `onChange` | `(value: string \| null) => void` | — | Required. Called when an item is selected. |
-| `expanded` | `string[]` | — | Controlled expanded branches. |
-| `defaultExpanded` | `string[]` | `[]` | Branches expanded on first render when `expanded` is omitted. |
-| `onExpandedChange` | `(expanded: string[]) => void` | — | Called when a branch opens or closes. |
-| `disabled` | `boolean` | `false` | Disables every item. |
+<Reference name="TreeProps" />
 
 | Attribute | Values |
 | --- | --- |
@@ -144,12 +138,7 @@ The root. Renders a `div` with `role="tree"`.
 One row. Renders a `div` with `role="treeitem"`. A branch wraps its row
 content in a `[data-slot="row"]` element, followed by its Group.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | — | The item's id, used by `value` and `expanded`. Also set as its DOM `id`. |
-| `disabled` | `boolean` | `false` | Disables the item. |
-| `textValue` | `string` | — | Text used for typeahead instead of the item's content. |
-| `isBranch` | `boolean` | `false` | Treat the item as a branch without a Group child. |
+<Reference name="TreeItemProps" />
 
 | Attribute | Values |
 | --- | --- |
@@ -170,10 +159,7 @@ only while its branch is expanded.
 A button that opens and closes its branch. Clicking it does not select the
 item. It is skipped by Tab, since the arrow keys expand from the item.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `children` | `ReactNode` | chevron | Replaces the default chevron icon. |
-| `aria-label` | `string` | `'Expand'` / `'Collapse'` | Accessible name. Defaults follow the branch state. |
+<Reference name="TreeExpanderProps" />
 
 ## Accessibility
 

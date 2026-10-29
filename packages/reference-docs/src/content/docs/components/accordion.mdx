@@ -8,6 +8,7 @@ description: A stack of collapsible sections where one, or several, can be open 
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { AccordionDemo, AccordionMultipleDemo } from './accordion-demo'
 
 # Accordion
@@ -112,13 +113,7 @@ single mode, that closes the item that was open.
 
 Holds the open items. Takes `div` props and style props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `expansion` | `'single' \| 'multiple'` | `'single'` | One open item at a time, or any number. |
-| `value` | `string \| null` in single mode, `string[]` in multiple mode | — | Controlled open ids. Omit it to let Accordion manage its own. |
-| `onChange` | `(value: AccordionValue) => void` | — | Called when an item opens or closes, controlled or not. |
-| `disabled` | `boolean` | `false` | Disables every item. |
-| `keyboard` | `'headers' \| 'none'` | `'headers'` | Arrow-key movement between triggers. `'none'` turns it off. `'arrows'` is accepted as `'headers'`. |
+<Reference name="AccordionProps" />
 
 `AccordionValue` is `string | string[] | null`. In multiple mode, ids in
 the value follow the order of the items.
@@ -127,11 +122,7 @@ the value follow the order of the items.
 
 One item. Renders no element of its own.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `id` | `string` | — | Required. Unique within the Accordion. |
-| `disabled` | `boolean` | `false` | Disables this item. |
-| `hiddenUntilFound` | `boolean` | `false` | Keep closed content findable by the browser's find-in-page. |
+<Reference name="AccordionItemProps" />
 
 ### Accordion.Trigger and Accordion.Content
 

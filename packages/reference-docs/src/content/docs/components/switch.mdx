@@ -8,6 +8,7 @@ description: An on/off control with a sliding thumb.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { SwitchDemo, SwitchVariantsDemo } from './switch-demo'
 
 # Switch
@@ -111,12 +112,7 @@ it and Switch neither changes nor calls `onChange`.
 Renders a `button` and takes `button` props and style props, except
 `role`, `type`, `aria-checked` and `aria-pressed`, which Switch sets.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `checked` | `boolean` | — | Controlled state. |
-| `defaultChecked` | `boolean` | `false` | Initial state when `checked` is left out. |
-| `onChange` | `(checked: boolean, event: MouseEvent) => void` | — | Called with the new state on each click, Space or Enter. Not called when `checked` changes from outside. |
-| `disabled` | `boolean` | `false` | Stops interaction. |
+<Reference name="SwitchProps" />
 
 | Data attribute | Values |
 | --- | --- |

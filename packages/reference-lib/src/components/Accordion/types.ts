@@ -21,27 +21,43 @@ export type AccordionValue = string | string[] | null
 export interface AccordionProps
   extends Omit<AccordionReferencePartProps<'div'>, 'onChange' | 'value' | 'defaultValue'> {
   children?: React.ReactNode
+  /**
+   * One open item at a time, or any number.
+   * @default 'single'
+   */
   expansion?: AccordionExpansion
-  /** Optional value. Single uses string|null, multiple uses string[]. Omitted = self-managed from the natural zero state (null single, [] multiple). */
+  /**
+   * Controlled open ids: `string | null` in single mode, `string[]` in
+   * multiple mode. Omit it to let Accordion manage its own.
+   */
   value?: AccordionValue
-  /** Optional notification, emitted in both controlled and self-managed modes. */
+  /** Called when an item opens or closes, controlled or not. */
   onChange?: (value: AccordionValue) => void
+  /**
+   * Disables every item.
+   * @default false
+   */
   disabled?: boolean
-  /** 'arrows' is accepted as an alias of 'headers' (base-API compatibility). */
+  /**
+   * Arrow-key movement between triggers. `'none'` turns it off. `'arrows'` is
+   * accepted as `'headers'`.
+   * @default 'headers'
+   */
   keyboard?: AccordionKeyboard
 }
 
 export type AccordionItemProps = {
+  /** Required. Unique within the Accordion. */
   id: string
   children?: React.ReactNode
+  /**
+   * Disables this item.
+   * @default false
+   */
   disabled?: boolean
   /**
-   * AC-FIND: default `hidden` passthrough for the item Collapsible. Closed
-   * item Content stays mounted but hidden (`hidden="until-found"`) so
-   * browser find can match it; a `beforematch` reveal expands the item
-   * through existing policy (single mode swaps the open item, multiple
-   * adds) with enter motion skipped once. Setting this prop IS the opt-in —
-   * there is no separate `findExpansion` switch (see README).
+   * Keep closed content findable by the browser's find-in-page.
+   * @default false
    */
   hiddenUntilFound?: boolean
 }

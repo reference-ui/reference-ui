@@ -8,6 +8,7 @@ description: Shows one panel at a time, chosen from a list of tabs.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { TabsDemo, TabsPillDemo, TabsVerticalDemo } from './tabs-demo'
 
 # Tabs
@@ -144,22 +145,13 @@ as `tabsListRecipe` and `tabsTabRecipe`.
 
 Holds the selected value. Renders only its children.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | first enabled tab | Controlled selection. Omit it to let Tabs manage its own. |
-| `onChange` | `(value: string) => void` | — | Called when the user selects a different tab, controlled or not. |
-| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Which arrow keys move between tabs. |
-| `activation` | `'automatic' \| 'manual'` | `'automatic'` | `automatic` selects a tab on focus. `manual` waits for `Enter` or `Space`. |
-| `variant` | `'line' \| 'pill' \| string` | `'line'` | Built-in look, or your own variant name. |
-| `keepMounted` | `boolean` | `false` | Keep every inactive panel's children mounted. |
+<Reference name="TabsProps" />
 
 ### Tabs.List
 
 The row of tabs. Renders a `div` and takes its props and style props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `variant` | `'line' \| 'pill' \| string` | from `Tabs` | Overrides the root's variant for the list. |
+<Reference name="TabsListProps" />
 
 | Data attribute | Values |
 | --- | --- |
@@ -170,11 +162,7 @@ The row of tabs. Renders a `div` and takes its props and style props.
 
 One tab. Renders a `button` and takes its props and style props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | — | Required. Unique within the Tabs; matches a `Tabs.Panel`. |
-| `disabled` | `boolean` | `false` | Can't be selected, and arrow keys skip it. |
-| `variant` | `'line' \| 'pill' \| string` | from `Tabs` | Overrides the root's variant for this tab. |
+<Reference name="TabProps" />
 
 | Data attribute | Values |
 | --- | --- |
@@ -188,10 +176,7 @@ One tab. Renders a `button` and takes its props and style props.
 The content for one tab. Renders a `div` and takes its props and style
 props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | — | Required. Matches a `Tabs.Tab`. |
-| `keepMounted` | `boolean` | `false` | Keep this panel's children mounted while inactive. |
+<Reference name="TabPanelProps" />
 
 | Data attribute | Values |
 | --- | --- |
