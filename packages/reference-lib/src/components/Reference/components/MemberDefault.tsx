@@ -28,7 +28,7 @@ export function MemberDefault({ defaultValue }: { defaultValue?: string }) {
 
   return (
     <Div display="flex" alignItems="baseline" flexWrap="wrap" gap="2r" color="reference.text">
-      <Div fontFamily="reference.mono" fontSize="4r" fontWeight="550" color="reference.highlight">
+      <Div fontSize="3.5r" color="reference.textLighter">
         Default
       </Div>
       {isCodeLiteralDefault(value) ? (

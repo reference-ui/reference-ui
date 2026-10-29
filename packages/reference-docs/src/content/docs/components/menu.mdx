@@ -208,13 +208,13 @@ Every part takes the props of the element it renders, plus style props.
 Renders a `div` with `role="menu"`. The root menu's open state lives on the
 Popover or Overlay around it.
 
-<Reference name="MenuProps" />
+<Reference name="MenuProps" headingLevel={4} />
 
 ### Menu.Item
 
 Renders a `div` with `role="menuitem"`.
 
-<Reference name="MenuItemProps" />
+<Reference name="MenuItemProps" headingLevel={4} />
 
 `closeOnSelect` is a deprecated alias for `closeOnClick`.
 
@@ -222,26 +222,26 @@ Renders a `div` with `role="menuitem"`.
 
 Renders a `div` with `role="menuitemcheckbox"` and `aria-checked`.
 
-<Reference name="MenuCheckboxItemProps" />
+<Reference name="MenuCheckboxItemProps" headingLevel={4} />
 
 ### Menu.RadioGroup
 
 Renders a `div` with `role="group"`.
 
-<Reference name="MenuRadioGroupProps" />
+<Reference name="MenuRadioGroupProps" headingLevel={4} />
 
 ### Menu.RadioItem
 
 Renders a `div` with `role="menuitemradio"` and `aria-checked`. Use it only
 inside `Menu.RadioGroup`.
 
-<Reference name="MenuRadioItemProps" />
+<Reference name="MenuRadioItemProps" headingLevel={4} />
 
 ### Menu.LinkItem
 
 Renders an `a` with `role="menuitem"`.
 
-<Reference name="MenuLinkItemProps" />
+<Reference name="MenuLinkItemProps" headingLevel={4} />
 
 ### Menu.Separator
 
@@ -253,7 +253,7 @@ The submenu's row in its parent menu. Renders a `div` with
 `role="menuitem"` and `aria-haspopup="menu"`. Use it only inside a nested
 `Menu`.
 
-<Reference name="MenuTriggerProps" />
+<Reference name="MenuTriggerProps" headingLevel={4} />
 
 ### Menu.Content
 
@@ -268,14 +268,14 @@ Returns `{ onKeyDown, onClick }`. Spread both on the `Popover.Trigger` that
 opens a root menu. A keyboard opening focuses the first or last item; a
 pointer opening focuses the menu itself.
 
-<Reference name="MenuTriggerKeys" />
+<Reference name="MenuTriggerKeys" headingLevel={4} />
 
 ### useMenuContextKeys
 
 Returns `{ onContextMenu, onKeyDown }`. Spread both on a context-menu
 target so the next opening focuses the first item.
 
-<Reference name="MenuContextKeys" />
+<Reference name="MenuContextKeys" headingLevel={4} />
 
 ## Accessibility
 

@@ -26,13 +26,7 @@ export function MemberJsDoc({
   if (paramRows.length === 0 && tags.length === 0) return null
 
   return (
-    <Div
-      display="grid"
-      gap="2r"
-      position="relative"
-      paddingTop="calc(0.875rem + 2px)"
-    >
-      <Div mb="2r" height="1r" background="reference.text" width="6r" />
+    <Div display="grid" gap="1.5r">
       {paramRows.map(param => (
         <Div key={`${memberId}-${param.name}`} display="grid" gap="0.5r">
           <Div display="flex" alignItems="center" flexWrap="wrap" gap="2r">
@@ -40,7 +34,7 @@ export function MemberJsDoc({
             <Div
               fontFamily="reference.mono"
               fontSize="4r"
-              fontWeight="550"
+              weight="mono.semibold"
               color="reference.text"
             >
               {param.name}

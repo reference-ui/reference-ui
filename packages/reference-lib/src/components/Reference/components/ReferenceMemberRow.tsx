@@ -19,29 +19,23 @@ export function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument
       css={{
         display: 'grid',
         gridTemplateColumns: 'minmax(0, 1fr)',
-        rowGap: '0.625rem',
+        rowGap: '2r',
         alignItems: 'start',
-        paddingBlock: '1.25rem',
+        paddingBlock: '3r',
         borderBottomWidth: '1px',
         borderBottomStyle: 'solid',
         borderBottomColor: 'reference.border',
       }}
     >
-      <Div display="grid" gap="0.5r">
+      <Div display="flex" alignItems="baseline" flexWrap="wrap" columnGap="3r" rowGap="0.5r" minWidth="0">
         <MemberName name={member.name} />
+        <MemberType typeLabel={member.typeLabel} />
       </Div>
-      <MemberType typeLabel={member.typeLabel} />
 
-      <Div display="grid" gap="3r" minWidth="0">
-        <MemberTypeSummary summary={member.summary.memberTypeSummary} />
-        <MemberDefault defaultValue={member.defaultValue} />
-        <MemberDescription description={member.summary.description} />
-        <MemberJsDoc
-          memberId={member.id}
-          jsDoc={member.jsDoc}
-          params={member.summary.paramDocs}
-        />
-      </Div>
+      <MemberTypeSummary summary={member.summary.memberTypeSummary} />
+      <MemberDefault defaultValue={member.defaultValue} />
+      <MemberDescription description={member.summary.description} />
+      <MemberJsDoc memberId={member.id} jsDoc={member.jsDoc} params={member.summary.paramDocs} />
     </Div>
   )
 }

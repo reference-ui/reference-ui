@@ -3,35 +3,36 @@
  * Takes the document payload and renders its name, kind, and summary.
  */
 import * as React from 'react'
-import { Div, H2, P } from '@reference-ui/react'
+import { Div, P } from '@reference-ui/react'
 import { formatReferenceTypeParameter, type ReferenceDocument } from '@reference-ui/types'
 import { InlineCode } from '../components/shared/InlineCode'
 import { MonoText } from '../components/shared/MonoText'
+import { useReferenceHeading } from './ReferenceHeadingLevel'
 
 type TitleRowProps = {
   name: string
   kindLabel: string
 }
 
-/** Document symbol name and kind label (e.g. type alias, interface). */
+/**
+ * Document symbol name and kind label (e.g. type alias, interface) on one line. The title sits under
+ * the host page's own headings, so it stays small and its size never follows the heading level.
+ */
 function ReferenceDocumentHeaderTitleRow({ name, kindLabel }: TitleRowProps) {
+  const Heading = useReferenceHeading()
   return (
-    <Div display="flex" flexDir="column" gap="2r" flexWrap="wrap" mb="4r">
-      <H2
+    <Div display="flex" alignItems="baseline" flexWrap="wrap" columnGap="3r" rowGap="1r">
+      <Heading
         margin="0"
         color="reference.text"
-        fontFamily="reference.sans"
-        fontWeight="500"
-        fontSize="8r"
+        fontFamily="reference.mono"
+        weight="mono.semibold"
+        fontSize="4r"
+        lineHeight="1.5"
       >
         {name}
-      </H2>
-      <Div
-        fontFamily="reference.mono"
-        color="reference.text"
-        fontSize="4r"
-        fontWeight="550"
-      >
+      </Heading>
+      <Div fontFamily="reference.mono" color="reference.textLighter" fontSize="3.5r">
         {kindLabel}
       </Div>
     </Div>
@@ -45,7 +46,7 @@ type DescriptionProps = {
 /** Optional JSDoc / summary paragraph for the document. */
 function ReferenceDocumentHeaderDescription({ description }: DescriptionProps) {
   return (
-    <P margin="0" color="reference.text" mb="4r">
+    <P margin="0" color="reference.text">
       <InlineCode text={description} />
     </P>
   )
@@ -83,7 +84,7 @@ function ReferenceDocumentHeaderExtendsLine({ extendsNames }: ExtendsLineProps) 
 
 export function ReferenceDocumentHeader({ document }: { document: ReferenceDocument }) {
   return (
-    <Div display="grid" gap="2r">
+    <Div display="grid" gap="1.5r" mb="1r">
       <ReferenceDocumentHeaderTitleRow
         name={document.name}
         kindLabel={document.kindLabel}

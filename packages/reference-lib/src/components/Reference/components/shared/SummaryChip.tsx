@@ -11,7 +11,7 @@ const summaryChipRecipe = recipe({
   className: 'summaryChip',
   base: {
     fontSize: '4r',
-    fontWeight: '550',
+    weight: 'mono.semibold',
     display: 'inline-flex',
     alignItems: 'center',
     minHeight: '1.5rem',

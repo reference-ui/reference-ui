@@ -17,6 +17,7 @@ const REFERENCE_CODE_RESET_CSS: any = {
   padding: '0',
   borderRadius: '0',
   boxShadow: 'none',
+  borderWidth: '0',
 } as unknown as React.ComponentProps<typeof Code>['css']
 
 export function MonoText({ children, color = 'reference.highlight', ...styleProps }: MonoTextProps) {

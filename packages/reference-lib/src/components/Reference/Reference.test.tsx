@@ -2,8 +2,9 @@
  * Proof for the Reference server-rendering contracts. Pins runtime
  * installation with a loading state and no fetch during SSR, explicit
  * failure without a provider, loading/empty distinction, escaped error
- * text, and memberless aliases showing their type definition. Member rows
- * pin the labelled default line, inline code spans, and dropped empty params.
+ * text, memberless aliases showing their type definition, and the title's
+ * heading level. Member rows pin the labelled default line, inline code
+ * spans, and dropped empty params.
  */
 import * as React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -12,6 +13,7 @@ import type { ReferenceDocument as DocumentData } from '@reference-ui/types'
 import { Reference, ReferenceView } from './index'
 import { ReferenceEmptyState, ReferenceErrorState, ReferenceLoadingState } from './ReferenceStatus'
 import { ReferenceDocument } from './document/ReferenceDocument'
+import { ReferenceHeadingLevelProvider } from './document/ReferenceHeadingLevel'
 import { ReferenceMemberRow } from './components/ReferenceMemberRow'
 import { isCodeLiteralDefault } from './components/MemberDefault'
 import { splitInlineCode } from './components/shared/InlineCode'
@@ -195,5 +197,20 @@ describe('Reference member rows', () => {
       />,
     )
     expect(html).not.toContain('param')
+  })
+})
+
+describe('Reference document title heading level', () => {
+  it('renders the title as an h2 by default and at the provided level otherwise', () => {
+    const doc = document('interface', null)
+    const fallback = renderToStaticMarkup(<ReferenceDocument document={doc} />)
+    const nested = renderToStaticMarkup(
+      <ReferenceHeadingLevelProvider value={4}>
+        <ReferenceDocument document={doc} />
+      </ReferenceHeadingLevelProvider>,
+    )
+    expect(fallback).toMatch(/<h2[^>]*>ContractType<\/h2>/)
+    expect(nested).toMatch(/<h4[^>]*>ContractType<\/h4>/)
+    expect(nested).not.toContain('<h2')
   })
 })

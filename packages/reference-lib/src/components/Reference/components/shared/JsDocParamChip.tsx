@@ -23,7 +23,7 @@ export function JsDocParamChip({ tagLabel, className }: JsDocParamChipProps) {
       gap="0.5r"
       fontFamily="reference.mono"
       fontSize="4r"
-      fontWeight="550"
+      weight="mono.semibold"
       width="fit-content"
       maxWidth="100%"
       borderRadius="9999px"

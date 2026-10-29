@@ -13,7 +13,14 @@ import type {
 
 /** Props for the `Reference` documentation component (`name` targets a symbol). */
 export interface ReferenceComponentProps {
+  /** The type's name. */
   name: string
+  /**
+   * Heading level of the document title, so it nests under the page's own headings: pass `4`
+   * when the block sits under an `h3`. Changes the element only; the title's size stays the same.
+   * @default 2
+   */
+  headingLevel?: 2 | 3 | 4 | 5 | 6
 }
 
 export interface ReferenceJsDocTag {

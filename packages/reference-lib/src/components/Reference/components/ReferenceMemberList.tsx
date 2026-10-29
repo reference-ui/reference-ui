@@ -29,7 +29,7 @@ const declaredMemberRowsCss = {
 
 const inheritedSectionCss = {
   display: 'grid',
-  gap: '2r',
+  gap: '1.5r',
 } as ComponentProps<typeof Div>['css']
 
 const inheritedToggleButtonStyle: CSSProperties = {
@@ -107,12 +107,10 @@ function ReferenceInheritedMemberSection({ group }: { group: InheritedMemberGrou
 
   return (
     <Div css={inheritedSectionCss}>
-      <Divider marginBottom="2r" />
+      <Divider marginBottom="1.5r" />
       <Div color="reference.textLighter">
         Inherited from <MonoText ml="1r"> {group.origin.name} ({group.members.length})</MonoText>
       </Div>
-      
-
       <ReferenceMemberRows members={visibleMembers} css={memberRowsCss} />
       {isCollapsible ? (
         <Div color="reference.textLighter" _hover={{ color: 'reference.highlight' }}>
@@ -141,7 +139,7 @@ export function ReferenceMemberList({ members }: { members: ReferenceMemberDocum
   const { declaredMembers, inheritedGroups } = partitionMembers(members)
 
   return (
-    <Div display="grid" gap="4r">
+    <Div display="grid" gap="3r">
       {declaredMembers.length > 0 ? (
         <ReferenceMemberRows members={declaredMembers} css={declaredMemberRowsCss} />
       ) : null}

@@ -1,7 +1,8 @@
 /**
  * Reference: the public API browser. Installs the default
  * `@reference-ui/types` runtime and renders the named export's document
- * through `ReferenceView`; takes the export name only.
+ * through `ReferenceView`; takes the export name and the title's heading
+ * level.
  */
 import * as React from 'react'
 import {
@@ -13,10 +14,10 @@ import { ReferenceView } from './ReferenceView'
 
 const runtime = createDefaultReferenceRuntime()
 
-export function Reference({ name }: ReferenceComponentProps) {
+export function Reference({ name, headingLevel }: ReferenceComponentProps) {
   return (
     <ReferenceRuntimeProvider runtime={runtime}>
-      <ReferenceView name={name} />
+      <ReferenceView name={name} headingLevel={headingLevel} />
     </ReferenceRuntimeProvider>
   )
 }

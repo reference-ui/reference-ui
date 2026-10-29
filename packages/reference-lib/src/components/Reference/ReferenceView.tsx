@@ -9,6 +9,7 @@ import {
   type ReferenceComponentProps,
 } from '@reference-ui/types'
 import { ReferenceDocument } from './document/index'
+import { ReferenceHeadingLevelProvider } from './document/ReferenceHeadingLevel'
 import { ReferenceFrame } from './components/ReferenceFrame'
 import {
   ReferenceEmptyState,
@@ -16,7 +17,7 @@ import {
   ReferenceLoadingState,
 } from './ReferenceStatus'
 
-export function ReferenceView({ name }: ReferenceComponentProps) {
+export function ReferenceView({ name, headingLevel = 2 }: ReferenceComponentProps) {
   const { document, errorMessage, isLoading } = useReferenceDocumentFromContext(name)
 
   if (isLoading) {
@@ -45,7 +46,9 @@ export function ReferenceView({ name }: ReferenceComponentProps) {
 
   return (
     <ReferenceFrame>
-      <ReferenceDocument document={document} />
+      <ReferenceHeadingLevelProvider value={headingLevel}>
+        <ReferenceDocument document={document} />
+      </ReferenceHeadingLevelProvider>
     </ReferenceFrame>
   )
 }
