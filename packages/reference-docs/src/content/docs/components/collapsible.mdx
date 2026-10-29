@@ -8,6 +8,7 @@ description: Shows and hides one region of content behind a trigger button.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { CollapsibleDemo } from './collapsible-demo'
 
 # Collapsible
@@ -97,25 +98,13 @@ it, the Collapsible opens. Cancel the `beforematch` event to keep it closed.
 
 Holds the open state. Renders only its children.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `open` | `boolean` | — | Controlled open state. Omit it to let Collapsible manage its own. |
-| `defaultOpen` | `boolean` | `false` | Open state on first render when `open` is omitted. |
-| `onOpenChange` | `(open: boolean) => void` | — | Called when the trigger toggles. |
-| `onChange` | `(open: boolean) => void` | — | Same as `onOpenChange`. If you pass both, `onChange` runs first. |
-| `disabled` | `boolean` | `false` | Disables the trigger. |
-| `hiddenUntilFound` | `boolean` | `false` | Default for `Content`'s `hiddenUntilFound`. |
-| `id` | `string` | — | The item's id inside an [Accordion](/accordion). |
+<Reference name="CollapsibleProps" />
 
 ### Collapsible.Trigger
 
 The button that toggles the content. Takes `button` props and style props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `icon` | `ReactNode` | chevron | Replaces the indicator icon. |
-| `hideIcon` | `boolean` | `false` | Removes the indicator icon. |
-| `disabled` | `boolean` | from root | Overrides the root's `disabled`. |
+<Reference name="CollapsibleTriggerProps" />
 
 Only a primary-button click toggles. Calling `preventDefault()` in your
 `onClick` stops the toggle.
@@ -130,11 +119,7 @@ Only a primary-button click toggles. Calling `preventDefault()` in your
 The region that opens and closes. Takes `div` props and style props.
 Outside a `Collapsible` it renders nothing.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `hiddenUntilFound` | `boolean` | root's value | Keep closed content mounted as `hidden="until-found"`. Wins over `forceMount`. |
-| `forceMount` | `boolean` | `false` | Keep closed content mounted and interactive, with no collapse motion. |
-| `id` | `string` | generated | Replaces the generated id the trigger points to. |
+<Reference name="CollapsibleContentProps" />
 
 | Data attribute | Values |
 | --- | --- |
