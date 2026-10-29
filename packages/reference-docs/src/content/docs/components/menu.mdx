@@ -8,6 +8,7 @@ description: A pop-up list of commands, toggles and submenus.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { MenuDemo } from './menu-demo'
 
 # Menu
@@ -207,23 +208,13 @@ Every part takes the props of the element it renders, plus style props.
 Renders a `div` with `role="menu"`. The root menu's open state lives on the
 Popover or Overlay around it.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `open` | `boolean` | `false` | Submenu only. Whether the submenu is open. |
-| `onOpen` | `() => void` | — | Submenu only. Called when the submenu asks to open. |
-| `onDismiss` | `() => void` | — | Submenu only. Called when the submenu asks to close. |
+<Reference name="MenuProps" />
 
 ### Menu.Item
 
 Renders a `div` with `role="menuitem"`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `onSelect` | `(event: Event) => void` | — | Called on click, Enter or Space. `preventDefault()` keeps the menu open. |
-| `closeOnClick` | `boolean` | `true` | Close the whole menu after selection. |
-| `disabled` | `boolean` | `false` | Skipped by the keyboard and not selectable. |
-| `selected` | `boolean` | `false` | Highlights the item and sets `data-state="selected"`. |
-| `textValue` | `string` | — | Text used for typeahead. Defaults to the item's text. |
+<Reference name="MenuItemProps" />
 
 `closeOnSelect` is a deprecated alias for `closeOnClick`.
 
@@ -231,48 +222,26 @@ Renders a `div` with `role="menuitem"`.
 
 Renders a `div` with `role="menuitemcheckbox"` and `aria-checked`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `checked` | `boolean \| 'mixed'` | — | Required. The checked state. |
-| `onChange` | `(checked: boolean) => void` | — | Called with the next state. |
-| `onSelect` | `(event: Event) => void` | — | Called before `onChange`. `preventDefault()` cancels it. |
-| `closeOnSelect` | `boolean` | `false` | Close the whole menu after selection. |
-| `disabled` | `boolean` | `false` | Skipped by the keyboard and not selectable. |
-| `textValue` | `string` | — | Text used for typeahead. |
+<Reference name="MenuCheckboxItemProps" />
 
 ### Menu.RadioGroup
 
 Renders a `div` with `role="group"`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string \| null` | — | The checked item's value. |
-| `onChange` | `(value: string) => void` | — | Called with the activated item's value, even if it is already checked. |
+<Reference name="MenuRadioGroupProps" />
 
 ### Menu.RadioItem
 
 Renders a `div` with `role="menuitemradio"` and `aria-checked`. Use it only
 inside `Menu.RadioGroup`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | — | Required. The item's value. |
-| `onSelect` | `(event: Event) => void` | — | Called before the group's `onChange`. `preventDefault()` cancels it. |
-| `closeOnSelect` | `boolean` | `false` | Close the whole menu after selection. |
-| `disabled` | `boolean` | `false` | Skipped by the keyboard and not selectable. |
-| `textValue` | `string` | — | Text used for typeahead. |
+<Reference name="MenuRadioItemProps" />
 
 ### Menu.LinkItem
 
 Renders an `a` with `role="menuitem"`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `href` | `string` | — | Required. The link target. |
-| `onSelect` | `(event: Event) => void` | — | Called on a plain click. `preventDefault()` cancels navigation and closing. |
-| `closeOnSelect` | `boolean` | `true` | Close the whole menu after selection. |
-| `disabled` | `boolean` | `false` | Not navigable, skipped by the keyboard. |
-| `textValue` | `string` | — | Text used for typeahead. |
+<Reference name="MenuLinkItemProps" />
 
 ### Menu.Separator
 
@@ -284,10 +253,7 @@ The submenu's row in its parent menu. Renders a `div` with
 `role="menuitem"` and `aria-haspopup="menu"`. Use it only inside a nested
 `Menu`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | The submenu cannot open. |
-| `textValue` | `string` | — | Text used for typeahead. |
+<Reference name="MenuTriggerProps" />
 
 ### Menu.Content
 
@@ -302,10 +268,14 @@ Returns `{ onKeyDown, onClick }`. Spread both on the `Popover.Trigger` that
 opens a root menu. A keyboard opening focuses the first or last item; a
 pointer opening focuses the menu itself.
 
+<Reference name="MenuTriggerKeys" />
+
 ### useMenuContextKeys
 
 Returns `{ onContextMenu, onKeyDown }`. Spread both on a context-menu
 target so the next opening focuses the first item.
+
+<Reference name="MenuContextKeys" />
 
 ## Accessibility
 

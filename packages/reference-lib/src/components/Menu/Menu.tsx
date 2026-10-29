@@ -64,6 +64,8 @@ export type {
   MenuRadioItemProps,
   MenuLinkItemProps,
   MenuSeparatorProps,
+  MenuTriggerKeys,
+  MenuContextKeys,
 } from './types'
 export { useMenuTriggerKeys } from './hooks/use-menu-trigger-keys'
 export { useMenuContextKeys } from './hooks/use-menu-context-keys'

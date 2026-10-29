@@ -10,20 +10,42 @@ import type { PopoverContentProps, PopoverTriggerProps } from '../Popover'
 export type MenubarValue = string | null
 
 export type MenubarProps = Omit<PrimitiveProps<'div'>, 'onChange'> & {
-  /** Open menu. `null` means none open. Required: Menubar is controlled-only. */
+  /** Required. The open menu's value, or `null` when none is open. */
   value: MenubarValue
-  /** Fires on user-driven open-menu changes. Never redundant. Required. */
+  /** Required. Called when the user opens, switches or closes a menu. */
   onChange: (value: MenubarValue) => void
-  /** Wrap trigger arrows and menu switching at the edges. Default false. */
+  /**
+   * Wrap arrow-key movement and menu switching at the ends of the bar.
+   * @default false
+   */
   loop?: boolean
 }
 
 export type MenubarMenuProps = {
-  /** Identity within the bar. Defaults to a stable generated id. */
+  /**
+   * The menu's value in the bar. Must be unique.
+   * @default generated
+   */
   value?: string
   children?: React.ReactNode
 }
 
-export type MenubarTriggerProps = PopoverTriggerProps
+export type MenubarTriggerProps = PopoverTriggerProps & {
+  /**
+   * The menu cannot open, and the arrow keys skip it.
+   * @default false
+   */
+  disabled?: boolean
+  /**
+   * The trigger's button style.
+   * @default 'ghost'
+   */
+  variant?: PopoverTriggerProps['variant']
+  /**
+   * Announced popup type.
+   * @default 'menu'
+   */
+  'aria-haspopup'?: PopoverTriggerProps['aria-haspopup']
+}
 
 export type MenubarContentProps = PopoverContentProps

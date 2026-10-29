@@ -8,6 +8,7 @@ description: A text input or button with a pop-up list of options.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { ComboboxDemo, ComboboxSelectDemo } from './combobox-demo'
 
 # Combobox
@@ -179,27 +180,7 @@ Holds the value, the input text and the open state. Renders only its
 children. `value` and `onChange` are required: Combobox is always
 controlled.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string \| null` | — | Required. The selected option's value. |
-| `onChange` | `(value: string \| null) => void` | — | Required. Called with each new selection. |
-| `inputValue` | `string` | — | Controlled input text. |
-| `defaultInputValue` | `string` | — | Input text on first render when `inputValue` is omitted. |
-| `onInputValueChange` | `(value: string) => void` | — | Called when the input text changes. |
-| `onInputChange` | `(value: string) => void` | — | Same as `onInputValueChange`. Used only when that prop is omitted. |
-| `open` | `boolean` | — | Controlled open state. Omit it to let Combobox manage its own. |
-| `defaultOpen` | `boolean` | `false` | Open state on first render when `open` is omitted. |
-| `onOpenChange` | `(open: boolean) => void` | — | Called on every open and close request. |
-| `onOpen` | `() => void` | — | Called when the list opens. |
-| `onDismiss` | `() => void` | — | Called when the list closes. |
-| `onEscape` | `(event: KeyboardEvent) => void` | — | Called on Escape while open. `preventDefault()` keeps the list open and the text as it is. |
-| `autocomplete` | `'none' \| 'inline' \| 'list' \| 'both'` | `'list'` | Whether the input completes the active option's label inline. |
-| `allowCustomValue` | `boolean` | `false` | Commit text that matches no option as the value. |
-| `closeOnBlur` | `boolean` | `true` | Close and resolve the text when focus leaves. With `false`, the list and the typed text stay as they are when focus leaves. |
-| `disabled` | `boolean` | `false` | Disables the input or trigger. |
-| `loading` | `boolean` | `false` | Marks the list `aria-busy`. |
-| `emptyMessage` | `string` | `'No options available'` | Announced when the list is empty and the input is empty. |
-| `noResultsMessage` | `string` | `'No results found'` | Announced when the list is empty and the input has text. |
+<Reference name="ComboboxProps" />
 
 When you own `inputValue`, set the text yourself on selection, as in the
 first example. Otherwise Combobox sets it to the option's label.
@@ -226,11 +207,7 @@ props of [`Overlay.Content`](/overlay). It sits below the input, aligned to
 its start edge, and is at least as wide as the input. It has a panel style by
 default; style props you pass override it.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `placement` | placement | `'bottom-start'` | Side and alignment against the input. |
-| `id` | `string` | generated | Replaces the generated id the input points to. |
-| `virtualFocus` | grid adapter | — | Navigation data for a custom grid of `Combobox.VirtualItem` cells. |
+<Reference name="ComboboxPopoverProps" />
 
 ### Combobox.Option
 

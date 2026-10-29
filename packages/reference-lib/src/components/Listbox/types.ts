@@ -37,21 +37,46 @@ export type ListboxBaseProps = Omit<
   ReferencePartProps<'div'>,
   'onChange' | 'value' | 'defaultValue'
 > & {
+  /**
+   * Layout direction and arrow-key axis.
+   * @default 'vertical'
+   */
   orientation?: ListboxOrientation
+  /**
+   * Disables every option.
+   * @default false
+   */
   disabled?: boolean
 }
 
 export type ListboxSingleProps<TValue extends string = string> = ListboxBaseProps & {
+  /**
+   * Selection mode.
+   * @default 'single'
+   */
   selection?: 'single'
+  /**
+   * The selected value.
+   * @default null
+   */
   value?: TValue | null
+  /** Called with the next selection. */
   onChange?: (value: TValue | null) => void
+  /** Adapter for a virtualized list. */
   virtual?: ListboxVirtualAdapter<TValue>
 }
 
 export type ListboxMultipleProps<TValue extends string = string> = ListboxBaseProps & {
+  /** Selection mode. */
   selection: 'multiple'
+  /**
+   * The selected values.
+   * @default []
+   */
   value?: TValue[]
+  /** Called with the next selection. */
   onChange?: (value: TValue[]) => void
+  /** Adapter for a virtualized list. */
   virtual?: ListboxVirtualAdapter<TValue>
 }
 
@@ -61,9 +86,16 @@ export type ListboxProps<TValue extends string = string> =
 
 export type ListboxOptionProps<TValue extends string = string> =
   ReferencePartProps<'div'> & {
+    /** Required. The option's value. */
     value: TValue
+    /**
+     * Skipped by the keyboard and not selectable.
+     * @default false
+     */
     disabled?: boolean
+    /** Text used for typeahead. Defaults to the children when they are a string, else `value`. */
     textValue?: string
+    /** The option's position in `virtual.items`. Virtualized lists only. */
     index?: number
   }
 
@@ -100,6 +132,7 @@ export interface ListboxContextValue {
 }
 
 export type ListboxSectionProps = PrimitiveProps<'div'> & {
+  /** The group's heading. */
   title?: React.ReactNode
 }
 

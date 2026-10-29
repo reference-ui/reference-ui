@@ -8,6 +8,7 @@ description: A row of menus that stays on screen, like an application's File and
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { MenubarDemo } from './menubar-demo'
 
 # Menubar
@@ -107,30 +108,20 @@ to wrap around.
 
 Renders a `div` with `role="menubar"`. Takes `div` props and style props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string \| null` | — | Required. The open menu's value, or `null` when none is open. |
-| `onChange` | `(value: string \| null) => void` | — | Required. Called when the user opens, switches or closes a menu. |
-| `loop` | `boolean` | `false` | Wrap arrow-key movement and menu switching at the ends of the bar. |
+<Reference name="MenubarProps" />
 
 ### Menubar.Menu
 
 Binds one trigger to one content panel. Renders no element.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | generated | The menu's value in the bar. Must be unique. |
+<Reference name="MenubarMenuProps" />
 
 ### Menubar.Trigger
 
 Renders a `Popover.Trigger` button with `role="menuitem"`. Takes the props
 of [`Popover.Trigger`](/popover).
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | The menu cannot open, and the arrow keys skip it. |
-| `variant` | button variant | `'ghost'` | The trigger's button style. |
-| `aria-haspopup` | `string` | `'menu'` | Announced popup type. |
+<Reference name="MenubarTriggerProps" />
 
 It sets `data-state` to `open` or `closed`.
 

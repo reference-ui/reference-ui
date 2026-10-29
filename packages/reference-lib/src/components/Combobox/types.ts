@@ -13,77 +13,70 @@ import type { ComboboxAutocomplete, ComboboxGridAdapter } from './combobox-conte
 
 export interface ComboboxProps {
   children?: React.ReactNode
-  /** Required controlled selection (`null` is the empty value). There is no
-   * `defaultValue` and no uncontrolled branch. */
+  /** Required. The selected option's value. `null` is the empty value. */
   value: string | null
-  /** Required commit callback — every selection request emits here and the
-   * parent owns the value (no silent-frozen controlled). */
+  /** Required. Called with each new selection. */
   onChange: (value: string | null) => void
+  /** Controlled input text. */
   inputValue?: string
+  /** Input text on first render when `inputValue` is omitted. */
   defaultInputValue?: string
+  /** Called when the input text changes. */
   onInputValueChange?: (value: string) => void
+  /** Same as `onInputValueChange`. Used only when that prop is omitted. */
   onInputChange?: (value: string) => void
+  /** Controlled open state. Omit it to let Combobox manage its own. */
   open?: boolean
+  /**
+   * Open state on first render when `open` is omitted.
+   * @default false
+   */
   defaultOpen?: boolean
+  /** Called when the list opens. */
   onOpen?: () => void
+  /** Called when the list closes. */
   onDismiss?: () => void
+  /** Called on every open and close request. */
   onOpenChange?: (open: boolean) => void
+  /**
+   * Disables the input or trigger.
+   * @default false
+   */
   disabled?: boolean
   /**
-   * Blur policy (#3). `true` (default) reverts unmatched text (editable)
-   * and dismisses when focus leaves the combobox; `false` preserves
-   * open/text state on blur while Escape and explicit dismissal still close.
+   * Close and resolve the text when focus leaves. With `false`, the list and
+   * the typed text stay as they are when focus leaves.
+   * @default true
    */
   closeOnBlur?: boolean
   /**
-   * Inline-completion policy (#1, default `"list"`). Mirrors
-   * `aria-autocomplete` on the Input; `"inline"` and `"both"` complete
-   * the active option's label inline with suffix-only selection,
-   * restoring the typed prefix when active clears. Never emits text
-   * callbacks for preview navigation. Inert for select-only Triggers
-   * (no text).
+   * Whether the input completes the active option's label inline.
+   * @default 'list'
    */
   autocomplete?: ComboboxAutocomplete
   /**
-   * Custom-value policy (#2, Ark-exact name, default `false`).
-   * `true` commits exact unmatched text as the value on Enter, Tab, and
-   * blur/outside-press (empty text maps to `null`); the string is never
-   * normalized. `false` restores the committed text on those paths with
-   * no value callback. An active option always wins over custom text.
-   * Escape always reverts, regardless of this policy. Inert for
-   * select-only Triggers (no text).
+   * Commit text that matches no option as the value. It applies on Enter, Tab
+   * and blur, and empty text becomes `null`.
+   * @default false
    */
   allowCustomValue?: boolean
-  /**
-   * Granular cancelable Escape hook (#7, Overlay #3 vocabulary). Fires
-   * with the real native KeyboardEvent before revert and dismiss;
-   * `preventDefault()` stops revert, value callbacks, and dismissal
-   * while `open` and descendant DOM stay controlled. Never fires while
-   * closed or during IME composition. Combobox owns the path and does
-   * not forward to the Overlay layer (no double-fire).
-   */
+  /** Called on Escape while open. `preventDefault()` keeps the list open and the text as it is. */
   onEscape?: (event: KeyboardEvent) => void
   /**
-   * Async busy state (FEATURES #4, default `false`). `true` marks the
-   * popup collection `aria-busy` (the nested listbox/tree node, or the
-   * grid popover itself) until the collection resolves. Never renders a
-   * private live region — status prose routes through the shared
-   * `announce()` below.
+   * Marks the list `aria-busy`.
+   * @default false
    */
   loading?: boolean
   /**
-   * Empty-collection status prose (FEATURES #4). Announced once via the
-   * shared `announce()` when the open popover's collection is logically
-   * empty and the input holds no text — unless an Empty node is authored
-   * (its native live region speaks for itself) or `loading` is true.
+   * Announced when the list is empty and the input is empty. Not announced
+   * while `loading` is true.
+   * @default 'No options available'
    */
   emptyMessage?: string
   /**
-   * No-results status prose (FEATURES #4). Announced once via the shared
-   * `announce()` when the open popover's collection is logically empty
-   * and the input holds unmatched text — unless an Empty node is
-   * authored (its native live region speaks for itself) or `loading` is
-   * true.
+   * Announced when the list is empty and the input has text. Not announced
+   * while `loading` is true.
+   * @default 'No results found'
    */
   noResultsMessage?: string
 }
@@ -107,11 +100,16 @@ export type ComboboxTriggerProps = PrimitiveProps<'button'>
 
 export type ComboboxPopoverProps = OverlayContentProps & {
   /**
-   * Custom grid adapter (#5). Metadata-only at this layer: the root
-   * reads it from authored children (see `authored.ts`), validates
-   * single-authority, and drives navigation/mount timing. Never reaches
-   * the DOM.
+   * Side and alignment against the input.
+   * @default 'bottom-start'
    */
+  placement?: OverlayContentProps['placement']
+  /**
+   * Replaces the generated id the input points to.
+   * @default generated
+   */
+  id?: string
+  /** Navigation data for a custom grid of `Combobox.VirtualItem` cells. */
   virtualFocus?: ComboboxGridAdapter
 }
 

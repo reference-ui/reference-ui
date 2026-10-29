@@ -8,11 +8,12 @@
 import * as React from 'react'
 import { useOverlay } from '../../Overlay'
 import { setMenuEntryIntent } from '../levels/entry'
+import type { MenuTriggerKeys } from '../types'
 
 // Keyboard-entry wiring for a Popover.Trigger that opens a root Menu.
 // Spread the result onto the trigger; chain consumer handlers first so a
 // consumer preventDefault still wins.
-export function useMenuTriggerKeys() {
+export function useMenuTriggerKeys(): MenuTriggerKeys {
   const overlay = useOverlay()
   const isOpen = overlay?.isOpen ?? false
 

@@ -8,6 +8,7 @@ description: A list of options on the page that the user can pick one or more of
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { ListboxDemo, ListboxMultipleDemo } from './listbox-demo'
 
 # Listbox
@@ -160,14 +161,13 @@ and typeahead run over all items.
 
 Renders a `div` with `role="listbox"`. Takes `div` props and style props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `selection` | `'single' \| 'multiple'` | `'single'` | Selection mode. |
-| `value` | `string \| null`, or `string[]` when multiple | `null`, or `[]` | The selected value. |
-| `onChange` | `(value: string \| null) => void`, or `(value: string[]) => void` when multiple | — | Called with the next selection. |
-| `orientation` | `'vertical' \| 'horizontal'` | `'vertical'` | Layout direction and arrow-key axis. |
-| `disabled` | `boolean` | `false` | Disables every option. |
-| `virtual` | `{ items, scrollToIndex }` | — | Adapter for a virtualized list. |
+With single selection, the default:
+
+<Reference name="ListboxSingleProps" />
+
+With `selection="multiple"`:
+
+<Reference name="ListboxMultipleProps" />
 
 Option values narrow to their literal types, so `onChange` is typed by the
 values you pass. A `value` that matches no option selects nothing.
@@ -176,12 +176,7 @@ values you pass. A `value` that matches no option selects nothing.
 
 Renders a `div` with `role="option"` and `aria-selected`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | — | Required. The option's value. |
-| `disabled` | `boolean` | `false` | Skipped by the keyboard and not selectable. |
-| `textValue` | `string` | — | Text used for typeahead. Defaults to the children when they are a string, else `value`. |
-| `index` | `number` | — | The option's position in `virtual.items`. Virtualized lists only. |
+<Reference name="ListboxOptionProps" />
 
 | Data attribute | Values |
 | --- | --- |
@@ -193,9 +188,7 @@ Renders a `div` with `role="option"` and `aria-selected`.
 
 Renders a `div` with `role="group"`, labelled by its title.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `title` | `ReactNode` | — | The group's heading. |
+<Reference name="ListboxSectionProps" />
 
 ### Listbox.Header
 
