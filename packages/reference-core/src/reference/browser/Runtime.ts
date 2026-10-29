@@ -19,6 +19,7 @@ import type {
 import { createTastyBrowserRuntime } from '@reference-ui/rust/tasty/browser'
 import {
   createReferenceDocument,
+  dropSystemStyleProps,
   loadUnionAliasMembers,
   resolveReferenceTypeSourceSymbol,
 } from '../browser-model/index.ts'
@@ -62,10 +63,11 @@ async function loadReferenceRuntimeData(
   const projection = await readReferenceDisplayResult(api, symbol)
   const hideProjection = shouldHideAliasProjection(symbol)
   const unionMerge = hideProjection ? undefined : await loadUnionAliasMembers(api, symbol, cutNotices)
-  const members = hideProjection ? [] : unionMerge?.members ?? projection.members
+  const projectedMembers = hideProjection ? [] : unionMerge?.members ?? projection.members
   for (const notice of projection.notices) cutNotices.add(notice)
   const extendsChain = symbol.getKind() === 'interface' ? await api.graph.loadExtendsChain(symbol) : []
   const memberOrigins = unionMerge?.origins ?? await loadReferenceMemberOrigins(api, symbol, extendsChain, cutNotices)
+  const members = await dropSystemStyleProps(api, symbol, projectedMembers, memberOrigins, cutNotices)
   const relatedSymbols = await loadReferenceRelatedSymbols(api, symbol)
 
   return {

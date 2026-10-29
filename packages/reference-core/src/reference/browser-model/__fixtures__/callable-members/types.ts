@@ -1,3 +1,7 @@
+// Fixture for the callable member cases: a notifier interface with a call signature, a method, an
+// overloaded method and a function-typed property. It takes no input and emits the interface the
+// callable-members suite loads by name. Its options type documents each parameter for the param rows.
+
 /** Options a notification accepts. */
 export interface NotifyOptions {
   duration?: number

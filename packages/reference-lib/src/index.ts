@@ -22,7 +22,7 @@ initFocusVisible()
 // and the tsconfig exclude is dropped.
 export { Reference, ReferenceView, referenceBrowserTokenConfig } from './components/Reference/index'
 export type { ReferenceComponentProps } from '@reference-ui/types'
-export type { MaterialSymbolIconProps } from './core/icon/types'
+export type { MaterialSymbolIconProps } from '@reference-ui/icons'
 export * from './components/Slot/index'
 export * from './components/Presence/index'
 export * from './motion/index'

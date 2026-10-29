@@ -1,6 +1,7 @@
 // Callable member cases: they compile a vendored interface with a call signature, a method,
 // an overloaded method and a function-typed property, and assert that each shows the same
-// signature text and param rows in the API table.
+// signature text and param rows in the API table. Each case reads the document the Reference runtime
+// builds from the fixture, so the rows are what a reader sees.
 
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -46,7 +47,7 @@ function signature(m: ReferenceMemberDocument): string | undefined {
   return summary?.kind === 'callSignature' ? summary.text : undefined
 }
 
-function paramRows(m: ReferenceMemberDocument): Array<[string, boolean, string | undefined]> {
+function paramRows(m: ReferenceMemberDocument): Array<[string, boolean | undefined, string | undefined]> {
   return m.summary.paramDocs.map((p) => [p.name, p.optional, p.description])
 }
 
