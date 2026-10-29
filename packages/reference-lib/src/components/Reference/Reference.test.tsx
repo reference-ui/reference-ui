@@ -76,6 +76,18 @@ describe('Reference server rendering contracts', () => {
     expect(html).not.toContain('No members were emitted')
   })
 
+  it('a union alias whose branches merged into members renders the member list, not its definition', () => {
+    const merged = {
+      ...document('typeAlias', 'BranchA | BranchB'),
+      members: [member({ name: 'mode', optional: false, typeLabel: 'Union' }), member({ id: 'm2', name: 'onPick' })],
+    }
+    const html = renderToStaticMarkup(<ReferenceDocument document={merged} />)
+    expect(html).toContain('mode')
+    expect(html).toContain('onPick')
+    expect(html).not.toContain('BranchA | BranchB')
+    expect(html).not.toContain('Definition')
+  })
+
   it('memberless interfaces show an explicit empty member notice rather than the alias definition', () => {
     const html = renderToStaticMarkup(<ReferenceDocument document={document('interface', 'ignored-definition')} />)
     expect(html).toContain('ContractType')

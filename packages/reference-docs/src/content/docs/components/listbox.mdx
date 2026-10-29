@@ -161,13 +161,11 @@ and typeahead run over all items.
 
 Renders a `div` with `role="listbox"`. Takes `div` props and style props.
 
-With single selection, the default:
+<Reference name="ListboxProps" />
 
-<Reference name="ListboxSingleProps" />
-
-With `selection="multiple"`:
-
-<Reference name="ListboxMultipleProps" />
+`selection` picks the mode. With `selection="multiple"`, `value` is an array
+and `onChange` receives the next array; with the default `'single'`, both use
+one value or `null`.
 
 Option values narrow to their literal types, so `onChange` is typed by the
 values you pass. A `value` that matches no option selects nothing.

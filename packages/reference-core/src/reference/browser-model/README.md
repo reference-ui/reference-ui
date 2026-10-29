@@ -1,3 +1,3 @@
 # Reference document model
 
-UI-free builders shaping tasty symbols into serializable API documents. Documents resolve definition types, normalize member ownership across extends chains, and link related symbols; member rows prefer inline-union value-set labels over declared types. The runtime and the Node API consume the model; presentation reads its plain values.
+UI-free builders shaping tasty symbols into serializable API documents. Documents resolve definition types, normalize member ownership across extends chains, and link related symbols; member rows prefer inline-union value-set labels over declared types. The runtime and the Node API consume the model; presentation reads its plain values. A union alias whose branches are all object types gets one merged member list (`unionMembers.ts`): each member once in first-seen order, branch types unioned, docs from the first branch that has them, optional when a branch lacks it.

@@ -4,3 +4,5 @@
 
 export { createReferenceDocument } from './document.ts'
 export { createReferenceJsDoc, createReferenceType, createReferenceTypeParameter, formatReferenceTypeParameter } from './type.ts'
+export { loadUnionAliasMembers, resolveReferenceTypeSourceSymbol } from './unionMembers.ts'
+export type { UnionMemberMerge } from './unionMembers.ts'

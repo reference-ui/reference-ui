@@ -169,11 +169,9 @@ everywhere:
 
 Contains the parts. Renders a `div` and takes its props and style props.
 
-<Reference name="CalendarSharedProps" />
+<Reference name="CalendarProps" />
 
-Three more props depend on `mode`. `mode` picks what a selection chooses and
-defaults to `'day'`. `value` is required: it is the controlled value, and
-`null` is empty. `onChange` is called with the picked value.
+`value` and `onChange` follow `mode`:
 
 | Mode | `value` type | Format |
 | --- | --- | --- |

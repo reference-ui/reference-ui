@@ -17,7 +17,11 @@ import type {
   TastySymbol,
 } from '@reference-ui/rust/tasty'
 import { createTastyBrowserRuntime } from '@reference-ui/rust/tasty/browser'
-import { createReferenceDocument } from '../browser-model/index.ts'
+import {
+  createReferenceDocument,
+  loadUnionAliasMembers,
+  resolveReferenceTypeSourceSymbol,
+} from '../browser-model/index.ts'
 import {
   getReferenceUiTastyBrowserApiOptions,
   projectionBudgetWarning,
@@ -57,10 +61,11 @@ async function loadReferenceRuntimeData(
   const cutNotices = new Set<string>()
   const projection = await readReferenceDisplayResult(api, symbol)
   const hideProjection = shouldHideAliasProjection(symbol)
-  const members = hideProjection ? [] : projection.members
+  const unionMerge = hideProjection ? undefined : await loadUnionAliasMembers(api, symbol, cutNotices)
+  const members = hideProjection ? [] : unionMerge?.members ?? projection.members
   for (const notice of projection.notices) cutNotices.add(notice)
   const extendsChain = symbol.getKind() === 'interface' ? await api.graph.loadExtendsChain(symbol) : []
-  const memberOrigins = await loadReferenceMemberOrigins(api, symbol, extendsChain, cutNotices)
+  const memberOrigins = unionMerge?.origins ?? await loadReferenceMemberOrigins(api, symbol, extendsChain, cutNotices)
   const relatedSymbols = await loadReferenceRelatedSymbols(api, symbol)
 
   return {
@@ -224,26 +229,6 @@ async function setReferenceProjectedMemberOrigins(
   for (const member of await readDisplayMembers(api, sourceSymbol, walk.cutNotices)) {
     walk.origins.set(member.getId(), originSymbol)
   }
-}
-
-async function resolveReferenceTypeSourceSymbol(
-  api: TastyApi,
-  reference: RawTastyTypeReference,
-): Promise<TastySymbol | undefined> {
-  if (api.hasManifestSymbol(reference.id)) {
-    return api.loadSymbolById(reference.id)
-  }
-
-  try {
-    const scoped = await api.findSymbolByScopedName(reference.library, reference.name)
-    if (scoped) return scoped
-  } catch {
-    // The emitted library can point at a re-exporting module; try a unique bare match.
-  }
-
-  const matches = await api.findSymbolsByName(reference.name)
-  if (matches.length === 1) return api.loadSymbolById(matches[0]!.id)
-  return undefined
 }
 
 function isRawTastyIntersection(

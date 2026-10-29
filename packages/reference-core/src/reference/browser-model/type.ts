@@ -153,10 +153,10 @@ const referenceTypeFormatters: {
   intrinsic: (type) => type.name,
   literal: (type) => formatReferenceLiteral(type.value),
   object: (type) => `{ ${type.members.map(formatReferenceInlineMember).join('; ')} }`,
-  union: (type) => type.types.map(formatReferenceType).join(' | '),
+  union: (type) => type.types.map(formatReferenceTypeOperand).join(' | '),
   array: (type) => `${formatReferenceType(type.element)}[]`,
   tuple: (type) => `[${type.elements.map(formatReferenceTupleElement).join(', ')}]`,
-  intersection: (type) => type.types.map(formatReferenceType).join(' & '),
+  intersection: (type) => type.types.map(formatReferenceTypeOperand).join(' & '),
   indexed_access: (type) => `${formatReferenceType(type.object)}[${formatReferenceType(type.index)}]`,
   function: (type) => `(${type.params.map(formatReferenceCallableParameter).join(', ')}) => ${formatReferenceType(type.returnType)}`,
   constructor: (type) => {
@@ -177,6 +177,12 @@ const referenceTypeFormatters: {
   },
   template_literal: (type) => `\`${type.parts.map(formatReferenceTemplateLiteralPart).join('')}\``,
   raw: (type) => type.summary,
+}
+
+/** A union or intersection member: function-like types need parentheses so `|` does not read into the return type. */
+function formatReferenceTypeOperand(type: ReferenceType): string {
+  const text = formatReferenceType(type)
+  return type.kind === 'function' || type.kind === 'constructor' || type.kind === 'conditional' ? `(${text})` : text
 }
 
 function mapReferenceTypes(
