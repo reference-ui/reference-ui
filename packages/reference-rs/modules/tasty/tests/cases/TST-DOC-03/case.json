@@ -1,0 +1,1 @@
+{"id": "TST-DOC-03", "name": "jsdoc: a trailing // comment on one member never leaks into the next member's JSDoc"}

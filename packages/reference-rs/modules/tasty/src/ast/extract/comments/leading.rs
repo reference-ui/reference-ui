@@ -1,5 +1,6 @@
 //! Leading comment extraction and normalization for JSDoc and block comments.
-//! Returns the contiguous block before a span with normalized text.
+//! Returns the contiguous block before a span with normalized text. A comment that trails code on
+//! its own line (`a: string // note`) documents that line, so it is never part of the next node's block.
 
 use oxc_ast::ast::Comment;
 use oxc_span::Span;
@@ -19,7 +20,7 @@ pub(crate) fn leading_comment_for_span(
     let node_start = node_span.start;
     let mut candidates: Vec<&Comment> = comments
         .iter()
-        .filter(|c| c.span.end <= node_start)
+        .filter(|c| c.span.end <= node_start && !is_trailing_comment(source, c))
         .collect();
     if candidates.is_empty() {
         return None;
@@ -35,6 +36,15 @@ pub(crate) fn leading_comment_for_span(
         collect_leading_comment_block(source, candidates.as_slice(), first);
     let raw = source.get(block_start..first.span.end as usize)?;
     build_leading_comment(raw, is_jsdoc)
+}
+
+/// True when code precedes the comment on its line and nothing follows it there.
+fn is_trailing_comment(source: &str, comment: &Comment) -> bool {
+    let before = source.get(..comment.span.start as usize).unwrap_or("");
+    let after = source.get(comment.span.end as usize..).unwrap_or("");
+    let line_prefix = before.rsplit('\n').next().unwrap_or("");
+    let line_suffix = after.split('\n').next().unwrap_or("");
+    !line_prefix.trim().is_empty() && line_suffix.trim().is_empty()
 }
 
 fn leading_block_is_usable(
@@ -233,6 +243,16 @@ mod tests {
             "block includes JSDoc; expected jsdoc metadata, got {:?}",
             meta.jsdoc
         );
+    }
+
+    #[test]
+    fn trailing_line_comment_is_not_part_of_next_leading_block() {
+        let source = "interface W {\n  a: string // note\n}\n/** doc */\ninterface X {}\n";
+        let meta = metadata_for_nth_interface(source, 1);
+        assert_eq!(meta.description.as_deref(), Some("doc"));
+        let source = "const a = 1 // trailing\n/** doc */\ninterface X {}\n";
+        let meta = metadata_for_nth_interface(source, 0);
+        assert_eq!(meta.description.as_deref(), Some("doc"));
     }
 
     #[test]
