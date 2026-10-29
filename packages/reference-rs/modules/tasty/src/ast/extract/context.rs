@@ -17,19 +17,6 @@ pub(crate) struct ExtractionContext<'a> {
     pub(crate) library: &'a str,
 }
 
-impl<'a> ExtractionContext<'a> {
-    /// Type literals have no comment attachment in this path; reuse bindings and module ids.
-    pub(crate) fn with_empty_comments(&self) -> ExtractionContext<'a> {
-        ExtractionContext {
-            source: self.source,
-            comments: &[],
-            import_bindings: self.import_bindings,
-            module_specifier: self.module_specifier,
-            library: self.library,
-        }
-    }
-}
-
 /// Workspace facts one statement walk reads for its file: the import resolver, the workspace file ids, and the
 /// scanned file with its comments. Statement collectors take this one handle instead of loose parameters.
 pub(crate) struct StatementScope<'a> {

@@ -27,8 +27,8 @@ impl<'a> LoweringContext<'a> {
         TypeRef::Object {
             members: members_from_signatures_in(
                 type_literal.members.as_slice(),
-                &self.ctx.with_empty_comments(),
-                None,
+                self.ctx,
+                Some(type_literal.span.start),
                 &self.bound,
             ),
         }
