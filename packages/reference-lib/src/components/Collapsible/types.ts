@@ -42,7 +42,7 @@ export type CollapsibleTriggerProps = PrimitiveProps<'button'> & {
   hideIcon?: boolean
   /**
    * Replaces the indicator icon.
-   * @default chevron
+   * @default a chevron icon
    */
   icon?: React.ReactNode
   /**
