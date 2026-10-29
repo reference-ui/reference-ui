@@ -7,6 +7,7 @@ slug: use-measure
 description: Read an element's size once its layout settles.
 ---
 
+import { Reference } from '@reference-ui/lib'
 import { Preview } from '../../../mdx/Preview'
 import { UseMeasureDemo } from './use-measure-demo'
 
@@ -88,19 +89,11 @@ function useMeasure<E extends HTMLElement = HTMLElement>(
 
 ### Options
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `paused` | `boolean` | `false` | Stop observing. The last `rect` is kept. |
-| `settleTimeoutMs` | `number` | `20` | Quiet time in milliseconds before `isSettled` turns `true`. |
-| `target` | `RefObject<HTMLElement \| null>` | — | Measure the element this ref holds instead of attaching `ref`. |
+<Reference name="UseMeasureOptions" />
 
 ### Return value
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `ref` | `RefCallback<E>` | Attach to the element to measure. |
-| `rect` | `MeasureBox \| null` | `{ width, height, top, left }` in pixels, or `null` before the first measurement. |
-| `isSettled` | `boolean` | `true` once `rect` has not changed for `settleTimeoutMs`. |
+<Reference name="UseMeasureResult" />
 
 The default quiet time is also exported as `MEASUREMENT_SETTLE_TIMEOUT_MS`.
 The types `MeasureBox`, `UseMeasureOptions` and `UseMeasureResult` are

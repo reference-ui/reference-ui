@@ -46,32 +46,74 @@ export type ToastPosition =
   | 'bottom-end'
 
 export interface ToastOptions {
+  /**
+   * Reuse an id to replace a toast in place.
+   * @default generated
+   */
   id?: string
+  /**
+   * Milliseconds before it dismisses. `false` keeps it open.
+   * @default 5000
+   */
   duration?: number | false
+  /**
+   * Where it appears.
+   * @default 'bottom-end'
+   */
   position?: ToastPosition
   document?: Document
+  /**
+   * `false` stops swipe and button dismissal.
+   * @default true
+   */
   dismissible?: boolean
+  /** Called when its duration runs out. */
   onAutoClose?: (id: string) => void
+  /** Called when the toast is dismissed. */
   onDismiss?: (id: string) => void
   testId?: string
   invert?: boolean
+  /**
+   * Coloured backgrounds for typed toasts.
+   * @default false
+   */
   richColors?: boolean
   swipeDirections?: Array<'top' | 'right' | 'bottom' | 'left'>
+  /**
+   * Drops the card's own styling.
+   * @default false
+   */
   unstyled?: boolean
+  /** Class hook for the card. */
   className?: string
+  /** Inline style hook for the card. */
   style?: React.CSSProperties
+  /** Class hooks for the card's parts. */
   classNames?: ToastClassNames
   actionButtonStyle?: React.CSSProperties
   cancelButtonStyle?: React.CSSProperties
+  /** Text for screen readers. */
   announce?: string
 }
 
 export interface DefaultToastOptions extends ToastOptions {
+  /** Secondary text under the message. */
   description?: React.ReactNode
+  /**
+   * Shows a close button.
+   * @default false
+   */
   closeButton?: boolean
+  /**
+   * Status icon. The typed calls set it.
+   * @default 'default'
+   */
   type?: ToastType
+  /** Button on the default card. */
   action?: ToastAction
+  /** Button on the default card. */
   cancel?: ToastAction
+  /** Replaces the status icon. */
   icon?: React.ReactNode
 }
 
@@ -212,6 +254,7 @@ export interface ReferenceToastOptions {
 }
 
 export type ToastRootProps = PrimitiveProps<'div'> & {
+  /** Drops the card's own styling. */
   unstyled?: boolean
 }
 

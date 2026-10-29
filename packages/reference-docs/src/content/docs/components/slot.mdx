@@ -7,6 +7,7 @@ slug: slot
 description: Named regions for compound components, filled by parts in any order.
 ---
 
+import { Reference } from '@reference-ui/lib'
 import { Preview } from '../../../mdx/Preview'
 import { SlotDemo } from './slot-demo'
 
@@ -127,24 +128,13 @@ const state = resolveSlotVisibility(footer?.visibility)
 
 `createSlotRootContext<TMeta>()` returns:
 
-| Member | Type | Description |
-| --- | --- | --- |
-| `Provider` | `ComponentType<{ children?, root? }>` | Scopes a registry to one component tree. Renders no element. |
-| `useSlotRegistration` | `(options, deps?) => void` | Registers an element while the calling part is mounted. |
-| `useSlot` | `(slotId) => SlotRegistration \| undefined` | The first registration with that id. |
-| `useSlots` | `(filter?) => SlotRegistration[]` | Every registration that matches, in registration order. |
-| `useRoot` | `() => SlotRoot` | The registry itself. |
+<Reference name="SlotRootContext" />
 
 The hooks throw outside their `Provider`.
 
 ### useSlotRegistration options
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `slotId` | `string` | — | The region to fill. |
-| `element` | `ReactElement` | — | What the layout renders. |
-| `meta` | `TMeta` | — | Data for the layout to read. |
-| `visibility` | `{ visible?: boolean, hidden?: boolean }` | — | `hidden: true` resolves to `'hidden'`; `visible: false` to `'unmounted'`. |
+<Reference name="UseSlotRegistrationOptions" />
 
 `deps` defaults to `[]`. A change to `slotId` or `deps` re-registers in
 place; content changes never need a dep.

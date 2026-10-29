@@ -7,6 +7,7 @@ slug: toast
 description: Brief notifications that stack in a corner of the screen and dismiss themselves.
 ---
 
+import { Reference } from '@reference-ui/lib'
 import { Preview } from '../../../mdx/Preview'
 import { ToastDemo } from './toast-demo'
 
@@ -164,23 +165,9 @@ ProjectSaved.update(id, { name: 'Atlas v2' })
 
 ### Options
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `description` | `ReactNode` | — | Secondary text under the message. |
-| `duration` | `number \| false` | `5000` | Milliseconds before it dismisses. `false` keeps it open. |
-| `position` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | `'bottom-end'` | Where it appears. |
-| `id` | `string` | generated | Reuse an id to replace a toast in place. |
-| `type` | `'default' \| 'success' \| 'error' \| 'warning' \| 'info' \| 'loading'` | `'default'` | Status icon. The typed calls set it. |
-| `action` / `cancel` | `{ label, onClick? }` or `ReactNode` | — | Buttons on the default card. |
-| `closeButton` | `boolean` | `false` | Shows a close button. |
-| `icon` | `ReactNode` | — | Replaces the status icon. |
-| `dismissible` | `boolean` | `true` | `false` stops swipe and button dismissal. |
-| `announce` | `string` | — | Text for screen readers. See [Accessibility](#accessibility). |
-| `onDismiss` | `(id) => void` | — | Called when the toast is dismissed. |
-| `onAutoClose` | `(id) => void` | — | Called when its duration runs out. |
-| `richColors` | `boolean` | `false` | Coloured backgrounds for typed toasts. |
-| `unstyled` | `boolean` | `false` | Drops the card's own styling. |
-| `className` / `classNames` / `style` | | — | Class and inline style hooks for the card and its parts. |
+<Reference name="DefaultToastOptions" />
+
+See [Accessibility](#accessibility) for `announce`.
 
 Defaults for every toast (position, duration, visible limit, theme, hotkey)
 are set with the `toaster` prop on [ReferenceLibrary](/reference-library).

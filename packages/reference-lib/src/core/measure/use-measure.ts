@@ -16,24 +16,25 @@ export interface MeasureBox {
 
 export interface UseMeasureOptions {
   /**
-   * Skip ResizeObserver and settle while true (pointer drag, CSS animation).
-   * Last rect is kept; `isSettled` is false until observation resumes.
+   * Stop observing. The last `rect` is kept.
+   * @default false
    */
   paused?: boolean
-  /** Quiet window before `isSettled`. Default 20ms. */
-  settleTimeoutMs?: number
   /**
-   * Observe an already-owned ref. Re-read after every commit so a node that
-   * appears on a later render still attaches. Callback `ref` is the
-   * canonical attach if you can put it on the host.
+   * Quiet time in milliseconds before `isSettled` turns `true`.
+   * @default 20
    */
+  settleTimeoutMs?: number
+  /** Measure the element this ref holds instead of attaching `ref`. */
   target?: React.RefObject<HTMLElement | null>
 }
 
 export interface UseMeasureResult<E extends HTMLElement> {
-  /** Attach to the element being measured. Adds no host node. */
+  /** Attach to the element to measure. */
   ref: React.RefCallback<E>
+  /** `{ width, height, top, left }` in pixels, or `null` before the first measurement. */
   rect: MeasureBox | null
+  /** `true` once `rect` has not changed for `settleTimeoutMs`. */
   isSettled: boolean
 }
 
