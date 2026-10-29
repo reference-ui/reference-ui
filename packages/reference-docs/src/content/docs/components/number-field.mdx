@@ -8,6 +8,7 @@ description: A text input for numbers, with locale formatting and optional stepp
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { NumberFieldDemo, NumberFieldFormatDemo } from './number-field-demo'
 
 # NumberField
@@ -180,31 +181,13 @@ the field invalid.
 
 Renders a `div` and takes `div` props and style props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `number \| null` | — | Required. The current value; `null` is empty. |
-| `onChange` | `(value: number \| null) => void` | — | Called with each new value. |
-| `locale` | `string` | — | Required. BCP 47 locale for parsing and display. |
-| `min` | `number` | — | Lowest value. |
-| `max` | `number` | — | Highest value. |
-| `step` | `number` | `1`, or `0.01` for percent | Amount each step adds. Must be greater than 0. |
-| `formatOptions` | `Intl.NumberFormatOptions` | `{}` | Display format: currency, percent, units, digits. |
-| `commitBehavior` | `'none' \| 'snap' \| 'validate'` | `'none'` | What a commit does with an off-step or out-of-range value. |
-| `onInvalidCommit` | `(attempted: number, reason: 'off-step' \| 'out-of-range') => void` | — | Reports invalid commits in `validate` mode. |
-| `name` | `string` | — | Adds a hidden input for form submission. |
-| `form` | `string` | — | `id` of the form the hidden input belongs to. |
-| `disabled` | `boolean` | `false` | Stops interaction and leaves the value out of the form. |
-| `readOnly` | `boolean` | `false` | Stops editing and stepping. The value still submits. |
-| `required` | `boolean` | `false` | Sets `required` on the input. |
-| `invalid` | `boolean` | `false` | Marks the field invalid. |
+<Reference name="NumberFieldProps" />
 
 ### NumberField.Group
 
 Renders a `div` with `role="group"` and takes `div` props and style props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `status` | `'warning'` | — | Paints the warning bezel. |
+<Reference name="NumberFieldGroupProps" />
 
 ### NumberField.Input
 

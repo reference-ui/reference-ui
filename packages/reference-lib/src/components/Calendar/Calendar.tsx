@@ -47,6 +47,7 @@ export type {
   CalendarNextButtonProps,
   CalendarPrevButtonProps,
   CalendarProps,
+  CalendarSharedProps,
   CalendarValue,
   CalendarView,
   CalendarWeekdaysProps,

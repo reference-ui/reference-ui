@@ -8,6 +8,7 @@ description: The bezel around a text control, with room for prefixes, suffixes a
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { FieldDemo, FieldStatusDemo } from './field-demo'
 
 # Field
@@ -121,9 +122,7 @@ Field renders a `div` and takes `div` props and style props, except
 and `aria-errormessage`. Those belong on the control and are removed if
 passed.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `status` | `'warning'` | — | Paints the warning bezel. It does not mark the control invalid. |
+<Reference name="FieldProps" />
 
 | Data attribute | Values |
 | --- | --- |

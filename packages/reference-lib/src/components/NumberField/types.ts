@@ -20,26 +20,56 @@ export type NumberFieldCommitBehavior = 'snap' | 'validate' | 'none'
 export type NumberFieldInvalidCommitReason = 'off-step' | 'out-of-range'
 
 export type NumberFieldProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
+  /** Required. The current value; `null` is empty. */
   value: number | null
+  /** Called with each new value. */
   onChange?: (value: number | null) => void
+  /** Required. BCP 47 locale for parsing and display. */
   locale: string
+  /** Lowest value. */
   min?: number
+  /** Highest value. */
   max?: number
+  /**
+   * Amount each step adds. Must be greater than 0.
+   * @default `1`, or `0.01` for percent
+   */
   step?: number
+  /**
+   * Stops interaction and leaves the value out of the form.
+   * @default false
+   */
   disabled?: boolean
-  // Interaction/form state. readOnly suppresses stepping and
-  // numeric submit blocking while still serializing canonical state;
-  // required keeps native valueMissing; invalid is an ARIA/style signal
-  // that never blocks submit by itself; name/form own the hidden input.
+  /**
+   * Stops editing and stepping. The value still submits.
+   * @default false
+   */
   readOnly?: boolean
+  /**
+   * Sets `required` on the input.
+   * @default false
+   */
   required?: boolean
+  /**
+   * Marks the field invalid.
+   * @default false
+   */
   invalid?: boolean
+  /** Adds a hidden input for form submission. */
   name?: string
+  /** `id` of the form the hidden input belongs to. */
   form?: string
-  // Intl display formatting. The committed value stays a plain
-  // number; only the clean (non-editing) rendering is formatted.
+  /**
+   * Display format: currency, percent, units, digits.
+   * @default {}
+   */
   formatOptions?: Intl.NumberFormatOptions
+  /**
+   * What a commit does with an off-step or out-of-range value.
+   * @default 'none'
+   */
   commitBehavior?: NumberFieldCommitBehavior
+  /** Reports invalid commits in `validate` mode. */
   onInvalidCommit?: (attempted: number, reason: NumberFieldInvalidCommitReason) => void
 }
 
@@ -78,6 +108,7 @@ export type NumberFieldGroupProps = Omit<
   PrimitiveProps<'div'>,
   'role' | 'aria-disabled' | 'aria-readonly' | 'aria-required' | 'aria-invalid'
 > & {
+  /** Paints the warning bezel. */
   status?: 'warning'
 }
 

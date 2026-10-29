@@ -8,6 +8,7 @@ description: A month grid for picking a date, a date range, a month or a year.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { CalendarDemo, CalendarRangeDemo } from './calendar-demo'
 
 # Calendar
@@ -168,20 +169,11 @@ everywhere:
 
 Contains the parts. Renders a `div` and takes its props and style props.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `mode` | `'day' \| 'range' \| 'month' \| 'year'` | `'day'` | What a selection picks. |
-| `value` | see below | — | Required. The controlled value. `null` is empty. |
-| `onChange` | `(value) => void` | — | Called with the picked value. |
-| `locale` | `string` | — | Required. BCP 47 locale for labels and the first day of the week. |
-| `firstDayOfWeek` | `'sun' \| 'mon' \| … \| 'sat'` | locale default | Overrides the week start. |
-| `min` | `ISODate` | — | Earliest selectable date. |
-| `max` | `ISODate` | — | Latest selectable date. |
-| `isDateUnavailable` | `(date: ISODate) => boolean` | — | Dates that stay focusable but cannot be selected. |
-| `month` | `ISOMonth` | follows `value` | The visible month, when you control it. |
-| `onMonthChange` | `(month: ISOMonth) => void` | — | Called when the user moves to another month. |
-| `today` | `ISODate` | the browser's date | The date marked as today. Also opens on its month when there is no value. |
-| `Day` | `(date: ISODate, state) => ReactNode` | — | Custom content for each day button. |
+<Reference name="CalendarSharedProps" />
+
+Three more props depend on `mode`. `mode` picks what a selection chooses and
+defaults to `'day'`. `value` is required: it is the controlled value, and
+`null` is empty. `onChange` is called with the picked value.
 
 | Mode | `value` type | Format |
 | --- | --- | --- |
@@ -232,33 +224,17 @@ children.
 
 The day rows. Renders a `tbody`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `children` | `(day: CalendarDayState) => ReactElement` | — | Returns the `Calendar.Day` for one date. Leave it out for default days. |
+<Reference name="CalendarDaysProps" />
 
 `CalendarDayState` has these fields:
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `date` | `ISODate` | The date. |
-| `formattedDay` | `string` | The day number in the locale. |
-| `outsideMonth` | `boolean` | The date belongs to the previous or next month. |
-| `today` | `boolean` | The date is today. |
-| `selected` | `boolean` | The date is selected, or inside a selected range. |
-| `disabled` | `boolean` | Outside `min` and `max`, or unavailable. |
-| `rangeStart` | `boolean` | First date of a range. |
-| `rangeEnd` | `boolean` | Last date of a range. |
-| `inRange` | `boolean` | Inside a selected range, ends included. |
-| `preview` | `boolean` | Inside the range being previewed. |
+<Reference name="CalendarDayState" />
 
 ### Calendar.Day
 
 One day. Renders a `button`.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `date` | `ISODate` | — | Required. Must equal the `date` it was rendered for. |
-| `children` | `ReactNode` | — | The button content. |
+<Reference name="CalendarDayProps" />
 
 Your styles, event handlers and ref apply. Calendar keeps `id`,
 `tabIndex`, `disabled` and the ARIA attributes.

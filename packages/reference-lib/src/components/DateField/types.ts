@@ -16,15 +16,39 @@ import type {
 import type { ISOMonth, ISOYear } from '../Calendar/dates/iso'
 
 export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' | 'defaultValue'> & {
+  /** Required. The controlled date. `null` is empty. */
   value: ISODate | null
+  /** Required. Called with the new date, or `null` when cleared. */
   onChange: (value: ISODate | null) => void
+  /** Required. BCP 47 locale for the text format. */
   locale: string
+  /** Earliest allowed date. */
   min?: ISODate
+  /** Latest allowed date. */
   max?: ISODate
+  /** Dates that cannot be chosen. */
   isDateUnavailable?: (date: ISODate) => boolean
+  /**
+   * Disables the input and the trigger.
+   * @default false
+   */
   disabled?: boolean
+  /**
+   * Shows the value but blocks typing and arrow stepping.
+   * @default false
+   */
+  readOnly?: boolean
+  /**
+   * Marks the input required.
+   * @default false
+   */
+  required?: boolean
+  /** Submits the value with a form. */
   name?: string
+  /** The `id` of the form to submit with. */
   form?: string
+  /** Placeholder text for the input. */
+  placeholder?: string
 }
 
 export type DateFieldRangeEndpoint = 'start' | 'end'
@@ -34,16 +58,36 @@ export type DateFieldRangeProps = Omit<
   PrimitiveProps<'div'>,
   'onChange' | 'value' | 'defaultValue'
 > & {
+  /** Required. `{ start, end }`, or `null`. */
   value: DateRangeValue | null
+  /** Required. Called with a complete range, or `null`. */
   onChange: (value: DateRangeValue | null) => void
+  /** Required. BCP 47 locale for the text format. */
   locale: string
+  /** Earliest allowed date. */
   min?: ISODate
+  /** Latest allowed date. */
   max?: ISODate
+  /** Dates that cannot be chosen. */
   isDateUnavailable?: (date: ISODate) => boolean
+  /**
+   * Disables the inputs and the trigger.
+   * @default false
+   */
   disabled?: boolean
+  /**
+   * Shows the value but blocks typing and arrow stepping.
+   * @default false
+   */
   readOnly?: boolean
+  /**
+   * Marks the inputs required.
+   * @default false
+   */
   required?: boolean
+  /** One name for both dates, or a name each. */
   name?: string | DateFieldRangeName
+  /** The `id` of the form to submit with. */
   form?: string
 }
 

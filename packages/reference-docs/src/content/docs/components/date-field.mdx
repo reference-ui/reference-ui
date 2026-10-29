@@ -8,6 +8,7 @@ description: A text input for a date, with an optional calendar picker.
 ---
 
 import { Preview } from '../../../mdx/Preview'
+import { Reference } from '@reference-ui/lib'
 import { DateFieldDemo, DateFieldRangeDemo } from './date-field-demo'
 
 # DateField
@@ -146,20 +147,7 @@ Without children, renders an `input` and takes its props. With children,
 renders a `div` around the parts; `id`, `placeholder` and the input event
 handlers still go to the input.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `ISODate \| null` | — | Required. The controlled date. `null` is empty. |
-| `onChange` | `(value: ISODate \| null) => void` | — | Required. Called with the new date, or `null` when cleared. |
-| `locale` | `string` | — | Required. BCP 47 locale for the text format. |
-| `min` | `ISODate` | — | Earliest allowed date. |
-| `max` | `ISODate` | — | Latest allowed date. |
-| `isDateUnavailable` | `(date: ISODate) => boolean` | — | Dates that cannot be chosen. |
-| `disabled` | `boolean` | `false` | Disables the input and the trigger. |
-| `readOnly` | `boolean` | `false` | Shows the value but blocks typing and arrow stepping. |
-| `required` | `boolean` | `false` | Marks the input required. |
-| `name` | `string` | — | Submits the value with a form. |
-| `form` | `string` | — | The `id` of the form to submit with. |
-| `placeholder` | `string` | — | Placeholder text for the input. |
+<Reference name="DateFieldProps" />
 
 DateField throws if a required prop is missing or `min` and `max` are not
 valid dates in order.
@@ -179,14 +167,11 @@ The input carries these data attributes:
 
 ### DateField.Range
 
-The range host. Renders a `div` and takes its props, plus the `locale`,
-limit, state and `form` props of DateField. These differ:
+The range host. Renders a `div` and takes its props. The `locale`, limit,
+state and `form` props work as on DateField; `value`, `onChange` and `name`
+differ.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `DateRangeValue \| null` | — | Required. `{ start, end }`, or `null`. |
-| `onChange` | `(value: DateRangeValue \| null) => void` | — | Required. Called with a complete range, or `null`. |
-| `name` | `string \| { start?: string; end?: string }` | — | One name for both dates, or a name each. |
+<Reference name="DateFieldRangeProps" />
 
 ### Parts
 

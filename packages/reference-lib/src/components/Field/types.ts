@@ -17,5 +17,6 @@ export type FieldProps = Omit<
   | 'aria-required'
   | 'aria-errormessage'
 > & {
+  /** Paints the warning bezel. It does not mark the control invalid. */
   status?: FieldStatus
 }
