@@ -156,9 +156,9 @@ filesystem. Stop that sync, or rerun with `--break-lock`.
 `@reference-ui/lib` instead of `@reference-ui/lib/baseSystem`. Import the
 subpath the warning names.
 
-**Style props on a package component don't paint**
+**Style props on a package component have no effect**
 
 You set style props on a component from a package, such as
 `<SearchIcon marginLeft="2r" />`, but that package's system is in neither
-`extends` nor `layers`. The props do not paint. Add the `baseSystem` the
-warning names to `extends` or `layers`.
+`extends` nor `layers`. The style props are not extracted. Add the `baseSystem`
+the warning names to `extends` or `layers`.

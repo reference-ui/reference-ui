@@ -65,8 +65,8 @@ import { DateField } from '@reference-ui/lib'
 </DateField.Range>
 ```
 
-The parts carry props, not position. DateField always places the input
-first and the trigger after it, and the picker opens below the field.
+Regardless of child order, DateField places the input first, the trigger after
+it, and the picker below the field.
 
 - Without children, DateField renders only the text input.
 - A `DateField.Picker` without a `DateField.Trigger` gets a calendar-icon
@@ -153,9 +153,9 @@ DateField throws if a required prop is missing or `min` and `max` are not
 valid dates in order.
 
 `onChange` fires as soon as the typed text is a complete, allowed date that
-differs from `value`, and with `null` when the text is cleared. Partial
-text waits. On blur or Enter, text that is not an allowed date goes back to
-the current value and the input is marked invalid.
+differs from `value`, and with `null` when the text is cleared. Incomplete
+dates do not fire `onChange`. On blur or Enter, text that is not an allowed
+date goes back to the current value and the input is marked invalid.
 
 The input carries these data attributes:
 

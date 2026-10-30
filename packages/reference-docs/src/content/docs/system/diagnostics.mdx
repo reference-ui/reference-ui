@@ -82,9 +82,9 @@ With `--quiet` or `--json`, one stderr line, `[ref] sync finished with 1 tasty e
 
 ## Compiler diagnostics
 
-The default list holds only problems sync can prove. Set `logs` in
-`ui.config.ts` to also see what the compiler could not read, such as dynamic
-values and spreads:
+By default, sync reports only definite configuration or style issues. Set
+`logs: ['compiler']` in `ui.config.ts` to also log expressions that could not
+be statically extracted, such as runtime variables and spreads:
 
 ```ts
 // ui.config.ts
@@ -151,8 +151,8 @@ the code in any tooling you build.
 - `ATM-W-RESPONSIVE-LEAF-IMPORTANT`: a `!` marker on one value of a
   responsive object, like `width: { base: '50px!' }`. Sync drops the marker.
   Remove it.
-- `ATM-W-MISSING-STYLE-PLAN`: a style that will get no class at runtime, for
-  a reason sync could not name. Write the value so sync can read it.
+- `ATM-W-MISSING-STYLE-PLAN`: a style call that could not be compiled to a
+  static class. Replace dynamic expressions with static values.
 
 ### Tokens
 
@@ -268,9 +268,9 @@ the code in any tooling you build.
 
 ### Compiler channel
 
-These appear only with `logs: ['compiler']`. Each marks a value sync could
-not read, so it gets no CSS. Write a literal value, or list the values under
-`staticCss`. See [Compiler](/compiler).
+These appear only with `logs: ['compiler']`. Each marks an expression that
+could not be statically extracted, so no CSS is generated for it. Use a static
+value or pre-generate the tokens with `staticCss`. See [Compiler](/compiler).
 
 - `ATM-W-DYNAMIC-EXPRESSION`: a function call or other expression, like
   `color: maybeColor()`.
@@ -306,8 +306,8 @@ API reference documents. Its warnings carry the `[ref]` tag.
   holding a chain of more than 8,192 operators, contributes no declarations.
   The message names the line; split or flatten the nested expression.
 - `TST-E-SCAN-FAILED`: the scan cannot read a folder or file, or an `include`
-  glob is invalid. A glob whose braces nest deeper than 64 levels or expand to
-  more than 1,024 globs is one. Sync reports it as an error that names the
+  glob is invalid (for example, braces nested deeper than 64 levels or
+  expanding past 1,024 patterns). Sync reports it as an error that names the
   path or pattern, writes your stylesheet, and exits with code 0; watch mode
   reports it and keeps running. The API reference documents are missing until
   you make the path readable or fix the pattern.

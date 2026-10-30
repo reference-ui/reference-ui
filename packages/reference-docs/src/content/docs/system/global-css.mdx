@@ -131,8 +131,8 @@ small reset in the `reset` layer. It:
 - makes `img` and `picture` block elements with `max-width: 100%`;
 - makes `input`, `button`, `textarea` and `select` inherit the font;
 - turns on smooth scrolling when focus is inside the page;
-- cuts animations, transitions and smooth scrolling to almost nothing when
-  the user prefers reduced motion.
+- reduces animation and transition durations to `0.01ms` and disables smooth
+  scrolling when the user prefers reduced motion.
 
 The reduced-motion rules use `!important`, so they win over your own
 animations. Turn the reset off in `ui.config.ts`:

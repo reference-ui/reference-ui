@@ -49,8 +49,8 @@ Your own base system is also exported from `@reference-ui/system`.
 | Your token values inside its components | yes | no |
 
 A recipe stays as the system's sync built it: your sync receives its
-classes, not its config. A `_private` token stays private: it paints inside
-the system's components and stays out of your token names.
+classes, not its config. A `_private` token stays private: it applies inside
+the system's components without appearing in your token types.
 
 Under `layers`, a style that names one of the system's tokens warns at the
 call.
@@ -134,11 +134,11 @@ function extendSystem(
 | `overrides.tokens` | `TokenConfig` | A token tree shaped like the `tokens()` input. Every leaf must be a token the base declares. |
 
 The copy keeps the base's name, components and compiled styles, and changes
-only token values. The new values paint inside the base's components, in
-light and dark.
+only token values. The new values apply inside the base's components in both
+light and dark mode.
 
-List the copy instead of the base. The base and its copy together, in one
-field or across both, are rejected.
+List the copy instead of the base. Don't list both a base system and its
+extended copy in your config.
 
 ### Token values
 

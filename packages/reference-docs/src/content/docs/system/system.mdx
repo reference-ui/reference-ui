@@ -46,9 +46,9 @@ Define your own, or extend a system that defines them, such as
 2. **Compile** reads every style prop, `css()` and `recipe()` call in your
    source. A Rust engine compiles them, with that description, into CSS.
 
-The engine reads your source without running it, so it compiles only the
-style values it can see there. [Compiler](/compiler) lists
-what it can read. [Sync](/sync) covers the command.
+Because the compiler analyzes your source statically without executing it,
+style values must be resolvable at build time. See [Compiler](/compiler) and
+[Sync](/sync).
 
 ## What you get
 

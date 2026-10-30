@@ -68,8 +68,8 @@ back.
 
 `min` and `max` limit a Panel's size. A number is a percentage of the
 group. A string is a length: `px`, `rem`, `em`, `r` (the spacing unit), or
-`%`. Lengths are measured against the space the Panels share, without the
-Handles.
+`%`. Lengths are measured against the total panel space, excluding handle
+widths.
 
 ```tsx
 <Splitter.Panel min="60r" max={50}>Sidebar</Splitter.Panel>
@@ -130,8 +130,8 @@ Changing `value` yourself fires neither callback.
 ### Reading sizes in CSS
 
 Each Panel sets `--reference-splitter-panel-size` to its own size. The root
-sets `--reference-splitter-1` through `--reference-splitter-N`, one per
-Panel in order, for content inside that wants to follow the split.
+sets `--reference-splitter-1` through `--reference-splitter-N` (one per
+Panel in order) so child styles can reference panel sizes.
 
 ## API reference
 

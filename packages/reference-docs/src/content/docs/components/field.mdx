@@ -13,8 +13,8 @@ import { FieldDemo, FieldStatusDemo } from './field-demo'
 
 # Field
 
-Field draws one bezel around a text control and the things beside it, such
-as a prefix, a unit or a clear button.
+Field wraps a text input and adjacent elements (such as a prefix, unit or
+clear button) in a shared border and focus ring.
 
 <Preview>
   <FieldDemo />
@@ -32,8 +32,8 @@ import { Field } from '@reference-ui/lib'
 </Field>
 ```
 
-Field is chrome only. The control inside keeps its own label, validity and
-disabled state, and Field paints whatever state the control already has.
+Field is purely visual: the input inside keeps its own label, validation and
+disabled state, and Field styles itself to match.
 
 ## Import
 

@@ -91,7 +91,7 @@ waits before opening or closing:
 
 ### Controlled
 
-Pass `open` and `onOpenChange` to own the state.
+Pass `open` and `onOpenChange` to control the state.
 
 ```tsx
 const [open, setOpen] = React.useState(false)
@@ -169,5 +169,5 @@ props. Give it a shape with your own styles.
 
 | Key | Description |
 | --- | --- |
-| `Tab` | Focusing the trigger with the keyboard opens the tooltip at once. Moving focus away closes it. |
+| `Tab` | Focusing the trigger with the keyboard opens the tooltip immediately. Moving focus away closes it. |
 | `Escape` | Closes the tooltip. |

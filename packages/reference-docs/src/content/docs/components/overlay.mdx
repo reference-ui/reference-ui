@@ -96,8 +96,8 @@ nothing.
 
 ### Sheet
 
-Pass `edge` to bind Content to a side of the viewport. Add `Overlay.Handle` to
-let people drag it away.
+Pass `edge` to bind Content to a side of the viewport. Add `Overlay.Handle` so
+users can drag it to dismiss.
 
 <Preview>
   <OverlaySheetDemo />
@@ -139,8 +139,8 @@ For a ready-made anchored panel, use [Popover](/popover).
 
 ### Alert dialog
 
-Call `preventDefault()` in `onEscape` or `onOutsidePress` to keep the layer
-open. The person then has to choose an action.
+Call `preventDefault()` in `onEscape` or `onOutsidePress` to prevent closing
+until the user chooses an action.
 
 ```tsx
 <Overlay

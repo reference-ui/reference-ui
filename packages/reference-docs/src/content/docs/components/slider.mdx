@@ -60,7 +60,7 @@ Without children, Slider renders this structure with one thumb per value.
 
 ### Range
 
-Pass an array to `value` and author one `Slider.Thumb` per entry. Thumbs
+Pass an array to `value` and render one `Slider.Thumb` per entry. Thumbs
 take their value by the order they appear in. `minStepsBetweenThumbs` keeps
 them a number of steps apart.
 
@@ -132,7 +132,7 @@ Contains the parts. Renders a `div` and takes its props and style props.
 an array when it is an array. Neither fires when you change `value` yourself.
 
 Slider throws on an invalid `min`, `max`, `step` or array `value`. A value
-outside `min` and `max` is drawn at the nearest end.
+outside `min` and `max` is clamped to the nearest bound.
 
 | Data attribute | Values |
 | --- | --- |

@@ -182,14 +182,14 @@ controlled.
 
 <Reference name="ComboboxProps" headingLevel={4} />
 
-When you own `inputValue`, set the text yourself on selection, as in the
-first example. Otherwise Combobox sets it to the option's label.
+When you control `inputValue`, update the text yourself on selection, as in
+the first example. Otherwise Combobox sets it to the option's label.
 
 ### Combobox.Input
 
 The text input. Takes `input` props and style props, except `value`,
 `defaultValue` and `onChange`: the root's `inputValue` and
-`onInputValueChange` own the text. To cancel an edit, use `onBeforeInput`.
+`onInputValueChange` control the text. To cancel an edit, use `onBeforeInput`.
 
 Focusing the input does not open the list. Typing, clicking, or an arrow
 key does. Inside a [Field](/field), the list is positioned against the

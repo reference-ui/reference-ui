@@ -102,8 +102,9 @@ Both use `line`, since `border` and `boxShadow` are line props.
 
 ## Light and dark
 
-A tone mixes with transparency, so it takes on whatever sits behind it in
-either mode. To change the amount in dark mode, give the tone a `dark` value:
+Because a tone mixes with transparency, it blends with the background in both
+light and dark mode. To change the amount in dark mode, give the tone a `dark`
+value:
 
 ```ts
 tokens({

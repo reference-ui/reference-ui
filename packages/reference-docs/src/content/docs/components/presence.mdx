@@ -54,11 +54,11 @@ import { Presence } from '@reference-ui/lib'
 
 - Presence waits for CSS animations, CSS transitions and finite GSAP tweens
   on the child element itself. Effects on its descendants don't count.
-- A keyframe animation holds the exit only if `animation-name` changes when
-  the element closes. Infinite animations never hold it.
-- If nothing runs, the child unmounts straight away. That includes
-  `prefers-reduced-motion` styles that remove the effect, `display: none`,
-  and a hidden browser tab.
+- A keyframe animation delays unmount only if `animation-name` changes when
+  the element closes; infinite animations are ignored.
+- If no animation or transition runs, the child unmounts immediately. That
+  includes `prefers-reduced-motion` styles that remove the effect,
+  `display: none`, and a hidden browser tab.
 - Setting `present` back to `true` during an exit cancels it. The child
   stays, and `onExitComplete` does not fire.
 - A Presence inside another one finishes its exit before the outer one

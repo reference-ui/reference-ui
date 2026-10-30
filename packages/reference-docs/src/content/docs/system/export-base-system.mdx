@@ -60,15 +60,15 @@ system's `name`, so your components render under that name in any app.
 
 Keep `react` as a peer dependency, so the app supplies a single copy.
 
-## What stays behind
+## Recipes
 
-Your `recipe()` definitions stay in your package. The app receives the
-classes your sync compiled, so each recipe renders as you built it.
+Your `recipe()` definitions stay in your package; consuming apps receive the
+precompiled classes in your `baseSystem`.
 
 ## In a monorepo
 
-A package in the same repository as the app needs no publishing, since sync
-follows each import to the file it lands on. Choose one of two shapes.
+A workspace package in the same monorepo does not need to be published first,
+since sync resolves workspace imports directly. Choose one of two shapes.
 
 **One system.** Run one sync at the repository root, with `include` covering
 the app and the package. The package's components become part of the app's

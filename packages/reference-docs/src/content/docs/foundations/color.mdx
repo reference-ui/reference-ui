@@ -50,8 +50,8 @@ use `gray`.
 ## Tones
 
 A tone is a shade at a named strength, written `shade/tone`. The tone mixes
-the shade with transparency, so it takes on whatever sits behind it. It needs
-no separate dark value.
+the shade with transparency, so it blends with the background in both light
+and dark mode.
 
 <ShadesAndTones />
 
@@ -65,8 +65,8 @@ import { Div } from '@reference-ui/react'
 <Div bg="blue.500/medium" />
 ```
 
-Each tone holds two amounts. The surface amount paints areas. The line amount
-is stronger, so edges and text stay visible.
+Each tone defines two opacity levels: a lighter surface amount for backgrounds
+and fills, and a stronger line amount so borders and text stay legible.
 
 | Tone | Surface | Line |
 | --- | --- | --- |
@@ -83,15 +83,14 @@ colour prop, including `bg` and `fill`, uses the surface amount.
 
 <RoleSpecimens />
 
-Start at `medium`. Go up when a surface has to stand out, and down when it
-competes with the content around it. For body text, use a shade such as
-`blue.700`, not a tone.
+Start with `medium`. Use `firm` or `strong` for emphasis, and `ghost` for
+subtle fills. For body text, use a shade such as `blue.700`, not a tone.
 
 ## Semantic tokens
 
-A semantic token names a job, not a colour. Each one has a light value and a
-dark value, so it follows the [colour mode](#light-and-dark-mode). Lib's
-components use these tokens, and so can your styles.
+Semantic tokens describe where a colour is used rather than its hue, with
+separate values for light and dark mode. Lib's components use these tokens, and
+so can your styles.
 
 | Token | Light | Dark |
 | --- | --- | --- |
@@ -124,8 +123,8 @@ Lib also defines `ui.*`, one group per element, such as `ui.link.default`,
 `ui.button.hover` and `ui.focus.ring`. Lib's primitives and components style
 themselves with these. Prefer `design.*` in your own code.
 
-`text.*` (`text.primary`, `text.secondary` and three more) is defined too, but
-nothing in lib reads it. Use `design.text.*`.
+`text.*` (`text.primary`, `text.secondary` and others) is also defined, though
+lib's components do not use it. Prefer `design.text.*`.
 
 ## Light and dark mode
 

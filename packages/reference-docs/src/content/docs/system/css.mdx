@@ -90,8 +90,8 @@ Breakpoint keys such as `md` are covered in [Responsive](/responsive).
 Conditions nest, and a nested rule applies only when every condition around
 it matches.
 
-## What the compiler can read
+## Static extraction
 
-`ref sync` reads `css()` calls without running them. See the
-[Compiler](/compiler) for what it reads, and
-[Dynamic styles](/dynamic-styles) for values chosen at runtime.
+`ref sync` extracts `css()` calls statically at build time. See
+[Compiler](/compiler) for supported syntax and
+[Dynamic styles](/dynamic-styles) for runtime values.

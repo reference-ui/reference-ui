@@ -37,10 +37,9 @@ your tokens.
 
 ## One component per element
 
-Each HTML element has its own component. You choose the element by
-choosing the component, so each one is typed for its element: `A` takes
-`href`, `Input` takes `value`, and `ref` gives you the real
-`HTMLAnchorElement` or `HTMLInputElement`.
+Each HTML element has its own component typed for that tag: `A` takes `href`,
+`Input` takes `value`, and `ref` gives you the underlying `HTMLAnchorElement`
+or `HTMLInputElement`.
 
 ## Props
 
@@ -90,8 +89,8 @@ function ModeLabel() {
 A primitive sets `data-layer` to your system's [`name`](/config#name).
 Inside a colour mode, a primitive skips it when its nearest primitive
 ancestor is from the same system. A primitive with `colorMode`, or one from
-another system, always sets it. The stylesheet uses the attribute to keep
-two systems on one page apart. See [Cascade layers](/cascade-layers).
+another system, always sets it. The stylesheet uses this attribute to scope
+colour mode tokens per system. See [Cascade layers](/cascade-layers).
 
 ## Your own components
 

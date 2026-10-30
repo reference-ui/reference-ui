@@ -117,8 +117,8 @@ reference: it prints as written and sync warns.
 
 ## Light and dark values
 
-Give a token `light` and `dark` values. `value` fills the mode you don't name,
-so beside `dark` it is the light value:
+Give a token `light` and `dark` values, or set `value` as the default for
+whichever mode you omit:
 
 ```ts
 tokens({
@@ -136,7 +136,7 @@ part of it:
 
 ```tsx
 <Div colorMode="dark" bg="surface" color="text">
-  Dark, whatever the page uses.
+  Always dark, regardless of the page mode.
 </Div>
 ```
 
