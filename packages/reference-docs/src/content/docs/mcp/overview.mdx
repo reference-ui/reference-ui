@@ -34,8 +34,8 @@ The server reads two things:
 Atlas finds the components your files export and records every JSX call site.
 It reads your project's own files and any design packages you
 [include](/mcp-configuration#config-options), never the rest of
-`node_modules`. When it can't work out a component's props type, the component
-carries a warning instead of a guess.
+`node_modules`. When it cannot resolve a component's props type, the component
+includes a warning instead of guessing.
 
 The server joins the two into one model when it first loads a project.
 

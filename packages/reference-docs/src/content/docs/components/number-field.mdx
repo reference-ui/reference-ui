@@ -64,8 +64,8 @@ import { NumberField } from '@reference-ui/lib'
 ```
 
 - `NumberField` holds the state and renders a `div`.
-- `NumberField.Group` draws the [Field](/field) bezel. It must be the one
-  direct child of NumberField.
+- `NumberField.Group` renders the [Field](/field) border and focus ring. It
+  must be the single direct child of NumberField.
 - `NumberField.Input` is the text input. Group needs exactly one, as a
   direct child.
 - `NumberField.Decrement` and `NumberField.Increment` are optional, at most
@@ -172,8 +172,8 @@ does not block submit.
 
 ### Warning
 
-Pass `status="warning"` to Group for the warning bezel. It does not mark
-the field invalid.
+Pass `status="warning"` to Group for the warning border style. It does not
+mark the field invalid.
 
 ## API reference
 

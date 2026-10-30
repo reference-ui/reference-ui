@@ -16,7 +16,7 @@ generates CSS for every style value it extracts. Values known only at runtime
 get no CSS on their own, unless another call site or `staticCss` already
 compiled the same property and value.
 
-## How it reads source
+## How extraction works
 
 In every file matched by `include`, the compiler extracts:
 
@@ -91,7 +91,9 @@ Only a parameter typed as a single literal, such as `{ tone: 'brand' }`,
 resolves to that constant. To style from a variant prop, use a recipe or class
 map. See [Dynamic styles](/dynamic-styles#style-from-a-prop).
 
-## What it can read
+## Supported expressions
+
+The compiler evaluates these static expressions at build time:
 
 | Expression | Example |
 | --- | --- |
@@ -125,7 +127,7 @@ const field = (active: boolean) =>
   })
 ```
 
-## What it can't read
+## Unsupported expressions
 
 Expressions that depend on runtime values aren't extracted. See
 [Dynamic styles](/dynamic-styles) for the build-time pattern for each case:

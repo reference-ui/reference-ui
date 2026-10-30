@@ -278,7 +278,8 @@ value or pre-generate the tokens with `staticCss`. See [Compiler](/compiler).
 - `ATM-W-DYNAMIC-IDENTIFIER`: a variable sync cannot resolve.
 - `ATM-W-MUTATED-BINDING`: a variable that is reassigned before the style
   reads it.
-- `ATM-W-DYNAMIC-TEMPLATE`: a template string with parts sync cannot read.
+- `ATM-W-DYNAMIC-TEMPLATE`: a template string with dynamic expressions that
+  cannot be statically resolved.
 - `ATM-W-DYNAMIC-UNARY`, `ATM-W-DYNAMIC-BINARY`: an operator sync cannot
   fold to a value, like `typeof x`.
 - `ATM-W-UNFOLDABLE-KEY`: a computed key, like `[dynamicKey]: '10px'`.

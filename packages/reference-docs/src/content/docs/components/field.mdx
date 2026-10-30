@@ -4,7 +4,7 @@ section: Components
 group: Form controls
 order: 80
 slug: field
-description: The bezel around a text control, with room for prefixes, suffixes and buttons.
+description: A styled wrapper around a text control, with room for prefixes, suffixes and buttons.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -58,7 +58,7 @@ row.
 
 ### Invalid and warning
 
-Set `aria-invalid` on the control, not on Field. The bezel turns red while
+Set `aria-invalid` on the control, not on Field. The border turns red while
 the control is invalid. For a warning that should not mark the value
 invalid, set `status="warning"` on Field. Invalid wins when both apply.
 
@@ -84,7 +84,7 @@ invalid, set `status="warning"` on Field. Invalid wins when both apply.
 
 Set `disabled` or `readOnly` on the control. Field dims for a disabled
 control and changes its background for a read-only one. A disabled button
-beside the control does not dim the bezel.
+beside the control does not dim the field.
 
 ```tsx
 <Field>
@@ -137,13 +137,13 @@ a wrapping `label`, and put descriptions and errors on the control with
 prefix carries meaning, put it in the label instead. Buttons inside Field
 need their own accessible names.
 
-Focus goes to the control and buttons in document order. The bezel shows
-the focus ring only while the control has visible focus, so a focused
-button keeps its own ring.
+Focus goes to the control and buttons in document order. Field shows its
+focus ring only while the control has visible focus, so a focused button
+keeps its own ring.
 
 - Put the label above Field, never inside it.
 - Use Field for text controls. Switch, checkboxes and radios do not go in a
   Field.
 - `NumberField.Group` and a [DateField](/date-field) with parts already
-  draw this bezel. Do not wrap them in Field. A DateField without children
-  renders a bare input, which Field can wrap like any other.
+  include this border and focus ring. Do not wrap them in Field. A DateField
+  without children renders a bare input, which Field can wrap like any other.

@@ -1,12 +1,11 @@
+/**
+ * Before-and-after button specimens for the Customization page.
+ * The global CSS demo applies its rule as style props, because a real
+ * `.ref-button` rule would restyle every button on the docs site.
+ */
 import type { ReactNode } from 'react'
 import { Button, Div, Span, css } from '@reference-ui/react'
 
-/**
- * Before-and-after specimens for the Customization page: the library's stock
- * buttons on the left, the customised ones on the right. The global CSS demo
- * applies its rule as style props, because a real `.ref-button` rule would
- * restyle every button on the docs site.
- */
 const split = css({
   display: 'grid',
   gridTemplateColumns: '1fr',
