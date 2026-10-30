@@ -17,7 +17,7 @@ const brandLink = css({
 export function Brand() {
   return (
     <Link to="/" className={brandLink} aria-label="Reference UI docs home">
-      <Span fontSize="4r" fontWeight="600" letterSpacing="-0.01em" color="docsText">
+      <Span fontSize="4r" weight="sans.semibold" letterSpacing="-0.01em" color="docsText">
         Reference UI
       </Span>
     </Link>

@@ -116,7 +116,6 @@ function getRhythm(num: number, denom?: number): string
 
 ## Write steps literally
 
-A rhythm value gets CSS only when the compiler can read it from your source.
-`padding="4r"` works anywhere. A step built at runtime, such as
-`` `${n}r` ``, gets no CSS unless the same step appears literally somewhere
-else. See [CSS](/css#what-the-compiler-can-read).
+Write rhythm steps as static strings like `padding="4r"` so the compiler can
+extract them at build time. For a step calculated from a number at runtime,
+pass `getRhythm(n)` to `style` (see [Dynamic styles](/dynamic-styles#dynamic-sizes)).

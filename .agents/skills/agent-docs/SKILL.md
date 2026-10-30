@@ -87,6 +87,11 @@ After the gate is green, do the reading pass — a human reviewer's eye:
 
 When the language evolves, update `DOCS.md` / `STRUCTURE.md` in the same pass.
 
+**Diagrams** use the kit in `src/components/diagram/` and follow its README.
+Two owner rulings: a diagram sits flush with the content, with no background
+box around it, and it is gray in different tones, with a hue only when the
+colour carries meaning.
+
 ## 6. Writing From the Corpus
 
 Docs prose starts from the docs corpus: production design-system docs

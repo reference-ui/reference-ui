@@ -31,7 +31,7 @@ import {
 function FontCard({ name, font, sample }: { name: string; font: 'sans' | 'serif' | 'mono'; sample: string }) {
   return (
     <Div bg="docsPanelBg" borderRadius="md" padding="4r" display="flex" flexDirection="column" gap="3r">
-      <Span fontSize="3.5r" fontWeight="600" color="docsMuted">
+      <Span fontSize="3.5r" weight="sans.semibold" color="docsMuted">
         {name}
       </Span>
       <Div font={font} fontSize="5r" lineHeight="1.3" color="docsText">

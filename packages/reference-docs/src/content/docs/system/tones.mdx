@@ -62,7 +62,7 @@ colours.
 
 ## Surface and line
 
-The prop decides which amount a tone draws:
+The prop determines which amount a tone uses:
 
 | Role | Props |
 | --- | --- |
@@ -98,7 +98,7 @@ css({
 })
 ```
 
-Both draw `line`, since `border` and `boxShadow` are line props.
+Both use `line`, since `border` and `boxShadow` are line props.
 
 ## Light and dark
 
@@ -127,7 +127,7 @@ numeric opacity such as `blue.500/40`. `tones` is not a strict category. See
 
 ## Unknown tones
 
-A tone name that is not declared warns with `ATM-W-UNKNOWN-TONE` and suggests
+A tone name that is not declared warns and suggests
 the closest name. The value prints as written. Inside braces, an unknown tone is
 an error and its declaration is dropped. See [Diagnostics](/diagnostics).
 

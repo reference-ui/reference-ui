@@ -1,0 +1,76 @@
+---
+title: Introduction
+section: Guides
+order: 0.5
+slug: introduction
+description: A styling system that compiles at build time, and a small library of components built on it.
+---
+
+{/* Shape follows radix:primitives/docs/overview/introduction (summary, then key features) and panda:get-started/why-panda. Facts from /system, /choose-a-styling-api, /compiler, /sharing and /library-components. */}
+
+# Introduction
+
+Reference UI is a styling system for React. You write styles in TypeScript,
+and `ref sync` compiles them into one stylesheet before your app runs.
+`@reference-ui/lib` is a small library of components built on it.
+
+## How you write styles
+
+Every way to write a style takes the same keys and the same token values:
+
+```tsx
+import { Div, css, recipe } from '@reference-ui/react'
+import { globalCss, tokens } from '@reference-ui/system'
+
+// Style props, straight on a primitive
+<Div padding="4r" bg="surface" _hover={{ bg: 'surface/80' }} />
+
+// css(), a class name for any element
+const card = css({ padding: '4r', bg: 'surface' })
+
+// recipe(), named variants for a component
+const badge = recipe({
+  className: 'badge',
+  variants: { tone: { info: { … }, danger: { … } } },
+})
+
+// globalCss(), elements you don't render yourself
+globalCss({ body: { color: 'text' } })
+
+// tokens(), the values every style shares
+tokens({ colors: { brand: { value: '#4f46e5' } } })
+```
+
+See [Choose a styling API](/choose-a-styling-api) for when to use each.
+
+## Key features
+
+### Built at build time
+
+Sync reads your source without running it and writes plain CSS: one shared
+class for each property and value. Your components pick between classes that
+already exist. See [Built in time](/built-in-time).
+
+### Your components take style props
+
+The compiler follows props through your own components to the primitive they
+render, so `<Card padding="6r">` works like `<Div padding="6r">`, with nothing
+to register. See [Compiler](/compiler).
+
+### Design systems you can share
+
+Your tokens and components pack into a base system that other apps build on.
+Its CSS joins theirs in one stylesheet. See [Sharing](/sharing).
+
+### Components you can read
+
+`@reference-ui/lib` keeps to patterns over widgets: a small set of transparent
+components that humans and agents can both understand. See
+[Library components](/library-components).
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/initialize" title="Getting started">Install Reference UI and start building.</LinkCard>
+  <LinkCard href="/built-in-time" title="Built in time">How your styles become CSS before your app runs.</LinkCard>
+</LinkCards>

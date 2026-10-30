@@ -48,7 +48,7 @@ const navLinkActive = css({
 
 const sectionLabel = css({
   fontSize: '0.6875rem',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
   color: 'docsNavHeading',

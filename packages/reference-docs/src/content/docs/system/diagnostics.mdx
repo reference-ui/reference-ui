@@ -1,7 +1,7 @@
 ---
 title: Diagnostics
 section: System
-group: Output
+group: Build and output
 order: 230
 slug: diagnostics
 description: What sync's warnings and errors mean, and how to fix each one.
@@ -194,47 +194,23 @@ the code in any tooling you build.
 - `ATM-E-DUPLICATE-RECIPE`: two recipes in one system share a `className`, or a
   `className` matches a slot of another recipe, like `card__root` beside a
   `card` recipe with a `root` slot. Rename one.
-- `ATM-E-RECIPE-SLOT`: a recipe with `slots` breaks one of the rules below.
-  Sync fails on the whole recipe. A slot map is the object under `base`, under
-  a variant value, or under a compound's `css`.
-  - `slots` is not written inline, like `slots: names`. Write the array of
-    names inside the `recipe()` call.
-  - `slots` is empty. List at least one name.
-  - A name is not a quoted string, is empty, or contains whitespace, like `''`
-    or `'top row'`. Use a plain name, like `'title'`.
-  - A name is listed twice. Remove the repeat.
-  - A slot map is not an inline object, like `base: styles` or
-    `sm: undefined`. Write it inline, keyed by slot name, or write `{}` when it
-    styles nothing.
-  - A slot map has a spread, like `...shared`, or a computed key, like
-    `[key]:`. Write each slot as a plain key, like `root: { … }`.
-  - A slot map styles a name that `slots` does not list, like `display` in
-    `base` of a recipe with `slots: ['root']`. Nest those styles under a listed
-    slot, or add the name to `slots`.
-- `ATM-E-RECIPE-FIELD`: a recipe field the compiler cannot read. Sync fails on
-  the whole recipe, and the message names the field, like `variants.size` or
-  `compoundVariants[1]`. Write that field inline as an object literal. A
-  `base`, a variant value or a compound's `css` may also name a const object
-  literal, like `base: baseStyles`. Without `slots`, `variants` and an axis may
-  name one too.
-  - A field is neither, like `base: pick()` or `variants: sizes` where `sizes`
-    comes from a call. Write it inline.
-  - A spread brings in a value that is not a const object literal, like
-    `size: { ...common }` where `common` comes from a call. Write the entries
-    inline.
-  - A map key is computed, like `[key]:`. Name each entry with a plain key.
-  - A compound entry is not an inline object, like `compoundVariants: [shared]`,
-    or it spreads a value, like `{ ...rest, css: { … } }`. Write the compound
-    inline.
-  - A recipe with `slots` writes `variants`, each axis and each compound inline.
-    A slot entry, like `base: { root: rootStyles }`, may name a const object.
-  - A default or a compound predicate is neither a string, boolean or number
-    literal nor a `const` in the same file that holds one, like
-    `defaultVariants: { size: pick() }` or `tone: LET_TONE` where `LET_TONE`
-    is a `let`. Write a literal, or name a `const` value. A predicate may also
-    be a list of them, and an empty or partly unreadable list is refused.
-  - `defaultVariants` is a name or a spread, like `defaultVariants: DEFAULTS`.
-    Write it inline, with each default as a plain key.
+- `ATM-E-RECIPE-SLOT`: a multi-slot `recipe()` definition violates one of the
+  static slot rules:
+  - `slots` must be a non-empty inline array of unique, non-whitespace string
+    literals (for example, `slots: ['root', 'title']`).
+  - Every slot map (`base`, each variant value, and each compound's `css`) must
+    be an inline object literal keyed only by names listed in `slots`, with no
+    spreads or computed keys.
+- `ATM-E-RECIPE-FIELD`: a `recipe()` field cannot be statically extracted. The
+  error names the field (such as `variants.size` or `compoundVariants[1]`):
+  - `base`, variant values, and compound `css` objects must be inline object
+    literals or `const` object literals, with static keys and `const` spreads.
+  - In a single-slot recipe, `variants` and each variant axis may also reference
+    a `const` object literal; in a multi-slot recipe, write `variants`, each
+    axis, and each compound entry inline.
+  - `defaultVariants` must be an inline object, and default values or compound
+    predicates must be string, boolean, or number literals (or local `const`
+    bindings holding them).
 - `TGN-W-INVALID-RECIPE-NAME`: a `className` that cannot form a TypeScript
   type name. The recipe is left out of the generated types. Rename it.
 - `TGN-W-DUPLICATE-RECIPE-STEM`: two recipe names form the same type name.
@@ -265,54 +241,27 @@ the code in any tooling you build.
 
 ### Components and files
 
-- `ATM-E-PARSE`: a file in `include` has a syntax error, or nests so deeply
-  that sync cannot read it safely. Sync fails on the whole file, and the message
-  names the line. Fix the syntax, or split or flatten the nested code. Three
-  limits apply:
-  - Brackets nested deeper than 1,024 levels.
-  - A chain of more than 8,192 links with no brackets, such as one long run of
-    `!`, `typeof`, ternary `?`, `=>` or `=`. The message reads "operator chain
-    longer than 8192 links". Split the chain into statements.
-  - Code nested deeper than 8,192 levels once parsed, such as one very long
-    chain of `+` or `||` operators, `else if` branches or conditional types.
-    Split the chain into several expressions.
-- `ATM-E-INCLUDE-BRACE-LIMIT`: an `include` pattern whose braces nest deeper
-  than 64 levels or expand to more than 1,024 globs, like `src/{a,b}` written
-  eleven times in a row. Sync fails, and the message names the pattern. Split
-  the pattern into several shorter ones. The config check refuses the same
-  patterns first, so a normal `ref sync` reports a config error instead.
-- `STT-W-SKIPPED-FILE`: sync skipped a file while looking for components that
-  pass style props on. The message says why. The rest of the files are still
-  read. Fix the file so it parses and can be read. A file nested deeper than
-  1,024 bracket levels, or holding a chain of more than 8,192 operators, gets a
-  message that names the line and says to split or flatten the nested
-  expression.
-- `STT-W-CLASS-COMPONENT`: a class component whose props take style props, like
-  `class Card extends React.Component<CardProps>`. Sync skips it, so the style
-  props passed to it get no CSS. Rewrite it as a function component.
-- `STT-W-TYPE-EXPANSION-LIMIT`: sync stopped following a props type at a depth,
-  argument size, or session budget limit. A long chain of type aliases, or a
-  generic that refers to itself with growing arguments, hits one. The props
-  that type would add get no CSS. Flatten the alias chain or shorten the
-  recursive type. The message names the type and the limit.
+- `ATM-E-PARSE`: a file in `include` has a syntax error or exceeds the parser
+  nesting limits (1,024 bracket levels or 8,192 chained operators/nodes). Fix
+  the syntax error, or split deeply nested expressions into smaller statements.
+- `ATM-E-INCLUDE-BRACE-LIMIT`: an `include` glob nests braces deeper than 64
+  levels or expands to more than 1,024 patterns. Split it into shorter globs.
+- `STT-W-SKIPPED-FILE`: sync skipped an unreadable, unparsable, or overly
+  nested file while tracing style props. Other files still trace; fix or
+  flatten the file named in the message.
+- `STT-W-CLASS-COMPONENT`: a class component accepts style props. Class
+  components are not traced; rewrite it as a function component.
+- `STT-W-TYPE-EXPANSION-LIMIT`: a props type exceeded the depth, argument-size
+  or session-budget guard while tracing style props. Flatten the alias chain or
+  recursive type named in the warning.
 - `STT-W-UNRESOLVED-HOC-ARGUMENT`: a higher-order component forwards style props
-  into an argument that names no component, like the result of a call. Sync
-  skips the component it creates, so its style props get no CSS. Pass a
-  component by name in that argument.
-- `STT-E-SCAN-FAILED`: sync cannot read a folder in the source tree it scans,
-  so it refuses the style trace and fails. The message names the folder and
-  the OS error. Make the folder readable, or fix the path if it does not
-  exist.
-- `STT-E-UNRESOLVED-SURFACE`: sync cannot build the StyleProps surface it
-  traces against, so it refuses the trace and fails. There are two causes,
-  and the message says which one applies. If sync finds no sync root, no
-  StyleProps or primitive entrypoint, or a declaration file it cannot read or
-  that yields no names, run `ref sync` so `.reference-ui/` is generated. Sync
-  rebuilds that folder on every run, so running it again also repairs
-  generated output that is damaged. If a guard limit cut a type on the surface
-  and hid names, the message names the declaration, its module and the limit:
-  `depth`, `argument` or `budget`. Flatten the alias chain or shorten the
-  recursive type it names, then run `ref sync` again.
+  to an argument that isn't a named component. Pass a component identifier.
+- `STT-E-SCAN-FAILED`: sync could not read a directory in the scanned source
+  tree. Check that the path exists and is readable.
+- `STT-E-UNRESOLVED-SURFACE`: sync could not load the `StyleProps` declaration
+  surface. Run `ref sync` to regenerate `.reference-ui/`, or flatten the
+  recursive type if the error names a type expansion limit (`depth`, `argument`
+  or `budget`).
 - `ATM-W-EXTERNAL-UNBACKED`: style props on a component from a package whose
   system is in neither `extends` nor `layers`. The props get no CSS. Add the
   `baseSystem` the warning names. See [Primitives](/primitives#your-own-components).
@@ -321,7 +270,7 @@ the code in any tooling you build.
 
 These appear only with `logs: ['compiler']`. Each marks a value sync could
 not read, so it gets no CSS. Write a literal value, or list the values under
-`staticCss`. See [What the compiler can read](/css#what-the-compiler-can-read).
+`staticCss`. See [Compiler](/compiler).
 
 - `ATM-W-DYNAMIC-EXPRESSION`: a function call or other expression, like
   `color: maybeColor()`.
@@ -346,7 +295,6 @@ not read, so it gets no CSS. Write a literal value, or list the values under
   literal object, like `css={cond && { … }}`.
 - `ATM-W-TAGGED-TEMPLATE-SITE`: `css` used as a tagged template. Call it
   with an object.
-- `ATM-W-TOKEN-CALL-REFUSED`: a `token()` call sync cannot read.
 
 ### API reference build
 

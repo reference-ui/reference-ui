@@ -29,7 +29,7 @@ const backLink = css({
 
 const eyebrow = css({
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
   color: 'docsMuted',
@@ -139,36 +139,36 @@ export function DiagramPage() {
         >
           <Ol margin="0" paddingLeft="5r" color="docsText" display="flex" flexDirection="column" gap="2r">
             <Li lineHeight="1.7">
-              <Strong fontWeight="600">One direction per diagram.</Strong> Down for processes,
+              <Strong weight="sans.semibold">One direction per diagram.</Strong> Down for processes,
               right for transforms. Never both in the same flow.
             </Li>
             <Li lineHeight="1.7">
-              <Strong fontWeight="600">Panels hold content; arrows carry verbs.</Strong> If a
+              <Strong weight="sans.semibold">Panels hold content; arrows carry verbs.</Strong> If a
               connection needs explaining, label the arrow — do not add a panel.
             </Li>
             <Li lineHeight="1.7">
-              <Strong fontWeight="600">Tones carry meaning.</Strong> Neutral structures, blue
+              <Strong weight="sans.semibold">Tones carry meaning.</Strong> Neutral structures, blue
               builds, green confirms, amber warns, red blocks, violet transforms.
             </Li>
             <Li lineHeight="1.7">
-              <Strong fontWeight="600">Tints never sit on tints.</Strong> A toned stage holds
+              <Strong weight="sans.semibold">Tints never sit on tints.</Strong> A toned stage holds
               neutral cards, chips and pills; the stage carries the colour.
             </Li>
             <Li lineHeight="1.7">
-              <Strong fontWeight="600">Intensity is the resting tint plus three steps.</Strong>{' '}
+              <Strong weight="sans.semibold">Intensity is the resting tint plus three steps.</Strong>{' '}
               Ghost, medium, firm, strong — the core tones, the same words the palette uses.
               Medium is the default, so most panels carry no intensity at all.
             </Li>
             <Li lineHeight="1.7">
-              <Strong fontWeight="600">Content is ordinary components.</Strong> Span, Code,
+              <Strong weight="sans.semibold">Content is ordinary components.</Strong> Span, Code,
               icons, and small css() chips. No diagram-specific content components.
             </Li>
             <Li lineHeight="1.7">
-              <Strong fontWeight="600">Nest rows, columns, and panels — never canvases.</Strong>{' '}
+              <Strong weight="sans.semibold">Nest rows, columns, and panels — never canvases.</Strong>{' '}
               One Diagram per figure; everything inside composes.
             </Li>
             <Li lineHeight="1.7">
-              <Strong fontWeight="600">Keep labels short.</Strong> A command, a handoff, a
+              <Strong weight="sans.semibold">Keep labels short.</Strong> A command, a handoff, a
               boundary name. Wide rows scroll on narrow screens rather than wrapping.
             </Li>
           </Ol>

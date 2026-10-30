@@ -1,0 +1,97 @@
+---
+title: Built in time
+section: Guides
+order: 1.5
+slug: built-in-time
+description: How Reference UI turns your styles into CSS before your app runs, and where to go next.
+---
+
+{/* Shape follows panda:get-started/thinking-in-panda and stylex:learn/thinking-in-stylex, much shorter. Facts from /compiler, /dynamic-styles, /sharing and /recipes. */}
+
+# Built in time
+
+`ref sync` reads your source without running it and writes plain CSS before
+your app runs: one shared class for each property and value, in a single
+stylesheet. Your components only pick between classes that already exist.
+
+The [compiler](/compiler) reads literals, constants, small pure helpers and
+both branches of a condition. A value that exists only at runtime gets no CSS.
+Every rule sits in a [cascade layer](/cascade-layers), so specificity and file
+order never decide which rule wins.
+
+## Build-time extraction
+
+Take a card like the one in [Build a component](/build-a-component). Sync
+finds every `css()` call in your source and extracts its styles at build time.
+In the browser, `css()` only returns the class name:
+
+```tsx
+// Card.tsx
+import { Div, css, type DivProps } from '@reference-ui/react'
+
+const card = css({ padding: '4r', bg: 'surface', borderRadius: 'md' })
+
+export function Card(props: DivProps) {
+  return <Div className={card} {...props} />
+}
+```
+
+## Your components take style props
+
+`Card` passes its props on to `Div`, so it takes style props too:
+
+```tsx
+import { Card } from './Card'
+
+<Card padding="6r" bg="brand" />
+```
+
+The compiler reads `<Card>` where you use it, follows `padding` and `bg`
+through `Card` to the `Div` it renders, and writes their CSS. There is nothing
+to register. It follows spreads, chains of components, higher-order
+components, re-exports, barrel files and package imports. See
+[Compiler](/compiler#how-it-follows-props).
+
+## Share your design system
+
+Define tokens, build your components on them, and export your base system.
+Another app adds it to `extends` or `layers`. Its CSS joins the app's one
+stylesheet, and the app's style props work on your components:
+
+```tsx
+import { Card } from 'my-design-system'
+
+<Card padding="6r" bg="surface" />
+```
+
+See [Sharing](/sharing) and [Export a base system](/export-base-system).
+
+## Compared with runtime CSS-in-JS
+
+Libraries like Emotion turn style objects into CSS on every render. Reference
+UI does that work once, at build time, so your components switch between
+classes that already exist. The one thing you give up is generating new CSS
+while the app runs, which is the slow path in those libraries too.
+
+A value that changes every frame, such as a drag position, belongs in React's
+`style` prop:
+
+```tsx
+// ❌ a new value every frame
+<Div transform={`translateX(${x}px)`} />
+
+// ✅ the frame value in `style`
+<Div transition="transform 150ms" style={{ transform: `translateX(${x}px)` }} />
+```
+
+That was always the case, even with runtime CSS-in-JS. Reference UI keeps you
+as close as it can to that way of working: you define your components and
+their styles together, and the CSS is written before your app runs.
+
+See [Dynamic styles](/dynamic-styles) for every pattern.
+
+## Diagnostics
+
+Sync reports a warning count after every run, and `--verbose` lists each
+warning. In development, `css()` warns in the browser console when a value has
+no CSS. See [Diagnostics](/diagnostics).

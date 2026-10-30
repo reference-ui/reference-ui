@@ -13,7 +13,7 @@ import { Diagram } from '../../components/diagram/Diagram'
 
 const panelTitle = css({
   fontSize: '4r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   color: 'docsText',
   lineHeight: '1.3',

@@ -1,4 +1,4 @@
-// Code primitive styles: inline code pill, kbd, pre, samp.
+// Code primitive styles: a monochrome inline code pill (subtle gray, no border), kbd, pre, samp.
 // It takes nothing and emits the globalCss map for the code elements.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography } from '../shared'
@@ -13,9 +13,6 @@ export const codePrimitiveStyles = {
     paddingInline: '0.4em',
     paddingBlock: '0.15em',
     borderRadius: 'sm',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderColor: '{colors.ui.code.inline.border}',
   },
   '.ref-kbd': {
     ...baseTypography,

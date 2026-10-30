@@ -42,9 +42,9 @@ See [Style props](/style-props) for every prop and value.
 
 ## css()
 
-Use `css()` when the same styles go on several elements, or on an element
-that is not a primitive, such as a component from another library. It
-returns a class name:
+Use `css()` when several elements share the same styles, or when styling a
+non-primitive element (such as a native tag or a component from another
+library). It returns a class name string:
 
 ```tsx
 import { css } from '@reference-ui/react'
@@ -54,17 +54,13 @@ const card = css({ padding: '4r', bg: 'surface', borderRadius: 'card' })
 <article className={card}>…</article>
 ```
 
-The compiler reads `css()` calls from your source without running it. When
-the choice is made at runtime, write one call per option and pick between
-the class names. See [What the compiler can read](/css#what-the-compiler-can-read).
+See [CSS](/css) and [Dynamic styles](/dynamic-styles).
 
 ## recipe()
 
-A component with options, such as `tone` or `size`, soon fills one `css()`
-call with ternaries. A lookup table of `css()` classes is a variant without
-the name. Swap it for `recipe()`, which takes base styles and named
-variants, and returns a function that gives the class names for the
-variants you pick:
+When a component has named variants like `tone` or `size`, use `recipe()`. It
+takes base styles and variant maps, and returns a function that produces the
+class names for a given selection:
 
 ```tsx
 import { recipe } from '@reference-ui/react'
@@ -84,8 +80,7 @@ const card = recipe({
 <article className={card({ tone: 'brand' })}>…</article>
 ```
 
-[Build a component](/build-a-component) turns a recipe into a typed
-component, and [Recipes](/recipes) has every option.
+See [Build a component](/build-a-component) and [Recipes](/recipes).
 
 ## globalCss()
 

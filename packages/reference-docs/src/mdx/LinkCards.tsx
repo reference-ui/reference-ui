@@ -44,7 +44,7 @@ const title = css({
   justifyContent: 'space-between',
   gap: '2r',
   fontSize: '0.9375rem',
-  fontWeight: '600',
+  weight: 'sans.semibold',
 })
 
 const arrow = css({

@@ -1,52 +1,51 @@
 ---
 title: Library components
 section: Guides
-group: Theming
-order: 80
+order: 2
 slug: library-components
 description: Why the library has the components it has, and how they stay transparent.
 ---
 
 {/* Source: packages/reference-lib/src/components/README.md (the component manifesto). */}
 
+import { CarouselDemo } from './carousel-demo'
+import { LibraryKindsDiagram } from './library-kinds-diagram'
+
 # Library components
 
-Older component libraries were built to save keystrokes. One widget took a
-configuration object and rendered a whole feature, so you wrote less code.
-That worked until your product needed something the widget didn't plan for.
-After that, every change was a workaround.
+Older component libraries saved keystrokes with monolithic components,
+favouring convenience over composition. Once your product needed something they
+didn't plan for, every change was a workaround.
 
-`@reference-ui/lib` addresses this by favouring patterns over widgets. It is a
-small set of transparent components, designed to be easily understood by both
-humans and agents.
+`@reference-ui/lib` favours patterns over widgets: a small set of transparent
+components that humans and agents can both understand.
 
 ## What's in the library
 
 A component joins the library only when the browser has no native equivalent,
 the behaviour is hard to rebuild (focus trapping, date math, positioning) and
-many products need the same API. Anything else is a composition of smaller parts.
+many products need the same API. Each one falls into one of three kinds.
 
-That keeps the set small:
+<LibraryKindsDiagram />
 
-| Group | Components |
-| --- | --- |
-| Foundation | `ReferenceLibrary`, `Portal`, `Overlay`, `Popover`, `Toast` |
-| Widgets | `Listbox`, `Combobox`, `Menu`, `Tabs`, `Slider`, `Switch`, `Tree`, `NumberField`, `DateField`, `Calendar`, `Collapsible`, `Accordion`, `Splitter`, `Tooltip` |
-| Form chrome | `Field` |
-| Building blocks | `Slot`, `Presence`, `RovingFocus`, `FocusLock` |
+See [Components](/components) for the full list.
 
-## What we left out
+## What's not in the library
 
-Every omission is deliberate. Checkbox, radio, `<progress>` and `<meter>` are
-native elements with built-in behaviour, so the library doesn't wrap them.
-Carousels and scroll areas are CSS: scroll snap and `overflow` cover them.
+The library leaves out components with no hard behaviour, and components
+that mean something different in every product, such as a card or a navbar.
 
-A new pattern name is not a reason for a new component. If it brings no new
-hard behaviour, it would only bloat the API.
+You build them from [primitives](/primitives). A checkbox is an `Input` with
+`type="checkbox"`, and [`Field`](/field) wraps a plain `Input` to give it a
+bezel.
+
+A new pattern name is not a reason for a component either.
+
+<CarouselDemo />
 
 ## Patterns are compositions
 
-Dialogs, drawers, selects and menus are not separate components. Each is a
+Dialogs, drawers and selects are not separate components. Each is a
 documented composition of the components above. A dialog is an `Overlay`
 with `role="dialog"`:
 
@@ -63,16 +62,13 @@ with `role="dialog"`:
 
 | Pattern | Built from |
 | --- | --- |
-| Dialog, alert dialog | `Overlay` with a dialog role |
-| Drawer, sheet | `Overlay` with `edge` |
-| Select, autocomplete | `Combobox` with a `Listbox` popup |
-| Menu button | `Popover` with a `Menu` |
-| Command palette | `Overlay` with a `Combobox` |
-| Toolbar, toggle group | `RovingFocus` over your buttons |
-| FAQ | `Accordion` |
+| Dialog, Alert Dialog | `Overlay` with a dialog role |
+| Drawer, Sheet | `Overlay` with `edge` |
+| Select, Autocomplete | `Combobox` with a `Listbox` popup |
 
 ## Stability
 
 A small set is one we can keep stable. Patterns may change over time, but the
-components underneath them are built to last. We are committed to never
-shipping a version 2 that breaks them.
+components underneath them are built to last.
+
+**We are committed to never shipping a version 2.**

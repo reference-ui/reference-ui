@@ -22,7 +22,7 @@ export const brand = css({ display: 'flex', alignItems: 'center', gap: '2r' })
 
 export const brandTitle = css({
   fontSize: '4r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   color: 'docsText',
   lineHeight: '1.3',
@@ -41,7 +41,7 @@ export const stageHead = css({ display: 'flex', alignItems: 'center', gap: '3r' 
 export const stageNo = css({
   fontFamily: 'mono',
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   paddingX: '2r',
   paddingY: '1r',
   borderRadius: 'sm',
@@ -53,7 +53,7 @@ export const stageNo = css({
 export const stageNoBlue = css({
   fontFamily: 'mono',
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   paddingX: '2r',
   paddingY: '1r',
   borderRadius: 'sm',
@@ -65,7 +65,7 @@ export const stageNoBlue = css({
 export const stageNoGreen = css({
   fontFamily: 'mono',
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   paddingX: '2r',
   paddingY: '1r',
   borderRadius: 'sm',
@@ -76,7 +76,7 @@ export const stageNoGreen = css({
 
 export const stageTitle = css({
   fontSize: '4r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   color: 'docsText',
   lineHeight: '1.3',
@@ -86,7 +86,7 @@ export const spacer = css({ flex: '1' })
 
 export const stageTag = css({
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
   color: 'diagramMuted',
@@ -95,7 +95,7 @@ export const stageTag = css({
 
 export const tagPillBlue = css({
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   paddingX: '3r',
   paddingY: '1r',
   borderRadius: 'full',
@@ -109,7 +109,7 @@ export const cardHead = css({ display: 'flex', alignItems: 'center', gap: '2r' }
 
 export const cardTitle = css({
   fontSize: '4r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   lineHeight: '1.3',
 })
@@ -135,14 +135,14 @@ export const codeBlock = css({
 
 export const analysisTitle = css({
   fontSize: '5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   lineHeight: '1.3',
 })
 
 export const pillGreen = css({
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   paddingX: '3r',
   paddingY: '1r',
   borderRadius: 'full',
@@ -221,7 +221,7 @@ export const skeletonBar = css({ height: '1r', borderRadius: 'full', bg: 'diagra
 
 export const actionButton = css({
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   color: 'docsText',
   bg: 'diagramPanel',
   borderWidth: '1px',

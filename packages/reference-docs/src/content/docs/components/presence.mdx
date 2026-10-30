@@ -13,8 +13,8 @@ import { PresenceDemo } from './presence-demo'
 
 # Presence
 
-When `present` turns `false`, Presence waits for the child's exit animation
-or transition to finish, then unmounts it.
+Presence keeps an element mounted until its exit animation or transition
+finishes, then unmounts it when `present` turns `false`.
 
 <Preview>
   <PresenceDemo />

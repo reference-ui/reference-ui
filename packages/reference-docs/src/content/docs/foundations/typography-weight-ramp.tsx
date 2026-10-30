@@ -32,7 +32,7 @@ function FamilyLine({ spec, children }: { spec: string; children: ReactNode }) {
 function WeightGroup({ name, children }: { name: string; children: ReactNode }) {
   return (
     <Div display="flex" flexDirection="column" gap="1r">
-      <Span fontSize="3.5r" fontWeight="600" color="docsText">
+      <Span fontSize="3.5r" weight="sans.semibold" color="docsText">
         {name}
       </Span>
       {children}

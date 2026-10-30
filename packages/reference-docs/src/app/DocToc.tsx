@@ -15,7 +15,7 @@ type TocItem = { id: string; text: string; level: 'h2' | 'h3' }
 
 const label = css({
   fontSize: '0.6875rem',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
   color: 'docsNavHeading',

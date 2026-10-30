@@ -19,6 +19,7 @@ import {
   css,
 } from '@reference-ui/react'
 import { CodeBlock } from './CodeBlock'
+import { Info, Warn } from './Callout'
 import { CodeTabs } from './CodeTabs'
 import { MdxH1, MdxH2, MdxH3, MdxH4, Step, type MdxProps } from './headings'
 import { Install } from './Install'
@@ -113,7 +114,7 @@ const tdClass = css({
 function MdxP(props: MdxProps<'p'>) {
   return (
     <P
-      color="docsText"
+      color="docsBody"
       fontSize="4r"
       lineHeight="1.7"
       marginTop="0"
@@ -124,11 +125,11 @@ function MdxP(props: MdxProps<'p'>) {
 }
 
 function MdxUl(props: MdxProps<'ul'>) {
-  return <Ul marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />
+  return <Ul marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsBody" {...props} />
 }
 
 function MdxOl(props: MdxProps<'ol'>) {
-  return <Ol marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />
+  return <Ol marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsBody" {...props} />
 }
 
 function MdxLi(props: MdxProps<'li'>) {
@@ -136,7 +137,7 @@ function MdxLi(props: MdxProps<'li'>) {
 }
 
 function MdxStrong(props: MdxProps<'strong'>) {
-  return <Strong color="docsText" fontWeight="700" {...props} />
+  return <Strong color="docsText" weight="sans.semibold" {...props} />
 }
 
 function MdxHr(props: MdxProps<'hr'>) {
@@ -193,6 +194,8 @@ export const mdxComponents = {
   td: MdxTd,
   pre: CodeBlock,
   CodeTabs,
+  Info,
+  Warn,
   Install,
   InstallPrompt,
   LinkCard,

@@ -19,7 +19,7 @@ const card = recipe({
       borderRadius: 'md',
       '&:hover > [data-slot="title"]': { textDecoration: 'underline' },
     },
-    title: { margin: '0', fontWeight: '600' },
+    title: { margin: '0', weight: 'sans.semibold' },
     body: { margin: '0', opacity: 0.8 },
   },
   variants: {

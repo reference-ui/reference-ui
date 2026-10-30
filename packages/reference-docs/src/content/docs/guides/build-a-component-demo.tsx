@@ -15,12 +15,12 @@ const card = recipe({
   },
   variants: {
     tone: {
-      slate: { bg: 'slate.500/strong' },
-      violet: { bg: 'violet.500/strong' },
-      rose: { bg: 'rose.500/strong' },
+      violet: { bg: 'violet.500/firm', color: 'violet.700', _dark: { color: 'violet.200' } },
+      blue: { bg: 'blue.500/firm', color: 'blue.700', _dark: { color: 'blue.200' } },
+      green: { bg: 'green.500/firm', color: 'green.700', _dark: { color: 'green.200' } },
     },
   },
-  defaultVariants: { tone: 'slate' },
+  defaultVariants: { tone: 'violet' },
 })
 
 type CardProps = DivProps & RecipeVariantProps<typeof card>
@@ -32,11 +32,10 @@ function Card({ tone, className, ...props }: CardProps) {
 export function CardDemo() {
   return (
     <>
-      <Card>Slate</Card>
       <Card tone="violet">Violet</Card>
-      <Card tone="rose">Rose</Card>
-      <Card tone="violet" padding="6r">
-        More padding
+      <Card tone="blue">Blue</Card>
+      <Card tone="green" padding="6r">
+        Green, with more padding
       </Card>
     </>
   )

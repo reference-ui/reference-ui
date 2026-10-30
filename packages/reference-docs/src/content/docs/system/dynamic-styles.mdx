@@ -1,0 +1,198 @@
+---
+title: Dynamic styles
+section: System
+group: Build and output
+order: 216
+slug: dynamic-styles
+description: Style from a value chosen at runtime, such as state, a prop or user input.
+---
+
+{/* Shape follows panda:styling/dynamic-styling (✅ / ❌ pairs, runtime values, static CSS, custom property), panda:styling/static, stylex:learn/styling-ui/defining-styles#dynamic-styles, stylex:learn/styling-ui/using-styles#conditional-styles and vanilla-extract:packages/dynamic (assignInlineVars), with chakra:guides/styling-performance#the-cost-of-dynamic-styles and #zero-runtime-alternative for the runtime CSS-in-JS callout. Facts from CORE-STATIC-01, CORE-STATIC-03, CORE-SYNC-12, ATM-SITE-44, ATM-SITE-51, ATM-HARVEST-01, ATM-HARVEST-02. */}
+
+# Dynamic styles
+
+`ref sync` extracts styles from your source files at build time without running
+your components. Values that only exist at runtime don't generate CSS on their
+own: instead, switch between static values in your source, or pass the runtime
+value through a CSS variable or `style`.
+
+<Info title="Coming from runtime CSS-in-JS">
+Libraries like Emotion turn style objects into CSS on every render. Reference
+UI generates the stylesheet once at build time, and your components switch
+between existing classes at runtime.
+</Info>
+
+## Style from state
+
+Use a ternary or logical expression between static values. The compiler
+extracts both branches and state picks one at runtime:
+
+```tsx
+const [color, setColor] = useState('brand')
+
+// ❌ state as the value
+<Div bg={color} />
+
+// ✅ state chooses between static values
+<Div bg={hasError ? 'danger' : 'surface'} />
+<Div opacity={open ? '1' : '0'} />
+```
+
+## Style from a prop
+
+When a component forwards style props to a primitive, the compiler traces them
+from parent to child and extracts static values at the call site:
+
+```tsx
+export function Card(props: DivProps) {
+  return <Div bg="surface" {...props} />
+}
+
+// ✅ traced through Card to Div
+<Card padding="6r" />
+```
+
+When a component takes its own custom prop (like `tone`), passing that variable
+into a style prop (`<Span color={tone}>`) can't be statically analyzed inside
+the component. Define the options at build time with a [recipe](/recipes)
+instead:
+
+```tsx
+// ❌ `tone` is a runtime variable inside Badge
+function Badge({ tone }: { tone: 'info' | 'danger' }) {
+  return <Span color={tone}>New</Span>
+}
+
+// ✅ variants are defined at build time, `tone` selects one
+const badge = recipe({
+  className: 'badge',
+  variants: {
+    tone: {
+      info: { color: 'brand' },
+      danger: { color: 'danger' },
+    },
+  },
+})
+
+function Badge({ tone }: { tone: 'info' | 'danger' }) {
+  return <Span className={badge({ tone })}>New</Span>
+}
+```
+
+For a one-off component, map each prop value to a `css()` class:
+
+```tsx
+const toneClass = {
+  info: css({ color: 'brand' }),
+  danger: css({ color: 'danger' }),
+}
+
+<Span className={toneClass[tone]}>New</Span>
+```
+
+See [Recipes](/recipes#values-picked-at-runtime) and
+[Compiler](/compiler#how-it-follows-props).
+
+## Dynamic sizes
+
+The compiler only extracts complete value strings, not template strings with
+runtime variables like `` `${size}r` ``. For a fixed set of sizes, look up the
+full string by key:
+
+```tsx
+// ❌ partial template string
+<Div padding={`${size}r`} />
+
+// ✅ lookup of complete values
+const padding = { sm: '2r', md: '4r', lg: '6r' } as const
+<Div padding={padding[size]} />
+```
+
+For an arbitrary number of rhythm steps at runtime, pass
+[`getRhythm()`](/spacing#getrhythm) to `style`:
+
+```tsx
+import { getRhythm } from '@reference-ui/system'
+
+<Div style={{ padding: getRhythm(steps) }} />
+```
+
+## Arbitrary runtime values
+
+When a value can be anything at runtime, such as a colour from a picker, reference
+a CSS custom property in your style prop and set its value in `style`:
+
+```tsx
+// ❌ open-ended runtime value
+<Div bg={user.color} />
+
+// ✅ static class with a CSS variable
+<Div bg="var(--swatch)" style={{ '--swatch': user.color }} />
+```
+
+## Animation
+
+Values that change on every frame, such as drag coordinates or springs, belong in
+`style` so they update the DOM directly. Keep static properties like
+`transition` in style props:
+
+```tsx
+// ❌ new class value every frame
+<Div transform={`translateX(${x}px)`} />
+
+// ✅ frame value in `style`
+<Div transition="transform 150ms" style={{ transform: `translateX(${x}px)` }} />
+```
+
+For keyframe animations, define the keyframes in your theme and toggle the
+animation token from state. See [Animation](/animation).
+
+## A token name chosen at runtime
+
+When state or data holds a token name and you want utility classes instead of
+inline styles, list the tokens under `staticCss` in `ui.config.ts` to
+pre-generate them:
+
+```tsx
+// ❌ no class is extracted from this call site
+<Span color={tone}>New</Span>
+```
+
+```ts
+// ✅ pre-generate the tokens `tone` can take
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  staticCss: {
+    color: ['brand', 'danger'],
+    '_hover:bg': ['*'],
+  },
+})
+```
+
+Keys are properties with an optional condition prefix, such as `'_hover:bg'`.
+Values are token names, or `'*'` for every token in that category. Unknown token
+names fail sync, and `'*'` on an untokenized property warns. See
+[Config](/config#staticcss).
+
+## Keys and spreads
+
+Write property names out explicitly and only spread constant style objects in
+`css()`:
+
+```tsx
+// ❌ dynamic key or runtime spread
+css({ [property]: '4r' })
+css({ ...user.styles })
+
+// ✅ explicit keys and constant spreads
+const card = { padding: '4r', bg: 'surface' }
+css({ ...card, borderRadius: 'md' })
+```
+
+## Missing styles at runtime
+
+In development, `css()` logs a console warning once when a property and value
+has no compiled class. The style still applies if another file or `staticCss`
+already compiled the same pair. See [Compiler](/compiler#what-it-can-read) for
+all supported static expressions.

@@ -31,7 +31,7 @@ export interface NavSection {
 }
 
 /** Sidebar section order; unknown sections sort last, then alphabetically. */
-const SECTION_ORDER = ['Get started', 'Guides', 'MCP', 'System', 'Foundations', 'Components']
+const SECTION_ORDER = ['Guides', 'MCP', 'System', 'Foundations', 'Components']
 
 function sectionRank(section: string): number {
   const rank = SECTION_ORDER.indexOf(section)

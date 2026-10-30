@@ -4,181 +4,137 @@ section: System
 group: Overview
 order: 20
 slug: imports
-description: Every package you import, what each exports, and which ones sync generates.
+description: Every package you import and what each exports.
 ---
 
 # Imports and packages
 
-You import Reference UI from three kinds of package:
-
-- `@reference-ui/core`, which you install. It holds the config calls and the
-  `ref` CLI.
-- The packages `ref sync` generates for your system: `@reference-ui/react`,
-  `@reference-ui/system`, `@reference-ui/styled` and `@reference-ui/types`.
-- The component packages `@reference-ui/lib` and `@reference-ui/icons`, which
-  you install.
-
-## Which call comes from where
-
-| Call | Import from | Where you use it |
-| --- | --- | --- |
-| `defineConfig()` | `@reference-ui/core` | `ui.config.ts` |
-| `extendSystem()` | `@reference-ui/core` | `ui.config.ts`, or a file it imports |
-| `tokens()`, `font()`, `keyframes()`, `globalCss()`, `recipe()` | `@reference-ui/system` | Theme files |
-| `getRhythm()` | `@reference-ui/system` | Components |
-| Primitives such as `Div`, `css()`, `recipe()`, `useColorMode()` | `@reference-ui/react` | Components |
-| The stylesheet | `@reference-ui/react/styles.css` | Your app's entry file |
-| Style, token, primitive and recipe types | `@reference-ui/react` | Components |
-| Config and theme input types | `@reference-ui/core` | Config and theme files |
-| Library components | `@reference-ui/lib` | Components |
-| The library's base system | `@reference-ui/lib/baseSystem` | `ui.config.ts` |
-| Icon components | `@reference-ui/icons` | Components |
-| `Reference` for your own types | `@reference-ui/types` | Components |
-
-A file is a theme file when it imports from `@reference-ui/system` or
-`@reference-ui/core` and matches your config's `include`. Sync runs each
-theme file and collects its calls.
-
-```ts
-// src/theme/tokens.ts
-import { tokens } from '@reference-ui/system'
-
-tokens({
-  colors: {
-    brand: { value: '#0f766e' },
-  },
-})
-```
-
-```tsx
-// src/components/Card.tsx
-import { Div, css } from '@reference-ui/react'
-```
-
-## Generated packages
-
-`ref sync` writes four packages to `.reference-ui/` and links each one into
-`node_modules/@reference-ui/`. Run sync once before you typecheck or build, so
-the imports resolve.
-
-| Package | Folder | Entry points |
-| --- | --- | --- |
-| `@reference-ui/react` | `.reference-ui/react/` | `.`, `./styles.css` |
-| `@reference-ui/system` | `.reference-ui/system/` | `.`, `./baseSystem` |
-| `@reference-ui/styled` | `.reference-ui/styled/` | Types and stylesheet behind `@reference-ui/react` |
-| `@reference-ui/types` | `.reference-ui/types/` | `.` |
-
-Each sync rewrites these packages from `ui.config.ts` and your source. Don't
-edit them. See [Sync](/sync).
+You install `@reference-ui/core`, `@reference-ui/lib` and
+`@reference-ui/icons`. `ref sync` generates the rest into `.reference-ui/` and
+links them into `node_modules/@reference-ui/`, so run sync once before you
+typecheck or build. Don't edit the generated packages: each sync rewrites
+them. See [Sync](/sync).
 
 ## `@reference-ui/core`
 
-Install it as a dev dependency. It provides the `ref` CLI and these exports:
+Install it as a dev dependency. It also provides the `ref` CLI.
 
-| Export | Kind | Description |
-| --- | --- | --- |
-| `defineConfig` | Function | Returns your config as given, typed as `ReferenceUIConfig`. See [Config](/config). |
-| `extendSystem` | Function | `extendSystem(base, { tokens })` returns a copy of a base system with your token values. See [Base systems](/base-systems#extendsystem). |
-| `ReferenceUIConfig` | Type | The `ui.config.ts` object. |
-| `BaseSystem` | Type | A system you list in `extends` or `layers`. |
-| `TokenConfig`, `ReferenceTokenConfig`, `ReferenceTokenLeaf` | Type | What `tokens()` takes. |
-| `FontOptions`, `FontDefinition`, `FontFaceRule`, `FontWeightName` | Type | What `font()` takes. |
-| `KeyframesConfig` | Type | What `keyframes()` takes. |
-| `GlobalCssConfig`, `GlobalCssRule` | Type | What `globalCss()` takes. |
-| `RecipeConfig` | Type | What `recipe()` takes. |
+### `defineConfig`
 
-```ts
-// ui.config.ts
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem } from '@reference-ui/lib/baseSystem'
+Returns your config as given, typed as `ReferenceUIConfig`. See [Config](/config).
 
-export default defineConfig({
-  name: 'my-app',
-  include: ['src/**/*.{ts,tsx}'],
-  extends: [baseSystem],
-})
-```
+### `extendSystem(base, { tokens })`
 
-Import the input types from here when a theme file needs them:
+Returns a copy of a base system with your token values. See
+[Base systems](/base-systems#extendsystem).
 
-```ts
-import type { FontOptions } from '@reference-ui/core'
-```
+### Types
+
+`ReferenceUIConfig`, `BaseSystem`, and the input types for each theme call:
+`TokenConfig`, `FontOptions`, `KeyframesConfig`, `GlobalCssConfig` and
+`RecipeConfig`.
 
 ## `@reference-ui/system`
 
-Generated by sync. It holds the theme calls and your own base system.
+Generated by sync. Sync runs every file in your `include` that imports from
+here and collects its calls.
 
-| Export | Description |
-| --- | --- |
-| `tokens(config)` | Adds tokens. See [Tokens](/tokens). |
-| `font(name, options)` | Adds a font family. See [Fonts](/fonts). |
-| `keyframes(config)` | Adds keyframes. See [Animation](/animation). |
-| `globalCss(config)` | Adds global styles. See [Global CSS](/global-css). |
-| `recipe(config)` | Adds a recipe to the system, so sync emits its CSS. See [Recipes](/recipes). |
-| `getRhythm(num, denom?)` | Returns a rhythm value as a CSS string. See [Spacing](/spacing). |
-| `baseSystem` | Your system, ready for another app's `extends` or `layers`. |
-| `defineConfig` | The same call as in `@reference-ui/core`. Import it from core in `ui.config.ts`. |
+### `tokens(config)`
 
-The `./baseSystem` entry exports `baseSystem` on its own. A package that
-publishes your system points its `./baseSystem` export at
-`.reference-ui/system/baseSystem.mjs`. See
-[Share a design system](/share-a-design-system).
+Adds tokens. See [Tokens](/tokens).
+
+### `font(name, options)`
+
+Adds a font family. See [Fonts](/fonts).
+
+### `keyframes(config)`
+
+Adds keyframes. See [Animation](/animation).
+
+### `globalCss(config)`
+
+Adds global styles. See [Global CSS](/global-css).
+
+### `recipe(config)`
+
+Adds a recipe to the system, so sync emits its CSS. See [Recipes](/recipes).
+
+### `getRhythm(num, denom?)`
+
+Returns a rhythm value as a CSS string. See [Spacing](/spacing).
+
+### `baseSystem`
+
+Your system, ready for another app's `extends` or `layers`. Also exported on
+its own from `@reference-ui/system/baseSystem`. See
+[Export a base system](/export-base-system).
 
 ## `@reference-ui/react`
 
-Generated by sync. Its `css()` and `recipe()` are bound to your system.
+Generated by sync, and bound to your system.
 
-| Export | Description |
-| --- | --- |
-| Primitives | One component per HTML element: `Div`, `Span`, `Button`, `Input` and the rest. See [Primitives](/primitives). |
-| `css(...styles)` | Returns a class name for one or more style objects. See [css()](/css). |
-| `recipe(config)` | Returns a function that picks classes from variants. See [Recipes](/recipes). |
-| `useColorMode()` | Returns `'light'`, `'dark'` or `undefined` from the nearest `colorMode`. See [Light and dark](/light-and-dark). |
-| Types | `SystemStyleObject`, `StyleProps`, `CssStyles`, `<Tag>Props`, `RecipeVariantProps` and the token unions. See [Types](/types). |
-| `./styles.css` | The compiled stylesheet. Import it once in your app's entry file. |
+### Primitives
 
-```tsx
-import { Div, css, recipe, type DivProps } from '@reference-ui/react'
-```
+One component per HTML element: `Div`, `Span`, `Button`, `Input` and the
+rest. See [Primitives](/primitives).
 
-## `@reference-ui/styled`
+### `css(...styles)`
 
-Generated by sync. It holds the stylesheet and the style and token types that
-`@reference-ui/react` re-exports. Import both from `@reference-ui/react`.
+Returns a class name for one or more style objects. See [css()](/css).
+
+### `recipe(config)`
+
+Returns a function that picks classes from variants. See [Recipes](/recipes).
+
+### `useColorMode()`
+
+Returns `'light'`, `'dark'` or `undefined` from the nearest `colorMode`. See
+[Light and dark](/light-and-dark).
+
+### Types
+
+`SystemStyleObject`, `StyleProps`, `<Tag>Props`, `RecipeVariantProps` and the
+token unions. See [Types](/types).
+
+### `@reference-ui/react/styles.css`
+
+The compiled stylesheet. Import it once in your app's entry file.
 
 ## `@reference-ui/types`
 
-Generated by sync from the files in your `include`. It exports the
-[`Reference`](/reference) component, which renders the API of any interface
-or type alias in those files.
+Generated by sync from the files in your `include`.
 
-```tsx
-import { Reference } from '@reference-ui/types'
+### `Reference`
 
-<Reference name="CardProps" />
-```
+Renders the API of any interface or type alias in those files. See
+[Reference](/reference).
 
 ## `@reference-ui/lib`
 
 The component library. Install it as a dependency.
 
-| Entry point | Exports |
-| --- | --- |
-| `@reference-ui/lib` | The components, such as `Overlay`, `Tabs` and `Field`, plus `controlHeight`, `controlSize`, `iconSizes`, `defaultIconSize`, `setupFocusVisible` and `Reference` for the library's own types. See [Components](/components). |
-| `@reference-ui/lib/baseSystem` | `baseSystem`: the library's system for your `extends`. It carries the icons' system too. |
-| `@reference-ui/lib/theme` | The theme values as plain objects: `colors`, `design`, `fonts`, `radii`, `tones`, `animationTokens` and the keyframes presets. See [Foundations](/foundations). |
+### Components
 
-In `ui.config.ts`, import `baseSystem` from `@reference-ui/lib/baseSystem`.
-Importing the root entry there slows config loading and raises
-[`BSS-W-SLOW-CONFIG`](/sync).
+`Overlay`, `Tabs`, `Field` and the rest. See [Components](/components).
+
+### `@reference-ui/lib/baseSystem`
+
+The library's system for your `extends`, icons included. Import it from this
+entry in `ui.config.ts`: the root entry slows config loading.
+
+### `@reference-ui/lib/theme`
+
+The theme values as plain objects: `colors`, `fonts`, `radii`, `tones` and
+the rest. See [Foundations](/foundations).
 
 ## `@reference-ui/icons`
 
-Material Symbols icons as components, such as `SearchIcon`. Install it as a
-dependency.
+Material Symbols icons as components. Install it as a dependency.
 
-| Entry point | Exports |
-| --- | --- |
-| `@reference-ui/icons` | The icon components. See [Icons](/icons). |
-| `@reference-ui/icons/baseSystem` | `baseSystem`: the icons' system, for `layers` when you don't extend the library. |
+### Icons
+
+`SearchIcon` and the rest. See [Icons](/icons).
+
+### `@reference-ui/icons/baseSystem`
+
+The icons' system, for `layers` when you don't extend the library.

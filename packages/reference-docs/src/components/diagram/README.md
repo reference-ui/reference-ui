@@ -2,21 +2,28 @@
 
 How docs diagrams look, and the rules that keep them coherent. Tones are core Reference UI (`bg="blue.500/medium"`), spent rather than mixed by hand.
 
+## Flush with the page
+
+A diagram sits flush with the content: no background, radius or padding
+around it. The page is the canvas, and the panels are the only surfaces.
+Never wrap a diagram in a tinted box.
+
 ## The environment
 
-Every panel belongs to one environment: the midnight slate ramp.
+Every panel belongs to one environment: the gray ramp.
 
 | role | light | dark |
 | ---- | ----- | ---- |
-| canvas | `slate.100` | `slate.950` |
-| panel | `#ffffff` | `slate.900` |
-| hairline | `slate.200` | `slate.800` |
-| chip / inset | `slate.100` | `slate.800` |
+| canvas | the page | the page |
+| panel | `#ffffff` | `gray.950` |
+| hairline | `gray.100` | `gray.900` |
+| chip / inset | `gray.100` | `gray.800` |
 
 A tone never replaces the environment — it mixes over the canvas.
 
 ## Tone is meaning, intensity is loudness
 
+- **neutral is the default.** Diagrams are gray in different tones, matching the core tones; a hue needs a reason (it carries one of the meanings below), and a figure never colours panels just to tell them apart.
 - **tone** — `neutral | blue | green | amber | red | violet`. Blue builds, green generates/confirms, amber fences, red blocks, violet transforms, neutral structures.
 - **intensity** — `ghost | medium | firm | strong`. `medium` is the resting tint and the default.
 

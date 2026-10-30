@@ -66,7 +66,7 @@ export function MdxH1(props: MdxProps<'h1'>) {
     <H1
       color="docsText"
       fontSize="9r"
-      fontWeight="600"
+      weight="sans.semibold"
       letterSpacing="-0.025em"
       lineHeight="1.15"
       marginTop="0"
@@ -94,7 +94,7 @@ export function MdxH2({ children, ...props }: MdxProps<'h2'>) {
       className={headingHover}
       color="docsText"
       fontSize="6r"
-      fontWeight="600"
+      weight="sans.semibold"
       letterSpacing="-0.02em"
       lineHeight="1.25"
       marginTop="12r"
@@ -123,7 +123,7 @@ const stepBadge = css({
   bg: 'docsActiveBg',
   color: 'docsText',
   fontSize: '0.8125rem',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   fontVariantNumeric: 'tabular-nums',
   letterSpacing: '0',
 })
@@ -153,7 +153,7 @@ export function MdxH4(props: MdxProps<'h4'>) {
     <H4
       color="docsText"
       fontSize="4r"
-      fontWeight="600"
+      weight="sans.semibold"
       lineHeight="1.4"
       marginTop="6r"
       marginBottom="2r"
@@ -175,7 +175,7 @@ function SubHeading({ children, className, badge, id: givenId, ...props }: SubHe
       className={[headingHover, stepAfterSection, className].filter(Boolean).join(' ')}
       color="docsText"
       fontSize="4.5r"
-      fontWeight="600"
+      weight="sans.semibold"
       letterSpacing="-0.01em"
       lineHeight="1.35"
       marginTop="10r"

@@ -14,7 +14,7 @@ import { Diagram } from '../../components/diagram/Diagram'
 
 const title = css({
   fontSize: '5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   color: 'docsText',
   lineHeight: '1.3',
@@ -34,7 +34,7 @@ const chip = css({
 
 const pill = css({
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   color: 'diagramBlueText',
   bg: 'diagramChip',
   paddingX: '3r',

@@ -41,7 +41,7 @@ const arrow = css({
 
 const eyebrow = css({
   fontSize: '0.6875rem',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
   color: 'docsNavHeading',
@@ -49,7 +49,7 @@ const eyebrow = css({
 
 const title = css({
   fontSize: '0.9375rem',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',

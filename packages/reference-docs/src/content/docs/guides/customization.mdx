@@ -1,8 +1,7 @@
 ---
 title: Customization
 section: Guides
-group: Theming
-order: 70
+order: 4
 slug: customization
 description: Customize primitives, library components and anything built with Reference UI.
 ---
@@ -77,7 +76,7 @@ Your global CSS sits in a later [cascade layer](/cascade-layers) than the
 library's, so it wins. Style props sit in a later layer than global CSS, so
 they still override it on one element.
 
-## Extend the library's tokens
+## Customize the library's tokens
 
 The library styles its components with its own tokens, such as
 `colors.ui.button.background`. Change a token's value and every component
@@ -136,6 +135,26 @@ A token takes `value`, `light` or `dark`. `value` fills the mode you don't
 name. A token with one of them uses it in both modes. A value can point at another library
 token with `{colors.gray.950}`.
 
+### Hide the library's tokens
+
+In `extends`, the library's tokens join your own, so `colors.ui.button.background`
+shows up in your style props and types. To keep them out, put the copy in
+`layers` instead:
+
+```ts
+// ui.config.ts
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  layers: [brandedLib],
+})
+```
+
+The library's components still paint with your values, but your code only
+sees your own tokens. Use this when your app has its own token set and the
+library should sit underneath it. See [Base systems](/base-systems#what-travels)
+for what each field takes.
+
 ## Other libraries
 
 Any component that accepts `className` can take a `css()` class, including
@@ -152,5 +171,5 @@ import { css } from '@reference-ui/react'
 <LinkCards>
   <LinkCard href="/theming" title="Theming">Define your own tokens, fonts and animations.</LinkCard>
   <LinkCard href="/global-css" title="Global CSS">Selectors, layers and the CSS reset.</LinkCard>
-  <LinkCard href="/share-a-design-system" title="Share a design system">How `extends` and `layers` differ.</LinkCard>
+  <LinkCard href="/sharing" title="Sharing">How `extends` and `layers` differ.</LinkCard>
 </LinkCards>

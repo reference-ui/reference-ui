@@ -41,9 +41,8 @@ export const ui = {
 
   code: {
     inline: {
-      foreground: { light: '{colors.design.accent.foreground}', dark: '{colors.design.accent.foreground}' },
-      background: { light: '{colors.design.accent.background}', dark: '{colors.design.accent.background}' },
-      border: { light: '{colors.design.accent.border}', dark: '{colors.design.accent.border}' },
+      foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
+      background: { light: '{colors.gray.100}', dark: '{colors.gray.900}' },
     },
   },
 

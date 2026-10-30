@@ -62,7 +62,7 @@ const label = css({ fontFamily: 'mono', fontSize: '3.5r', color: 'docsMuted', li
 const toneName = css({
   fontFamily: 'mono',
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   color: 'docsText',
   lineHeight: '1.5',
 })
@@ -165,7 +165,7 @@ const specimenSurface = css({ height: '14r', borderRadius: 'md', bg: 'blue.500/s
 const specimenText = css({
   color: 'blue.500/strong',
   fontSize: '4r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   lineHeight: '1.3',
 })
 

@@ -40,7 +40,7 @@ export function DocLayout() {
       height="100dvh"
       overflow="hidden"
       bg="docsPageBg"
-      color="docsText"
+      color="docsBody"
     >
       <DocSidebar />
 

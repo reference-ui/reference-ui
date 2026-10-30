@@ -1,5 +1,5 @@
 # Guide articles
 
-Task-oriented walkthroughs.
+Onboarding and task-oriented walkthroughs.
 
-Theming, dark mode, customization, building a component, sharing, server rendering, adopting an existing app, responsive layouts, and library components: each guide solves one job end to end.
+The top pages read as one sequence: introduction, getting started, build a component, built in time (how styles work and which API to reach for), library components, theming and customization. Sharing, troubleshooting and the FAQ follow as single pages. Groups close the section, one per theme: Styling, then Integration (Vite, webpack, server rendering, adopting an existing app).

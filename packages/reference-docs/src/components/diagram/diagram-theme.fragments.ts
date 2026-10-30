@@ -1,10 +1,10 @@
 // Diagram palette tokens collected by ref sync.
-// It declares the midnight-slate canvas chrome, the six semantic tones on the core scale,
+// It declares the gray panel chrome, the six semantic tones on the core scale,
 // and the legible inks. Imported for its side effects by the Diagram kit.
 import { tokens } from '@reference-ui/system'
 
 /**
- * Diagram palette. Chrome is the midnight slate ramp — the one environment every
+ * Diagram palette. Chrome is the gray ramp — the one environment every
  * panel belongs to. Tones are core: a panel says `blue.500/medium` and the amount
  * comes from the core scale. Tints never sit on tints: a toned panel sits on the
  * canvas and everything inside it is neutral (see README.md). What a tone cannot
@@ -15,12 +15,11 @@ import { tokens } from '@reference-ui/system'
 tokens({
   colors: {
     /* Chrome — the neutral environment every panel belongs to. */
-    diagramCanvas: { value: '{colors.slate.100}', dark: '{colors.slate.950}' },
-    diagramPanel: { value: '#ffffff', dark: '{colors.slate.900}' },
-    diagramBorder: { value: '{colors.slate.200}', dark: '{colors.slate.800}' },
-    diagramArrow: { value: '{colors.slate.400}', dark: '{colors.slate.500}' },
+    diagramPanel: { value: '#ffffff', dark: '{colors.gray.950}' },
+    diagramBorder: { value: '{colors.gray.100}', dark: '{colors.gray.900}' },
+    diagramArrow: { value: '{colors.gray.400}', dark: '{colors.gray.500}' },
     /* Inset content on a panel — code chips, pills, trays and stage numbers. */
-    diagramChip: { value: '{colors.slate.100}', dark: '{colors.slate.800}' },
+    diagramChip: { value: '{colors.gray.100}', dark: '{colors.gray.800}' },
 
     /*
      * Tone text. Light steps to 700; amber takes 800 because 700 computes to
@@ -56,6 +55,5 @@ tokens({
 tokens({
   radii: {
     diagramPanel: { value: '0.875rem' },
-    diagramCanvas: { value: '1.25rem' },
   },
 })

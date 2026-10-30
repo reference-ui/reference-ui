@@ -14,7 +14,7 @@ import { Diagram } from '../../components/diagram/Diagram'
 
 const cardTitle = css({
   fontSize: '5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   color: 'docsText',
   lineHeight: '1.3',
@@ -32,7 +32,7 @@ const keyChip = css({
 
 const pillGreen = css({
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   color: 'diagramGreenText',
   bg: 'diagramChip',
   paddingX: '3r',
@@ -43,7 +43,7 @@ const pillGreen = css({
 
 const machineName = css({
   fontSize: '4r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   color: 'docsText',
   lineHeight: '1.3',
@@ -53,7 +53,7 @@ const titleRow = css({ display: 'flex', alignItems: 'center', gap: '2r' })
 
 const limitTitle = css({
   fontSize: '4r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   color: 'docsText',
   lineHeight: '1.3',

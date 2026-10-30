@@ -1,45 +1,27 @@
 ---
 title: Troubleshooting
 section: Guides
-group: Fixing
-order: 100
+order: 6
 slug: troubleshooting
 description: Find out why a style is missing, and fix it.
 ---
 
 # Troubleshooting
 
-Most styling problems come down to one question: did `ref sync` see your
-style? Start with what sync prints, then find your symptom below.
+Most styling issues come down to whether `ref sync` extracted your style. Check
+the sync output first, then match your symptom below.
 
-## Read sync's output
+## Check sync warnings
 
-By default, sync folds warnings into a count. A one-off `ref sync` adds a
-`Warnings:` row:
-
-```text
-  REF  v0.1.0  ready in 412 ms
-
-  ➜  CSS:       38.2 KB
-  ➜  Warnings:  2 [--verbose]
-```
-
-In watch mode, each resync ends its line with the count instead. See
-[Diagnostics](/diagnostics#where-they-appear).
-
-Run it again with `--verbose` to list every warning with its location and a
-fix hint:
+By default, `ref sync` summarizes warnings as a count. Run `--verbose` to print
+each warning with its file location and fix hint:
 
 ```bash
 npx ref sync --verbose
 ```
 
-`--json` prints the same diagnostics as a JSON array on stdout, for scripts
-and agents. `ref sync --watch --debug` traces the file events
-watch mode receives.
-
-To also see the compiler's own diagnostics, such as values it could not read
-or spreads it could not follow, add `logs` to your config:
+To include compiler warnings for dynamic values and spreads that couldn't be
+statically extracted, enable the `compiler` log channel in `ui.config.ts`:
 
 ```ts
 // ui.config.ts
@@ -50,97 +32,84 @@ export default defineConfig({
 })
 ```
 
-The [Diagnostics](/diagnostics) page lists every warning code.
+See [Diagnostics](/diagnostics#where-they-appear) for `--json` output and every
+warning code.
 
 ## No styles at all
 
-**The stylesheet is not imported.** Every style lives in one stylesheet.
-Import it once, at your app's entry:
-
-```tsx
-// src/main.tsx
-import '@reference-ui/react/styles.css'
-```
-
-**Sync has not run.** Run `npx ref sync`, then check that `.reference-ui/`
-exists. [Sync](/sync#verify-the-output) lists what it should hold.
+- **Stylesheet not imported.** Import the generated stylesheet once at your app
+  entry:
+  ```tsx
+  // src/main.tsx
+  import '@reference-ui/react/styles.css'
+  ```
+- **Sync hasn't run.** Run `npx ref sync` and check that `.reference-ui/`
+  exists. See [Sync](/sync#verify-the-output).
 
 ## New styles don't appear
 
-Sync compiles your styles ahead of time, so a style you add after the last
-sync has no CSS yet. Run `ref sync --watch` beside your dev server so every
-change resyncs. See [Sync](/sync).
+Styles added after the last sync won't have CSS until sync runs again. Run
+`ref sync --watch` alongside your dev server so changes compile automatically.
+See [Sync](/sync).
 
 ## One file's styles are missing
 
-Sync compiles only the files `include` matches. Check that the file's path
-matches one of the globs in `ui.config.ts`. A pattern that matches nothing
-prints `include matched no files`.
+Sync only scans files matched by `include` in `ui.config.ts`. Check that the
+file path matches your globs. A pattern that matches nothing warns with
+`include matched no files`.
 
 ## One property is missing
 
-**The compiler could not read the value.** It reads your source without
-running it, so a value computed at runtime, such as the result of a function
-call, gets no CSS. Sync warns at the call site. In development, the browser
-console also warns `css(): no compiled class for` the property and value,
-with where it was called. Write each option as its own
-`css()` call and pick between the class names, or list the values under
-`staticCss`. See [What the compiler can read](/css#what-the-compiler-can-read).
-
-**`css()` comes from somewhere else.** The compiler only reads `css()` and
-`recipe()` calls imported from `@reference-ui/react` or
-`@reference-ui/styled`. A local function that shadows the import, or a `css`
-from another package, is not compiled.
+- **Dynamic value at runtime.** The compiler extracts styles statically without
+  running your code, so runtime values get no CSS unless pre-generated. In
+  development, the browser console warns `css(): no compiled class for` the
+  missing property and value. Use conditional static values, a recipe, CSS
+  variables or `staticCss`. See [Dynamic styles](/dynamic-styles).
+- **Wrong `css()` import.** Only `css()` and `recipe()` imported from
+  `@reference-ui/react` or `@reference-ui/styled` are compiled. Local functions
+  or imports from other packages are ignored.
 
 ## A recipe resolves to nothing
 
-The browser console says why:
+Check the browser console warning:
 
-- **`needs a literal className`**: give the recipe a string `className` in
-  its config. See [Recipes](/recipes).
-- **`no compiled table found`**: the recipe was added after the last sync.
-  Run `ref sync`.
+- **`needs a literal className`**: pass a string literal `className` to
+  `recipe()`. See [Recipes](/recipes).
+- **`no compiled table found`**: the recipe was added after the last sync. Run
+  `ref sync`.
 
 ## A recipe that nothing calls emits no CSS
 
-The recipe's class is on the element, but it has no styles.
-
-Sync generates a recipe's CSS only from the calls it finds in your source.
-A recipe that no file calls emits no rules, not even its base styles. A call
-sync cannot follow counts as no call: one made through a local object, a map
-or a prop, `.raw()`, or a computed key. Call the recipe directly, in a file
-that `include` matches. See [Recipes](/recipes).
+Sync only emits CSS for recipes that are called in your `include` files. An
+uncalled recipe (or one only called indirectly through a map, prop or `.raw()`)
+emits no rules. Call the recipe directly in a matched source file. See
+[Recipes](/recipes).
 
 ## Style props on a package component don't paint
 
-Components from a package take style props only when that package's system is
-in `extends` or `layers`. Sync warns `ATM-W-EXTERNAL-UNBACKED` and names the
-package. Add the `baseSystem` it names. See
-[Primitives](/primitives#your-own-components).
+Components from an external package only accept style props when that package's
+`baseSystem` is listed in `extends` or `layers`. Add the `baseSystem` named in
+the sync warning. See [Primitives](/primitives#your-own-components).
 
 ## Another rule wins
 
-The style is in the stylesheet, but the element shows something else.
+Every Reference UI rule lives in a `@layer`. Standard unlayered CSS always
+overrides layered rules regardless of specificity. Remove the competing
+unlayered rule, or wrap your custom stylesheet in a layer declared before
+Reference UI's stylesheet. See [Cascade layers](/cascade-layers#your-own-css).
 
-Every Reference UI rule sits in a cascade layer, and CSS that is not in a
-layer wins over every layered rule. An unlayered stylesheet in your app beats
-Reference UI for the same property, whatever its selectors. Delete the old
-rule, or move it into a layer declared before the stylesheet. See
-[Cascade layers](/cascade-layers#your-own-css).
-
-Inside Reference UI, a style prop or `css()` class always beats a recipe or a
-global rule on the same element.
+Within Reference UI, style props and `css()` classes always override recipes
+and `globalCss()` rules on the same element.
 
 ## Sync errors
 
-Config, lock and watch errors are listed under
-[Sync: Common errors](/sync#common-errors).
+For config, lock and watch errors, see [Sync: Common errors](/sync#common-errors).
 
 ## Further reading
 
 <LinkCards>
   <LinkCard href="/diagnostics" title="Diagnostics">Every warning code and its fix.</LinkCard>
   <LinkCard href="/cli" title="CLI">Every `ref sync` option.</LinkCard>
-  <LinkCard href="/css" title="css()">What the compiler can read.</LinkCard>
+  <LinkCard href="/dynamic-styles" title="Dynamic styles">Patterns for runtime values.</LinkCard>
   <LinkCard href="/cascade-layers" title="Cascade layers">How the stylesheet orders its rules.</LinkCard>
 </LinkCards>

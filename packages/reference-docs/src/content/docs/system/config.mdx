@@ -33,7 +33,7 @@ In watch mode, sync reloads the config when it or a file it imports changes.
 
 Import only data modules into the config. Import a base system from its
 `baseSystem` subpath, not from the package root: when the config takes more
-than 750 ms to load, sync warns `BSS-W-SLOW-CONFIG` and names the slow import.
+than 750 ms to load, sync warns and names the slow import.
 
 ## Required
 
@@ -62,27 +62,17 @@ An `.mdx` file can hold token, font and global CSS definitions. A pattern that
 starts with `!` excludes files. Sync never reads `node_modules`, `dist`,
 `build`, `.git` or `.reference-ui`.
 
-A pattern that matches no files is a warning, not an error.
-
-A pattern whose braces expand to more than 1,024 globs, or nest deeper than 64
-levels, is refused with `ATM-E-INCLUDE-BRACE-LIMIT`. Split it into several shorter
-patterns.
-
-Sync reads these glob parts: `/` between folders, `*` for part of a name, `**`
-as a whole folder name, `?`, classes such as `[ab]` and `[!_]`, and `{a,b}`
-for alternatives. `(a|b)` is read as `{a,b}`, and a name in parentheses, such as
-`app/(marketing)/**`, matches the folder with the parentheses in its name. A
-pattern in any other shape is refused when the config loads, and the error names
-the pattern and the form to write: `{a,b}` for alternatives, `[(]` and `[)]` for
-literal parentheses, `**/*x` or `x*/**` where `**x` or `x**` was written, and a
-class such as `[a-zA-Z]` in place of `[[:alpha:]]`.
+A pattern that matches no files logs a warning. Patterns support standard
+globs (`*`, `**`, `?`, `[...]`, `{a,b}`) as well as parenthesized route groups
+like `app/(marketing)/**`. Patterns that expand past 1,024 globs or nest braces
+deeper than 64 levels fail sync; split them into shorter entries.
 
 ## Composing systems
 
 `extends` and `layers` both take the `baseSystem` export of another synced
 package. A system can appear in only one of them, and neither can list your
-own `name`. See [Share a design system](/share-a-design-system) for when to
-use each.
+own `name`. See [Sharing](/sharing) for when to use
+each.
 
 ### extends
 
@@ -140,7 +130,7 @@ staticCss: {
 
 Sync fails if an entry names a token that does not exist. `'*'` on a property
 with no token category is a warning. See
-[CSS](/css#generate-values-ahead-of-time).
+[Dynamic styles](/dynamic-styles#a-token-name-chosen-at-runtime).
 
 ### normalizeCss
 

@@ -27,10 +27,8 @@ export type DiagramDirection = 'down' | 'up' | 'right' | 'left'
 export type DiagramPanelVariant = 'fill' | 'outline'
 export type DiagramPanelAlign = 'start' | 'center' | 'stretch'
 
+// Flush: the canvas is the page itself, with no background, radius or padding of its own.
 const canvasClass = css({
-  bg: 'diagramCanvas',
-  borderRadius: 'diagramCanvas',
-  padding: '6r',
   display: 'flex',
   flexDirection: 'column',
   gap: '4r',

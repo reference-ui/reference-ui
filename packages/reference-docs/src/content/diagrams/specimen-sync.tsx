@@ -14,7 +14,7 @@ import { Diagram } from '../../components/diagram/Diagram'
 
 const eyebrow = css({
   fontSize: '3.5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
   color: 'diagramMuted',
@@ -24,7 +24,7 @@ const eyebrow = css({
 const command = css({
   fontFamily: 'mono',
   fontSize: '6r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   color: 'docsText',
   lineHeight: '1.2',
 })
@@ -33,7 +33,7 @@ const lede = css({ fontSize: '4r', color: 'diagramMuted', lineHeight: '1.5' })
 
 const cardTitle = css({
   fontSize: '5r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   color: 'docsText',
   lineHeight: '1.3',

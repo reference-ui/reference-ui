@@ -1,19 +1,98 @@
 ---
 title: Sync
 section: System
-group: Overview
-order: 30
+group: Build and output
+order: 217
 slug: sync
-description: Compile your styles and types, once or in watch mode.
+description: Compile your styles and types once, or keep them current in watch mode.
 ---
+
+{/* Shape follows panda:get-started/cli. Facts from reference-core/src/sync/index.ts. */}
 
 # Sync
 
 `ref sync` compiles your stylesheet and types from `ui.config.ts` and the
-files its `include` globs match.
+files its `include` globs match. Run it once before a build, or in watch
+mode while you develop.
 
-Sync compiles only the style values it finds in your source. A value you add
-after the last sync has no CSS until the next one.
+Sync compiles only the style values it finds. A value you add after the last
+sync has no CSS until the next one.
+
+## What sync does
+
+Each run goes through the same steps:
+
+1. Load `ui.config.ts`.
+2. Scan the files `include` matches.
+3. Compile every style in one pass.
+4. Report warnings and errors. Any error stops the run.
+5. Assemble the packages and write them in one step.
+
+A failed run changes nothing: your app keeps the output of the last good
+sync. Systems from `extends` and `layers` join your own in the same
+stylesheet. Run sync as its own command beside your bundler.
+
+## Run it once
+
+Run sync from the directory that holds `ui.config.ts`.
+
+```bash
+npx ref sync
+```
+
+Sync prints the time it took and the size of the stylesheet:
+
+```text
+  REF  v0.0.0  ready in 840 ms
+
+  ➜  CSS:       41.2 KB
+```
+
+When there are warnings, a `Warnings:` row shows the count. Run
+`npx ref sync --verbose` to list each one with its location and a fix hint,
+or `--json` for machine-readable output.
+
+Add sync to your build script so a build never ships a stale stylesheet:
+
+```json {4}
+{
+  "scripts": {
+    "sync": "ref sync",
+    "build": "ref sync && vite build"
+  }
+}
+```
+
+Sync again after you install or upgrade `@reference-ui/lib`. Its tokens and
+types reach your project through sync.
+
+## Watch during development
+
+```bash
+npx ref sync --watch
+```
+
+Watch mode syncs once and keeps running. It resyncs when a matched file is
+added, changed or deleted, and when `ui.config.ts` or a file it imports
+changes. Each resync prints one line:
+
+```text
+⎔ ref sync ⫶ 38 ms ⫶ 41.3 KB
+```
+
+Run watch mode next to your dev server, for example with the `concurrently`
+package:
+
+```json {3}
+{
+  "scripts": {
+    "dev": "ref sync && concurrently --kill-others \"ref sync --watch\" \"vite\""
+  }
+}
+```
+
+The first `ref sync` makes sure the generated packages exist before the dev
+server starts.
 
 ## What sync writes
 
@@ -33,73 +112,6 @@ source.
 `ref init` does not add `.reference-ui/` to `.gitignore`. Add it yourself.
 Sync rebuilds the folder on every run, and while a sync runs, its
 `sync.lock/` folder records that process's id and host.
-
-## Usage
-
-Run sync from the directory that holds `ui.config.ts`.
-
-<Step n={1}>Run sync once</Step>
-
-```bash
-npx ref sync
-```
-
-Sync prints the time it took and the size of the stylesheet:
-
-```text
-  REF  v0.0.0  ready in 840 ms
-
-  ➜  CSS:       41.2 KB
-```
-
-When there are warnings, a `Warnings:` row shows the count. Run
-`npx ref sync --verbose` to list each one with its location and a fix hint.
-
-<Step n={2}>Sync before every build</Step>
-
-Add sync to your build script so a build never ships a stale stylesheet.
-
-```json {4}
-{
-  "scripts": {
-    "sync": "ref sync",
-    "build": "ref sync && vite build"
-  }
-}
-```
-
-Sync again after you install or upgrade `@reference-ui/lib`. Its tokens and
-types reach your project through sync.
-
-<Step n={3}>Watch during development</Step>
-
-```bash
-npx ref sync --watch
-```
-
-Watch mode syncs once and keeps running. It resyncs when a matched file
-changes, and when `ui.config.ts` or a file it imports changes. Each resync
-prints one line:
-
-```text
-⎔ ref sync ⫶ 38 ms ⫶ 41.3 KB
-```
-
-<Step n={4}>Run it beside your dev server</Step>
-
-Run watch mode next to your dev server,
-for example with the `concurrently` package:
-
-```json {3}
-{
-  "scripts": {
-    "dev": "ref sync && concurrently --kill-others \"ref sync --watch\" \"vite\""
-  }
-}
-```
-
-The first `ref sync` makes sure the generated packages exist before the dev
-server starts.
 
 ## Verify the output
 
@@ -138,13 +150,13 @@ and exits with code 0. Expected while your dev script runs.
 Another machine is syncing the same `.reference-ui/` folder over a shared
 filesystem. Stop that sync, or rerun with `--break-lock`.
 
-**`BSS-W-SLOW-CONFIG`**
+**The config is slow to load**
 
 `ui.config.ts` took over 750 ms to load, usually because it imports
 `@reference-ui/lib` instead of `@reference-ui/lib/baseSystem`. Import the
 subpath the warning names.
 
-**`ATM-W-EXTERNAL-UNBACKED`**
+**Style props on a package component don't paint**
 
 You set style props on a component from a package, such as
 `<SearchIcon marginLeft="2r" />`, but that package's system is in neither

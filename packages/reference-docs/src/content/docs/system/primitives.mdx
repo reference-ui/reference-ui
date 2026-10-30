@@ -1,8 +1,7 @@
 ---
 title: Primitives
 section: System
-group: Styling
-order: 60
+order: 15
 slug: primitives
 description: Typed components for every HTML element, with style props.
 ---
@@ -100,15 +99,15 @@ A component that passes style props on to a primitive takes style props
 too. `<Card padding="4r" />` compiles when `Card` spreads its props onto a
 `Div`. The compiler follows props through spreads, other components,
 higher-order components, re-exports and barrel files, so there is nothing to
-register. Class components are not followed: `ref sync` warns
-`STT-W-CLASS-COMPONENT` for one that takes style props.
+register. Class components are not followed: `ref sync` warns for one that
+takes style props.
 
 A prop the component keeps for itself, such as a `size` it turns into
 `data-size`, stays the component's own prop.
 
 Components from a package, such as those in `@reference-ui/lib`, take style
 props when that package's system is in `extends` or `layers`. Otherwise
-`ref sync` warns `ATM-W-EXTERNAL-UNBACKED` and names the package.
+`ref sync` warns and names the package.
 
 ## Types
 

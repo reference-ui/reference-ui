@@ -1,8 +1,7 @@
 ---
 title: Build a component
 section: Guides
-group: Styling
-order: 20
+order: 1.2
 slug: build-a-component
 description: Make your own component from a primitive and a recipe.
 ---
@@ -31,7 +30,7 @@ import { css } from '@reference-ui/react'
 const card = css({
   padding: '4r',
   borderRadius: 'md',
-  bg: 'slate.500/strong',
+  bg: 'violet.500/firm',
 })
 ```
 
@@ -67,18 +66,18 @@ const card = recipe({
   },
   variants: {
     tone: {
-      slate: { bg: 'slate.500/strong' },
-      violet: { bg: 'violet.500/strong' },
-      rose: { bg: 'rose.500/strong' },
+      violet: { bg: 'violet.500/firm', color: 'violet.700', _dark: { color: 'violet.200' } },
+      blue: { bg: 'blue.500/firm', color: 'blue.700', _dark: { color: 'blue.200' } },
+      green: { bg: 'green.500/firm', color: 'green.700', _dark: { color: 'green.200' } },
     },
   },
-  defaultVariants: { tone: 'slate' },
+  defaultVariants: { tone: 'violet' },
 })
 ```
 
 Call the recipe with the variant props to get the class names.
 `RecipeVariantProps` infers their types, so `tone` is typed to
-`'slate' | 'violet' | 'rose'`:
+`'violet' | 'blue' | 'green'`:
 
 ```tsx
 // src/components/Card.tsx
@@ -93,27 +92,34 @@ export function Card({ tone, className, ...props }: CardProps) {
 
 See [Recipes](/recipes) for compound and responsive variants.
 
-## Usage
+<Step n={4}>Usage</Step>
+
+Import your card like any other component. Reference UI knows that `Card`
+renders one of its primitives, and that `Card` passes its props on to it. So
+your card takes its own `tone`, and every one of the
+**[style props](/style-props)** too:
 
 ```tsx
-<Card>Slate</Card>
+import { Card } from './components/Card'
+
 <Card tone="violet">Violet</Card>
-<Card tone="rose">Rose</Card>
-<Card tone="violet" padding="6r">More padding</Card>
+<Card tone="blue">Blue</Card>
+<Card tone="green" padding="6r">Green, with more padding</Card>
 ```
 
 <Preview>
   <CardDemo />
 </Preview>
 
-Style props override the recipe, because recipe rules sit in an earlier
-[cascade layer](/cascade-layers). Here `padding="6r"` replaces the recipe's `4r`.
+The [compiler](/compiler) traces `Card` to the [primitive](/primitives) it
+renders, which [Built in time](/built-in-time) explains.
 
 ## Further reading
 
 <LinkCards>
+  <LinkCard href="/built-in-time" title="Built in time">How your component's styles become CSS before your app runs.</LinkCard>
   <LinkCard href="/recipes" title="Recipes">Compound variants, responsive variants and the full recipe config.</LinkCard>
   <LinkCard href="/style-props" title="Style props">Every prop a primitive takes.</LinkCard>
   <LinkCard href="/multi-part-components" title="Multi-part components">Style a component with several parts.</LinkCard>
-  <LinkCard href="/share-a-design-system" title="Share a design system">Publish your components for other apps.</LinkCard>
+  <LinkCard href="/sharing" title="Sharing">Share your components with other apps.</LinkCard>
 </LinkCards>

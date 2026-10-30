@@ -23,7 +23,7 @@ import { Diagram, type DiagramIntensity, type DiagramTone } from '../../componen
 
 const cardName = css({
   fontSize: '4r',
-  fontWeight: '600',
+  weight: 'sans.semibold',
   letterSpacing: '-0.01em',
   color: 'docsText',
   lineHeight: '1.3',

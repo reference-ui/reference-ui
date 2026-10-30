@@ -16,6 +16,9 @@ writes their rules into the stylesheet. For a component with variants, use a
 
 ## `css()`
 
+Pass a style object to `css()` and apply the returned class string to any
+element:
+
 ```tsx
 import { css } from '@reference-ui/react'
 
@@ -29,7 +32,7 @@ const card = css({
 <article className={card}>…</article>
 ```
 
-A style object takes the same keys and values as
+A style object accepts the same keys and values as
 [style props](/style-props).
 
 ### Combine styles
@@ -89,52 +92,6 @@ it matches.
 
 ## What the compiler can read
 
-`ref sync` reads `css()` calls without running them. A value it cannot read
-gets CSS only when that value already has CSS. See
-[What sync can read](/what-sync-can-read) for which calls and values count.
-
-### Values chosen at runtime
-
-When the choice is made at runtime, write each option as its own `css()`
-call and pick between the class names:
-
-```tsx
-const toneClass = {
-  info: css({ color: 'blue' }),
-  danger: css({ color: 'red' }),
-}
-
-<p className={toneClass[kind]}>…</p>
-```
-
-When the value itself comes from runtime data, read it from a custom property
-and set that property in `style`:
-
-```tsx
-<div
-  className={css({ bg: 'var(--swatch)' })}
-  style={{ '--swatch': user.color }}
->
-  …
-</div>
-```
-
-### Generate values ahead of time
-
-For values that appear nowhere in your source, list them under `staticCss`
-in `ui.config.ts`. Each key is a property, optionally with a condition
-prefix. Each value lists token names, or `'*'` for the whole category:
-
-```ts
-// ui.config.ts
-export default defineConfig({
-  name: 'my-app',
-  include: ['src/**/*.{ts,tsx}'],
-  staticCss: {
-    color: ['*'],
-    '_hover:bg': ['brand', 'surface'],
-  },
-})
-```
-
-Sync fails if an entry names a token that does not exist.
+`ref sync` reads `css()` calls without running them. See the
+[Compiler](/compiler) for what it reads, and
+[Dynamic styles](/dynamic-styles) for values chosen at runtime.

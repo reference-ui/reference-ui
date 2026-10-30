@@ -77,9 +77,9 @@ is stronger, so edges and text stay visible.
 
 <IntensityGrid />
 
-The prop decides which amount it draws. `border*` and `outline*` props,
-`color`, text decoration, strokes and shadows draw the line amount. Every other
-colour prop, including `bg` and `fill`, draws the surface amount.
+The prop determines which amount a tone uses. `border*` and `outline*` props,
+`color`, text decoration, strokes and shadows use the line amount; every other
+colour prop, including `bg` and `fill`, uses the surface amount.
 
 <RoleSpecimens />
 
@@ -150,8 +150,8 @@ To switch the whole page, set `colorMode` on your root primitive.
 [Light and dark](/light-and-dark) covers following the system setting and adding a
 toggle, and [Server-side rendering](/ssr) covers setting the mode from the request.
 
-Only semantic tokens change between modes. Shades are fixed, and a tone
-adapts because it is see-through.
+Only semantic tokens change between modes. Shades stay fixed, while tones
+blend with the surface behind them.
 
 ## Related
 

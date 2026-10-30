@@ -31,6 +31,12 @@ tokens({
       value: '{colors.gray.950}',
       dark: '{colors.gray.50}',
     },
+    // Body copy sits one step under docsText, so headings and bold stay the
+    // brightest ink on the page.
+    docsBody: {
+      value: '{colors.gray.900}',
+      dark: '{colors.gray.200}',
+    },
     docsMuted: {
       value: '{colors.gray.500}',
       dark: '{colors.gray.400}',

@@ -1,0 +1,73 @@
+---
+title: Sharing
+section: Guides
+order: 5
+slug: sharing
+description: Share one design system across every app that uses it.
+---
+
+# Sharing
+
+Reference UI lets you share a design system. You build your tokens and
+components once, in their own package, and every app that installs it gets
+the same look, typed tokens and a single stylesheet.
+
+`@reference-ui/lib` is shared this way, so the library is the first design
+system most apps build on.
+
+## How it works
+
+Every project that runs `ref sync` has a system: its tokens, fonts,
+keyframes, compiled styles and component names. Sync packs that system into
+a base system, one export that another project can build on.
+
+An app lists a base system in its config, and the app's own sync folds it
+in. The app still imports one stylesheet, and styles the shared components
+with its own style props and tokens:
+
+```tsx
+import { Card } from 'my-design-system'
+
+<Card padding="6r" bg="surface" />
+```
+
+To publish a base system from your package, see
+[Export a base system](/export-base-system).
+
+## Build on it, or only render it
+
+An app takes a shared system in one of two ways:
+
+- **`extends`** builds on it. Its tokens join the app's, by name and in
+  types, and where both set the same token, the app's value wins.
+- **`layers`** only renders its components. They keep their own tokens, and
+  the app keeps its own.
+
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem } from 'my-design-system/baseSystem'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [baseSystem],
+})
+```
+
+[Base systems](/base-systems) has the full rules: what each field takes, the
+cascade order, and how tokens merge.
+
+## Make it your own
+
+To change a shared system's colours or spacing without forking it, pass it
+to `extendSystem()` with your token values. Its components paint with your
+values, in light and dark. See [Customization](/customization).
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/export-base-system" title="Export a base system">Publish your system from a package or a monorepo.</LinkCard>
+  <LinkCard href="/base-systems" title="Base systems">`extends`, `layers` and what each one takes.</LinkCard>
+  <LinkCard href="/customization" title="Customization">Brand a shared system with `extendSystem()`.</LinkCard>
+</LinkCards>

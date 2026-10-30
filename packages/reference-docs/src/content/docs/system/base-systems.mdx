@@ -15,7 +15,7 @@ keyframes, compiled styles and component names. `ref sync` writes it as the
 project lists it in `extends` or `layers`, or passes it to `extendSystem()`
 to change its token values.
 
-To publish one, see [Share a design system](/share-a-design-system). To
+To publish one, see [Export a base system](/export-base-system). To
 brand a shared system, see [Customization](/customization).
 
 ## baseSystem
@@ -53,7 +53,7 @@ classes, not its config. A `_private` token stays private: it paints inside
 the system's components and stays out of your token names.
 
 Under `layers`, a style that names one of the system's tokens warns at the
-call, such as `ATM-W-UNKNOWN-COLOR`.
+call.
 
 ## Order
 
@@ -62,11 +62,20 @@ Each system gets its own [cascade layer](/cascade-layers). Sync orders them:
 
 Under `extends`, token definitions merge by leaf path:
 
-- A later entry wins over an earlier one.
-- Your own tokens win over every entry, and sync warns
-  `BSS-W-TOKEN-SHADOW` when yours replaces a different value.
-- A system that extends another brings both. A system reached twice is
-  merged once.
+- Later entries in `extends` override earlier ones.
+- Your own tokens override all extended systems (sync logs a warning when your
+  token replaces a different upstream value).
+- Transitive `extends` chains are included automatically and deduplicated.
+
+## Styling its components
+
+Whether a package is in `extends` or `layers`, your app can pass style props
+and its own tokens to the package's components. Component-specific props (like
+`tone`) stay with the component.
+
+If style props on an external component don't apply, check that its package's
+`baseSystem` is listed in `extends` or `layers`. See
+[Diagnostics](/diagnostics#components-and-files).
 
 ## Config errors
 
@@ -190,7 +199,7 @@ Each message begins with `extendSystem:`.
 ## Further reading
 
 <LinkCards>
-  <LinkCard href="/share-a-design-system" title="Share a design system">Publish a base system and choose `extends` or `layers`.</LinkCard>
+  <LinkCard href="/export-base-system" title="Export a base system">Publish a base system from a package.</LinkCard>
   <LinkCard href="/customization" title="Customization">Brand the library with `extendSystem()`.</LinkCard>
   <LinkCard href="/config" title="Config">The `extends` and `layers` fields.</LinkCard>
 </LinkCards>

@@ -1,0 +1,97 @@
+---
+title: Export a base system
+section: System
+group: Theme
+order: 211
+slug: export-base-system
+description: Publish a package's base system so other apps can list it in extends or layers.
+---
+
+# Export a base system
+
+A design system package publishes its base system as a `./baseSystem`
+subpath. Apps import it from there and list it in `extends` or `layers`. For
+what a base system carries, see [Base systems](/base-systems).
+
+## package.json
+
+`ref sync` writes the base system to `.reference-ui/system/baseSystem.mjs`.
+Point the `./baseSystem` export at it, and list it in `files` so it is
+published:
+
+```json
+{
+  "exports": {
+    "./baseSystem": {
+      "types": "./.reference-ui/system/baseSystem.d.mts",
+      "import": "./.reference-ui/system/baseSystem.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    ".reference-ui/system/baseSystem.d.mts",
+    ".reference-ui/system/baseSystem.mjs"
+  ]
+}
+```
+
+Don't export a stylesheet. The app's sync builds one stylesheet from your
+base system and its own source.
+
+## Build
+
+Run `ref sync` before you build. The app never syncs your source, so your
+components' styles come only from your sync. A `prepack` script keeps the
+published files current:
+
+```json
+{
+  "scripts": {
+    "prepack": "ref sync && npm run build"
+  }
+}
+```
+
+## Dependencies
+
+Bundle `@reference-ui/react` into your build output, and leave it out of
+`dependencies` and `peerDependencies`. Your sync generates it bound to your
+system's `name`, so your components render under that name in any app.
+
+Keep `react` as a peer dependency, so the app supplies a single copy.
+
+## What stays behind
+
+Your `recipe()` definitions stay in your package. The app receives the
+classes your sync compiled, so each recipe renders as you built it.
+
+## In a monorepo
+
+A package in the same repository as the app needs no publishing, since sync
+follows each import to the file it lands on. Choose one of two shapes.
+
+**One system.** Run one sync at the repository root, with `include` covering
+the app and the package. The package's components become part of the app's
+system:
+
+```ts
+// ui.config.ts at the repository root
+import { defineConfig } from '@reference-ui/core'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['apps/web/src/**/*.{ts,tsx}', 'packages/ui/src/**/*.{ts,tsx}'],
+})
+```
+
+**Two systems.** The package runs its own sync and exports its base system
+as above, and the app lists it in `extends` or `layers`. Once the package
+has its own sync output, sync uses this shape, even when the app's `include`
+also covers the package's source.
+
+## Further reading
+
+<LinkCards>
+  <LinkCard href="/sharing" title="Sharing">How sharing a design system works.</LinkCard>
+  <LinkCard href="/base-systems" title="Base systems">`extends`, `layers` and what each one takes.</LinkCard>
+</LinkCards>

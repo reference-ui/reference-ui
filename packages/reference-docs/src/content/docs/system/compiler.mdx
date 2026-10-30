@@ -1,0 +1,169 @@
+---
+title: Compiler
+section: System
+group: Build and output
+order: 215
+slug: compiler
+description: How sync reads your source, and which style values it can compile.
+---
+
+{/* Shape follows panda:styling/extraction-rules, tamagui:docs/core/compiler-tiers and stylex:learn/styling-ui/defining-styles#constraints. Facts from ATM-SITE-31, -44, -49, -51, -109, -110, CORE-SITE-07 and CORE-STATIC-01. */}
+
+# Compiler
+
+`ref sync` statically analyzes your source files without running them and
+generates CSS for every style value it extracts. Values known only at runtime
+get no CSS on their own, unless another call site or `staticCss` already
+compiled the same property and value.
+
+## How it reads source
+
+In every file matched by `include`, the compiler extracts:
+
+- style props on primitives, and on components that forward style props to a
+  primitive;
+- `css()` and [`recipe()`](/recipes) calls imported from `@reference-ui/react`
+  or `@reference-ui/styled`.
+
+It also compiles any tokens listed under `staticCss` in `ui.config.ts`.
+
+The import source determines whether a call is extracted. All of these are
+compiled:
+
+```tsx
+import { css } from '@reference-ui/react'
+import { css as style } from '@reference-ui/react'
+import * as ui from '@reference-ui/react' // ui.css({ … })
+import { css } from './styles' // re-exported from @reference-ui/react
+```
+
+A local function or parameter named `css`, or a `css` imported from another
+package, is ignored. `recipe()` follows the same rule.
+
+When a style value uses a ternary or logical expression, the compiler extracts
+both branches so your component can switch between them at runtime:
+
+```tsx
+<Div bg={isActive ? 'brand' : 'surface'} />
+```
+
+## How it follows props
+
+When a component forwards style props to a primitive, the compiler traces them
+from parent to child. `<Card padding="6r">` compiles just like
+`<Div padding="6r">`:
+
+```tsx
+import { Div, type DivProps } from '@reference-ui/react'
+
+export function Card(props: DivProps) {
+  return <Div bg="surface" {...props} />
+}
+```
+
+Style props are traced through spreads, component chains, higher-order
+components, re-exports, barrel files and package imports.
+
+- Class components are not traced, and sync logs a warning.
+- Components created with `Object.assign` are not traced.
+- You can register any custom host component under
+  [`jsxElements`](/config#jsxelements).
+
+Components from an external package built on Reference UI, such as
+`@reference-ui/lib`, accept style props when that package's `baseSystem` is in
+`extends` or `layers` (otherwise sync warns and names the package). Workspace
+packages matched by your `include` globs are scanned as your own source unless
+they publish their own `baseSystem`.
+
+### A component's own props
+
+The compiler extracts style props at the call site, not runtime prop variables
+inside a component's body. A custom prop passed into a style prop isn't
+statically known inside the component, even when its TypeScript type is a union:
+
+```tsx
+function Badge({ tone }: { tone: 'brand' | 'danger' }) {
+  return <Span color={tone}>New</Span> // no CSS: `tone` is a runtime variable
+}
+```
+
+Only a parameter typed as a single literal, such as `{ tone: 'brand' }`,
+resolves to that constant. To style from a variant prop, use a recipe or class
+map. See [Dynamic styles](/dynamic-styles#style-from-a-prop).
+
+## What it can read
+
+| Expression | Example |
+| --- | --- |
+| Literals | `'4r'`, `4`, `` `4r` `` |
+| Constants (local or imported) | `const gap = '4r'`, `space.lg` |
+| Enums and constant object lookups | `Size.Large`, `sizes['lg']` |
+| Computed keys from a constant | `{ [key]: '10px' }` where `key` is a `const` |
+| Small pure helper calls | `gap(2)` where `const gap = (n: number) => n * 4` |
+| Ternaries and logical operators | `active ? 'brand' : 'text'`, `flag && 'brand'`, `tone ?? 'text'` |
+| Template strings with static parts | `` `${gap}px` `` |
+| Spreads of constant style objects | `{ ...focusRing }` |
+
+A pure helper is a single expression with no side effects. Functions with
+multiple statements, loops, `Math.random()` or `.map()` are not evaluated.
+
+```tsx
+import { css } from '@reference-ui/react'
+import { focusRing } from './styles'
+
+const gap = 4
+const sizes = { sm: '2r', lg: '4r' } as const
+const space = (n: number) => `${n * 2}r`
+
+const field = (active: boolean) =>
+  css({
+    ...focusRing, // ✅ spread of an imported constant
+    padding: `${gap}px`, // ✅ template string over a constant
+    margin: sizes.lg, // ✅ lookup on a constant object
+    gap: space(2), // ✅ small pure helper
+    color: active ? 'brand' : 'text', // ✅ both branches extracted
+  })
+```
+
+## What it can't read
+
+Expressions that depend on runtime values aren't extracted. See
+[Dynamic styles](/dynamic-styles) for the build-time pattern for each case:
+
+```tsx
+// ❌ runtime prop or state variable
+<Div bg={color} />
+
+// ❌ template string with a runtime variable
+<Div padding={`${size}r`} />
+
+// ❌ variable reassigned before use
+let tone = 'brand'
+if (error) tone = 'danger'
+<Span color={tone} />
+
+// ❌ dynamic computed key
+css({ [key]: '4r' })
+
+// ❌ spread of a runtime object
+css({ ...props.styles, padding: '4r' })
+```
+
+An unresolved spread logs a warning, while static siblings like `padding`
+above still compile.
+
+### What happens then
+
+- **Style props and `css()`:** the dynamic value gets no CSS. Set
+  `logs: ['compiler']` in `ui.config.ts` to list every unextracted expression
+  during sync.
+- **In development:** the browser console warns once per missing `css()` value
+  (`[reference-ui] css(): no compiled class for ...`) with its call site.
+- **Shared classes:** the style still applies if another file or `staticCss`
+  already compiled the same property and value.
+- **Recipes:** an unextractable `recipe()` definition fails sync with an error
+  and preserves the previous output.
+
+See [Dynamic styles](/dynamic-styles),
+[Diagnostics](/diagnostics#compiler-channel) and
+[Troubleshooting](/troubleshooting#one-property-is-missing).
