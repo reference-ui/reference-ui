@@ -43,8 +43,8 @@ Values work as they do in [`css()`](/css#values): token names, `{colors.brand}`
 references, rhythm units such as `4r`, and plain CSS. A key set to
 `undefined` is dropped, which helps when you spread a shared object.
 
-A custom property value prints as written. Only a value that is a whole
-reference, such as `'{colors.brand}'`, becomes the token's `var()`. The
+Custom property values output as written unless the entire value is a token
+reference like `'{colors.brand}'`, which resolves to `var(--colors-brand)`. The
 `--spacing-root` rule above rescales every rhythm unit. See
 [Spacing](/spacing).
 
@@ -94,8 +94,8 @@ globalCss({
 ## Breakpoints
 
 Breakpoint keys, range keys such as `mdDown` or `smToLg`, and responsive
-objects and arrays work as they do on style props. In global CSS they print
-`@media` queries on the viewport, where style props and `css()` print
+objects and arrays work as they do on style props. In global CSS they compile
+to viewport `@media` queries, whereas style props and `css()` compile to
 `@container` queries. See [Responsive](/responsive).
 
 ```ts
@@ -108,7 +108,7 @@ globalCss({
 })
 ```
 
-The `lg` value prints `font-size: 16px` inside `@media (min-width: 1024px)`.
+The `lg` value compiles to `font-size: 16px` inside `@media (min-width: 1024px)`.
 
 ## Where global rules sit
 

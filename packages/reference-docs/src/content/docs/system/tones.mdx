@@ -50,7 +50,7 @@ import { Div } from '@reference-ui/react'
 <Div bg="blue.500/soft" borderColor="blue.500/soft" />
 ```
 
-The tone prints as a variable, not a literal amount:
+The tone compiles to a CSS variable rather than a hardcoded percentage:
 
 ```css
 background: color-mix(in srgb, var(--colors-blue-500) var(--tones-soft-surface), transparent);
@@ -80,7 +80,7 @@ For a one-off amount, write a number after the slash:
 <Div bg="blue.500/40" />
 ```
 
-This prints `color-mix(in srgb, var(--colors-blue-500) 40%, transparent)`. The
+This compiles to `color-mix(in srgb, var(--colors-blue-500) 40%, transparent)`. The
 amount is fixed in the class, so a theme cannot retune it. Use a tone for any
 amount you repeat.
 
@@ -128,9 +128,9 @@ numeric opacity such as `blue.500/40`. `tones` is not a strict category. See
 
 ## Unknown tones
 
-A tone name that is not declared warns and suggests
-the closest name. The value prints as written. Inside braces, an unknown tone is
-an error and its declaration is dropped. See [Diagnostics](/diagnostics).
+An undeclared tone name logs a warning with the closest match and outputs the
+value as written. Inside braces, an unknown tone is an error and its
+declaration is dropped. See [Diagnostics](/diagnostics).
 
 ## Related
 

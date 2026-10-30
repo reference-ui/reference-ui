@@ -65,7 +65,7 @@ globalCss({
 })
 ```
 
-`'& h2'` prints `.prose h2`, so the rules reach only content inside the
+`'& h2'` compiles to `.prose h2`, scoping the rule to content inside the
 wrapper. Values work as in `css()`: token names, `{…}` references inside a
 longer value, and rhythm units such as `4r`. The colours here are lib's
 [semantic tokens](/color#semantic-tokens) and follow light and dark mode.
@@ -97,9 +97,8 @@ globalCss({
 })
 ```
 
-Breakpoint keys such as `md` also work in `globalCss()`, but there they print
-`@media` queries on the viewport. See
-[Global CSS](/global-css#breakpoints).
+Breakpoint keys such as `md` also work in `globalCss()`, where they compile to
+viewport `@media` queries. See [Global CSS](/global-css#breakpoints).
 
 ## Where the rules sit
 

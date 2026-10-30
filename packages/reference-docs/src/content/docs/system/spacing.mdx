@@ -86,15 +86,15 @@ tokens({
 <Div paddingInline="gutter" marginBlock="-section" />
 ```
 
-A leading `-` negates a token: `-section` prints
+A leading `-` negates a token: `-section` compiles to
 `calc(-1 * var(--spacing-section))`. Each token is also a CSS variable, such
 as `--spacing-gutter`, for use in your own CSS.
 
 ## Numbers
 
-A bare number on a length property is pixels: `width={42}` prints `42px`.
-Properties without a unit, such as `opacity` and `zIndex`, keep the number.
-Use rhythm units for spacing so it follows the root.
+A bare number on a length property resolves to pixels: `width={42}` outputs
+`42px`. Properties without a unit, such as `opacity` and `zIndex`, keep the
+number. Use rhythm units for spacing so it scales with `--spacing-root`.
 
 ## `getRhythm()`
 

@@ -94,8 +94,8 @@ const [stay, setStay] = useState<DateRangeValue | null>(null)
 ```
 
 After the first click the value is `{ start, end: null }`. While the end is
-open, hovering or focusing a day previews the range. A range that would
-include an unavailable date is refused, and the start stays.
+open, hovering or focusing a day previews the range. Selecting a range across
+an unavailable date is ignored, keeping the current start date.
 
 ### Month or year
 

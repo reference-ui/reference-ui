@@ -53,7 +53,7 @@ slash: `bg="brand/40"`, `borderColor="brand/soft"`. See [Tones and opacity](/ton
 | `gridColumn`, `gridColumnStart`, `gridColumnEnd` | `grid-column`, … | | Unitless. |
 | `gridRow`, `gridRowStart`, `gridRowEnd` | `grid-row`, … | | Unitless. |
 
-Four `flex` keywords print a full value:
+Four `flex` keywords expand to full values:
 
 | Value | CSS |
 | --- | --- |
@@ -74,8 +74,8 @@ Four `flex` keywords print a full value:
 | `maxH`, `maxHeight` | `max-height` | `sizes` | |
 | `size` | `width`, `height` | `sizes` | Sets both to one value. |
 
-A name that is no `sizes` token is looked up in `spacing` next, so
-`w="gutter"` works.
+If a token name is not found in `sizes`, it falls back to `spacing` (so
+`w="gutter"` works).
 
 ## Spacing
 
@@ -90,14 +90,14 @@ A name that is no `sizes` token is looked up in `spacing` next, so
 | `mx`, `marginX`, `marginInline` | `margin-inline` | `spacing` |
 | `my`, `marginY`, `marginBlock` | `margin-block` | `spacing` |
 
-`padding` and `margin` with two to four values, such as `p="2r 4r"`, print
-the four side properties.
+Multi-value `padding` and `margin` shorthands like `p="2r 4r"` expand to
+individual side properties.
 
 ## Position
 
 | Prop | CSS property | Tokens | Notes |
 | --- | --- | --- | --- |
-| `inset` | `inset` | `spacing` | Two to four values print `top`, `right`, `bottom` and `left`. |
+| `inset` | `inset` | `spacing` | Multi-value shorthands expand to `top`, `right`, `bottom` and `left`. |
 | `top`, `right`, `bottom`, `left` | `top`, `right`, `bottom`, `left` | `spacing` | |
 | `zIndex` | `z-index` | `zIndex` | Unitless. |
 
@@ -131,8 +131,8 @@ Logical insets such as `insetInline` take a full path: `spacing.gutter`.
 | `caretColor` | `caret-color` | `colors` | |
 | `scrollbarColor` | `scrollbar-color` | `colors` | |
 
-`bg` reads colours, so give a gradient on `bg` its full path:
-`bg="gradients.hero"`.
+`bg` resolves against `colors` by default; use the full path for a gradient
+(`bg="gradients.hero"`).
 
 ## Border and radius
 
@@ -150,11 +150,11 @@ Logical insets such as `insetInline` take a full path: `spacing.gutter`.
 | `borderImageOutset`, `borderImageSlice`, `borderImageWidth` | `border-image-outset`, … | | Unitless. |
 
 `border`, `borderTop`, `borderRight`, `borderBottom`, `borderLeft` and
-`outline` print separate width, style and colour properties, so a later
-`borderColor` still applies. The colour part takes a colour token:
+`outline` expand to separate width, style and colour declarations, so a later
+`borderColor` override still applies. The colour part accepts a colour token:
 `borderBottom="1px solid ink"`.
 
-Three values print a fixed result:
+Three shorthand values expand to presets:
 
 | Value | CSS |
 | --- | --- |
@@ -169,7 +169,7 @@ Three values print a fixed result:
 | `boxShadow` | `box-shadow` | `shadows` | |
 | `opacity` | `opacity` | | Unitless. |
 
-A shadow written in place can still use a colour token:
+An inline shadow value can reference a colour token in braces:
 `boxShadow="0 0 0 3px {colors.brand/30}"`.
 
 ## Transforms

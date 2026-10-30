@@ -17,8 +17,8 @@ that switches layout at `md` does so when the space it sits in reaches
 <Div padding={{ base: '2r', md: '4r' }} />
 ```
 
-Breakpoints are mobile-first: each one prints `@container (min-width: …)`, so
-a style set at a breakpoint holds at every wider width.
+Breakpoints are mobile-first: each one compiles to `@container (min-width: …)`,
+so a style set at a breakpoint holds at every wider width.
 
 ## Mark a container
 
@@ -122,8 +122,8 @@ pixel width; a breakpoint name works too:
 <Div width="100%" r={{ 300: { width: '50%' }, 900: { width: '33%' } }} />
 ```
 
-Each key prints `@container (min-width: <width>px)`. `r` works on primitives
-and in `css()`.
+Each key compiles to `@container (min-width: <width>px)`. `r` works on
+primitives and in `css()`.
 
 ## Named containers
 
@@ -136,7 +136,7 @@ name it and prefix the `r` key with that name:
 </Div>
 ```
 
-`'sidebar/md'` prints `@container sidebar (min-width: 768px)`.
+`'sidebar/md'` compiles to `@container sidebar (min-width: 768px)`.
 
 ## Recipe variants
 
@@ -160,5 +160,5 @@ css({
 })
 ```
 
-In [Global CSS](/global-css), breakpoint keys print `@media` queries with the
-same widths.
+In [Global CSS](/global-css), breakpoint keys compile to `@media` queries with
+the same widths.

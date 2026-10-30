@@ -35,7 +35,7 @@ earlier one:
 So a style prop always overrides a recipe or a global rule on the same
 element, with no `!important`.
 
-A layer with no rules prints no block, but keeps its place in the order.
+An empty layer omits its block while keeping its place in the `@layer` order.
 
 ## One layer per system
 
@@ -62,17 +62,17 @@ All six layers sit inside a layer named after your system's
 
 Systems in `extends` come first, then systems in `layers`, then yours, each
 group in config order. A system's own upstreams come before it: here
-`reference-ui` layers in `reference-icons`. A system reached twice prints
-once, at its first position.
+`reference-ui` layers in `reference-icons`. A system referenced more than once
+is emitted once, at its first position.
 
 Your rules win over theirs. The system order applies first, so even a rule
 in your `global` layer beats a style prop in an upstream system.
 
-Only your system prints a reset. Upstream systems print without theirs, so
-your `normalizeCss` decides the reset for the whole page.
+Only your system emits the CSS reset; upstream systems omit theirs, so your
+`normalizeCss` setting controls the reset for the whole page.
 
-Layer names are escaped as CSS identifiers. A system named `@acme/ui` prints
-as `@layer \@acme\/ui`.
+Layer names are escaped as CSS identifiers. A system named `@acme/ui` is
+escaped as `@layer \@acme\/ui`.
 
 The `root` layer comes before everything. It holds only the default
 `--spacing-root`, so any `--spacing-root` you set wins. See
@@ -107,6 +107,6 @@ layer and lets them use your tokens.
 
 The generated CSS needs browsers that support these three features:
 
-- **Cascade layers** (`@layer`): every rule the stylesheet prints sits in a layer.
-- **Container queries** (`@container`): breakpoints such as `md`, and the [`r` prop](/responsive#custom-widths), print them.
-- **`color-mix()`**: numeric opacity, such as `blue.500/40`, and [tones](/tones), such as `blue.500/medium`, print it.
+- **Cascade layers** (`@layer`): every generated rule is placed in a layer.
+- **Container queries** (`@container`): used by responsive breakpoints like `md` and the [`r` prop](/responsive#custom-widths).
+- **`color-mix()`**: used by numeric opacity (`blue.500/40`) and [tones](/tones) (`blue.500/medium`).
