@@ -15,8 +15,8 @@ steps.
 
 ## 1. Sync your project
 
-Run `ref sync` in the folder with your `ui.config.ts`. The server reads the
-types it writes.
+Run `ref sync` in your project directory so `.reference-ui/` is generated before
+the server starts:
 
 ```bash
 npx ref sync
@@ -24,7 +24,7 @@ npx ref sync
 
 ## 2. Add the server
 
-Your agent starts the server itself. Add it to your agent's MCP config:
+Add `@reference-ui/mcp` to your editor or agent's MCP configuration:
 
 <CodeTabs labels={['Claude Code', 'Cursor', 'VS Code', 'Codex', 'Other']}>
 
@@ -73,8 +73,8 @@ npx -y @reference-ui/mcp --project ./apps/web
 
 ## 3. Try it
 
-Ask your agent *"Which components does this project have?"* It should list
-your components, read from the server.
+Ask your agent *"Which components does this project have?"* to verify that it
+queries the MCP server and lists your project's components.
 
 ## Over HTTP
 

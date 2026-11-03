@@ -9,8 +9,8 @@ description: Name your design values once and use them everywhere.
 
 # Tokens
 
-Tokens name your design values, so every style can use the name instead of
-the raw value.
+Tokens map named design values to CSS custom properties so components and
+styles can reference them consistently.
 
 ## Define tokens
 
@@ -34,9 +34,9 @@ tokens({
 })
 ```
 
-Put the call in any file your `include` globs match. The next `ref sync`
-collects it. Call `tokens()` in as many files as you like: sync merges them,
-and a later definition of the same path wins.
+Call `tokens()` in any file matched by your `include` globs. You can split
+token definitions across multiple files; `ref sync` merges them, with later
+definitions overriding earlier ones at the same path.
 
 ## Use a token
 
@@ -57,13 +57,14 @@ Each token becomes a CSS custom property named from its path in kebab case:
 `colors.brand.primary` is `--colors-brand-primary`. Styles use the variable,
 so changing a token's value never changes a class name.
 
-A value that names no token is printed as written, so `color="#ff0000"` works
-beside your tokens.
+Values that do not match a token name are passed through as raw CSS, so
+`color="#ff0000"` works alongside token names.
 
 ## Categories
 
-The property decides which category a token name is looked up in. Each value
-is a CSS string, printed into the token's variable as written.
+Each style property resolves bare token names against its default token
+category. Token values must be strings and are emitted directly into the
+generated CSS custom properties.
 
 | Category | Properties | Value |
 | --- | --- | --- |
@@ -87,8 +88,8 @@ is a CSS string, printed into the token's variable as written.
 Write numbers as strings: `zIndex: { modal: { value: '50' } }`. A number,
 array or object value fails `ref sync` as an invalid token leaf.
 
-Shorthands such as `p` and `bg` use the category of the property they stand
-for.
+Shorthands such as `p` and `bg` resolve against the same category as their full
+property names.
 
 ## References
 
@@ -106,14 +107,14 @@ tokens({
 })
 ```
 
-A reference stays a variable in CSS: `--colors-danger` is
-`var(--colors-red-500)`, so changing `red.500` changes `danger` too. One value
-can hold several references. References work the same way in `css()`, style
-props and `globalCss()`.
+Token references compile to CSS `var()` references
+(`--colors-danger: var(--colors-red-500)`), so updating `red.500` updates
+`danger` automatically. A single value can contain multiple `{...}` references,
+and the same syntax works in `css()`, style props, and `globalCss()`.
 
-A reference to a token that does not exist fails `ref sync` and names the
-reference. A whole value written without braces, such as `'red.500'`, is not a
-reference: it prints as written and sync warns.
+Referencing a non-existent token fails `ref sync` with a diagnostic naming the
+missing path. A bare path without braces (such as `'red.500'`) is treated as a
+literal string rather than a reference and triggers a warning.
 
 ## Light and dark values
 
@@ -140,8 +141,9 @@ part of it:
 </Div>
 ```
 
-Modes nest: a `colorMode="light"` element inside a dark one is light again.
-See [Primitives](/primitives#colour-mode).
+Colour modes can be nested: a `colorMode="light"` element inside a dark
+container switches its subtree back to light mode. See
+[Primitives](/primitives#colour-mode).
 
 ## Opacity and tones
 
@@ -157,8 +159,8 @@ See [Tones and opacity](/tones) to define tones and choose between them.
 
 ## Private tokens
 
-Tokens under a `_private` key work inside the system that defines them, but
-a system that extends it never sees them:
+Tokens defined under a `_private` group are available within the system that
+declares them, but are excluded when another system extends it:
 
 ```ts
 tokens({
@@ -199,10 +201,11 @@ function tokens(config: TokenConfig): void
 
 | Leaf key | Type | Description |
 | --- | --- | --- |
-| `value` | `string` | The token's value. Fills the mode you don't name. |
+| `value` | `string` | The default token value, used for any mode not explicitly set. |
 | `light` | `string` | Light value. |
 | `dark` | `string` | Dark value. |
 
-A leaf needs `value`, `light` or `dark`. A leaf with one of them uses it in both
-modes. Any other key starts a group, and a
-key named `_private` starts a private group.
+Each token leaf must specify at least one of `value`, `light`, or `dark`. If
+only one is provided, it applies in both light and dark modes. Any other object
+key creates a nested token group, and `_private` creates a group scoped to the
+current system.

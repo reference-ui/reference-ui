@@ -13,8 +13,10 @@ import { ComboboxDemo, ComboboxSelectDemo } from './combobox-demo'
 
 # Combobox
 
-Use Combobox for autocomplete, searchable selects and plain selects. Focus
-stays on the input or button while the arrow keys move through the list.
+Combobox pairs a text input or trigger button with a popup list of options for
+autocomplete, searchable selects, and standard select menus. DOM focus remains
+on the input or button while arrow keys move the active highlight through the
+list.
 
 <Preview>
   <ComboboxDemo />
@@ -63,8 +65,9 @@ export function FrameworkPicker() {
 }
 ```
 
-Combobox does not filter. You decide which options to render from the
-input text; Combobox handles keyboard navigation, selection and dismissal.
+Combobox does not filter options automatically. You filter the rendered
+options based on `inputValue`, while Combobox manages keyboard navigation,
+selection, and popup dismissal.
 
 ## Import
 
@@ -90,20 +93,20 @@ import { Combobox } from '@reference-ui/lib'
 </Combobox>
 ```
 
-`Combobox` renders no element of its own. Use `Combobox.Input` for a text
-input or `Combobox.Trigger` for a button, not both. `Combobox.Popover` holds
-the list: a [Listbox](/listbox) or a [Tree](/tree).
+`Combobox` renders no wrapper element. Pair `Combobox.Popover` with either
+`Combobox.Input` for a text input or `Combobox.Trigger` for a select button
+(not both). Inside the popover, render a [Listbox](/listbox) or a
+[Tree](/tree).
 
-`Combobox.Option`, `Combobox.Section` and `Combobox.Empty` are
-`Listbox.Option`, `Listbox.Section` and `Listbox.Empty` under Combobox
-names.
+`Combobox.Option`, `Combobox.Section`, and `Combobox.Empty` are aliases for
+`Listbox.Option`, `Listbox.Section`, and `Listbox.Empty`.
 
 ## Examples
 
 ### Select
 
-For a select without typing, use `Combobox.Trigger` in place of the input.
-Its children are what the button shows.
+For a select menu without text filtering, render `Combobox.Trigger` instead of
+`Combobox.Input`. Pass the current selection label as its children.
 
 <Preview>
   <ComboboxSelectDemo />
@@ -125,8 +128,8 @@ Its children are what the button shows.
 
 ### Groups and empty state
 
-Wrap options in `Combobox.Section` to give them a heading. Render
-`Combobox.Empty` when nothing matches.
+Group related options under a heading with `Combobox.Section`, and render
+`Combobox.Empty` when no options match the query.
 
 ```tsx
 <Combobox.Popover>
@@ -145,8 +148,8 @@ Wrap options in `Combobox.Section` to give them a heading. Render
 
 ### Inline completion
 
-With `autocomplete="inline"` or `"both"`, the input completes the active
-option's label after what the user typed and selects the added text.
+Set `autocomplete="inline"` or `"both"` to complete the active option's label
+inline after the typed text, with the suggested suffix selected.
 
 ```tsx
 <Combobox autocomplete="both" value={value} onChange={setValue}>…</Combobox>
@@ -154,10 +157,9 @@ option's label after what the user typed and selects the added text.
 
 ### Custom values
 
-By default, text that matches no option is replaced by the selected option's
-label when the user leaves the input. With `allowCustomValue`, Enter, Tab or
-leaving the input commits the typed text as the value. Empty text commits
-`null`.
+By default, unrecognised text reverts to the selected option's label on blur.
+Set `allowCustomValue` to commit arbitrary typed text as the value on Enter,
+Tab, or blur. Clearing the input commits `null`.
 
 ```tsx
 <Combobox allowCustomValue value={value} onChange={setValue}>…</Combobox>
@@ -165,8 +167,8 @@ leaving the input commits the typed text as the value. Empty text commits
 
 ### Loading
 
-Set `loading` while options are being fetched. The list is marked busy and
-no empty message is announced.
+Set `loading` while options are being fetched asynchronously. This marks the
+listbox with `aria-busy="true"` and suppresses empty-state announcements.
 
 ```tsx
 <Combobox loading={isFetching} value={value} onChange={setValue}>…</Combobox>
@@ -176,59 +178,63 @@ no empty message is announced.
 
 ### Combobox
 
-Holds the value, the input text and the open state. Renders only its
-children. `value` and `onChange` are required: Combobox is always
-controlled.
+Manages selection, input text, and open state without rendering a DOM element.
+Combobox is always controlled: `value` and `onChange` are required.
 
 <Reference name="ComboboxProps" headingLevel={4} />
 
-When you control `inputValue`, update the text yourself on selection, as in
-the first example. Otherwise Combobox sets it to the option's label.
+When controlling `inputValue`, update the input text inside `onChange` when an
+option is selected, as shown in the first example. When `inputValue` is
+uncontrolled, Combobox automatically sets it to the selected option's label.
 
 ### Combobox.Input
 
-The text input. Takes `input` props and style props, except `value`,
-`defaultValue` and `onChange`: the root's `inputValue` and
-`onInputValueChange` control the text. To cancel an edit, use `onBeforeInput`.
+Renders the text input. Accepts standard `input` props and style props, except
+`value`, `defaultValue`, and `onChange` (use `inputValue` and
+`onInputValueChange` on Combobox instead). To intercept edits before they
+apply, use `onBeforeInput`.
 
-Focusing the input does not open the list. Typing, clicking, or an arrow
-key does. Inside a [Field](/field), the list is positioned against the
-field.
+Focusing the input alone does not open the popover; typing, clicking, or
+pressing an arrow key opens it. When `Combobox.Input` is wrapped in a
+[Field](/field), the popover anchors to the outer Field border.
 
 ### Combobox.Trigger
 
-The button for a select. Takes `button` props and style props. It has
-`type="button"` unless you pass `type`. A click opens or closes the list.
+Renders the trigger button for a select-only combobox. Accepts standard
+`button` props and style props, defaulting to `type="button"`. Clicking
+toggles the popover.
 
 ### Combobox.Popover
 
-The pop-up panel. Takes `div` props and style props, plus the positioning
-props of [`Overlay.Content`](/overlay). It sits below the input, aligned to
-its start edge, and is at least as wide as the input. It has a panel style by
-default; style props you pass override it.
+Renders the popup container. Accepts `div` props, style props, and the
+positioning props of [`Overlay.Content`](/overlay). By default, it positions
+below the control aligned to its start edge, matches at least the control's
+width, and applies default panel styling that can be overridden with style
+props.
 
 <Reference name="ComboboxPopoverProps" headingLevel={4} />
 
 ### Combobox.Option
 
-A `Listbox.Option`. Takes `value`, `textValue` and `disabled`, plus `div`
-props. See [Listbox](/listbox).
+Alias for `Listbox.Option`. Accepts `value`, `textValue`, `disabled`, and
+standard `div` props. See [Listbox](/listbox).
 
 ### Combobox.Section
 
-A `Listbox.Section`: a group of options with an optional `title` heading.
+Alias for `Listbox.Section`. Groups options under an optional `title` heading.
 
 ### Combobox.Empty
 
-A `Listbox.Empty`: a `role="status"` message for an empty list. Its default
-text is `No results found`. When it renders, Combobox does not announce
-`emptyMessage` or `noResultsMessage`.
+Alias for `Listbox.Empty`. Renders a `role="status"` message when no options
+are present, defaulting to `"No results found"`. Rendering `Combobox.Empty`
+suppresses the live-region announcements from `emptyMessage` and
+`noResultsMessage`.
 
 ## Accessibility
 
-Give the input or trigger a name with a `label` or `aria-label`. Focus
-stays on it, and the active option is announced through
-`aria-activedescendant`.
+Provide an accessible name for the input or trigger using a `Label` or
+`aria-label`. DOM focus stays on the control while the highlighted option is
+communicated to assistive technologies via `aria-activedescendant`.
 
 ### Keyboard interactions
 
@@ -238,7 +244,7 @@ stays on it, and the active option is announced through
 | `ArrowUp` | Opens the list, or moves to the previous option. Wraps at the start. |
 | `Enter` | Selects the active option and closes. With no active option, resolves the text and closes. When the list is closed, the trigger opens it and the input leaves `Enter` to the form. |
 | `Space` | On the trigger, opens the list or selects the active option. |
-| `Tab` | Selects the active option if the keyboard or typing made it active, closes, and moves focus on. An option under the pointer is not selected. |
+| `Tab` | If an option was highlighted via the keyboard or typing, selects it and closes the list before moving focus to the next element. Options highlighted only by pointer hover are not selected on `Tab`. |
 | `Escape` | Closes the list. In the input, restores the text of the selected option. |
 | `Home` / `End` | On the trigger, moves to the first or last option. |
 | `ArrowRight` / `ArrowLeft` | With a [Tree](/tree) list, expands or collapses the active branch. |

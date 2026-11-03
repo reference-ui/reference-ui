@@ -4,7 +4,7 @@ section: Components
 group: Disclosure and layout
 order: 210
 slug: accordion
-description: A stack of collapsible sections where one, or several, can be open at a time.
+description: A stack of collapsible sections where one or multiple items can be open at a time.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -13,8 +13,8 @@ import { AccordionDemo, AccordionMultipleDemo } from './accordion-demo'
 
 # Accordion
 
-Accordion is a stack of [Collapsibles](/collapsible) where one, or several,
-can be open at a time.
+Accordion is a stack of [Collapsible](/collapsible) sections where one or
+multiple items can be open at a time.
 
 <Preview>
   <AccordionDemo />
@@ -58,13 +58,13 @@ import { Accordion } from '@reference-ui/lib'
 [`Collapsible.Content`](/collapsible#collapsiblecontent). A `Collapsible`
 with an `id` also works as an item.
 
-Every item needs a unique `id`. The Accordion's value is made of these ids.
+Every item requires a unique `id`, which identifies the item in `value`.
 
 ## Examples
 
 ### Multiple items open
 
-Set `expansion="multiple"` to let items open and close independently.
+Set `expansion="multiple"` to allow multiple items to open and close independently.
 
 <Preview>
   <AccordionMultipleDemo />
@@ -80,8 +80,8 @@ Set `expansion="multiple"` to let items open and close independently.
 
 ### Controlled
 
-Pass `value` and `onChange` to control the state. In single mode the value is
-an id or `null`. In multiple mode it is an array of ids.
+For controlled state, pass `value` and `onChange`. In single mode, `value` is
+an item `id` or `null`; in multiple mode, it is an array of item `id`s.
 
 ```tsx
 import { Accordion, type AccordionValue } from '@reference-ui/lib'
@@ -94,14 +94,15 @@ const [value, setValue] = React.useState<AccordionValue>('billing')
 </Accordion>
 ```
 
-Without `value`, every item starts closed. To start with an item open,
-control the value.
+In uncontrolled mode, all items start closed. Pass `value` and `onChange` to
+open an item initially.
 
 ### Findable content
 
-With `hiddenUntilFound` on an item, its closed content stays in the page.
-When the browser's find-in-page matches text inside it, the item opens. In
-single mode, that closes the item that was open.
+Set `hiddenUntilFound` on an item to keep its closed content in the DOM with
+`hidden="until-found"`. When the browser's find-in-page matches text inside the
+item, it opens automatically (and closes the previously open item in single
+mode).
 
 ```tsx
 <Accordion.Item id="billing" hiddenUntilFound>…</Accordion.Item>
@@ -111,34 +112,35 @@ single mode, that closes the item that was open.
 
 ### Accordion
 
-Holds the open items. Takes `div` props and style props.
+The root container that manages open state across items. Renders a `div` and
+accepts standard `div` props and style props.
 
 <Reference name="AccordionProps" headingLevel={4} />
 
-`AccordionValue` is `string | string[] | null`. In multiple mode, ids in
-the value follow the order of the items.
+`AccordionValue` is `string | string[] | null`. In multiple mode, the array of
+IDs follows the DOM order of the items.
 
 ### Accordion.Item
 
-One item. Renders no element of its own.
+Wraps a single collapsible section. Renders no DOM element of its own.
 
 <Reference name="AccordionItemProps" headingLevel={4} />
 
 ### Accordion.Trigger and Accordion.Content
 
-The same components as [`Collapsible.Trigger`](/collapsible#collapsibletrigger)
-and [`Collapsible.Content`](/collapsible#collapsiblecontent), with the same
-props, data attributes and CSS variables.
+Re-exports of [`Collapsible.Trigger`](/collapsible#collapsibletrigger) and
+[`Collapsible.Content`](/collapsible#collapsiblecontent), accepting the same
+props, data attributes, and CSS variables.
 
 ## Behaviour
 
-- In single mode, opening an item closes the open one. Clicking the open
-  item closes it, so none is open.
-- Accordion controls the open state of its items. Don't pass `open` or
-  `onChange` to an item.
-- In development, a missing or duplicate item `id` throws.
-- A Collapsible placed inside an item's content is independent. It doesn't
-  join the Accordion.
+- In single mode, opening an item closes the currently open item. Clicking the
+  active trigger closes it, leaving all items closed.
+- `Accordion` manages the open state of its items. Do not pass `open` or
+  `onChange` to individual items.
+- Missing or duplicate item `id`s throw an error in development.
+- A `Collapsible` nested inside `Accordion.Content` operates independently and
+  does not register as an accordion item.
 
 ## Accessibility
 

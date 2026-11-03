@@ -9,15 +9,15 @@ description: How the stylesheet orders its rules, and how your own CSS fits in.
 
 # Cascade layers
 
-The stylesheet puts every rule in a CSS cascade layer, so which rule wins
-depends on its layer, not on selector specificity or file order. The output
-relies on the CSS [`@layer`](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer)
-rule.
+Every generated rule is placed in a CSS
+[`@layer`](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer), so
+precedence is determined by layer order rather than selector specificity or
+source order.
 
 ## Layer order
 
-Inside your system, rules sit in six layers. A later layer wins over an
-earlier one:
+Within a system, rules are organized into six layers, ordered from lowest to
+highest precedence:
 
 ```css
 @layer reset, global, base, tokens, recipes, utilities;
@@ -25,23 +25,24 @@ earlier one:
 
 | Layer | Contents |
 | --- | --- |
-| `reset` | The CSS reset, when [`normalizeCss`](/config#normalizecss) is on. |
-| `global` | `globalCss()` rules, `@keyframes` and `@font-face`. |
-| `base` | Reserved. Sync writes nothing to it. |
+| `reset` | The CSS reset, when [`normalizeCss`](/config#normalizecss) is enabled. |
+| `global` | `globalCss()` rules, `@keyframes`, and `@font-face`. |
+| `base` | Reserved; unused by default. |
 | `tokens` | Token custom properties, with their light and dark values. |
 | `recipes` | `recipe()` classes. |
 | `utilities` | Style props and `css()` classes. |
 
-So a style prop always overrides a recipe or a global rule on the same
-element, with no `!important`.
+Because `utilities` comes after `recipes` and `global`, a style prop always
+overrides a recipe or global rule on the same element without `!important`.
 
-An empty layer omits its block while keeping its place in the `@layer` order.
+Empty layers are still declared in the `@layer` order, without a rule block.
 
 ## One layer per system
 
-All six layers sit inside a layer named after your system's
-[`name`](/config#name). Each system in [`extends`](/config#extends) and
-[`layers`](/config#layers) gets its own layer too, ordered before yours:
+All six sublayers are nested inside a top-level layer named after your system's
+[`name`](/config#name). Each upstream system in [`extends`](/config#extends)
+and [`layers`](/config#layers) gets its own top-level layer ordered before
+yours:
 
 ```css
 @layer root { :root { --spacing-root: 0.25rem } }
@@ -61,12 +62,13 @@ All six layers sit inside a layer named after your system's
 ```
 
 Systems in `extends` come first, then systems in `layers`, then yours, each
-group in config order. A system's own upstreams come before it: here
-`reference-ui` layers in `reference-icons`. A system referenced more than once
-is emitted once, at its first position.
+group in config order. Each system's transitive dependencies are ordered before
+it (for example, `reference-icons` before `reference-ui`). A system referenced
+more than once is emitted once, at its first position.
 
-Your rules win over theirs. The system order applies first, so even a rule
-in your `global` layer beats a style prop in an upstream system.
+Because outer layers take precedence before inner sublayers, your system's
+rules always override upstream systems, even when your rule is in `global` and
+the upstream rule is in `utilities`.
 
 Only your system emits the CSS reset; upstream systems omit theirs, so your
 `normalizeCss` setting controls the reset for the whole page.
@@ -74,18 +76,19 @@ Only your system emits the CSS reset; upstream systems omit theirs, so your
 Layer names are escaped as CSS identifiers. A system named `@acme/ui` is
 escaped as `@layer \@acme\/ui`.
 
-The `root` layer comes before everything. It holds only the default
-`--spacing-root`, so any `--spacing-root` you set wins. See
-[Spacing](/spacing#set-the-root).
+The `root` layer is ordered first and defines only the default
+`--spacing-root` variable, so any custom `--spacing-root` value overrides it.
+See [Spacing](/spacing#set-the-root).
 
 ## Your own CSS
 
-CSS that is not in a layer wins over every layered rule. A stylesheet you
-import beside `@reference-ui/react/styles.css` therefore overrides Reference
-UI styles for the same property, whatever the selectors and load order.
+In CSS, unlayered rules always take precedence over layered rules. Any
+unlayered stylesheet imported alongside `@reference-ui/react/styles.css`
+overrides Reference UI styles for the same property, regardless of selector
+specificity or import order.
 
-To rank your CSS below Reference UI instead, put it in a layer declared
-before the stylesheet:
+To give custom or third-party CSS lower precedence than Reference UI, wrap it
+in a `@layer` declared before importing `@reference-ui/react/styles.css`:
 
 ```css
 /* app.css, imported before @reference-ui/react/styles.css */
@@ -96,16 +99,17 @@ before the stylesheet:
 }
 ```
 
-A layer's rank comes from where it is first declared, not from import order.
-The same works for another library that ships its own layers: declare its
-layer before the Reference UI stylesheet loads to rank it below.
+Layer precedence is determined by the order in which layers are first
+declared. If another library ships its own cascade layers, declaring its layer
+name before importing `@reference-ui/react/styles.css` places it below
+Reference UI.
 
-Prefer `globalCss()` for new rules: it puts them in your system's `global`
-layer and lets them use your tokens.
+For new global styles, prefer `globalCss()`, which places rules in your
+system's `global` layer and supports token references.
 
 ## Browser support
 
-The generated CSS needs browsers that support these three features:
+The generated CSS requires browser support for:
 
 - **Cascade layers** (`@layer`): every generated rule is placed in a layer.
 - **Container queries** (`@container`): used by responsive breakpoints like `md` and the [`r` prop](/responsive#custom-widths).

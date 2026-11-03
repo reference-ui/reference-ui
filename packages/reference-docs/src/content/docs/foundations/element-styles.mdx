@@ -3,25 +3,24 @@ title: Element styles
 section: Foundations
 order: 60
 slug: element-styles
-description: Lib's base look for primitives, from text and forms to tables, media, focus and selection.
+description: Default global styles for HTML primitives in @reference-ui/lib.
 ---
 
 # Element styles
 
-Lib provides default styles for every [primitive](/primitives). Each primitive
-carries a class named after its tag, such as `ref-table` or `ref-input`, and
-lib styles those classes with `globalCss()`. The rules apply wherever your
-config extends lib's `baseSystem`.
+`@reference-ui/lib` provides default styles for every [primitive](/primitives).
+Each primitive renders a class named after its tag (such as `ref-table` or
+`ref-input`) styled via `globalCss()`. These rules apply whenever your config
+extends `@reference-ui/lib/baseSystem`.
 
-One rule targets the tag itself: `code` styles every `<code>` element on the
-page, not only the `Code` primitive.
+One rule targets a bare HTML tag directly: `code` styles all `<code>` elements
+on the page, not only the `Code` primitive.
 
-Colours come from lib's `ui.*` tokens, one group per element. See
-[Color](/color).
+Default colors reference the `ui.*` semantic token groups (see [Color](/color)).
 
 ## Page
 
-| Selector | Look |
+| Selector | Default styles |
 | --- | --- |
 | `:root` | Sets `--spacing-root` to `0.25rem`, the size of `1r`. See [Spacing](/spacing). |
 | `body` | `sans` at `4r` (16px), letter spacing `-0.01em`, `container-type: inline-size`. |
@@ -31,7 +30,7 @@ Colours come from lib's `ui.*` tokens, one group per element. See
 Headings, `P`, `Blockquote`, `Small`, `Code`, `Kbd`, `Samp` and `Pre` are
 covered in [Typography](/typography).
 
-| Element | Look | Tokens |
+| Element | Default styles | Tokens |
 | --- | --- | --- |
 | `A` | Underlined, offset `0.15em`. Focus ring on keyboard focus. | `ui.link.default`, `ui.link.hover` |
 | `Mark` | Filled highlight, `sm` radius. | `ui.mark.background`, `ui.mark.foreground` |
@@ -49,7 +48,7 @@ covered in [Typography](/typography).
 
 ### Lists
 
-| Element | Look | Tokens |
+| Element | Default styles | Tokens |
 | --- | --- | --- |
 | `Ul`, `Menu` | Disc markers, `4r` indent, `4r` bottom margin. | `ui.list.marker.foreground` |
 | `Ol` | Decimal markers at weight 500. | `ui.list.marker.foreground` |
@@ -58,7 +57,7 @@ covered in [Typography](/typography).
 
 ## Document
 
-| Element | Look | Tokens |
+| Element | Default styles | Tokens |
 | --- | --- | --- |
 | `Main`, `Header`, `Footer`, `Section`, `Article`, `Aside`, `Nav` | Block, body type. | |
 | `Span` | Body type; inherits its colour from its parent. | |
@@ -73,12 +72,12 @@ covered in [Typography](/typography).
 
 Controls share one height, `8.5r` (34px). See [Sizes](/sizes).
 
-| Element | Look | Tokens |
+| Element | Default styles | Tokens |
 | --- | --- | --- |
 | `Button` | `8.5r` tall, `3.5r` padding, `md` radius, weight 500. Three variants (below). | `ui.button.*` |
 | `Input` (text types), `Select`, `Textarea` | Full width, `8.5r` tall, 1px border, `sm` radius. Textarea resizes vertically. | `ui.field.background`, `ui.field.border`, `ui.field.borderHover`, `ui.field.placeholder` |
-| `Input type="checkbox"` | `4r` box with a tick when checked. | `ui.checkbox.*` |
-| `Input type="radio"` | `4r` disc with a ring when checked. | `ui.radio.*` |
+| `Input type="checkbox"` | `4r` square checkbox with a checkmark indicator when checked. | `ui.checkbox.*` |
+| `Input type="radio"` | `4r` circular radio control with an inner ring when checked. | `ui.radio.*` |
 | `Input type="range"` | `1.5r` track, filled bar and a rounded thumb. | `ui.progress.bar.foreground` |
 | `Input type="file"` | Field border, with a button-style picker. | `ui.field.*`, `ui.button.default.*` |
 | `Progress`, `Meter` | Full width, `1.5r` rounded bar. `Meter` colours its optimum, suboptimum and low ranges. | `ui.progress.*`, `ui.meter.*` |
@@ -87,18 +86,18 @@ Controls share one height, `8.5r` (34px). See [Sizes](/sizes).
 
 Pick a button variant with the `variant` prop:
 
-| `variant` | Look |
+| `variant` | Default styles |
 | --- | --- |
 | `default` (or none) | Grey fill, base text colour. |
 | `primary` | Near-black fill in light mode, near-white in dark mode. |
 | `ghost` | Transparent until hovered. |
 
-Disabled controls take a not-allowed cursor. A disabled `Button` uses
-`ui.button.disabled.*`; a disabled field drops to half opacity.
+Disabled controls use `cursor: not-allowed`. A disabled `Button` uses
+`ui.button.disabled.*` tokens, while disabled fields use `0.5` opacity.
 
 ## Tables
 
-| Element | Look | Tokens |
+| Element | Default styles | Tokens |
 | --- | --- | --- |
 | `Table` | Full width, collapsed borders, `3.5r` (14px) text, caption below. | |
 | `Tr` | 1px bottom border, tinted on hover. | `ui.table.border`, `ui.table.row.mutedBackground` |
@@ -107,11 +106,12 @@ Disabled controls take a not-allowed cursor. A disabled `Button` uses
 | `Tfoot` | Top border, tinted, weight 500. | `ui.table.footer.mutedBackground` |
 | `Caption` | `4r` top margin. | `ui.table.caption.foreground` |
 
-`Th` and `Td` don't wrap. Set `whiteSpace="normal"` on a cell to let it wrap.
+`Th` and `Td` default to `white-space: nowrap`. Pass `whiteSpace="normal"` to
+allow text wrapping in a cell.
 
 ## Media
 
-| Element | Look | Tokens |
+| Element | Default styles | Tokens |
 | --- | --- | --- |
 | `Img`, `Picture`, `Video`, `Canvas`, `Svg` | Block, no wider than their container. `Img`, `Video` and `Canvas` keep their aspect ratio. | |
 | `Audio` | Block, full width. | |
@@ -121,17 +121,20 @@ Disabled controls take a not-allowed cursor. A disabled `Button` uses
 
 ## Focus
 
-A primitive focused from the keyboard shows a 2px outline in
-`ui.focus.ring`, offset by 2px. A click on a button or link shows no ring.
+Primitives focused via the keyboard display a `2px` outline in `ui.focus.ring`
+with a `2px` offset. Pointer clicks on buttons and links do not trigger the
+focus ring.
 
-Text inputs, selects and textareas take the `ui.focus.ring` border colour on
-any focus, and add the outline only on keyboard focus. Browsers match
-`:focus-visible` on a clicked text input, so lib tracks the input method
-itself and sets `data-focus-visible` on the focused element when focus came
-from the keyboard.
+Text inputs, selects, and textareas change their border color to `ui.focus.ring`
+on any focus, and add the outer focus ring only on keyboard focus. Because
+browsers match native `:focus-visible` when clicking into a text input,
+`@reference-ui/lib` tracks the active input modality and sets
+`data-focus-visible` on elements focused via the keyboard.
 
-Importing anything from `@reference-ui/lib` starts that tracking. When your
-app uses lib's styles without importing from it, start it yourself once:
+Importing any module from `@reference-ui/lib` initializes this listener
+automatically. If your app extends `@reference-ui/lib/baseSystem` without
+importing runtime components from `@reference-ui/lib`, call
+`setupFocusVisible()` once at startup:
 
 ```ts
 import { setupFocusVisible } from '@reference-ui/lib'
@@ -139,8 +142,9 @@ import { setupFocusVisible } from '@reference-ui/lib'
 setupFocusVisible()
 ```
 
-`setupFocusVisible(doc?)` listens on `document`, or on the `Document` you pass.
-Later calls do nothing, and it does nothing on the server.
+`setupFocusVisible(doc?)` attaches listeners to `document` (or a custom
+`Document` instance). Subsequent calls on the same document are no-ops, and it
+is safe to call during SSR.
 
 To style keyboard focus yourself, target the attribute:
 
@@ -178,11 +182,12 @@ globalCss({
 })
 ```
 
-Your global CSS sits in a later [cascade layer](/cascade-layers) than lib's,
-so it wins. A style prop on one element still overrides both.
+Your application's global CSS is placed in a later [cascade layer](/cascade-layers)
+than the library's, so your rules take precedence. Style props on an individual
+element still override both.
 
-To change a colour everywhere lib uses it, change its `ui.*` token with
-`extendSystem()`. See [Customization](/customization).
+To customize a color across all primitives, override its `ui.*` token with
+`tokens()` or `extendSystem()`. See [Customization](/customization).
 
 ## Related
 

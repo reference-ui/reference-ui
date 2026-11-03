@@ -9,25 +9,25 @@ description: Shorthands, token categories and special values for each area of CS
 
 # Style prop reference
 
-Every standard CSS property is a style prop, in camelCase. This page lists
-only the props that have a shorthand, read a token category or take a
-special value, grouped by area. For how style props work, see
+Every standard CSS property is available as a camelCase style prop. This
+reference lists the props that have shorthands, resolve against a token
+category, or accept special values. For general usage, see
 [Style props](/style-props).
 
-In each table, **Tokens** is the category a bare token name is looked up in.
-A full path, such as `colors.brand` or `spacing.gutter`, works on every
-property.
+In the tables below, **Tokens** indicates the default token category used when
+resolving a bare token name. Full token paths such as `colors.brand` or
+`spacing.gutter` work on any property.
 
 ## Values on any property
 
 | Syntax | Example | Effect |
 | --- | --- | --- |
-| Token path | `bg="colors.brand"` | The token's variable, from any category. |
-| `{path}` inside a value | `border="1px solid {colors.brand}"` | Each reference becomes the token's variable. |
+| Token path | `bg="colors.brand"` | Resolves to the token's CSS variable from any category. |
+| `{path}` inside a value | `border="1px solid {colors.brand}"` | Replaces each braced reference with the token's CSS variable. |
 | Rhythm units | `p="2r 4r"`, `gap="1/3r"` | Multiples of the spacing root. See [Spacing](/spacing). |
 | Leading `-` | `mt="-gutter"` | Negates a token: `calc(-1 * var(--spacing-gutter))`. |
 | Trailing `!` | `mt="2r!"` | Adds `!important`. ` !important` works too. |
-| Number | `width={42}` | `42px` on a length. Bare on the unitless props marked below. |
+| Number | `width={42}` | `42px` on length properties; unitless on the properties marked below. |
 
 On colour properties, a token also takes an opacity or a tone after a
 slash: `bg="brand/40"`, `borderColor="brand/soft"`. See [Tones and opacity](/tones).
@@ -101,7 +101,7 @@ individual side properties.
 | `top`, `right`, `bottom`, `left` | `top`, `right`, `bottom`, `left` | `spacing` | |
 | `zIndex` | `z-index` | `zIndex` | Unitless. |
 
-Logical insets such as `insetInline` take a full path: `spacing.gutter`.
+Logical inset properties such as `insetInline` require a full token path (`spacing.gutter`).
 
 ## Typography
 

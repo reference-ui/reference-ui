@@ -13,8 +13,9 @@ import { DateFieldDemo, DateFieldRangeDemo } from './date-field-demo'
 
 # DateField
 
-DateField edits a date as locale-formatted text and holds it as an ISO
-string (`YYYY-MM-DD`). Add a picker to choose the date from a calendar.
+DateField formats and edits dates as locale-specific text while storing values
+as ISO strings (`YYYY-MM-DD`). Pair it with `DateField.Picker` to add a popup
+calendar.
 
 <Preview>
   <DateFieldDemo />
@@ -68,27 +69,30 @@ import { DateField } from '@reference-ui/lib'
 Regardless of child order, DateField places the input first, the trigger after
 it, and the picker below the field.
 
-- Without children, DateField renders only the text input.
-- A `DateField.Picker` without a `DateField.Trigger` gets a calendar-icon
-  trigger.
-- A `DateField.Picker` without children holds a calendar bound to the field.
+- Without children, DateField renders a standalone text input.
+- When `DateField.Picker` is included without an explicit `DateField.Trigger`,
+  DateField renders a default calendar-icon trigger button.
+- When `DateField.Picker` has no children, it renders a default
+  `DateField.Calendar` bound to the field.
 
 ## Examples
 
 ### Text only
 
-Leave out the children for a plain input.
+Omit children to render a standalone text input without a calendar popover.
 
 ```tsx
 <DateField id="due" value={date} onChange={setDate} locale="en-US" />
 ```
 
-The text follows the locale: `17/10/2026` in `en-GB`, `10/17/2026` in
-`en-US`. DateField also accepts `2026-10-17`. A year must have four digits.
+The display format follows the locale (`17/10/2026` in `en-GB`, `10/17/2026`
+in `en-US`), and ISO input (`2026-10-17`) is also accepted. Years must be four
+digits.
 
 ### Range
 
-`DateField.Range` holds a start and an end input and one range picker.
+Use `DateField.Range` to pair start and end inputs with a shared range
+calendar.
 
 <Preview>
   <DateFieldRangeDemo />
@@ -105,17 +109,18 @@ const [stay, setStay] = useState<DateRangeValue | null>(null)
 </DateField.Range>
 ```
 
-`onChange` receives a range only when both dates are complete, in order and
-allowed, or `null` when both inputs are cleared.
+`onChange` fires when both dates are complete, valid, and in chronological
+order, or with `null` when both inputs are cleared.
 
 ### Limits
 
-`min`, `max` and `isDateUnavailable` limit the dates the field accepts. A
-typed date outside them is never passed to `onChange`.
+`min`, `max`, and `isDateUnavailable` restrict which dates the field accepts.
+Typed dates that violate these constraints are not passed to `onChange`.
 
-In a single field, the default picker greys out dates outside `min` and
-`max`, but not unavailable dates. Clicking one does nothing. To grey those
-out too, pass the same function to `DateField.Calendar`:
+In a single-date field, the default picker disables dates outside `min` and
+`max`, while dates rejected by `isDateUnavailable` cannot be selected. To also
+style unavailable dates in the calendar grid, pass `isDateUnavailable`
+directly to `DateField.Calendar`:
 
 ```tsx
 <DateField value={date} onChange={setDate} locale="en-GB" isDateUnavailable={isWeekend}>
@@ -143,19 +148,20 @@ For a range, a string `name` submits both dates under that name, and
 
 ### DateField
 
-Without children, renders an `input` and takes its props. With children,
-renders a `div` around the parts; `id`, `placeholder` and the input event
-handlers still go to the input.
+Without children, DateField renders an `input` element and accepts standard
+`input` props. With children, it renders a wrapper `div` around the parts
+while forwarding `id`, `placeholder`, and input event handlers to
+`DateField.Input`.
 
 <Reference name="DateFieldProps" headingLevel={4} />
 
-DateField throws if a required prop is missing or `min` and `max` are not
-valid dates in order.
+DateField throws an error if a required prop is missing or if `min` and `max`
+are invalid or out of order.
 
-`onChange` fires as soon as the typed text is a complete, allowed date that
-differs from `value`, and with `null` when the text is cleared. Incomplete
-dates do not fire `onChange`. On blur or Enter, text that is not an allowed
-date goes back to the current value and the input is marked invalid.
+`onChange` fires as soon as the typed text forms a complete, valid date that
+differs from `value`, or with `null` when the input is cleared. Incomplete
+edits do not trigger `onChange`. On blur or Enter, invalid or incomplete text
+reverts to the last committed `value` and marks the input invalid.
 
 The input carries these data attributes:
 
@@ -167,9 +173,10 @@ The input carries these data attributes:
 
 ### DateField.Range
 
-The range host. Renders a `div` and takes its props. The `locale`, limit,
-state and `form` props work as on DateField; `value`, `onChange` and `name`
-differ.
+The root container for a date range field. Renders a `div` and accepts
+standard `div` props. Locale, constraint, state, and `form` props behave the
+same as on DateField, while `value`, `onChange`, and `name` accept range
+values.
 
 <Reference name="DateFieldRangeProps" headingLevel={4} />
 
@@ -181,33 +188,37 @@ differ.
 | `DateField.Start` | `input` | The start input of a range. Takes input props. |
 | `DateField.End` | `input` | The end input of a range. Takes input props. |
 | `DateField.Trigger` | `button` | Opens and closes the picker. Defaults to a calendar icon. |
-| `DateField.Picker` | `div` | The pop-up. Takes [Overlay.Content](/overlay) props; `placement` defaults to `'bottom-start'`. |
+| `DateField.Picker` | `div` | The popup container. Accepts [Overlay.Content](/overlay) props, with `placement` defaulting to `'bottom-start'`. |
 | `DateField.Calendar` | [Calendar](/calendar) | A calendar bound to the field. Takes Calendar props, all optional. |
 
-The managed props of each input, such as `value`, `role` and the ARIA
-state, always win over the ones you pass. Your `onKeyDown`, `onBlur` and
-`onClick` run first; call `preventDefault()` in them to skip the field's own
-handling.
+Input props managed by DateField (such as `value`, `role`, and ARIA
+attributes) take precedence over props passed directly. Custom `onKeyDown`,
+`onBlur`, and `onClick` handlers run before DateField's internal handlers;
+call `event.preventDefault()` to suppress the default behavior.
 
 ## Accessibility
 
-Label the input with a `Label` and `htmlFor`, as above. Give
-`DateField.Start` and `DateField.End` an `aria-label` each.
+Associate a `Label` with the input via `htmlFor`, as shown in the first
+example. For a range field, provide an `aria-label` on both `DateField.Start`
+and `DateField.End`.
 
-With a picker, the input is a combobox and clicking it opens the picker.
+When a picker is present, the input has `role="combobox"` and clicking it
+opens the calendar.
 
-The trigger is out of the tab order, and its default icon has no name. Give
-it an `aria-label`. Keyboard users open the picker with Alt+ArrowDown.
+`DateField.Trigger` is excluded from the tab order (`tabIndex={-1}`) because
+keyboard users open the picker from the input with `Alt+ArrowDown`. Always
+provide an `aria-label` on the trigger for pointer and touch screen-reader
+users.
 
 ### Keyboard interactions
 
 | Key | Action |
 | --- | --- |
 | `Alt` + `ArrowDown` | Opens the picker. |
-| `Escape` | Closes the picker. In a range, also drops unsaved edits. |
+| `Escape` | Closes the picker. In a range field, also reverts uncommitted edits. |
 | `Enter` | Commits the typed text. |
 | `ArrowUp` / `ArrowDown` | Steps the day, month or year under the caret by one. |
 | `Shift` + `ArrowUp` / `ArrowDown` | Steps it by ten. |
 
-Stepping needs a complete date in the input. A step that lands outside the
-limits does nothing.
+Arrow-key stepping requires a complete date in the input. Steps that would
+exceed `min` or `max` are ignored.

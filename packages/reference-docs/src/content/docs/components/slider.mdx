@@ -13,8 +13,8 @@ import { SliderDemo, SliderRangeDemo, SliderVerticalDemo } from './slider-demo'
 
 # Slider
 
-Slider picks a number, or a range of numbers, by dragging a thumb along a
-track or with the keyboard.
+Slider selects a single number or a numeric range by dragging a thumb along a
+track or stepping with the keyboard.
 
 <Preview>
   <SliderDemo />
@@ -60,9 +60,9 @@ Without children, Slider renders this structure with one thumb per value.
 
 ### Range
 
-Pass an array to `value` and render one `Slider.Thumb` per entry. Thumbs
-take their value by the order they appear in. `minStepsBetweenThumbs` keeps
-them a number of steps apart.
+Pass a number array to `value` and render one `Slider.Thumb` per element. Each
+thumb corresponds to the array item at its index. Use `minStepsBetweenThumbs`
+to enforce a minimum step distance between adjacent thumbs.
 
 <Preview>
   <SliderRangeDemo />
@@ -80,12 +80,12 @@ const [price, setPrice] = useState([20, 80])
 </Slider>
 ```
 
-Thumbs stop at their neighbours and never pass each other.
+Adjacent thumbs stop at each other's bounds and cannot cross.
 
 ### Vertical
 
-Set `orientation="vertical"`. The slider fills the height of its container,
-so give the container a height.
+Set `orientation="vertical"` for a vertical track. A vertical slider stretches
+to fill its parent's height, so give the container an explicit height.
 
 <Preview>
   <SliderVerticalDemo />
@@ -102,10 +102,10 @@ so give the container a height.
 </Div>
 ```
 
-### Save when the user lets go
+### Commit on release
 
-`onChange` fires on every step of a drag. `onChangeEnd` fires once, with the
-last value, when the pointer is released or the key comes up.
+`onChange` fires continuously as the thumb moves. Use `onChangeEnd` to run an
+action only when the interaction finishes (on pointer release or key up).
 
 ```tsx
 <Slider value={volume} onChange={setVolume} onChangeEnd={saveVolume} />
@@ -113,8 +113,8 @@ last value, when the pointer is released or the key comes up.
 
 ### Forms
 
-Slider does not submit with a form. Put the value in a hidden input
-yourself:
+Slider does not render a form input automatically. Include a hidden input to
+submit the value with a form:
 
 ```tsx
 <input type="hidden" name="volume" value={volume} />
@@ -124,12 +124,14 @@ yourself:
 
 ### Slider
 
-Contains the parts. Renders a `div` and takes its props and style props.
+The root container. Renders a `div` and accepts standard `div` props and style
+props.
 
 <Reference name="SliderProps" headingLevel={4} />
 
-`onChange` and `onChangeEnd` receive a number when `value` is a number, and
-an array when it is an array. Neither fires when you change `value` yourself.
+`onChange` and `onChangeEnd` receive a single number when `value` is a number,
+or a number array when `value` is an array. Neither callback fires when
+`value` is updated externally.
 
 Slider throws on an invalid `min`, `max`, `step` or array `value`. A value
 outside `min` and `max` is clamped to the nearest bound.
@@ -142,8 +144,8 @@ outside `min` and `max` is clamped to the nearest bound.
 
 ### Slider.Track
 
-The rail the thumbs ride on. Pressing it moves the nearest thumb to that
-point. Renders a `div`. A slider has exactly one track.
+The track along which thumbs move. Clicking the track jumps the nearest thumb
+to that position. Renders a `div`; each slider must contain exactly one track.
 
 | Data attribute | Values |
 | --- | --- |
@@ -151,8 +153,9 @@ point. Renders a `div`. A slider has exactly one track.
 
 ### Slider.Range
 
-The filled part of the track: from `min` to the value, or between the
-outer thumbs of a range. Renders a `div`. A slider has at most one.
+The filled portion of the track, spanning from `min` to the thumb in
+single-value mode or between the first and last thumbs in range mode. Renders
+a `div`; include at most one per slider.
 
 | CSS variable | Value |
 | --- | --- |
@@ -161,7 +164,7 @@ outer thumbs of a range. Renders a `div`. A slider has at most one.
 
 ### Slider.Thumb
 
-The handle for one value. Renders a `div` with `role="slider"`.
+The draggable handle for a single value. Renders a `div` with `role="slider"`.
 
 <Reference name="SliderThumbProps" headingLevel={4} />
 
@@ -179,12 +182,13 @@ The handle for one value. Renders a `div` with `role="slider"`.
 
 ## Accessibility
 
-Give every thumb a name with `aria-label`. A single thumb has no default
-name. When you leave the label off, two thumbs are named "Minimum" and
-"Maximum", and three or more "Value 1 of 3" and so on.
+Provide an accessible name for each thumb with `aria-label` or
+`aria-labelledby`. A single thumb has no default label. In a multi-thumb
+slider, unlabelled thumbs default to "Minimum" and "Maximum" for two thumbs,
+or "Value 1 of N" for three or more.
 
-For units or words, pass `formatValue`, for example
-`` formatValue={(v) => `${v}%`} ``.
+To announce formatted units or custom text to screen readers, pass
+`formatValue` (for example, `` formatValue={(v) => `${v}%`} ``).
 
 Slider follows the inherited `dir`. In a right-to-left horizontal slider,
 Arrow Left increases the value.

@@ -9,8 +9,8 @@ description: Give tokens a dark value and choose the mode for any part of your a
 
 # Light and dark
 
-Light mode is the default. A token with a dark value switches to it inside an
-element in dark mode, and your app decides which elements those are.
+Light mode is active by default. Tokens that define a `dark` value
+automatically switch to it inside any element with `colorMode="dark"`.
 
 ## Dark values
 
@@ -29,14 +29,15 @@ tokens({
 })
 ```
 
-The token names stay the same in both modes, and only their values change.
-The library's semantic tokens, such as `design.background` and
-`design.text.base`, already have both values. See [Color](/color).
+Token names remain the same across modes while their underlying CSS variables
+update. Semantic tokens in `@reference-ui/lib`, such as `design.background` and
+`design.text.base`, include both light and dark values by default. See
+[Color](/color).
 
 ## Setting the mode
 
-`colorMode` on any primitive sets the mode for it and everything inside it,
-library components included.
+Set `colorMode` on any primitive to apply that mode to the element and its
+descendants, including `@reference-ui/lib` components.
 
 ```tsx
 <Div colorMode="dark" bg="surface" color="ink">
@@ -69,9 +70,8 @@ export function Root() {
 
 ## Reading the mode
 
-`useColorMode` returns the mode set by the nearest `colorMode` above the
-component. It returns `undefined` when no ancestor sets one, which means
-light.
+`useColorMode()` returns the mode set by the nearest ancestor with `colorMode`,
+or `undefined` when no ancestor sets one (defaulting to light mode).
 
 ```tsx
 import { useColorMode } from '@reference-ui/react'
@@ -84,8 +84,8 @@ function ModeLabel() {
 
 ## System setting
 
-Tokens don't read the operating system's `prefers-color-scheme` setting. To
-follow it, initialize state from `matchMedia`:
+Tokens do not automatically switch on `prefers-color-scheme`. To follow the
+operating system preference, initialize your mode state from `matchMedia`:
 
 ```tsx
 const [mode, setMode] = useState(() =>
@@ -93,14 +93,15 @@ const [mode, setMode] = useState(() =>
 )
 ```
 
-`matchMedia` doesn't exist on the server. If you render on the server, read
-the mode from the request instead. See [Server-side rendering](/ssr).
+`matchMedia` is only available in the browser. For server-side rendering, read
+the user's preferred mode from the request instead. See
+[Server-side rendering](/ssr).
 
 ## Per-mode styles
 
-`_dark` and `_light` apply styles when an ancestor is in that mode, so they
-don't apply on the element that sets `colorMode`. Use them for one-off values
-that don't have a token:
+`_dark` and `_light` match when an ancestor sets `data-color-mode`, so they do
+not match on the element that sets `colorMode` itself. Use them for one-off
+values that are not backed by a token:
 
 ```tsx
 <Div boxShadow="0 1px 3px rgb(0 0 0 / 0.2)" _dark={{ boxShadow: 'none' }} />

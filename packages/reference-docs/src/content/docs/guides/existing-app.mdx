@@ -4,13 +4,13 @@ section: Guides
 group: Integration
 order: 63
 slug: existing-app
-description: Bring Reference UI into an app that already has its own CSS.
+description: Adopt Reference UI incrementally alongside an existing stylesheet.
 ---
 
 # Add to an existing app
 
-Reference UI runs beside your existing CSS, so you can move an app over one
-screen at a time.
+Reference UI works alongside your existing CSS, so you can migrate an
+application one screen or feature at a time.
 
 <Step n={1}>Install and initialize</Step>
 
@@ -19,8 +19,8 @@ packages, run `ref init`, then `ref sync`.
 
 <Step n={2}>Start with one feature</Step>
 
-Sync compiles only the files `include` matches. Point it at the first
-feature you move:
+`ref sync` only scans files matched by `include`. Scope it to the first
+feature you are migrating:
 
 ```ts
 // ui.config.ts
@@ -35,12 +35,11 @@ export default defineConfig({
 })
 ```
 
-Style props and `css()` calls in files outside `include` get no CSS.
+Files outside `include` are not scanned by the compiler.
 
-`normalizeCss: false` turns off the CSS reset. The reset sets
-`box-sizing: border-box` on every element, removes the margins on `body`,
-`h1` to `h4` and paragraphs, and makes images block elements. With it off,
-screens you haven't moved keep their look.
+Setting `normalizeCss: false` disables the default CSS reset (`box-sizing: border-box`
+on all elements, zeroed margins on `body`, `h1` through `h4`, and `p`, and
+block-level images), preserving the appearance of unmigrated screens.
 
 <Step n={3}>Import the stylesheet</Step>
 
@@ -51,48 +50,46 @@ Import the generated stylesheet in your app entry beside your existing CSS:
 import '@reference-ui/react/styles.css'
 ```
 
-## How the two stylesheets meet
+## CSS cascade and specificity
 
-Every Reference UI rule sits in a cascade layer. In CSS, any unlayered rule
-beats every layered rule, whatever its specificity or load order. Most
-existing CSS is unlayered, so where both style the same element, your
-existing styles win.
+Reference UI places all generated rules inside CSS cascade layers. Because
+unlayered CSS always takes precedence over layered CSS regardless of
+specificity or load order, your existing unlayered styles will override
+Reference UI rules when both target the same element.
 
-The library's global CSS targets primitives by their `ref-` classes, such
-as `ref-button`, so it leaves most of your existing markup alone. Two element
-selectors are the exception:
+The library's global styles target primitive classes such as `ref-button`,
+leaving existing markup unaffected except for two bare element selectors:
 
-- `body` gets the font family, letter spacing, font size and
+- `body` sets the default font family, font size, letter spacing, and
   `container-type: inline-size`.
-- `code` gets the inline code style: monospace font, background, border and
+- `code` sets the inline code monospace font, background, border, and
   padding.
 
-A rule of your own for either element still wins for each property it sets.
+Any unlayered rules you have for `body` or `code` continue to take precedence.
 
-If a converted screen still shows its old styles, an old selector is
-reaching it. Delete that rule once nothing else needs it. To let converted
-screens win instead, move the old CSS into a layer declared before the
-stylesheet, as [Cascade layers](/cascade-layers#your-own-css) shows.
+If a migrated screen inherits unintended styles from your legacy stylesheet,
+either remove the legacy selector once it is no longer needed, or wrap your
+existing CSS in a cascade layer declared before Reference UI's layers (see
+[Cascade layers](/cascade-layers#your-own-css)).
 
-If your existing CSS uses cascade layers of its own, the layer whose name
-appears first ranks lowest, so import order decides between the two. To
-fix the order, declare every layer name in one `@layer` statement at the
-top of a stylesheet that loads before both. Reference UI's layer names are
-`root` and one per system, listed in
-[One layer per system](/cascade-layers#one-layer-per-system).
+If your existing CSS already uses `@layer`, CSS gives lower precedence to
+whichever layer is declared first. To control the layer order explicitly,
+declare all layer names in a single `@layer` statement before importing either
+stylesheet. Reference UI uses `root` plus one layer per system (see
+[One layer per system](/cascade-layers#one-layer-per-system)).
 
-## Move over
+## Completing the migration
 
 1. Convert a screen to primitives and library components.
-2. Widen `include` to cover it, and run `ref sync`.
-3. Delete the old CSS it no longer uses.
+2. Expand `include` to cover the new files and run `ref sync`.
+3. Remove the legacy CSS rules that the screen no longer uses.
 
-Once nothing depends on the old styles, remove `normalizeCss: false` to turn
-the reset back on.
+Once the migration is complete, remove `normalizeCss: false` to enable the
+default CSS reset.
 
 ## Further reading
 
 <LinkCards>
   <LinkCard href="/cascade-layers" title="Cascade layers">How the stylesheet orders its rules.</LinkCard>
-  <LinkCard href="/sync" title="Sync">What `include` reads and what sync writes.</LinkCard>
+  <LinkCard href="/sync" title="Sync">How `ref sync` scans source files and generates packages.</LinkCard>
 </LinkCards>

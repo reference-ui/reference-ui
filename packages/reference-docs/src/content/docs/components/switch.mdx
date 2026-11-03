@@ -13,7 +13,7 @@ import { SwitchDemo, SwitchVariantsDemo } from './switch-demo'
 
 # Switch
 
-A control that turns a setting on or off.
+Switch is a toggle control that turns a setting on or off.
 
 <Preview>
   <SwitchDemo />
@@ -49,8 +49,8 @@ import { Switch } from '@reference-ui/lib'
 </Switch>
 ```
 
-`Switch` is the track, a `button`. `Switch.Thumb` is optional: when you
-leave it out, Switch renders a default thumb.
+`Switch` renders the outer track as a `button`. `Switch.Thumb` is optional; if
+omitted, Switch renders a default thumb automatically.
 
 ## Examples
 
@@ -60,8 +60,8 @@ leave it out, Switch renders a default thumb.
 
 ### Uncontrolled
 
-Pass `defaultChecked` and leave out `checked`. Switch keeps its own state
-and still calls `onChange`.
+For uncontrolled state, pass `defaultChecked` and omit `checked`. Switch
+manages its own state internally and still calls `onChange` when toggled.
 
 ```tsx
 <Label>
@@ -80,8 +80,8 @@ Pass `disabled` to prevent toggling and dim the control:
 
 ### Custom thumb
 
-Render `Switch.Thumb` as a child to style it. It replaces the default thumb, so
-there is always exactly one.
+Pass `Switch.Thumb` as a child to customize its styling. It replaces the
+default thumb rather than rendering a second one.
 
 ```tsx
 <Switch defaultChecked borderRadius="md" aria-label="Compact mode">
@@ -89,13 +89,14 @@ there is always exactly one.
 </Switch>
 ```
 
-The thumb moves `1.25rem` when checked, through an inline `transform`. If
-you change the track width, set your own `transform` in the thumb's
-`style`.
+When checked, the thumb translates by `1.25rem` via an inline `transform`. If
+you customize the track width, override `transform` on `Switch.Thumb`'s
+`style` prop to match.
 
 ### Forms
 
-Switch does not submit with a form. Add a hidden input for the value:
+Switch does not submit a value with a form automatically. Render a hidden
+input when you need form submission:
 
 ```tsx
 <Switch checked={enabled} onChange={setEnabled} aria-label="Airplane mode" />
@@ -104,8 +105,9 @@ Switch does not submit with a form. Add a hidden input for the value:
 
 ### Cancelling a change
 
-Your `onClick` runs before Switch changes. Call `event.preventDefault()` in
-it and Switch neither changes nor calls `onChange`.
+A custom `onClick` handler runs before Switch toggles. Call
+`event.preventDefault()` inside `onClick` to cancel the toggle and skip
+`onChange`.
 
 ## API reference
 
@@ -132,12 +134,13 @@ Renders a `span` and takes `span` props and style props.
 
 ## Accessibility
 
-Switch is a `button` with `role="switch"` and `aria-checked`. Name it with
-a `label` (`htmlFor` or wrapping), `aria-label` or `aria-labelledby`.
-There is no default name.
+Switch renders a `button` with `role="switch"` and `aria-checked`. Provide an
+accessible name using a `Label` (via `htmlFor` or wrapping), `aria-label`, or
+`aria-labelledby`.
 
-Text inside the track becomes part of its accessible name, even where the
-track hides it. Mark any extra children `aria-hidden`.
+Any text rendered inside the button becomes part of its accessible name, even
+if visually clipped by the track. Add `aria-hidden="true"` to decorative
+children inside Switch.
 
 ### Keyboard interactions
 

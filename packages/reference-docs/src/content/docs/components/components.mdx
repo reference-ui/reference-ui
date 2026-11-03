@@ -3,16 +3,15 @@ title: Overview
 section: Components
 order: 10
 slug: components
-description: Every component and utility that @reference-ui/lib ships.
+description: Every component and utility in @reference-ui/lib.
 ---
 
 # Overview
 
 `@reference-ui/lib` ships components for behaviour that is hard to build by
 hand: focus, keyboard navigation, layering, dismissal, selection and value
-editing. Markup and appearance stay in your code.
-[Library components](/library-components) explains why the set is this
-small.
+editing. Markup and styling remain under your control. See
+[Library components](/library-components) for how this set is scoped.
 
 Import components by name from the package root, and mount
 [ReferenceLibrary](/reference-library) once near your app root:
@@ -21,31 +20,31 @@ Import components by name from the package root, and mount
 import { ReferenceLibrary, Tabs } from '@reference-ui/lib'
 ```
 
-Each part renders a fixed native element and takes that element's props and
-style props.
+Each component part renders a specific HTML element and accepts its standard
+DOM props alongside Reference UI style props.
 
 ## Foundation
 
 | Component | Use it for |
 | --- | --- |
-| [ReferenceLibrary](/reference-library) | Mounting the toast host, the live region and tooltip timing. |
+| [ReferenceLibrary](/reference-library) | Mounting the toast host, live region, and shared tooltip timing. |
 | [Overlay](/overlay) | Dialogs, drawers, sheets and anchored panels. |
 | [Popover](/popover) | Interactive content anchored to a trigger. |
 | [Tooltip](/tooltip) | A short description of a control on hover or focus. |
-| [Toast](/toast) | Brief notifications that dismiss themselves. |
+| [Toast](/toast) | Temporary notifications that auto-dismiss. |
 | [Portal](/portal) | Rendering content elsewhere in the DOM. |
 
 ## Form controls
 
 | Component | Use it for |
 | --- | --- |
-| [Field](/field) | A styled wrapper around an input, with prefix and suffix slots. |
+| [Field](/field) | A shared border and focus ring around an input, with room for prefixes, suffixes, and buttons. |
 | [Switch](/switch) | An on/off toggle. |
 | [Slider](/slider) | Choosing a number or range by dragging. |
-| [NumberField](/number-field) | Typing a formatted number, with steppers. |
-| [DateField](/date-field) | Typing a date. |
+| [NumberField](/number-field) | A locale-formatted number input with optional stepper buttons. |
+| [DateField](/date-field) | A locale-formatted date input with an optional calendar picker. |
 | [Calendar](/calendar) | Picking a date, range, month or year from a grid. |
-| [Combobox](/combobox) | Autocomplete and selects. |
+| [Combobox](/combobox) | Autocomplete inputs and select menus. |
 
 ## Collections
 
@@ -61,7 +60,7 @@ style props.
 
 | Component | Use it for |
 | --- | --- |
-| [Collapsible](/collapsible) | Showing and hiding one region. |
+| [Collapsible](/collapsible) | Expanding and collapsing a single section. |
 | [Accordion](/accordion) | A group of collapsible sections. |
 | [Splitter](/splitter) | Resizable panels. |
 
@@ -69,12 +68,12 @@ style props.
 
 | Export | Use it for |
 | --- | --- |
-| [Presence](/presence) | Keeping an element mounted through its exit animation. |
+| [Presence](/presence) | Delaying unmount until exit animations complete. |
 | [FocusLock](/focus-lock) | Keeping focus inside a container. |
 | [RovingFocus](/roving-focus) | Arrow-key movement in a toolbar or grid. |
 | [Slot](/slot) | Named regions in your own compound components. |
 | [announce](/announce) | Speaking a message to screen readers. |
-| [useMeasure](/use-measure) | Reading an element's settled size. |
+| [useMeasure](/use-measure) | Measuring an element's rendered dimensions. |
 
 ## Content
 

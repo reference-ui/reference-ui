@@ -4,19 +4,18 @@ section: System
 group: Theme
 order: 160
 slug: tones
-description: Mix a colour token with transparency at a named, theme-owned amount.
+description: Mix colour tokens with transparency using named tone tokens or numeric percentages.
 ---
 
 # Tones and opacity
 
-A tone is a named opacity. Write it after a colour token and a slash, as in
-`bg="blue.500/medium"`, and the colour is mixed with transparency at the
-tone's amount.
+A tone is a named opacity token. Append `/<tone>` to any colour token, such as
+`bg="blue.500/medium"`, to mix the colour with transparency using `color-mix()`.
 
 ## Define tones
 
-Tones are tokens in the `tones` category. Each value is a percentage. Give a
-tone a `surface` amount and a `line` amount:
+Tones are defined in the `tones` token category as percentage strings. Each
+tone can specify separate `surface` and `line` opacities:
 
 ```ts
 // src/theme/tokens.ts
@@ -34,8 +33,8 @@ A tone with a single `value`, like `hush`, serves both roles. A tone with only
 `surface` uses it for both roles too. A tone value can also reference another
 tone, such as `'{tones.soft.surface}'`.
 
-Values must be percentages, such as `'10%'` or `'12.5%'`. A fraction such as
-`'0.1'` makes the tone unusable.
+Tone values must be percentage strings such as `'10%'` or `'12.5%'`, since they
+are interpolated into `color-mix()`.
 
 The library ships four tones: `ghost`, `medium`, `firm` and `strong`.
 See [Color](/color#tones) for their amounts.
@@ -57,8 +56,8 @@ background: color-mix(in srgb, var(--colors-blue-500) var(--tones-soft-surface),
 border-color: color-mix(in srgb, var(--colors-blue-500) var(--tones-soft-line), transparent);
 ```
 
-Change the tone token and every use of it follows, with no change to the
-colours.
+Updating a tone token updates every element that uses it without modifying your
+colour tokens.
 
 ## Surface and line
 
@@ -69,8 +68,8 @@ The prop determines which amount a tone uses:
 | `line` | `border*`, `outline*`, `color`, `caretColor`, `textDecoration`, `textDecorationColor`, `textEmphasisColor`, `columnRuleColor`, `stroke`, `boxShadow`, `textShadow` |
 | `surface` | Every other colour prop, including `bg` and `fill` |
 
-Make `line` stronger than `surface`, so edges and text stay visible over the
-area they sit on.
+The `surface` opacity is used for backgrounds and fills, while the higher `line`
+opacity keeps `1px` borders, outlines, and text legible.
 
 ## Numeric opacity
 
@@ -80,14 +79,14 @@ For a one-off amount, write a number after the slash:
 <Div bg="blue.500/40" />
 ```
 
-This compiles to `color-mix(in srgb, var(--colors-blue-500) 40%, transparent)`. The
-amount is fixed in the class, so a theme cannot retune it. Use a tone for any
-amount you repeat.
+This compiles to `color-mix(in srgb, var(--colors-blue-500) 40%, transparent)`.
+Because the percentage is baked into the utility class, use named tones instead
+when you want opacities that can be adjusted across your theme.
 
 ## Inside references
 
-Tones also work inside a braced token reference. The outer prop picks the
-role:
+Tones can also be used inside `{...}` token references. The property where the
+reference is used determines whether `surface` or `line` applies:
 
 ```ts
 import { css } from '@reference-ui/react'
@@ -117,8 +116,8 @@ tokens({
 })
 ```
 
-The colour side follows its own token. A tone over a colour with a dark value
-uses that dark value. See [Light and dark](/light-and-dark).
+The colour token and the tone token resolve their dark values independently.
+See [Light and dark](/light-and-dark).
 
 ## Strict colours
 

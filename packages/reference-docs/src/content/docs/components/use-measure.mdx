@@ -4,7 +4,7 @@ section: Components
 group: Building blocks
 order: 280
 slug: use-measure
-description: Read an element's size once its layout settles.
+description: Measures an element's dimensions and viewport position and tracks when its layout settles.
 ---
 
 import { Reference } from '@reference-ui/lib'
@@ -13,8 +13,8 @@ import { UseMeasureDemo } from './use-measure-demo'
 
 # useMeasure
 
-`useMeasure` reports an element's size and position once its layout stops
-changing.
+`useMeasure` tracks an element's bounding box and indicates when its dimensions
+have settled after a resize or transition.
 
 <Preview>
   <UseMeasureDemo />
@@ -43,22 +43,21 @@ import { useMeasure } from '@reference-ui/lib'
 
 ## Usage
 
-Attach the returned `ref` to the element you want to measure. The hook
-renders nothing of its own.
+Attach the returned `ref` to the target DOM element.
 
-`rect` is the element's border box, read with `getBoundingClientRect`. It
-is `null` until the first measurement, including during server rendering.
-It updates when the element's size changes.
+`rect` contains the element's border-box dimensions and viewport coordinates
+(via `getBoundingClientRect`). It is `null` during server rendering and until
+the initial measurement completes, and updates whenever the element resizes.
 
-`isSettled` turns `true` once the size has stopped changing for 20
-milliseconds. Sizes measured mid-transition are not final, so wait for
-`isSettled` before acting on them.
+`isSettled` becomes `true` once the element's dimensions have remained stable
+for 20ms (configurable via `settleTimeout`). Check `isSettled` when you need
+final dimensions after a CSS transition or continuous resize.
 
 ## Examples
 
-### Measuring an element you already have a ref to
+### Using an existing ref
 
-Pass the ref as `target` when the element's ref is already taken.
+Pass an existing ref to `target` when you already hold a ref to the element:
 
 ```tsx
 const panelRef = useRef<HTMLDivElement>(null)
@@ -69,10 +68,10 @@ return <Div ref={panelRef}>…</Div>
 
 ### Pausing during a drag
 
-Set `paused` while something else is resizing the element, such as a
-[Splitter](/splitter) drag or a CSS animation. Observation stops, `rect`
-keeps its last value and `isSettled` is `false`. Measurement starts again
-when `paused` turns `false`.
+Set `paused` to suspend observation during an active interaction such as a
+[Splitter](/splitter) drag or CSS animation. While paused, `rect` retains its
+last measured value and `isSettled` is `false`. Measurement resumes
+automatically when `paused` becomes `false`.
 
 ```tsx
 const [dragging, setDragging] = useState(false)
@@ -89,14 +88,18 @@ function useMeasure<E extends HTMLElement = HTMLElement>(
 
 ### Options
 
+Optional configuration passed to `useMeasure(options)`.
+
 <Reference name="UseMeasureOptions" headingLevel={4} />
 
 ### Return value
 
+The measurement state and callback ref returned by `useMeasure`.
+
 <Reference name="UseMeasureResult" headingLevel={4} />
 
 The default quiet time is also exported as `MEASUREMENT_SETTLE_TIMEOUT_MS`.
-The types `MeasureBox`, `UseMeasureOptions` and `UseMeasureResult` are
+The types `MeasureBox`, `UseMeasureOptions`, and `UseMeasureResult` are
 exported from `@reference-ui/lib`.
 
 `top` and `left` are relative to the viewport at the last measurement.

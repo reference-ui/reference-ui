@@ -13,8 +13,8 @@ import { MenuDemo } from './menu-demo'
 
 # Menu
 
-A pop-up list of commands, toggles and submenus. It opens from a button or a
-context press, and the arrow keys move through the items.
+Menu displays a list of actions, toggles, and submenus. It opens from a trigger
+button or right-click, with full arrow-key navigation and typeahead support.
 
 <Preview>
   <MenuDemo />
@@ -81,16 +81,16 @@ import { Menu, useMenuTriggerKeys, useMenuContextKeys } from '@reference-ui/lib'
 </Popover>
 ```
 
-A `Menu` inside another `Menu` is a submenu. It renders no element of its
-own: `Menu.Trigger` is its row in the parent menu and `Menu.Content` is its
-panel.
+A `Menu` nested inside another `Menu` acts as a submenu. It renders no wrapper
+element of its own: `Menu.Trigger` renders the item row in the parent menu, and
+`Menu.Content` renders the submenu panel.
 
 ## Examples
 
 ### Submenus
 
-Nest a `Menu` and give it `open`, `onOpen` and `onDismiss`. A submenu is
-always controlled; without `open` it stays closed.
+Nest a `Menu` and pass `open`, `onOpen`, and `onDismiss`. Submenus are always
+controlled and remain closed if `open` is omitted.
 
 ```tsx
 const [shareOpen, setShareOpen] = useState(false)
@@ -109,8 +109,8 @@ const [shareOpen, setShareOpen] = useState(false)
 
 ### Checkbox items
 
-`Menu.CheckboxItem` is controlled. Activating it calls `onChange` with the
-opposite of `checked`; a `'mixed'` item becomes `true`.
+`Menu.CheckboxItem` is controlled. Selecting it calls `onChange` with the
+toggled boolean value (an indeterminate `'mixed'` item resolves to `true`).
 
 ```tsx
 const [grid, setGrid] = useState(true)
@@ -122,7 +122,8 @@ const [grid, setGrid] = useState(true)
 
 ### Radio items
 
-Put `Menu.RadioItem`s in a `Menu.RadioGroup`. The group holds the value.
+Group `Menu.RadioItem` components inside a `Menu.RadioGroup` to manage single
+selection via `value` and `onChange`.
 
 ```tsx
 const [sort, setSort] = useState('name')
@@ -133,13 +134,14 @@ const [sort, setSort] = useState('name')
 </Menu.RadioGroup>
 ```
 
-Checkbox and radio items keep the menu open after selection. Pass
-`closeOnSelect` to close it.
+Checkbox and radio items keep the menu open when toggled. Pass `closeOnSelect`
+to close the menu on selection.
 
 ### Links
 
-`Menu.LinkItem` renders an `a`. A plain click navigates and closes the menu.
-Modified clicks and middle clicks keep their native behaviour.
+`Menu.LinkItem` renders an `<a>` element. A standard left-click navigates and
+closes the menu, while modifier and middle clicks preserve default browser
+behavior.
 
 ```tsx
 <Menu.LinkItem href="/settings">Settings</Menu.LinkItem>
@@ -147,8 +149,8 @@ Modified clicks and middle clicks keep their native behaviour.
 
 ### Keeping the menu open
 
-Call `preventDefault()` on the event passed to `onSelect`. The menu stays
-open and, for choice items, `onChange` is not called.
+Call `preventDefault()` on the event in `onSelect` to keep the menu open. On
+checkbox and radio items, this also prevents `onChange` from firing.
 
 ```tsx
 <Menu.Item onSelect={event => event.preventDefault()}>Refresh</Menu.Item>
@@ -156,9 +158,9 @@ open and, for choice items, `onChange` is not called.
 
 ### Context menus
 
-Open the menu from an [Overlay](/overlay) anchored at the pointer, and spread
-`useMenuContextKeys()` on the target so a keyboard opening focuses the first
-item.
+Render the menu inside an [Overlay](/overlay) anchored to the pointer
+coordinates, and attach `useMenuContextKeys()` to the target element so opening
+via keyboard focuses the first item.
 
 ```tsx
 import { useState } from 'react'
@@ -196,18 +198,19 @@ export function Canvas() {
 }
 ```
 
-`useMenuContextKeys()` also returns an `onKeyDown` that marks the
-ContextMenu key and Shift+F10. Your handler still opens the overlay for
-those keys.
+`useMenuContextKeys()` also provides an `onKeyDown` handler that detects the
+`ContextMenu` key and `Shift+F10` so focus moves into the menu when your
+handler opens the overlay.
 
 ## API reference
 
-Every part takes the props of the element it renders, plus style props.
+Each part accepts the standard HTML props of its rendered element along with
+style props.
 
 ### Menu
 
-Renders a `div` with `role="menu"`. The root menu's open state lives on the
-Popover or Overlay around it.
+Renders a `div` with `role="menu"`. For a root menu, open state is managed by
+the surrounding `Popover` or `Overlay`.
 
 <Reference name="MenuProps" headingLevel={4} />
 
@@ -233,7 +236,7 @@ Renders a `div` with `role="group"`.
 
 ### Menu.RadioItem
 
-Renders a `div` with `role="menuitemradio"` and `aria-checked`. Use it only
+Renders a `div` with `role="menuitemradio"` and `aria-checked`. Must be used
 inside `Menu.RadioGroup`.
 
 <Reference name="MenuRadioItemProps" headingLevel={4} />
@@ -246,42 +249,42 @@ Renders an `a` with `role="menuitem"`.
 
 ### Menu.Separator
 
-Renders a `div` with `role="separator"`. It is never focused.
+Renders a `div` with `role="separator"`. Skipped during keyboard navigation.
 
 ### Menu.Trigger
 
-The submenu's row in its parent menu. Renders a `div` with
-`role="menuitem"` and `aria-haspopup="menu"`. Use it only inside a nested
+The trigger item in the parent menu that opens a submenu. Renders a `div` with
+`role="menuitem"` and `aria-haspopup="menu"`. Must be used inside a nested
 `Menu`.
 
 <Reference name="MenuTriggerProps" headingLevel={4} />
 
 ### Menu.Content
 
-The submenu panel. Renders a `div` with `role="menu"`. Use it only inside a
-nested `Menu`. It takes the geometry props of
-[`Overlay.Content`](/overlay); `placement` defaults to `'right-start'`
-(`'left-start'` right to left).
+The floating panel for a submenu. Renders a `div` with `role="menu"` and must
+be used inside a nested `Menu`. Accepts the positioning props of
+[`Overlay.Content`](/overlay), with `placement` defaulting to `'right-start'`
+(`'left-start'` in right-to-left layouts).
 
 ### useMenuTriggerKeys
 
-Returns `{ onKeyDown, onClick }`. Spread both on the `Popover.Trigger` that
-opens a root menu. A keyboard opening focuses the first or last item; a
-pointer opening focuses the menu itself.
+Returns `{ onKeyDown, onClick }` for the `Popover.Trigger` that opens a root
+menu. Opening with the keyboard focuses the first or last item, while opening
+with a pointer focuses the menu container.
 
 <Reference name="MenuTriggerKeys" headingLevel={4} />
 
 ### useMenuContextKeys
 
-Returns `{ onContextMenu, onKeyDown }`. Spread both on a context-menu
-target so the next opening focuses the first item.
+Returns `{ onContextMenu, onKeyDown }` for a context-menu target so keyboard
+activation focuses the first menu item.
 
 <Reference name="MenuContextKeys" headingLevel={4} />
 
 ## Accessibility
 
 Menu follows the WAI-ARIA Menu and Menu Button patterns. Focus moves between
-items with a roving tab index.
+items with a roving `tabIndex`.
 
 ### Keyboard interactions
 
@@ -292,8 +295,8 @@ items with a roving tab index.
 | `ArrowUp` | On the trigger, opens the menu and focuses the last item. In the menu, moves to the previous item, wrapping at the start. |
 | `Home` / `PageUp` | Moves to the first item. |
 | `End` / `PageDown` | Moves to the last item. |
-| `ArrowRight` | On a submenu trigger, opens the submenu and focuses its first item. Mirrored right to left. |
-| `ArrowLeft` | In a submenu, closes it and returns focus to its trigger. Mirrored right to left. |
+| `ArrowRight` | On a submenu trigger, opens the submenu and focuses its first item. Reversed in right-to-left layouts. |
+| `ArrowLeft` | In a submenu, closes it and returns focus to its trigger. Reversed in right-to-left layouts. |
 | `Escape` | Closes one level: the open submenu, or the menu itself, returning focus to its trigger. |
 | `Tab` | Closes the menu and moves focus to the next control after the trigger. |
 | Letters | Focus the next item whose text starts with the typed characters. |
@@ -308,7 +311,7 @@ diagonally toward the open submenu keeps it open.
 
 ### Labelling
 
-Give the root menu a name with `aria-label` or `aria-labelledby`, and give
-each `Menu.RadioGroup` an `aria-label`.
+Provide an accessible name for the root menu using `aria-label` or
+`aria-labelledby`, and label each `Menu.RadioGroup` with `aria-label`.
 
 For a row of always-visible menus, use [Menubar](/menubar).

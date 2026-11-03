@@ -13,8 +13,8 @@ import { IconsDemo } from './icons-demo'
 
 # Icons
 
-The Material Symbols icon set, one React component per icon, in an outline
-and a filled variant.
+`@reference-ui/lib` exports the Material Symbols icon set as individual React
+components, each supporting outlined and filled variants.
 
 <Preview>
   <IconsDemo />
@@ -38,8 +38,8 @@ Icons are named after their Material Symbols name in PascalCase, followed by
 import { AccountCircleIcon, SearchIcon } from '@reference-ui/lib'
 ```
 
-The same components ship on their own in `@reference-ui/icons`, for projects
-that don't use the library:
+The same components are also published separately in `@reference-ui/icons` for
+projects that do not install `@reference-ui/lib`:
 
 ```tsx
 import { SearchIcon } from '@reference-ui/icons'
@@ -49,8 +49,9 @@ import { SearchIcon } from '@reference-ui/icons'
 
 ### Size
 
-`size` sets width and height. It takes `sm` (16px), `md` (20px) or `lg`
-(24px), a number of pixels, an `r` value, or any CSS length.
+`size` sets both width and height. It accepts preset tokens (`sm` for 16px,
+`md` for 20px, or `lg` for 24px), a pixel number, a rhythm unit (such as
+`"8r"`), or any CSS length string.
 
 ```tsx
 <SearchIcon size="sm" />
@@ -71,7 +72,8 @@ version:
 
 ### Colour
 
-Icons follow the text colour. Set `color` to change it.
+Icons inherit `currentColor` from the surrounding text by default. Pass
+`color` to set a specific token or CSS color:
 
 ```tsx
 <Span color="red.600">
@@ -82,16 +84,18 @@ Icons follow the text colour. Set `color` to change it.
 
 ### Style props
 
-Icons take style props like any other component, and resolve them against
-your tokens:
+Icons accept Reference UI style props and resolve them against your design
+tokens:
 
 ```tsx
 <CheckIcon marginLeft="3r" _hover={{ opacity: 0.7 }} />
 ```
 
-This needs the icons' system in `extends` or `layers` in `ui.config.ts`.
-The library's `baseSystem` carries it, and `ref init` puts that in `extends`.
-Without `@reference-ui/lib`, add the icons' own system to `layers`:
+Using style props on icons requires the icon system in your `ui.config.ts`
+`extends` or `layers`. `@reference-ui/lib` includes it in its `baseSystem`
+(which `ref init` adds to `extends` by default). If you use
+`@reference-ui/icons` without `@reference-ui/lib`, add the icon system to
+`layers`:
 
 ```ts
 // ui.config.ts
@@ -105,21 +109,21 @@ export default defineConfig({
 })
 ```
 
-Without either, `ref sync` warns at the icon and names its package, and its
-style props are not extracted. `size`, `variant`, `style` and `className` work
-either way.
+If neither system is configured, `ref sync` logs a warning naming the package
+and skips style-prop extraction for the icon. The `size`, `variant`, `style`,
+and `className` props work without system configuration.
 
 ## API reference
 
 <Reference name="MaterialSymbolIconProps" headingLevel={3} />
 
-An icon renders an inline-flex `div` around an `svg`, and takes the `div`'s
-props, style props and a `ref`.
+Each icon renders an inline-flex `div` wrapping an `svg`, and accepts standard
+`div` props, style props, and a `ref`.
 
 ## Accessibility
 
-The `svg` is hidden from screen readers. An icon beside text, or inside a
-button with a text label, needs nothing more.
+The inner `svg` has `aria-hidden="true"` by default, so decorative icons next
+to visible text require no extra attributes.
 
 An icon that carries meaning on its own needs a role and a label:
 

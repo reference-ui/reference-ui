@@ -3,13 +3,13 @@ title: Tools
 section: MCP
 order: 40
 slug: mcp-tools
-description: Every tool and resource the Reference UI MCP server gives your agent.
+description: Tools and resources exposed by the Reference UI MCP server.
 ---
 
 # Tools
 
-Your agent picks the tools itself. Every input is optional unless marked
-required. Each tool returns JSON text.
+All tool parameters are optional unless marked required, and each tool returns a
+JSON response.
 
 ## Projects
 
@@ -19,7 +19,7 @@ Lists the Reference UI projects the server can find, and which one is active.
 
 | Input | Type | Description |
 | --- | --- | --- |
-| `scanPath` | `string` | A folder to search as well, such as `~/Developer`. |
+| `scanPath` | `string` | Additional directory to search for projects, such as `~/Developer`. |
 | `maxDepth` | `number` | How deep to search `scanPath`, from 1 to 5. Defaults to 3. |
 
 ### select_project
@@ -29,7 +29,7 @@ Sets the active project for the session and starts loading its model.
 | Input | Type | Description |
 | --- | --- | --- |
 | `path` | `string` | The project folder, relative or absolute. Required unless you pass `project`. |
-| `project` | `string` | The same as `path`. |
+| `project` | `string` | Alias for `path`. |
 
 ## Components
 
@@ -87,8 +87,8 @@ Returns call sites for a component, captured from your code.
 
 ### get_style_props
 
-Returns the style props guide: the style prop categories and the token
-categories each one takes. It is the same for every project.
+Returns the style prop categories and the token categories each prop accepts.
+The output is project-independent.
 
 | Input | Type | Description |
 | --- | --- | --- |
@@ -98,9 +98,9 @@ categories each one takes. It is the same for every project.
 
 ### get_tokens
 
-Returns your token paths, categories, values and descriptions. Over 200 tokens,
-the result drops descriptions; query a token path to see them. Tokens under a
-`_private` path are left out unless your query matches them.
+Returns token paths, categories, values, and descriptions. When a response
+exceeds 200 tokens, descriptions are omitted unless filtered by `query`. Tokens
+under `_private` paths are excluded unless explicitly matched by `query`.
 
 | Input | Type | Description |
 | --- | --- | --- |
@@ -137,14 +137,13 @@ The server also offers three resources your agent can read:
 
 The server also sends the instructions to your agent when it connects.
 
-## Before sync
+## Behavior before sync
 
-Without a synced project, the tools answer with what doesn't need one:
+When no synced project is active, tools return data that does not depend on
+`.reference-ui/` alongside a diagnostic notice:
 
-- `list_components`, `get_component`, `get_component_props` and
-  `get_component_examples` cover the built-in primitives and the library
+- `list_components`, `get_component`, `get_component_props`, and
+  `get_component_examples` return built-in primitives and `@reference-ui/lib`
   components.
-- `get_style_props` and `list_icons` work as usual.
-- `get_tokens` returns no tokens.
-
-Each answer carries a notice explaining why.
+- `get_style_props` and `list_icons` return their full results.
+- `get_tokens` returns an empty token list.

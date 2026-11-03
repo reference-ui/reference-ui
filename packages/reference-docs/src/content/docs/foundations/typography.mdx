@@ -3,7 +3,7 @@ title: Typography
 section: Foundations
 order: 30
 slug: typography
-description: Lib's font families, weights and type scale.
+description: Font families, weight tokens, and typographic scale in @reference-ui/lib.
 ---
 
 import { FontFamilies, InlineSamples, TypeScale } from './typography-sections'
@@ -11,10 +11,11 @@ import { WeightRamp } from './typography-weight-ramp'
 
 # Typography
 
-Lib ships three font families, five named weights for each, and a type scale
-for its text primitives. Body text is `sans` at 16px.
+`@reference-ui/lib` defines three font families, five named weights per family,
+and a default type scale for text primitives. Body text defaults to `sans` at
+`4r` (16px).
 
-Pick a family with the `font` prop and a weight with the `weight` prop:
+Set a font family with the `font` prop and a weight with the `weight` prop:
 
 ```tsx
 import { P } from '@reference-ui/react'
@@ -32,8 +33,8 @@ import { P } from '@reference-ui/react'
 
 <FontFamilies />
 
-Each family loads one variable `woff2` file from Google Fonts with
-`font-display: swap`. Text shows in the fallback font until the file arrives.
+Each family loads a variable `.woff2` font from Google Fonts with
+`font-display: swap`.
 
 `font="mono"` sets the family, its default weight and its letter spacing.
 `fontFamily="mono"` sets only the stack. See [Fonts](/fonts) for the
@@ -41,8 +42,9 @@ difference.
 
 ## Weights
 
-Every family has the same five weight names. Each name maps to a different
-number per family, so the families look equally heavy side by side.
+All three families share the same five weight names, with family-specific
+`font-weight` values tuned for optical balance across `sans`, `serif`, and
+`mono`:
 
 | Weight | `sans` | `serif` | `mono` |
 | --- | --- | --- | --- |
@@ -56,9 +58,8 @@ number per family, so the families look equally heavy side by side.
 
 ## Type scale
 
-Lib's text primitives use these sizes. Sizes are in `r`, the
-[spacing unit](/spacing): `1r` is `0.25rem`, 4px at the browser's default font
-size.
+Text primitives use the following default sizes and line heights, expressed in
+`r` ([rhythm units](/spacing), where `1r` = `0.25rem` or 4px):
 
 | Element | Size | Line height | Weight |
 | --- | --- | --- | --- |
@@ -84,8 +85,8 @@ a style prop:
 
 ## Inline text and code
 
-`Code`, `Kbd`, `Samp` and `Pre` use `mono`. `Code` is `0.9em` and `Kbd` is
-`0.85em` of the surrounding text, so they fit a line at any size.
+`Code`, `Kbd`, `Samp`, and `Pre` use `mono`. Inline `Code` (`0.9em`) and `Kbd`
+(`0.85em`) scale relative to the surrounding font size.
 
 <InlineSamples />
 
@@ -100,4 +101,4 @@ import { Code, Kbd, P } from '@reference-ui/react'
 ## Related
 
 - [Fonts](/fonts): define a family, its weights and its font files.
-- [Theming](/theming): replace lib's fonts with your own.
+- [Theming](/theming): replace `@reference-ui/lib`'s default fonts with your own.

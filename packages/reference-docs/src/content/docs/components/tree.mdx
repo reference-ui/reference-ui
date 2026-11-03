@@ -13,8 +13,8 @@ import { TreeDemo } from './tree-demo'
 
 # Tree
 
-Tree shows items in a hierarchy, such as a file outline. Branches open and
-close, and one item can be selected.
+Tree displays hierarchical data such as a file browser or outline, with
+expandable branches and single-item selection.
 
 <Preview>
   <TreeDemo />
@@ -67,20 +67,21 @@ import { Tree } from '@reference-ui/lib'
 </Tree>
 ```
 
-An Item with a `Tree.Group` child is a branch. The Group holds the
-branch's children and renders only while the branch is expanded, so
-collapsed items are not in the keyboard order.
+A `Tree.Item` that contains a `Tree.Group` acts as a branch. `Tree.Group` holds
+the branch's nested items and renders only while the branch is expanded,
+removing collapsed descendants from the keyboard navigation order.
 
-Selection is controlled. `value` is the selected item, or `null` for none,
-and `onChange` receives the next one. Tree throws if either is missing.
+Selection is controlled: pass the selected item's value (or `null` when nothing
+is selected) to `value` and handle updates with `onChange`. Omitting either
+prop throws an error (unless used inside a `Combobox`).
 
 ## Examples
 
 ### Uncontrolled expansion
 
-Leave out `expanded` and Tree tracks expansion itself. `defaultExpanded`
-sets the branches open on first render, and `onExpandedChange` still
-reports each change.
+Omit `expanded` to let `Tree` manage branch expansion internally. Pass
+`defaultExpanded` to specify which branches start open, and `onExpandedChange`
+to listen for expansion changes.
 
 ```tsx
 <Tree aria-label="Files" value={selected} onChange={setSelected} defaultExpanded={['src']}>
@@ -90,8 +91,8 @@ reports each change.
 
 ### Disabled items
 
-`disabled` on an Item stops it from being selected, focused or expanded.
-`disabled` on the Tree does this for every Item.
+Set `disabled` on a `Tree.Item` to prevent it from being focused, selected, or
+expanded, or set `disabled` on `Tree` to disable all items.
 
 ```tsx
 <Tree.Item value="dist" disabled>dist</Tree.Item>
@@ -99,9 +100,9 @@ reports each change.
 
 ### Typeahead text
 
-Typing moves focus to the next visible item whose text starts with the
-typed characters. Set `textValue` when the row's text is not what users
-would type.
+Typing characters moves focus to the next visible item whose label starts with
+that prefix. Pass `textValue` when an item contains icons or non-text elements
+so typeahead matches the expected label.
 
 ```tsx
 <Tree.Item value="readme" textValue="readme">
@@ -111,21 +112,22 @@ would type.
 
 ### Branches without children yet
 
-Set `isBranch` on an Item whose children are not rendered yet, such as
-while they load. It is then treated as a branch, with `aria-expanded`.
+Set `isBranch` on a `Tree.Item` whose children are loaded asynchronously so it
+renders as an expandable branch with `aria-expanded` before its `Tree.Group` is
+populated.
 
 ### Inside a Combobox
 
-A Tree inside a [Combobox](/combobox) popup leaves selection to the
-Combobox. Drop `onChange` and `value`: the Combobox's own value is shown
-as selected, and focus stays in its input while the arrow keys move through
-the Tree.
+When rendered inside a [Combobox](/combobox) popup, `Tree` delegates selection
+state to the `Combobox`. Omit `value` and `onChange`: the `Combobox` selection
+is reflected automatically, and DOM focus stays in the text input while arrow
+keys navigate the tree.
 
 ## API reference
 
 ### Tree
 
-The root. Renders a `div` with `role="tree"`.
+The root tree container. Renders a `div` with `role="tree"`.
 
 <Reference name="TreeProps" headingLevel={4} />
 
@@ -135,8 +137,9 @@ The root. Renders a `div` with `role="tree"`.
 
 ### Tree.Item
 
-One row. Renders a `div` with `role="treeitem"`. A branch wraps its row
-content in a `[data-slot="row"]` element, followed by its Group.
+An individual tree node. Renders a `div` with `role="treeitem"`. When the item
+is a branch, its label content is wrapped in a `[data-slot="row"]` element
+followed by its `Tree.Group`.
 
 <Reference name="TreeItemProps" headingLevel={4} />
 
@@ -151,25 +154,26 @@ content in a `[data-slot="row"]` element, followed by its Group.
 
 ### Tree.Group
 
-The children of a branch. Renders a `div` with `role="group"`, indented,
-only while its branch is expanded.
+The nested container for a branch's child items. Renders an indented `div` with
+`role="group"` only while its parent branch is expanded.
 
 ### Tree.Expander
 
-A button that opens and closes its branch. Clicking it does not select the
-item. It is skipped by Tab, since the arrow keys expand from the item.
+A button that toggles its parent branch open or closed without changing
+selection. Excluded from the Tab order because branches are expanded and
+collapsed with the arrow keys.
 
 <Reference name="TreeExpanderProps" headingLevel={4} />
 
 ## Accessibility
 
-Adheres to the [Tree View WAI-ARIA design pattern](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/).
+Tree follows the [WAI-ARIA Tree View pattern](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/).
 
 Give the Tree an accessible name with `aria-label` or `aria-labelledby`.
 
-One item is in the tab order at a time: the selected item when it is
-visible, otherwise the first one. Collapsing a branch that holds focus
-moves focus to the branch.
+Only one item is in the Tab order at a time: the selected item if visible, or
+the first visible item otherwise. If a branch is collapsed while focus is on
+one of its descendants, focus moves to that branch item.
 
 ### Keyboard interactions
 
@@ -185,5 +189,5 @@ moves focus to the branch.
 | `*` | On a closed branch, opens it. On an open branch, opens every closed sibling branch. On a leaf, opens the first closed sibling branch. |
 | Characters | Moves focus to the next visible item whose text starts with the typed characters. Typing the same letter again cycles through matches. |
 
-In right-to-left layouts `ArrowRight` and `ArrowLeft` are swapped. Disabled
+In right-to-left layouts, `ArrowRight` and `ArrowLeft` are reversed. Disabled
 items are skipped.

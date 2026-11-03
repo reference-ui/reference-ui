@@ -9,8 +9,8 @@ description: Every option in ui.config.ts.
 
 # Config
 
-`ui.config.ts` tells `ref sync` what your system is called, which files to
-read, and which systems it builds on.
+`ui.config.ts` configures your system name, source file globs, and upstream
+base systems for `ref sync`.
 
 ```ts
 // ui.config.ts
@@ -24,16 +24,17 @@ export default defineConfig({
 })
 ```
 
-`ref init` writes this file for you. `defineConfig` returns its argument
-unchanged; it only adds type checking.
+`ref init` generates a starter config. `defineConfig` is an identity helper
+that provides TypeScript type checking.
 
-Sync looks for `ui.config.ts`, `ui.config.js` or `ui.config.mjs`, in that
-order, in the directory it runs in. It does not search parent directories.
-In watch mode, sync reloads the config when it or a file it imports changes.
+Sync resolves `ui.config.ts`, `ui.config.js`, or `ui.config.mjs` (in that
+order) in the target directory without searching parent directories. In watch
+mode, changes to the config or its imported modules trigger a reload.
 
-Import only data modules into the config. Import a base system from its
-`baseSystem` subpath, not from the package root: when the config takes more
-than 750 ms to load, sync warns and names the slow import.
+Keep config imports lightweight. Always import a package's base system from its
+`baseSystem` subpath rather than the package root; if the config takes longer
+than 750 ms to evaluate, sync logs a `BSS-W-SLOW-CONFIG` warning naming the
+slow import.
 
 ## Required
 
@@ -41,26 +42,27 @@ than 750 ms to load, sync warns and names the slow import.
 
 **Type**: `string`
 
-The name of your system. It names your system's cascade layer, and primitives
-write it to the DOM as `data-layer`. It must not be empty or contain double
-quotes, backslashes or newlines.
+Your system's identifier. Used as the top-level CSS `@layer` name and rendered
+on primitives as the `data-layer` attribute. Must be a non-empty string without
+double quotes, backslashes, or newlines.
 
 ### include
 
 **Type**: `string[]`
 
-Glob patterns for the files sync reads, relative to the config's directory.
-Sync finds style props and `css()` calls in `.ts`, `.tsx`, `.js` and `.jsx`
-files, and runs the files that call `tokens()`, `font()`, `keyframes()` or
-`globalCss()`. A style value in a file outside `include` gets no CSS.
+Glob patterns specifying which source files to scan, resolved relative to the
+config directory. Sync extracts style props, `css()`, and `recipe()` calls
+from `.ts`, `.tsx`, `.js`, and `.jsx` files, and evaluates files that call
+`tokens()`, `font()`, `keyframes()`, or `globalCss()`. Files outside `include`
+are not compiled.
 
 ```ts
 include: ['src/**/*.{ts,tsx}', 'content/**/*.mdx', '!src/**/*.test.tsx']
 ```
 
-An `.mdx` file can hold token, font and global CSS definitions. A pattern that
-starts with `!` excludes files. Sync never reads `node_modules`, `dist`,
-`build`, `.git` or `.reference-ui`.
+`.mdx` files are also scanned for token, font, and global CSS definitions.
+Patterns prefixed with `!` exclude matching files. `node_modules`, `dist`,
+`build`, `.git`, and `.reference-ui` are always excluded.
 
 A pattern that matches no files logs a warning. Patterns support standard
 globs (`*`, `**`, `?`, `[...]`, `{a,b}`) as well as parenthesized route groups
@@ -80,9 +82,10 @@ each.
 
 **Default**: `[]`
 
-Systems to build on. Their tokens, fonts and styles become part of yours, and
-you can use their token names. Later entries win over earlier ones, and your
-own definitions win over all of them.
+Upstream systems to extend. Their tokens, fonts, keyframes, and compiled styles
+are merged into your system, and their token names are included in your
+generated types. Later entries override earlier ones, and your own definitions
+override all extended systems.
 
 ### layers
 
@@ -90,13 +93,14 @@ own definitions win over all of them.
 
 **Default**: `[]`
 
-Systems whose components you render without adopting their tokens. Their CSS
-joins your stylesheet, and their components keep their own token values. Their
-token names are not part of your types.
+Upstream systems whose components you render without merging their tokens into
+your system. Their compiled CSS is included in your stylesheet and their
+components retain their own token values, but their tokens are not added to
+your generated types.
 
-`layers` does not name or order cascade layers. Sync names one cascade layer
-per system and orders them itself: `extends` systems, then `layers` systems,
-then yours. See [Cascade layers](/cascade-layers).
+Each system in `extends` and `layers` receives its own CSS `@layer`, ordered
+with `extends` systems first, then `layers` systems, then your own. See
+[Cascade layers](/cascade-layers).
 
 ## Output
 
@@ -106,10 +110,11 @@ then yours. See [Cascade layers](/cascade-layers).
 
 **Default**: `[]`
 
-Token categories that accept only your tokens. A raw value such as
-`color="#ff0000"` in a strict category is a type error. Strict colours still
-accept tones and the keywords `white`, `black`, `inherit`, `currentColor` and
-`transparent`. See [Tokens](/tokens#restrict-values-to-tokens).
+Token categories that restrict style props to defined tokens only. Passing a
+raw CSS value such as `color="#ff0000"` in a strict category produces a
+TypeScript error. Strict `colors` still allow tone modifiers and the CSS
+keywords `white`, `black`, `inherit`, `currentColor`, and `transparent`. See
+[Tokens](/tokens#restrict-values-to-tokens).
 
 ### staticCss
 
@@ -117,9 +122,10 @@ accept tones and the keywords `white`, `black`, `inherit`, `currentColor` and
 
 **Default**: `{}`
 
-Style values to generate even though no source file uses them. Each key is a
-property, optionally with a condition prefix. Each value lists token names,
-or `'*'` for every token in the property's category.
+Style rules to pre-generate regardless of whether they appear in source files.
+Each key is a style property (optionally prefixed with a condition), and each
+value is an array of token names or `['*']` for all tokens in that property's
+category.
 
 ```ts
 staticCss: {
@@ -129,7 +135,7 @@ staticCss: {
 ```
 
 Sync fails if an entry names a token that does not exist. `'*'` on a property
-with no token category is a warning. See
+with no token category logs a warning. See
 [Dynamic styles](/dynamic-styles#a-token-name-chosen-at-runtime).
 
 ### normalizeCss
@@ -138,7 +144,7 @@ with no token category is a warning. See
 
 **Default**: `true`
 
-Adds the CSS reset to the stylesheet. See
+Includes the CSS reset in the compiled stylesheet. See
 [Global CSS](/global-css#the-reset).
 
 ### jsxElements
@@ -147,10 +153,11 @@ Adds the CSS reset to the stylesheet. See
 
 **Default**: `[]`
 
-Component names to treat as style prop hosts. You rarely need it: sync finds
-every component that passes style props on to a primitive. A name here
-applies only to your own components, never to one imported from a package.
-See [Primitives](/primitives#your-own-components).
+Additional component names to treat as style-prop hosts during extraction.
+This is rarely needed because the compiler automatically traces components
+that forward style props to a primitive. Applies only to components defined in
+your project, not external packages. See
+[Primitives](/primitives#your-own-components).
 
 ## Diagnostics
 
@@ -160,14 +167,14 @@ See [Primitives](/primitives#your-own-components).
 
 **Default**: `[]`
 
-Adds the compiler's own diagnostics to sync's output: values it could not
-read, spreads it could not follow, and similar. They count toward the warning
-total, and `ref sync --verbose` lists them.
+Enables additional compiler diagnostics for expressions and spreads that cannot
+be statically extracted. These diagnostics are included in the warning count
+and listed under `ref sync --verbose`.
 
 ## MCP
 
-Sync ignores these options. The Reference MCP server reads them when it
-builds its model. See [MCP configuration](/mcp-configuration).
+These options are used by the Reference MCP server when indexing your project
+and are ignored by `ref sync`. See [MCP configuration](/mcp-configuration).
 
 ### mcp
 
@@ -175,8 +182,8 @@ builds its model. See [MCP configuration](/mcp-configuration).
 
 **Default**: none
 
-Packages, components and files the server scans beside your own source, and
-the ones it leaves out.
+Additional packages, components, or file globs for the MCP server to include
+or exclude alongside your project source.
 
 ### useReferenceLibrary
 
@@ -184,8 +191,8 @@ the ones it leaves out.
 
 **Default**: `true`
 
-Shows `@reference-ui/lib` components to your agent. `use_reference_library`
-is the same flag.
+Exposes `@reference-ui/lib` components in the MCP server
+(`use_reference_library` is accepted as an alias).
 
 ### useReferenceIcons
 
@@ -193,5 +200,5 @@ is the same flag.
 
 **Default**: `true`
 
-Lets your agent search `@reference-ui/icons` with `list_icons`.
-`use_reference_icons` is the same flag.
+Enables searching `@reference-ui/icons` via the `list_icons` MCP tool
+(`use_reference_icons` is accepted as an alias).

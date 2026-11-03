@@ -22,19 +22,19 @@ types that check your style values.
   element, such as `Div` or `Button`. Style props are CSS properties written
   as props: `<Div padding="4r" color="brand">`. See
   [Primitives](/primitives) and [Style props](/style-props).
-- **Tokens.** `tokens()` names your design values once, so styles can use the
-  name. See [Tokens](/tokens), [Spacing](/spacing), [Fonts](/fonts) and
-  [Animation](/animation).
-- **CSS.** `css()` returns a class name for any element, `recipe()` builds a
-  component's variants, and `globalCss()` styles selectors you choose. See
-  [CSS](/css), [Recipes](/recipes), [Responsive](/responsive) and
-  [Global CSS](/global-css).
+- **Tokens.** `tokens()` defines named design tokens that can be referenced
+  across your styles. See [Tokens](/tokens), [Spacing](/spacing),
+  [Fonts](/fonts) and [Animation](/animation).
+- **CSS.** `css()` generates a class name from a style object, `recipe()`
+  defines multi-variant component styles, and `globalCss()` declares
+  document-wide rules. See [CSS](/css), [Recipes](/recipes),
+  [Responsive](/responsive) and [Global CSS](/global-css).
 
-Sync reads the files that your `ui.config.ts` `include` globs match.
+Sync scans the files matched by `include` in `ui.config.ts`.
 
-Reference UI ships no colours, fonts or spacing scale, only the rhythm unit.
-Define your own, or extend a system that defines them, such as
-`@reference-ui/lib`.
+Core includes no default color palette, font stack, or spacing scale beyond the
+rhythm unit (`r`). You can define your own theme or extend a prebuilt base
+system such as `@reference-ui/lib`.
 
 ## What sync does
 
@@ -43,8 +43,9 @@ Define your own, or extend a system that defines them, such as
 1. **Collect** runs each file that calls `tokens()`, `font()`, `keyframes()`
    or `globalCss()`, and merges the results into one description of your
    system.
-2. **Compile** reads every style prop, `css()` and `recipe()` call in your
-   source. A Rust engine compiles them, with that description, into CSS.
+2. **Compile** statically extracts every style prop, `css()`, and `recipe()`
+   call in your source and compiles them against your system definition into
+   CSS.
 
 Because the compiler analyzes your source statically without executing it,
 style values must be resolvable at build time. See [Compiler](/compiler) and
@@ -58,10 +59,10 @@ Sync writes three things to `.reference-ui/`:
   use, ordered in [cascade layers](/cascade-layers). Import it once:
   `import '@reference-ui/react/styles.css'`.
 - **Types.** Declarations for your tokens and style props, so your editor
-  completes `color="…"` with your colour names.
+  completes `color="…"` with your color token names.
 - **Packages.** Your primitives, `css()` and `recipe()` in
   `@reference-ui/react`, and a `baseSystem` other projects can extend in
   `@reference-ui/system`.
 
-The Reference MCP server uses the same engine to map your components for
-your agent. See [MCP](/mcp).
+The Reference MCP server uses the same compiler to index your components,
+tokens, and props for coding agents. See [MCP](/mcp).

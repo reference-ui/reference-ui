@@ -4,7 +4,7 @@ section: Components
 group: Collections
 order: 170
 slug: menubar
-description: A row of menus that stays on screen, like an application's File and Edit menus.
+description: A persistent horizontal bar of menus, such as an application's File and Edit bar.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -13,9 +13,9 @@ import { MenubarDemo } from './menubar-demo'
 
 # Menubar
 
-A horizontal bar of menus, like an application's File and Edit menus. Each
-trigger opens a [Menu](/menu) in a popover, and the arrow keys move along the
-row.
+Menubar displays a horizontal row of menus, such as an application's File,
+Edit, and View bar. Each trigger opens a [Menu](/menu) in a popover, with
+arrow-key navigation across triggers and items.
 
 <Preview>
   <MenubarDemo />
@@ -48,8 +48,8 @@ export function EditorMenubar() {
 }
 ```
 
-Menubar is controlled. `value` names the open menu, so opening one closes
-the others.
+Menubar is controlled. `value` holds the active menu's identifier (or `null`
+when closed), ensuring only one menu is open at a time.
 
 ## Import
 
@@ -70,16 +70,16 @@ import { Menu, Menubar } from '@reference-ui/lib'
 </Menubar>
 ```
 
-`Menubar.Content` renders a [Menu](/menu) around its children. Put any menu
-part inside it: `Menu.Item`, `Menu.CheckboxItem`, `Menu.RadioGroup`,
+`Menubar.Content` renders a [Menu](/menu) around its children and accepts any
+menu subcomponent: `Menu.Item`, `Menu.CheckboxItem`, `Menu.RadioGroup`,
 `Menu.LinkItem`, `Menu.Separator`, or a nested `Menu` for a submenu.
 
 ## Examples
 
 ### Submenus
 
-Nest a `Menu` inside `Menubar.Content`, as on the [Menu](/menu#submenus)
-page.
+Nest a controlled `Menu` inside `Menubar.Content` to create a submenu, just
+like in [Menu](/menu#submenus).
 
 ```tsx
 const [recentOpen, setRecentOpen] = useState(false)
@@ -95,10 +95,10 @@ const [recentOpen, setRecentOpen] = useState(false)
 </Menubar.Content>
 ```
 
-### Wrapping at the ends
+### Looping focus
 
-By default the arrow keys stop at the first and last trigger. Pass `loop`
-to wrap around.
+By default, Left and Right arrow keys stop at the first and last triggers.
+Pass `loop` to cycle focus from the last trigger back to the first.
 
 ```tsx
 <Menubar aria-label="Editor" value={open} onChange={setOpen} loop>
@@ -108,35 +108,36 @@ to wrap around.
 
 ### Menubar
 
-Renders a `div` with `role="menubar"`. Takes `div` props and style props.
+Renders a `div` with `role="menubar"`. Accepts standard `div` props and style
+props.
 
 <Reference name="MenubarProps" headingLevel={4} />
 
 ### Menubar.Menu
 
-Binds one trigger to one content panel. Renders no element.
+Associates a trigger with its menu panel. Renders no DOM element of its own.
 
 <Reference name="MenubarMenuProps" headingLevel={4} />
 
 ### Menubar.Trigger
 
-Renders a `Popover.Trigger` button with `role="menuitem"`. Takes the props
-of [`Popover.Trigger`](/popover).
+Renders a `Popover.Trigger` button with `role="menuitem"`. Accepts the props of
+[`Popover.Trigger`](/popover).
 
 <Reference name="MenubarTriggerProps" headingLevel={4} />
 
-It sets `data-state` to `open` or `closed`.
+Exposes `data-state="open"` or `data-state="closed"`.
 
 ### Menubar.Content
 
-Renders a `Popover.Content` with a `Menu` inside. Takes the props of
+Renders a `Popover.Content` with a `Menu` inside. Accepts the props of
 [`Popover.Content`](/popover), including `placement`.
 
 ## Accessibility
 
-Menubar follows the WAI-ARIA Menubar pattern. The bar is one Tab stop, and
-focus moves between triggers with a roving tab index. Inside an open menu
-the keys are the same as [Menu](/menu#keyboard-interactions).
+Menubar follows the WAI-ARIA Menubar pattern. The bar acts as a single Tab stop
+using a roving `tabIndex` across triggers, and open menus support the same
+keyboard shortcuts as [Menu](/menu#keyboard-interactions).
 
 ### Keyboard interactions
 
@@ -144,8 +145,9 @@ the keys are the same as [Menu](/menu#keyboard-interactions).
 | --- | --- |
 | `Enter` / `Space` / `ArrowDown` | On a trigger, opens its menu and focuses the first item. |
 | `ArrowUp` | On a trigger, opens its menu and focuses the last item. |
-| `ArrowRight` / `ArrowLeft` | On a trigger, moves to the next or previous trigger. If a menu is open, that trigger's menu opens in its place. Mirrored right to left. |
+| `ArrowRight` / `ArrowLeft` | On a trigger, moves focus to the next or previous trigger. If a menu is already open, the newly focused trigger's menu opens automatically. Reversed in right-to-left layouts. |
 | `ArrowRight` / `ArrowLeft` | In an open menu, switches to the next or previous menu. On a submenu trigger, `ArrowRight` opens the submenu instead. |
 | `Escape` | Closes the open menu and returns focus to its trigger. |
 
-Disabled triggers are skipped. Give the bar a name with `aria-label`.
+Disabled triggers are skipped during keyboard navigation. Provide an accessible
+label for the menubar using `aria-label` or `aria-labelledby`.

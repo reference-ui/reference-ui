@@ -4,7 +4,7 @@ section: Components
 group: Foundation
 order: 60
 slug: toast
-description: Brief notifications that stack in a corner of the screen and dismiss themselves.
+description: Temporary notifications that stack in a corner of the viewport and auto-dismiss.
 ---
 
 import { Reference } from '@reference-ui/lib'
@@ -13,8 +13,8 @@ import { ToastDemo } from './toast-demo'
 
 # Toast
 
-A brief notification that appears in a corner of the screen and dismisses
-itself.
+Toast displays a temporary notification in a corner of the viewport that
+automatically dismisses after a timeout.
 
 <Preview>
   <ToastDemo />
@@ -29,8 +29,9 @@ import { toast } from '@reference-ui/lib'
 </Button>
 ```
 
-Toasts render inside [ReferenceLibrary](/reference-library). Mount it once
-near your app root; without it, `toast()` queues records but nothing shows.
+Toasts are rendered by [ReferenceLibrary](/reference-library). Mount
+`ReferenceLibrary` once near your application root; before it mounts, `toast()`
+calls are queued and displayed once the provider is ready.
 
 ## Import
 
@@ -38,13 +39,14 @@ near your app root; without it, `toast()` queues records but nothing shows.
 import { Toast, toast } from '@reference-ui/lib'
 ```
 
-`Toast` holds the parts, for custom markup.
+Use `toast` to trigger notifications, and `Toast` to compose custom toast
+layouts.
 
 ## Anatomy
 
-A toast is a call, not an element. `toast()` renders the default card. For
-your own markup, pass a render function to `toast.custom()` and compose the
-parts.
+Toasts are triggered imperatively with `toast()`, which renders the default
+notification layout. To render custom markup, pass a render function to
+`toast.custom()` and compose the `Toast.*` parts.
 
 ```tsx
 toast.custom(() => (
@@ -62,7 +64,8 @@ toast.custom(() => (
 
 ### Types
 
-`success`, `error`, `warning` and `info` show the matching status icon.
+Use `toast.success`, `toast.error`, `toast.warning`, and `toast.info` to
+display a toast with a corresponding status icon.
 
 ```tsx
 toast.success('Invite sent')
@@ -84,9 +87,10 @@ toast('File deleted', {
 
 ### Promise
 
-`toast.promise` shows a loading toast, then updates the same toast when the
-promise settles. `success` and `error` take content or a function of the
-result. The settled toast stays for 4 seconds.
+`toast.promise` displays a loading toast and updates it in place when the
+promise resolves or rejects. `success` and `error` accept either static content
+or a function receiving the resolved value or error. Once settled, the toast
+auto-dismisses after 4 seconds.
 
 ```tsx
 toast.promise(saveReport(), {
@@ -98,8 +102,9 @@ toast.promise(saveReport(), {
 
 ### Updating a toast
 
-Every call returns the toast's id. Pass it to `toast.update` to change the
-toast in place, or reuse it as the `id` option.
+Every `toast` call returns the toast's ID. Pass that ID to `toast.update` to
+update an existing toast in place, or pass a custom `id` in options to
+deduplicate or replace a toast.
 
 ```tsx
 const id = toast.loading('Uploading')
@@ -107,13 +112,14 @@ const id = toast.loading('Uploading')
 toast.update(id, 'Upload complete', { type: 'success', duration: 3000 })
 ```
 
-A loading toast stays until it is updated or dismissed.
+Loading toasts do not auto-dismiss and remain visible until updated or
+explicitly dismissed.
 
 ### Custom toasts
 
-`toast.custom` takes a render function that receives the toast's id. The
-parts read the toast from context, so `Toast.Close` and `Toast.Action`
-dismiss the right toast.
+`toast.custom` accepts a render function that receives the toast ID. Inside it,
+`Toast.*` subcomponents automatically connect to the current toast context so
+`Toast.Close` and `Toast.Action` dismiss that instance.
 
 ```tsx
 toast.custom(id => (
@@ -128,8 +134,9 @@ toast.custom(id => (
 
 ### Defined toasts
 
-`toast.define` returns a reusable toast. Call it with its props to show it.
-`render` also receives `close`, which dismisses that toast.
+`toast.define` creates a typed, reusable toast factory. Call the returned
+function with your custom props to display the toast; its `render` callback
+receives those props along with `{ close }` to dismiss the instance.
 
 ```tsx
 const ProjectSaved = toast.define<{ name: string }>({
@@ -150,9 +157,13 @@ ProjectSaved.update(id, { name: 'Atlas v2' })
 
 ### toast
 
+The imperative API for creating, updating, and dismissing toasts.
+
 <Reference name="ToastApi" headingLevel={4} />
 
 ### Options
+
+Configuration options accepted by `toast()` and its variant methods.
 
 <Reference name="DefaultToastOptions" headingLevel={4} />
 
@@ -173,31 +184,34 @@ are set with the `toaster` prop on [ReferenceLibrary](/reference-library).
 | `Toast.Close` | `button` | Close button, labelled `Close`, with an X icon by default. |
 | `Toast.Loader` | `div` | The loading spinner. |
 
-`Toast.Root`, `Toast.Title` and `Toast.Description` take style props. The
-buttons take native button props.
+`Toast.Root`, `Toast.Title`, and `Toast.Description` accept style props. The
+button parts accept standard `button` props.
 
 ## Behaviour
 
-- At most four toasts show at once. Extra toasts wait in order, and their
-  timers do not start until they show.
-- A toast's timer pauses while the pointer or keyboard focus is inside it,
-  while the tab is hidden, and while an isolating [Overlay](/overlay) is
-  open. It resumes with the time that was left.
-- Toasts can be swiped away. Loading toasts cannot.
-- Toast does not trap focus, block the page, or close on `Escape`.
+- Up to four toasts are visible simultaneously by default. Additional toasts
+  wait in a queue, and their auto-dismiss timers start only once they become
+  visible.
+- Auto-dismiss timers pause while the pointer hovers or focus is inside a
+  toast, while the browser tab is hidden, or while a modal [Overlay](/overlay)
+  is open, and resume with their remaining duration afterward.
+- Standard toasts can be dismissed by swiping; loading toasts cannot be swiped
+  away.
+- Toasts do not trap focus, block page interaction, or close on `Escape`.
 
 ## Accessibility
 
-The toasts sit in a region labelled "Notifications". Toast content is not
-announced on its own: pass `announce` to speak a message to screen readers
-through the same polite live region as [`announce()`](/announce).
+Toasts render inside a landmark region labeled `"Notifications"`. Visual toast
+content is not announced automatically; pass an `announce` string to broadcast
+a message to screen readers via the polite live region shared with
+[`announce()`](/announce).
 
 ```tsx
 toast.success('Invite sent', { announce: 'Invite sent to Sam' })
 ```
 
-If focus is inside a toast when it closes, focus returns to the control
-that had it before.
+If focus is inside a toast when it closes, focus returns to the previously
+focused element.
 
 ### Keyboard interactions
 

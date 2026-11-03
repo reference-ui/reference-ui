@@ -13,8 +13,8 @@ import { NumberFieldDemo, NumberFieldFormatDemo } from './number-field-demo'
 
 # NumberField
 
-A text input for numbers, formatted for a locale, with optional increment
-and decrement buttons.
+NumberField is a locale-formatted number input with optional increment and
+decrement stepper buttons.
 
 <Preview>
   <NumberFieldDemo />
@@ -63,19 +63,21 @@ import { NumberField } from '@reference-ui/lib'
 </NumberField>
 ```
 
-- `NumberField` holds the state and renders a `div`.
-- `NumberField.Group` renders the [Field](/field) border and focus ring. It
-  must be the single direct child of NumberField.
-- `NumberField.Input` is the text input. Group needs exactly one, as a
-  direct child.
-- `NumberField.Decrement` and `NumberField.Increment` are optional, at most
-  one of each, as direct children of Group.
+- `NumberField` manages state and renders the root `div`.
+- `NumberField.Group` renders the shared [Field](/field) border and focus
+  ring. It must be the sole direct child of `NumberField`.
+- `NumberField.Input` renders the text input. `NumberField.Group` requires
+  exactly one `NumberField.Input` as a direct child.
+- `NumberField.Decrement` and `NumberField.Increment` are optional stepper
+  buttons (at most one of each) placed as direct children of
+  `NumberField.Group`.
 
-Other elements, such as a unit label, can sit in Group beside the parts.
-Wrong nesting throws an error that names the part.
+Additional elements, such as unit prefixes or suffixes, can be placed inside
+`NumberField.Group` alongside the input and steppers. Invalid part nesting
+throws a descriptive error.
 
-If you leave out the children, NumberField renders the full anatomy with
-the steppers named "Decrement" and "Increment".
+Without children, `NumberField` renders the default layout above with stepper
+buttons labelled "Decrement" and "Increment".
 
 ## Examples
 
@@ -102,21 +104,24 @@ shows as `15%` and `step` defaults to `0.01`.
 </NumberField>
 ```
 
-Compact notation and `signDisplay: 'never'` can't be edited and throw.
+Compact notation and `signDisplay: 'never'` cannot be parsed back from edited
+text and will throw an error.
 
 ### Typing and committing
 
-While you type, each new number the text parses to goes to `onChange` as
-typed, before bounds or step apply. Partial text such as `-` sends nothing,
-and clearing the input sends `null`.
+As the user types, `onChange` fires whenever the text parses to a new number,
+before `min`, `max`, or `step` constraints are applied. Incomplete input such
+as `-` does not fire `onChange`, and clearing the input calls
+`onChange(null)`.
 
-Blur, Enter and each step commit the value. Text that doesn't parse
-reverts, and the field is marked invalid until the next edit.
+Blurring the input, pressing Enter, or activating a stepper commits the
+current value. Unparseable text reverts to the last committed value and marks
+the field invalid until the next edit.
 
 ### Snap to step
 
-`commitBehavior` decides what a commit does with a value off the step or
-out of bounds.
+`commitBehavior` controls how values that fall outside `min`/`max` or between
+steps are handled on commit:
 
 | Value | On commit |
 | --- | --- |
@@ -134,9 +139,9 @@ out of bounds.
 
 ### Validate
 
-With `commitBehavior="validate"`, `onInvalidCommit` reports each invalid
-commit with the value and a reason, `'out-of-range'` or `'off-step'`. It is
-called after `onChange` and does not change the value.
+When `commitBehavior="validate"`, `onInvalidCommit` is called on each invalid
+commit with the attempted number and the failure reason (`'out-of-range'` or
+`'off-step'`). It runs after `onChange` and leaves the value unchanged.
 
 ```tsx
 <NumberField
@@ -156,11 +161,12 @@ called after `onChange` and does not change the value.
 
 ### Forms
 
-Set `name` and NumberField adds a hidden input holding the plain number,
-or an empty string for `null`. Submitting commits any typed text first.
-Submit is blocked while the text doesn't parse or, in `snap` and `validate`
-modes, while the value is off the step or out of bounds. `invalid` alone
-does not block submit.
+Pass `name` to include the raw numeric value in form submissions via a hidden
+input (or an empty string when `value` is `null`). Submitting the form commits
+any in-progress edit first. Form submission is blocked if the input text
+cannot be parsed, or if the value violates `step`, `min`, or `max` in `'snap'`
+or `'validate'` mode. Setting the `invalid` prop alone does not block
+submission.
 
 ```tsx
 <NumberField name="quantity" value={quantity} onChange={setQuantity} locale="en-GB" required>
@@ -172,8 +178,8 @@ does not block submit.
 
 ### Warning
 
-Pass `status="warning"` to Group for the warning border style. It does not
-mark the field invalid.
+Pass `status="warning"` to `NumberField.Group` to apply the warning border
+style without marking the input invalid.
 
 ## API reference
 
@@ -198,11 +204,13 @@ default to `'off'` and `spellCheck` to `false`.
 
 ### NumberField.Increment and NumberField.Decrement
 
-Render a `button` and take `button` props. Each needs `aria-label` or
-`aria-labelledby`; without a name it renders nothing. Children replace the
-default plus or minus icon.
+Each renders a `button` and accepts standard `button` props. An accessible
+name via `aria-label` or `aria-labelledby` is required; without one, the
+button renders nothing. Passing children replaces the default plus or minus
+icon.
 
-A stepper is disabled at its bound, and when the field is disabled or
+Each stepper is automatically disabled when the value reaches its
+corresponding `min` or `max` bound, or when the field is disabled or
 read-only.
 
 ### Data attributes
@@ -221,13 +229,15 @@ read-only.
 
 ## Accessibility
 
-The input is a plain text box, so screen readers read the formatted text.
-Label it with `htmlFor`, a wrapping `label`, `aria-label` or
-`aria-labelledby`. The steppers are out of the tab order; use the arrow
-keys instead.
+`NumberField.Input` renders a text input so screen readers announce the
+locale-formatted string. Label it with `htmlFor`, a wrapping `label`,
+`aria-label`, or `aria-labelledby`. The stepper buttons are excluded from the
+tab order (`tabIndex={-1}`) since keyboard users adjust values with the arrow
+keys.
 
-Holding a stepper repeats the step. A touch press on a stepper does not
-focus the input, so the on-screen keyboard stays closed.
+Pressing and holding a stepper button repeats the step continuously. Touch
+presses on stepper buttons do not move focus to the input, preventing the
+mobile on-screen keyboard from opening.
 
 ### Keyboard interactions
 

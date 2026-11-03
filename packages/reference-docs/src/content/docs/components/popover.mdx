@@ -13,8 +13,8 @@ import { PopoverDemo, PopoverHoverDemo } from './popover-demo'
 
 # Popover
 
-Popover opens a panel from a button. Focus can move freely in and out of
-it, and the rest of the page stays usable.
+Popover displays a non-modal panel anchored to a trigger button. Focus moves
+freely in and out of the panel while the rest of the page remains interactive.
 
 <Preview>
   <PopoverDemo />
@@ -32,8 +32,9 @@ import { Popover } from '@reference-ui/lib'
 </Popover>
 ```
 
-Popover is an [Overlay](/overlay) with isolation off. For a panel that
-traps focus and blocks the page, use Overlay.
+Popover is built on [Overlay](/overlay) with isolation disabled. For a modal
+surface that traps focus and blocks background interaction, use `Overlay`
+directly.
 
 ## Import
 
@@ -55,18 +56,17 @@ import { Popover } from '@reference-ui/lib'
 </Popover>
 ```
 
-`Popover` renders no element of its own. `Popover.Trigger` and
-`Popover.Close` render a `button`, and `Popover.Content` a `div`.
+`Popover` renders no DOM element of its own. `Popover.Trigger` and
+`Popover.Close` render a `button`, and `Popover.Content` renders a `div`.
 
-Content has no panel style of its own. Give it a background, border and
-padding with style props or a class.
+`Popover.Content` is unstyled by default; apply a background, border, and
+padding using style props or `className`.
 
 ## Examples
 
 ### Hover card
 
-With `openOnHover`, the popover also opens when the pointer rests on the
-trigger, and when the trigger gets keyboard focus.
+Pass `openOnHover` to open the popover when hovering or focusing the trigger.
 
 <Preview>
   <PopoverHoverDemo />
@@ -79,12 +79,13 @@ trigger, and when the trigger gets keyboard focus.
 </Popover>
 ```
 
-It closes when both the pointer and focus have left the trigger and the
-content. The pointer can cross the gap between them without closing it.
+The popover closes once both the pointer and keyboard focus leave the trigger
+and content, allowing the pointer to move across the gap between them without
+dismissing the panel.
 
 ### Controlled
 
-Pass `open` and `onOpenChange` to control the state.
+For controlled state, pass `open` and `onOpenChange`.
 
 ```tsx
 const [open, setOpen] = React.useState(false)
@@ -97,8 +98,9 @@ const [open, setOpen] = React.useState(false)
 
 ### Placement
 
-Content sits below the trigger, aligned to its start edge. Pass `placement`
-and `offset` to move it. It flips and shifts to stay in the viewport.
+By default, `Popover.Content` is positioned below the trigger and aligned to its
+start edge (`bottom-start`). Pass `placement` and `offset` to adjust its
+position; the panel automatically flips and shifts to stay within the viewport.
 
 ```tsx
 <Popover.Content placement="top" offset={12}>…</Popover.Content>
@@ -106,8 +108,8 @@ and `offset` to move it. It flips and shifts to stay in the viewport.
 
 ### Custom anchor
 
-Pass `anchor` to position against another element, a ref, or a point
-instead of the trigger.
+Pass `anchor` to position the popover against a different element, ref, or
+coordinate point instead of `Popover.Trigger`.
 
 ```tsx
 const rowRef = React.useRef<HTMLDivElement>(null)
@@ -133,20 +135,21 @@ popover open.
 
 ### Popover
 
-Holds the open state. Renders only its children.
+Manages open state and positioning for the popover. Renders no DOM element of
+its own.
 
 <Reference name="PopoverProps" headingLevel={4} />
 
 ### Popover.Trigger
 
-The button that opens and closes the popover. Takes `button` props and style
-props. A click toggles; calling `preventDefault()` in your `onClick` stops
-it.
+The button that toggles the popover. Accepts standard `button` props and style
+props. Calling `preventDefault()` in `onClick` cancels the toggle.
 
 ### Popover.Content
 
-The panel. Takes `div` props and style props, plus the positioning props of
-[`Overlay.Content`](/overlay). Outside a `Popover` it renders nothing.
+The floating popover panel. Accepts standard `div` props, style props, and the
+positioning props of [`Overlay.Content`](/overlay). Renders nothing if used
+outside `Popover`.
 
 <Reference name="PopoverContentProps" headingLevel={4} />
 
@@ -160,25 +163,27 @@ The panel. Takes `div` props and style props, plus the positioning props of
 | --- | --- |
 | `--reference-overlay-anchor-width` | Width of the anchor. |
 | `--reference-overlay-anchor-height` | Height of the anchor. |
-| `--reference-overlay-available-width` | Width of the viewport, less `collisionPadding` on each side. |
-| `--reference-overlay-available-height` | Height of the viewport, less `collisionPadding` on each side. |
+| `--reference-overlay-available-width` | Width of the viewport, minus `collisionPadding` on each side. |
+| `--reference-overlay-available-height` | Height of the viewport, minus `collisionPadding` on each side. |
 | `--reference-overlay-transform-origin` | Origin for an open or close animation. |
 
 ### Popover.Close
 
-A button that closes the popover. Takes `button` props and style props.
-Calling `preventDefault()` in your `onClick` keeps it open.
+A button that dismisses the popover. Accepts standard `button` props and style
+props. Calling `preventDefault()` in `onClick` prevents the popover from
+closing.
 
 ### Popover.Portal
 
-Optional. Sets where Content is portalled.
+Optional portal wrapper that configures the DOM container where
+`Popover.Content` is rendered.
 
 <Reference name="PopoverPortalProps" headingLevel={4} />
 
 ### Popover.Arrow
 
-An optional box positioned against the anchor. Takes `div` props and style
-props. Give it a shape with your own styles.
+An optional arrow element positioned along the panel edge facing the anchor.
+Accepts standard `div` props and style props; style its shape with custom CSS.
 
 <Reference name="PopoverArrowProps" headingLevel={4} />
 
@@ -188,7 +193,7 @@ props. Give it a shape with your own styles.
   `aria-labelledby`.
 - The trigger has `aria-haspopup="dialog"`. Pass `aria-haspopup` to change
   it, for example to `"menu"`.
-- A hover card does not open on touch.
+- Hover-triggered popovers (`openOnHover`) do not open on touch devices.
 
 ### Keyboard interactions
 

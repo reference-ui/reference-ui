@@ -32,8 +32,8 @@ import { Field } from '@reference-ui/lib'
 </Field>
 ```
 
-Field is purely visual: the input inside keeps its own label, validation and
-disabled state, and Field styles itself to match.
+Field is purely visual: the inner control retains its own label, validation,
+and disabled state, and Field updates its border and background to match.
 
 ## Import
 
@@ -60,7 +60,8 @@ row.
 
 Set `aria-invalid` on the control, not on Field. The border turns red while
 the control is invalid. For a warning that should not mark the value
-invalid, set `status="warning"` on Field. Invalid wins when both apply.
+invalid, set `status="warning"` on Field. The invalid state takes precedence
+when both are present.
 
 <Preview>
   <FieldStatusDemo />
@@ -94,8 +95,9 @@ beside the control does not dim the field.
 
 ### Textarea and select
 
-`Textarea` and `Select` sit in Field the same way as `Input`. With a
-textarea, Field grows to its height and aligns children to the top.
+`Textarea` and `Select` work inside Field the same way as `Input`. When
+wrapping a `Textarea`, Field expands to match its height and aligns adjacent
+elements to the top.
 
 ```tsx
 <Label htmlFor="notes">Notes</Label>
@@ -117,10 +119,10 @@ change its width, padding, gap, radius and background.
 
 ## API reference
 
-Field renders a `div` and takes `div` props and style props, except
-`role`, `aria-invalid`, `aria-disabled`, `aria-readonly`, `aria-required`
-and `aria-errormessage`. Those belong on the control and are removed if
-passed.
+Field renders a `div` and accepts standard `div` props and style props.
+Accessibility state props (`role`, `aria-invalid`, `aria-disabled`,
+`aria-readonly`, `aria-required`, and `aria-errormessage`) belong on the inner
+control and are stripped if passed to Field.
 
 <Reference name="FieldProps" headingLevel={3} />
 
@@ -141,9 +143,9 @@ Focus goes to the control and buttons in document order. Field shows its
 focus ring only while the control has visible focus, so a focused button
 keeps its own ring.
 
-- Put the label above Field, never inside it.
-- Use Field for text controls. Switch, checkboxes and radios do not go in a
-  Field.
-- `NumberField.Group` and a [DateField](/date-field) with parts already
-  include this border and focus ring. Do not wrap them in Field. A DateField
-  without children renders a bare input, which Field can wrap like any other.
+- Place the `Label` outside Field, not inside it.
+- Use Field only for text inputs, selects, and textareas, not for switches,
+  checkboxes, or radio buttons.
+- `NumberField.Group` and a compound [DateField](/date-field) already provide
+  a shared border and focus ring, so do not wrap them in Field. A childless
+  DateField renders a standalone input that can be wrapped in Field.

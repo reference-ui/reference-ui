@@ -9,21 +9,23 @@ description: Breakpoints that follow the width of a container.
 
 # Responsive
 
-Responsive styles follow the width of a container, not the viewport. A card
-that switches layout at `md` does so when the space it sits in reaches
-768px, whether that is a page, a sidebar or a dialog.
+Responsive styles query the width of the nearest container rather than the
+viewport. A component with an `md` breakpoint adapts when its containing
+element reaches `768px`, whether it is placed in a full page, a sidebar, or a
+dialog.
 
 ```tsx
 <Div padding={{ base: '2r', md: '4r' }} />
 ```
 
-Breakpoints are mobile-first: each one compiles to `@container (min-width: …)`,
-so a style set at a breakpoint holds at every wider width.
+Breakpoints are mobile-first: each breakpoint compiles to
+`@container (min-width: …)`, so styles apply at that width and above unless
+overridden at a wider breakpoint.
 
 ## Mark a container
 
-A responsive style matches only inside a container. Make an element one with
-the `container` prop:
+Container queries require an ancestor query container. Add the `container` prop
+to any primitive to establish one:
 
 ```tsx
 import { Div } from '@reference-ui/react'
@@ -96,7 +98,8 @@ Nested keys must all match: `sm: { md: { … } }` applies only when both do.
 
 ## Target a range
 
-By default a breakpoint style holds from that width up. These keys bound it:
+By default, a breakpoint applies from its minimum width upward. Use range keys
+to bound the query:
 
 | Key | Matches | Example |
 | --- | --- | --- |
@@ -108,15 +111,15 @@ By default a breakpoint style holds from that width up. These keys bound it:
 css({ width: '100%', mdOnly: { width: '50%' } })
 ```
 
-The upper bound stops 0.02px short, so adjacent ranges never overlap.
+Upper bounds subtract `0.02px` so adjacent ranges do not overlap.
 
 Range keys use the names in the table above: `tabletOnly` is not a range, and
 sync reports it as an unknown style property.
 
 ## Custom widths
 
-The `r` prop takes widths that are not on the scale. A numeric key is a
-pixel width; a breakpoint name works too:
+Use the `r` prop for container widths outside the default breakpoint scale.
+Keys can be pixel numbers or named breakpoints:
 
 ```tsx
 <Div width="100%" r={{ 300: { width: '50%' }, 900: { width: '33%' } }} />
@@ -127,8 +130,9 @@ primitives and in `css()`.
 
 ## Named containers
 
-A responsive style follows its nearest container. To follow one further up,
-name it and prefix the `r` key with that name:
+By default, responsive styles query the nearest ancestor container. To query a
+specific ancestor container, pass a name to `container` and prefix the `r` key
+with `<name>/`:
 
 ```tsx
 <Div container="sidebar">

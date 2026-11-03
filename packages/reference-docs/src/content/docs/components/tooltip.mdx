@@ -13,8 +13,8 @@ import { TooltipDemo, TooltipGroupDemo } from './tooltip-demo'
 
 # Tooltip
 
-Tooltip shows when the pointer rests on a control or keyboard focus reaches
-it, and is linked to the control with `aria-describedby`.
+Tooltip displays a short label when a user hovers or focuses a trigger control,
+and associates the label with the trigger via `aria-describedby`.
 
 <Preview>
   <TooltipDemo />
@@ -51,28 +51,28 @@ import { Tooltip } from '@reference-ui/lib'
 </Tooltip>
 ```
 
-`Tooltip` renders no element of its own. `Tooltip.Trigger` renders no element
-either: it adds its behaviour to the one element you pass it.
-`Tooltip.Content` renders a `div`.
+`Tooltip` and `Tooltip.Trigger` render no wrapper DOM elements:
+`Tooltip.Trigger` clones its single child element to attach event handlers and
+ARIA attributes, while `Tooltip.Content` renders a `div`.
 
 ## Examples
 
 ### Neighbouring tooltips
 
-Hover one button, then move to the next. Once a tooltip has shown, the next
-one opens without waiting.
+Once a tooltip is open, moving the pointer to an adjacent trigger opens its
+tooltip immediately without waiting for `openDelay`.
 
 <Preview>
   <TooltipGroupDemo />
 </Preview>
 
-The window lasts 300ms after a tooltip closes. Change it with
-`tooltip.skipDelay` on [ReferenceLibrary](/reference-library).
+This instant-open window lasts for 300ms after a tooltip closes and can be
+customized via `tooltip.skipDelay` on [ReferenceLibrary](/reference-library).
 
 ### Placement
 
-Content sits above the trigger by default. Pass `placement` and `offset` to
-move it.
+`Tooltip.Content` is positioned above the trigger by default
+(`placement="top"`). Pass `placement` and `offset` to adjust its position.
 
 ```tsx
 <Tooltip.Content placement="right" offset={4}>
@@ -82,8 +82,8 @@ move it.
 
 ### Delays
 
-Set `openDelay` and `closeDelay` in milliseconds to change how long hover
-waits before opening or closing:
+Use `openDelay` and `closeDelay` (in milliseconds) to configure how long
+pointer hover waits before showing or hiding the tooltip:
 
 ```tsx
 <Tooltip openDelay={300} closeDelay={0}>…</Tooltip>
@@ -91,7 +91,7 @@ waits before opening or closing:
 
 ### Controlled
 
-Pass `open` and `onOpenChange` to control the state.
+For controlled state, pass `open` and `onOpenChange`.
 
 ```tsx
 const [open, setOpen] = React.useState(false)
@@ -108,26 +108,27 @@ const [open, setOpen] = React.useState(false)
 
 ### Tooltip
 
-Holds the open state and the hover timers. Renders only its children.
+Manages open state and hover delay timers. Renders no DOM element of its own.
 
 <Reference name="TooltipProps" headingLevel={4} />
 
 ### Tooltip.Trigger
 
-Takes exactly one element as its child and passes no props of its own. It
-adds the pointer and focus handlers, keeps the child's own handlers and ref,
-and appends the content id to the child's `aria-describedby` while open.
-Any other child throws an error.
+Requires a single React element as its child. Merges pointer and focus
+handlers, preserves the child's existing handlers and `ref`, and appends the
+tooltip's ID to the child's `aria-describedby` while open. Passing multiple
+children or a non-element child throws an error.
 
 ### Tooltip.Content
 
-The tooltip itself. Takes `div` props and style props, plus the positioning
-props of [`Overlay.Content`](/overlay). Outside a `Tooltip` it renders
-nothing.
+The floating tooltip label. Accepts standard `div` props, style props, and the
+positioning props of [`Overlay.Content`](/overlay). Renders nothing if used
+outside `Tooltip`.
 
 <Reference name="TooltipContentProps" headingLevel={4} />
 
-Content has a small dark style by default. Style props you pass override it.
+`Tooltip.Content` comes with a compact dark surface style by default, which can
+be overridden with style props.
 
 | Data attribute | Values |
 | --- | --- |
@@ -137,26 +138,28 @@ Content has a small dark style by default. Style props you pass override it.
 
 ### Tooltip.Portal
 
-Optional. Sets where Content is portalled.
+Optional portal wrapper that configures the DOM container where
+`Tooltip.Content` is rendered.
 
 <Reference name="TooltipPortalProps" headingLevel={4} />
 
 ### Tooltip.Arrow
 
-An optional box positioned against the trigger. Takes `div` props and style
-props. Give it a shape with your own styles.
+An optional arrow element positioned along the tooltip edge facing the trigger.
+Accepts standard `div` props and style props; style its shape with custom CSS.
 
 ## Behaviour
 
 - Only one tooltip is open at a time.
-- Content unmounts as soon as it closes. There is no exit animation.
+- `Tooltip.Content` unmounts immediately when closed, with no exit animation.
 - Pressing the trigger closes the tooltip, and it stays closed until the
   pointer leaves.
 - Scrolling an ancestor of the trigger closes the tooltip.
-- Touch does not open a tooltip. Content must not hold the only copy of
-  information.
-- Content is not interactive. For links or buttons in floating content, use
-  [Popover](/popover), with `openOnHover` for a hover card.
+- Tooltips do not open on touch devices; do not rely on a tooltip as the only
+  way to convey essential information.
+- `Tooltip.Content` is not meant for interactive controls. For floating panels
+  containing links or buttons, use [Popover](/popover) (with `openOnHover` for
+  hover cards).
 
 ## Accessibility
 

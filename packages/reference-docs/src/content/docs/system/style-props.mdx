@@ -12,9 +12,9 @@ description: CSS properties as props, with shorthands, values and conditions.
 Style props are CSS properties written as props on a
 [primitive](/primitives): `<Div padding="4r" color="brand">`.
 
-The compiler turns each property and value into a class. The same keys and
-values work in [`css()`](/css), the `css` prop, recipes and
-[`globalCss()`](/global-css).
+The compiler extracts each property-value pair into an atomic CSS class. The
+same properties and values work in [`css()`](/css), the `css` prop,
+[recipes](/recipes), and [`globalCss()`](/global-css).
 
 ## Properties
 
@@ -41,8 +41,8 @@ properties take either spelling, such as `WebkitLineClamp` or
 | `bg` | `background` |
 | `flexDir` | `flexDirection` |
 
-A shorthand and its full name are the same property. When both are set, the
-one written last wins.
+A shorthand compiles to the same CSS property as its full name. When both are
+passed on the same element, the later prop takes precedence.
 
 ### Reference props
 
@@ -65,13 +65,13 @@ A style prop accepts:
 - a colour with an opacity or tone, `bg="brand/40"` or `bg="brand/soft"`;
 - rhythm units, `padding="4r"` (see [Spacing](/spacing));
 - any CSS value, `width="calc(100% - 2rem)"`;
-- a number: pixels on lengths (`width={42}`), bare otherwise
-  (`opacity={0.5}`);
+- a number: resolved to pixels on length properties (`width={42}`) and left
+  unitless on unitless properties (`opacity={0.5}`);
 - a responsive array or object, `p={['2r', '4r']}` or
   `p={{ base: '2r', md: '4r' }}` (see [Responsive](/responsive));
 - an object keyed by condition, `color={{ base: 'ink', _hover: 'brand' }}`
   (see [Conditions on one property](#conditions-on-one-property));
-- `null`, `false` or `undefined`, which set nothing.
+- `null`, `false`, or `undefined`, which are ignored.
 
 Style prop values are extracted statically at build time. See
 [Compiler](/compiler) and [Dynamic styles](/dynamic-styles).

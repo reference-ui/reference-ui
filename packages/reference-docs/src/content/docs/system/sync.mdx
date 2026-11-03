@@ -15,22 +15,23 @@ description: Compile your styles and types once, or keep them current in watch m
 files its `include` globs match. Run it once before a build, or in watch
 mode while you develop.
 
-Sync compiles only the style values it finds. A value you add after the last
-sync has no CSS until the next one.
+Because CSS is generated at build time, newly added style values take effect
+after the next sync.
 
 ## What sync does
 
-Each run goes through the same steps:
+Each run performs the following steps:
 
-1. Load `ui.config.ts`.
-2. Scan the files `include` matches.
-3. Compile every style in one pass.
-4. Report warnings and errors. Any error stops the run.
-5. Assemble the packages and write them in one step.
+1. Loads `ui.config.ts`.
+2. Scans all files matched by `include`.
+3. Extracts and compiles tokens, recipes, global rules, and style props.
+4. Reports diagnostics, aborting on any error.
+5. Writes the generated packages to `.reference-ui/` and links them into `node_modules/@reference-ui/`.
 
-A failed run changes nothing: your app keeps the output of the last good
-sync. Systems from `extends` and `layers` join your own in the same
-stylesheet. Run sync as its own command beside your bundler.
+If a run fails, the existing `.reference-ui/` output is left untouched so your
+app retains the stylesheet from the last successful sync. Upstream systems
+listed in `extends` and `layers` are compiled into the same stylesheet.
+`ref sync` runs as a standalone CLI step alongside your bundler.
 
 ## Run it once
 
@@ -63,8 +64,8 @@ Add sync to your build script so a build never ships a stale stylesheet:
 }
 ```
 
-Sync again after you install or upgrade `@reference-ui/lib`. Its tokens and
-types reach your project through sync.
+Run `ref sync` after installing or upgrading `@reference-ui/lib` (or any other
+base system package) to pick up its updated tokens, styles, and types.
 
 ## Watch during development
 
@@ -80,8 +81,7 @@ changes. Each resync prints one line:
 ⎔ ref sync ⫶ 38 ms ⫶ 41.3 KB
 ```
 
-Run watch mode next to your dev server, for example with the `concurrently`
-package:
+Run watch mode alongside your dev server, for example with `concurrently`:
 
 ```json {3}
 {
@@ -91,8 +91,8 @@ package:
 }
 ```
 
-The first `ref sync` makes sure the generated packages exist before the dev
-server starts.
+Running `ref sync` once before starting the watcher ensures the generated
+packages exist on disk before the dev server boots.
 
 ## What sync writes
 
@@ -109,9 +109,9 @@ Sync writes four packages to `.reference-ui/` and links each one into
 Don't edit these files. Each sync rewrites them from `ui.config.ts` and your
 source.
 
-`ref init` does not add `.reference-ui/` to `.gitignore`. Add it yourself.
-Sync rebuilds the folder on every run, and while a sync runs, its
-`sync.lock/` folder records that process's id and host.
+Add `.reference-ui/` to `.gitignore` (`ref init` does not modify `.gitignore`).
+Sync regenerates the directory on every run and uses `.reference-ui/sync.lock/`
+to coordinate concurrent processes.
 
 ## Verify the output
 
@@ -142,8 +142,9 @@ files it should reach.
 
 **`[ref] already watching this project`**
 
-A watch session already owns the project, so this sync hands the work to it
-and exits with code 0. Expected while your dev script runs.
+A watch session is already active for this project; the command triggers a
+resync in that session and exits with code 0. This is normal when running
+`ref sync` while your dev server is active.
 
 **`the lock is held by pid <pid> on host <host>`**
 

@@ -9,9 +9,9 @@ description: Multi-variant styles for your components.
 
 # Recipes
 
-A recipe defines the variants of a component: base styles plus named
-variants, such as `tone` and `size`. `recipe()` returns a function that gives
-the class names for the variants you pick.
+A recipe defines a component's base styles and named variants, such as `tone`
+and `size`. `recipe()` returns a function that takes a variant selection and
+returns the corresponding class names.
 
 ## Define a recipe
 
@@ -44,11 +44,11 @@ const button = recipe({
 
 | Option | Type | Description |
 | --- | --- | --- |
-| `className` | `string` | Required. Names the recipe. Two recipes with the same name in one system fail sync. |
+| `className` | `string` | Required. Unique identifier for the recipe. Duplicate names within the same system fail `ref sync`. |
 | `slots` | `string[]` | The parts of a multi-part component. Key `base`, each variant value, and each compound's `css` by slot name; calling the recipe returns one class per slot. See [Slots](#slots). |
-| `base` | style object | Styles every choice gets. |
+| `base` | style object | Base styles applied to every instance. |
 | `variants` | `Record<string, Record<string, StyleObject>>` | One style object per value of each variant. Use `true` and `false` keys for a boolean variant. |
-| `defaultVariants` | `Record<string, string>` | The value used when a call leaves a variant out. |
+| `defaultVariants` | `Record<string, string>` | Default variant values used when a variant is omitted at the call site. |
 | `compoundVariants` | `Array<{ [variant]: value, css: StyleObject }>` | Styles that apply only when every listed variant matches. |
 
 ## Compound variants
@@ -80,16 +80,17 @@ A variant value can be an object of [breakpoints](/responsive):
 <button className={button({ size: { base: 'sm', md: 'lg' } })}>Save</button>
 ```
 
-The button is `sm` until its container reaches `md`, then `lg`. If the object
-has no `base`, the default variant applies below the breakpoints it names.
+The button uses the `sm` variant until its container reaches `md`, where it
+switches to `lg`. If `base` is omitted from the responsive object, the
+variant's default value applies below the specified breakpoints.
 
 Compound variants match the `base` value only. In the example above, a
 compound for `size: 'lg'` does not apply at `md`.
 
 ## Values picked at runtime
 
-Every value of every variant gets a class, so a value chosen at runtime
-needs no `staticCss`:
+All variants in a recipe are compiled ahead of time, so selecting a variant
+from a runtime variable works without configuring `staticCss`:
 
 ```tsx
 function SaveButton({ size }: { size: 'sm' | 'lg' }) {
@@ -97,13 +98,14 @@ function SaveButton({ size }: { size: 'sm' | 'lg' }) {
 }
 ```
 
-Responsive values work the same way. If any call passes a variable, sync
-emits every breakpoint of that recipe.
+Responsive variant values work the same way. When a recipe call receives a
+runtime variable, `ref sync` emits the responsive classes for every breakpoint
+of that recipe.
 
 ## Slots
 
-A component with several parts can take one recipe. List the parts in
-`slots`, then key `base` and each variant value by part:
+Multi-part components can share a single recipe using `slots`. List the part
+names in `slots`, then key `base` and each variant option by slot name:
 
 ```tsx
 const card = recipe({
@@ -131,9 +133,10 @@ const classes = card({ size: 'lg' })
 </div>
 ```
 
-The call returns one class string per slot. Every slot gets a key, even
-`body`, which no variant styles. Responsive values and values picked at
-runtime work as they do without slots.
+Calling a slotted recipe returns an object mapping each slot name to its class
+string (including slots like `body` that only have `base` styles). Responsive
+variants and runtime variant props work the same way as in single-element
+recipes.
 
 A compound variant keys its `css` by slot too:
 
@@ -141,11 +144,11 @@ A compound variant keys its `css` by slot too:
 compoundVariants: [{ size: 'lg', css: { title: { letterSpacing: '0.02em' } } }]
 ```
 
-Each slot compiles as its own recipe, named `card__root`, `card__title` and
-`card__body`. Sync fails on a key that `slots` does not list, and on another
-recipe whose `className` is one of those names. It also fails when two recipes
-compile the same name: a `card` recipe with slot `a__b` and a `card__a` recipe
-with slot `b` both compile `card__a__b`.
+Each slot compiles to its own recipe class (`card__root`, `card__title`, and
+`card__body`). `ref sync` fails if a style block references a slot not listed
+in `slots`, or if two recipes produce colliding slot names (for example, a
+`card` recipe with slot `a__b` and a `card__a` recipe with slot `b` both
+resolve to `card__a__b`).
 
 ## Helpers
 
@@ -156,9 +159,10 @@ The returned function also has:
 - `variantKeys` and `variantMap`, which list the variants and their values;
 - `splitVariantProps(props)`, which splits variant props from the rest.
 
-Use `splitVariantProps` in a wrapper component. It returns
-`[variants, rest]`: `rest` holds every other prop with its type intact, so
-`onClick` and `children` pass through and never reach the recipe:
+Use `splitVariantProps` inside wrapper components to separate recipe variants
+from HTML attributes. It returns `[variants, rest]`, preserving the types of
+remaining props like `onClick` and `children` so they can be spread onto the
+underlying element:
 
 ```tsx
 import type { RecipeVariantProps } from '@reference-ui/react'
@@ -192,6 +196,6 @@ and a variant with `true` or `false` keys takes a boolean.
 
 ## Cascade layer
 
-Recipe classes live in the `recipes` [cascade layer](/cascade-layers),
-below utilities. A style prop or `css()` class on the same element always
-wins over the recipe.
+Recipe classes are placed in the `recipes` [cascade layer](/cascade-layers),
+below utility classes. Style props and `css()` classes on the same element
+override recipe styles.

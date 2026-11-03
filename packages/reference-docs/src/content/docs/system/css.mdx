@@ -4,15 +4,14 @@ section: System
 group: Styling
 order: 90
 slug: css
-description: Turn a style object into a class name for any element.
+description: Compile a style object into a class name for any element.
 ---
 
 # CSS
 
-`css()` turns a style object into a class name for any element. It is
-compiled ahead of time: the compiler reads the calls from your source and
-writes their rules into the stylesheet. For a component with variants, use a
-[recipe](/recipes).
+`css()` takes a style object and returns a class name string. Calls are
+extracted statically at build time and compiled into the stylesheet. For
+components with multiple variants, use a [recipe](/recipes).
 
 ## `css()`
 
@@ -37,8 +36,9 @@ A style object accepts the same keys and values as
 
 ### Combine styles
 
-`css()` takes any number of style objects, or arrays of them. For the same
-property, the later object wins. `null`, `false` and `undefined` are skipped:
+`css()` accepts multiple style objects or nested arrays of style objects. When
+the same property appears more than once, the later value takes precedence.
+`null`, `false`, and `undefined` arguments are ignored:
 
 ```ts
 const button = css(
@@ -48,8 +48,8 @@ const button = css(
 )
 ```
 
-A `null`, `false` or `undefined` value inside an object is skipped too, so
-`{ color: undefined }` never overrides an earlier `color`.
+`null`, `false`, and `undefined` property values are also ignored, so
+`{ color: undefined }` does not override an earlier `color`.
 
 ```ts
 function css(...styles: Array<CssStyles | CssStyles[]>): string
@@ -63,12 +63,12 @@ type CssStyles = SystemStyleObject | undefined | null | false
 | --- | --- | --- |
 | Token name | `color: 'brand'` | `var(--colors-brand)`. See [Tokens](/tokens). |
 | Token reference | `border: '1px solid {colors.line}'` | Expands inside any string. |
-| Opacity or tone | `bg: 'brand/40'`, `bg: 'brand/soft'` | A `color-mix()` of the colour. |
+| Opacity or tone | `bg: 'brand/40'`, `bg: 'brand/soft'` | Mixes the colour with transparency via `color-mix()`. |
 | Rhythm | `gap: '3r'` | `calc(3 * var(--spacing-root))`. See [Spacing](/spacing). |
-| Number | `width: 42`, `opacity: 0.5` | `42px` on lengths, bare otherwise. |
-| Any CSS | `bg: 'linear-gradient(…)'` | Printed as written. |
+| Number | `width: 42`, `opacity: 0.5` | `42px` for length properties; unitless otherwise. |
+| Any CSS | `bg: 'linear-gradient(…)'` | Passed through as written. |
 | Important | `color: 'brand !important'` or `'brand!'` | Marks the declaration `!important`. |
-| Custom property | `'--card-gap': '2r'` | Keeps its casing. |
+| Custom property | `'--card-gap': '2r'` | Preserves the custom property name. |
 
 ## Selectors and at-rules
 
@@ -87,8 +87,8 @@ css({
 ```
 
 Breakpoint keys such as `md` are covered in [Responsive](/responsive).
-Conditions nest, and a nested rule applies only when every condition around
-it matches.
+Conditions can be nested, and a nested rule applies only when all enclosing
+conditions match.
 
 ## Static extraction
 

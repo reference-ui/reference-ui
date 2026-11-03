@@ -3,14 +3,14 @@ title: Overview
 section: MCP
 order: 10
 slug: mcp
-description: What the Reference UI MCP server tells your coding agent about your project.
+description: Expose your project's components, props, tokens, and icons to AI coding agents via MCP.
 ---
 
 # MCP
 
-The Reference UI MCP server gives your coding agent facts about your project:
-its components, their props, how your code uses them, your tokens and the
-icons you can import.
+The Reference UI MCP server exposes your project's design system to AI coding
+agents, including your components, their prop types, real call-site examples,
+design tokens, and available icons.
 
 ## What your agent can ask
 
@@ -24,27 +24,26 @@ icons you can import.
 
 Each question maps to one tool. See [Tools](/mcp-tools) for the full list.
 
-## Where the answers come from
+## How it works
 
-The server reads two things:
+When loading a project, the server combines two sources into a unified model:
 
-- The generated types that `ref sync` writes to `.reference-ui/`. See [Sync](/sync).
-- A scan of your source, made with Atlas, Reference UI's component analyzer.
+- The generated types and token definitions written to `.reference-ui/` by
+  `ref sync` (see [Sync](/sync)).
+- Static analysis of your source files using Atlas, Reference UI's component
+  analyzer.
 
-Atlas finds the components your files export and records every JSX call site.
-It reads your project's own files and any design packages you
-[include](/mcp-configuration#config-options), never the rest of
-`node_modules`. When it cannot resolve a component's props type, the component
-includes a warning instead of guessing.
+Atlas indexes exported components and records their JSX call sites across your
+project files and any packages listed in
+[`mcp.include`](/mcp-configuration#config-options), ignoring the rest of
+`node_modules`. If a component's prop types cannot be statically resolved, Atlas
+attaches a diagnostic warning rather than guessing.
 
-The server joins the two into one model when it first loads a project.
+## Unsynced projects
 
-## Before you sync
-
-Without a synced project, the server still answers with the built-in
-primitives, the library components and the style props guide. Each answer
-carries a notice. When the server found a `ui.config.ts` that isn't synced,
-the notice tells your agent to run `ref sync` there.
+If a project has not been synced yet, the server falls back to built-in
+primitives, `@reference-ui/lib` components, and the style props reference, and
+includes a notice in each response prompting the agent to run `ref sync`.
 
 ## Next steps
 

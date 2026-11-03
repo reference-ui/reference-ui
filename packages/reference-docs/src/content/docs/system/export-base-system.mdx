@@ -9,9 +9,9 @@ description: Publish a package's base system so other apps can list it in extend
 
 # Export a base system
 
-A design system package publishes its base system as a `./baseSystem`
-subpath. Apps import it from there and list it in `extends` or `layers`. For
-what a base system carries, see [Base systems](/base-systems).
+A design system package exports its compiled base system under the
+`./baseSystem` subpath so downstream projects can pass it to `extends` or
+`layers`. See [Base systems](/base-systems) for what a base system contains.
 
 ## package.json
 
@@ -35,14 +35,15 @@ published:
 }
 ```
 
-Don't export a stylesheet. The app's sync builds one stylesheet from your
-base system and its own source.
+Do not publish a separate CSS stylesheet. Consuming applications compile a
+single stylesheet that combines your `baseSystem` with their own styles.
 
 ## Build
 
-Run `ref sync` before you build. The app never syncs your source, so your
-components' styles come only from your sync. A `prepack` script keeps the
-published files current:
+Run `ref sync` before building your package. Downstream applications do not
+re-scan your package source; they consume the precompiled styles and component
+metadata from your `baseSystem` artifact. Add `ref sync` to your `prepack`
+script so published builds are always up to date:
 
 ```json
 {
@@ -54,11 +55,13 @@ published files current:
 
 ## Dependencies
 
-Bundle `@reference-ui/react` into your build output, and leave it out of
-`dependencies` and `peerDependencies`. Your sync generates it bound to your
-system's `name`, so your components render under that name in any app.
+Bundle `@reference-ui/react` into your package's build output and omit it from
+`dependencies` and `peerDependencies`. Because `ref sync` generates
+`@reference-ui/react` scoped to your system's `name`, bundling it ensures your
+components render with the correct `data-layer` attribute in any consuming app.
 
-Keep `react` as a peer dependency, so the app supplies a single copy.
+Declare `react` as a peer dependency so the host application provides a single
+React instance.
 
 ## Recipes
 
@@ -68,11 +71,11 @@ precompiled classes in your `baseSystem`.
 ## In a monorepo
 
 A workspace package in the same monorepo does not need to be published first,
-since sync resolves workspace imports directly. Choose one of two shapes.
+since sync resolves workspace imports directly. You can structure workspace
+packages in two ways:
 
-**One system.** Run one sync at the repository root, with `include` covering
-the app and the package. The package's components become part of the app's
-system:
+**Single system.** Run `ref sync` once at the repository root with `include`
+globs covering both the app and the workspace package:
 
 ```ts
 // ui.config.ts at the repository root
@@ -84,14 +87,15 @@ export default defineConfig({
 })
 ```
 
-**Two systems.** The package runs its own sync and exports its base system
-as above, and the app lists it in `extends` or `layers`. Once the package
-has its own sync output, sync uses this shape, even when the app's `include`
-also covers the package's source.
+**Separate systems.** Run `ref sync` in the workspace package, export its
+`./baseSystem`, and reference it in the app's `extends` or `layers`. When a
+workspace package has its own `.reference-ui/system/baseSystem.mjs`, sync
+treats it as an external base system even if the app's `include` globs also
+match its source directory.
 
 ## Further reading
 
 <LinkCards>
   <LinkCard href="/sharing" title="Sharing">How sharing a design system works.</LinkCard>
-  <LinkCard href="/base-systems" title="Base systems">`extends`, `layers` and what each one takes.</LinkCard>
+  <LinkCard href="/base-systems" title="Base systems">How `extends`, `layers`, and `extendSystem()` work.</LinkCard>
 </LinkCards>

@@ -4,7 +4,7 @@ section: Components
 group: Foundation
 order: 30
 slug: overlay
-description: Puts content above the page, such as dialogs, drawers, sheets and anchored panels.
+description: A foundational layer for dialogs, drawers, sheets, and anchored panels.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -13,8 +13,9 @@ import { OverlayAnchoredDemo, OverlayDemo, OverlaySheetDemo } from './overlay-de
 
 # Overlay
 
-Overlay handles layering, dismissal, focus and positioning. You supply the
-role, the copy and the styles.
+Overlay is a foundational primitive that manages layering, focus trapping,
+dismissal, and positioning for modal and non-modal surfaces. You provide the
+ARIA role, content, and styling.
 
 <Preview>
   <OverlayDemo />
@@ -75,29 +76,30 @@ Every part except `Overlay.Content` is optional.
 </Overlay>
 ```
 
-`Overlay` renders no element. Backdrop and Content render into a portal at the
-end of `document.body`. Each part may appear at most once.
+`Overlay` renders no DOM element of its own. `Overlay.Backdrop` and
+`Overlay.Content` render into a portal appended to `document.body`. Each
+subcomponent may appear at most once.
 
 ## Geometry
 
-Overlay picks where Content goes from the props you pass.
+`Overlay.Content` determines its positioning mode from the props on `Overlay`:
 
-| You pass | Content is |
+| Props | Positioning behavior |
 | --- | --- |
-| Trigger, default `isolation` | Unbound. Overlay writes no position; place it with your own CSS. |
-| Trigger and `isolation={false}` | Anchored to the Trigger. |
-| `anchor` | Anchored to that reference. `anchor` wins over Trigger. |
-| `edge` | Bound to that viewport edge. |
+| `Overlay.Trigger` with default `isolation` | Unbound. Overlay applies no positioning styles; position it with your own CSS. |
+| `Overlay.Trigger` with `isolation={false}` | Anchored to `Overlay.Trigger`. |
+| `anchor` | Anchored to the given element, ref, or coordinates (`anchor` takes precedence over `Overlay.Trigger`). |
+| `edge` | Attached to the specified viewport edge. |
 
-`edge` and `anchor` can't be combined: Content logs a warning and renders
-nothing.
+`edge` and `anchor` cannot be combined; if both are passed, `Overlay.Content`
+logs a warning and renders nothing.
 
 ## Examples
 
 ### Sheet
 
-Pass `edge` to bind Content to a side of the viewport. Add `Overlay.Handle` so
-users can drag it to dismiss.
+Pass `edge` to bind `Overlay.Content` to a side of the viewport. Add
+`Overlay.Handle` so users can drag it to dismiss.
 
 <Preview>
   <OverlaySheetDemo />
@@ -114,13 +116,13 @@ users can drag it to dismiss.
 </Overlay>
 ```
 
-A drag dismisses once it covers 25% of the sheet, or on a fast flick.
-Otherwise the sheet springs back.
+Dragging past 25% of the sheet's size or flicking quickly dismisses the sheet;
+otherwise, it snaps back into place.
 
 ### Anchored panel
 
-Turn isolation off and Content positions itself against the Trigger. The
-page stays interactive, and a press outside closes the panel.
+Set `isolation={false}` to anchor `Overlay.Content` to `Overlay.Trigger`. The
+rest of the page remains interactive, and clicking outside closes the panel.
 
 <Preview>
   <OverlayAnchoredDemo />
@@ -157,9 +159,10 @@ until the user chooses an action.
 
 ### Isolation
 
-`isolation` is three settings: `focus` keeps Tab inside Content, `inert`
-makes the rest of the page unreachable, and `scroll` locks page scroll. All
-three are on by default. Pass an object to turn one off:
+`isolation` controls three modal behaviors: `focus` traps Tab navigation inside
+`Overlay.Content`, `inert` marks the rest of the page inert, and `scroll` locks
+document scrolling. All three are enabled by default. Pass an object to
+configure them individually:
 
 ```tsx
 <Overlay isolation={{ scroll: false }}>…</Overlay>
@@ -167,9 +170,9 @@ three are on by default. Pass an object to turn one off:
 
 ### Animating
 
-Closing does not unmount Backdrop and Content immediately. Both carry
-`data-state="open"` or `data-state="closed"`, and stay in the DOM until a CSS
-animation or transition on them finishes.
+`Overlay.Backdrop` and `Overlay.Content` expose `data-state="open"` and
+`data-state="closed"`, remaining mounted when closing until any CSS animation or
+transition completes.
 
 ```tsx
 const fade = css({
@@ -180,21 +183,21 @@ const fade = css({
 <Overlay.Content className={fade}>…</Overlay.Content>
 ```
 
-See [Presence](/presence) for what counts as an exit.
+See [Presence](/presence) for details on how exit animations are detected.
 
 ## API reference
 
 ### Overlay
 
-Holds the open state and the settings every part reads.
+Manages open state, positioning mode, and isolation settings for its child
+parts. Renders no DOM element of its own.
 
 <Reference name="OverlayProps" headingLevel={4} />
 
 ### Overlay.Trigger
 
-A `button` that opens the layer when closed and closes it when open. Takes
-every `button` prop and style prop. If your `onClick` calls
-`preventDefault()`, the Trigger does nothing.
+A `button` that toggles the overlay. Accepts standard `button` props and style
+props. Calling `preventDefault()` in `onClick` cancels the toggle.
 
 | Attribute | Values |
 | --- | --- |
@@ -202,8 +205,8 @@ every `button` prop and style prop. If your `onClick` calls
 
 ### Overlay.Backdrop
 
-A fixed, full-viewport `div` behind Content. A press on it closes the
-layer. Takes every `div` prop and style prop.
+A fixed, full-viewport `div` rendered behind `Overlay.Content`. Clicking the
+backdrop dismisses the overlay. Accepts standard `div` props and style props.
 
 | Attribute | Values |
 | --- | --- |
@@ -211,13 +214,14 @@ layer. Takes every `div` prop and style prop.
 
 ### Overlay.Content
 
-The layer itself. Takes every `div` prop and style prop, plus:
+The overlay surface. Renders a `div` and accepts standard `div` props, style
+props, and positioning options:
 
 <Reference name="OverlayContentProps" headingLevel={4} />
 
-`initialFocus` and `restoreFocus` apply while `isolation.focus` is on.
-Placement props apply only when Content is anchored; `offset` also applies
-with `edge`.
+`initialFocus` and `restoreFocus` apply while `isolation.focus` is enabled.
+Placement props apply only when `Overlay.Content` is anchored; `offset` also
+applies with `edge`.
 
 | Attribute | Values |
 | --- | --- |
@@ -231,8 +235,8 @@ with `edge`.
 
 | CSS variable | Description |
 | --- | --- |
-| `--reference-overlay-available-width` | Width Content can use. |
-| `--reference-overlay-available-height` | Height Content can use. |
+| `--reference-overlay-available-width` | Available viewport width for the content. |
+| `--reference-overlay-available-height` | Available viewport height for the content. |
 | `--reference-overlay-anchor-width` | Width of the anchor. |
 | `--reference-overlay-anchor-height` | Height of the anchor. |
 | `--reference-overlay-transform-origin` | Origin facing the anchor, for scale animations. |
@@ -242,44 +246,48 @@ with `edge`.
 
 ### Overlay.Arrow
 
-A `div` that Overlay moves to point at the anchor. It renders a 2r square
-with no shape; draw the arrow with your own styles. Takes every `div` prop
-and style prop, plus:
+A `div` positioned along the edge of `Overlay.Content` to point toward the
+anchor. Renders an unstyled `2r` square that you can shape with custom CSS.
+Accepts standard `div` props, style props, and arrow options:
 
 <Reference name="OverlayArrowProps" headingLevel={4} />
 
 ### Overlay.Handle
 
-A drag handle for edge layers. It only works with `edge`. Its default look
-is a small grey pill; style props override it. Takes every `div` prop and
-style prop.
+A draggable handle for edge-bound sheets (active only when `edge` is set).
+Renders a `div` styled as a small pill by default, and accepts standard `div`
+props and style props.
 
 ### Overlay.Portal
 
-Sets where Backdrop and Content render. It renders only its children.
+Configures the portal target for `Overlay.Backdrop` and `Overlay.Content`.
+Renders no DOM element of its own.
 
 <Reference name="OverlayPortalProps" headingLevel={4} />
 
 ## Accessibility
 
-Overlay adds no role. Set `role="dialog"` (or `alertdialog`), `aria-modal`,
-and a label on Content yourself. The Trigger gets `aria-expanded`.
+`Overlay.Content` does not set a default ARIA role. Add `role="dialog"` (or
+`role="alertdialog"`), `aria-modal`, and `aria-label` or `aria-labelledby`
+directly on `Overlay.Content`. `Overlay.Trigger` sets `aria-expanded`
+automatically.
 
-While `isolation.inert` is on, everything outside the open layers gets the
-`inert` attribute. Live regions, [Toast](/toast) and
-[announce](/announce) stay reachable.
+When `isolation.inert` is enabled, elements outside the active overlay receive
+the `inert` attribute, while live regions, [Toast](/toast), and
+[announce](/announce) remain accessible.
 
 ### Keyboard interactions
 
 | Key | Description |
 | --- | --- |
 | `Space`, `Enter` | On the Trigger, opens or closes the layer. |
-| `Tab` | With focus isolation, moves focus within Content and wraps. Without it, moves from the Trigger into Content; past the last item it closes the layer and moves on. |
-| `Shift + Tab` | With focus isolation, moves back within Content. Without it, moves from the first item back to the Trigger. |
+| `Tab` | When focus isolation is enabled, cycles focus within `Overlay.Content`. When disabled, moves focus from the trigger into `Overlay.Content`, and closes the overlay after tabbing past the last focusable element. |
+| `Shift + Tab` | When focus isolation is enabled, cycles focus backward within `Overlay.Content`. When disabled, moves focus from the first focusable element back to the trigger. |
 | `Esc` | Closes the topmost open layer. |
 
 ## Nesting
 
-An Overlay inside another's Content is its child. Escape and outside presses
-reach the topmost layer only, a press inside a child is not an outside press
-for its parent, and closing a parent closes its children.
+An `Overlay` rendered inside another `Overlay.Content` registers as a nested
+child layer. `Escape` and outside clicks dismiss only the topmost open layer,
+interactions inside a child overlay do not count as outside clicks on its
+parent, and closing a parent overlay closes all of its nested children.

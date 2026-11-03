@@ -11,9 +11,9 @@ import { Reference } from '@reference-ui/lib'
 
 # announce
 
-`announce()` sends a message to screen readers through a live region. Nothing
-appears on screen. Use it for status changes that have no visible text, such
-as "3 results".
+`announce()` sends a message to screen readers through a visually hidden live
+region without rendering anything visible on screen. Use it to communicate
+dynamic status changes, such as filter result counts or background updates.
 
 ```tsx
 import { announce } from '@reference-ui/lib'
@@ -33,6 +33,9 @@ import { announce, type AnnounceOptions } from '@reference-ui/lib'
 
 ## API
 
+Call `announce` with the message string and optional politeness or document
+settings:
+
 ```ts
 announce(message: string, options?: AnnounceOptions): void
 ```
@@ -41,17 +44,19 @@ announce(message: string, options?: AnnounceOptions): void
 
 ## Behaviour
 
-- The same message sent twice is spoken twice.
-- A blank message is ignored.
-- Messages sent before ReferenceLibrary mounts are kept and spoken once it
-  mounts.
-- If more than one document has a ReferenceLibrary mounted, such as a page
-  and a same-origin iframe, pass `document`. Without it the call is dropped.
-- [Toast](/toast) announces messages through the same live region when given
-  its `announce` option.
+- Repeating the same message consecutively still triggers a new announcement.
+- Empty or whitespace-only messages are ignored.
+- Messages queued before ReferenceLibrary mounts are buffered and announced
+  once it mounts.
+- When multiple documents have a ReferenceLibrary mounted (such as the main
+  window and a same-origin iframe), pass the target `document` option;
+  otherwise the call is ignored.
+- [Toast](/toast) uses this same live region when configured with its
+  `announce` option.
 
 ## Accessibility
 
-The polite message goes into a `role="status"` region and the assertive one
-into a `role="alert"` region. Both stay audible while an
-[Overlay](/overlay) dialog makes the rest of the page inert.
+Polite messages are written to a `role="status"` region, and assertive
+messages to a `role="alert"` region. Both regions remain outside inert
+containers so announcements stay audible while a modal [Overlay](/overlay) is
+open.

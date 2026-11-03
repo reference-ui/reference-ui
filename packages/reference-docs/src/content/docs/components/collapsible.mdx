@@ -4,7 +4,7 @@ section: Components
 group: Disclosure and layout
 order: 200
 slug: collapsible
-description: Shows and hides one region of content behind a trigger button.
+description: An interactive section that expands and collapses a content panel.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -13,7 +13,7 @@ import { CollapsibleDemo } from './collapsible-demo'
 
 # Collapsible
 
-Collapsible shows and hides one region of content behind a trigger button.
+Collapsible toggles the visibility of a content section from a trigger button.
 
 <Preview>
   <CollapsibleDemo />
@@ -43,14 +43,14 @@ import { Collapsible } from '@reference-ui/lib'
 </Collapsible>
 ```
 
-`Collapsible` renders no element of its own. `Collapsible.Trigger` renders a
-`button` and `Collapsible.Content` a `div`.
+`Collapsible` renders no DOM element of its own. `Collapsible.Trigger` renders a
+`button`, and `Collapsible.Content` renders a `div`.
 
 ## Examples
 
 ### Controlled
 
-Pass `open` and `onOpenChange` to control the state.
+For controlled state, pass `open` and `onOpenChange`.
 
 ```tsx
 const [open, setOpen] = React.useState(false)
@@ -63,7 +63,7 @@ const [open, setOpen] = React.useState(false)
 
 ### Open by default
 
-Use `defaultOpen` to start open while Collapsible manages its own state.
+Pass `defaultOpen` to render the content expanded initially in uncontrolled mode.
 
 ```tsx
 <Collapsible defaultOpen>…</Collapsible>
@@ -71,8 +71,8 @@ Use `defaultOpen` to start open while Collapsible manages its own state.
 
 ### Custom icon
 
-The trigger ends with a chevron that turns when the content opens. Pass
-`icon` to replace it, or `hideIcon` to remove it.
+By default, the trigger renders a trailing chevron that rotates when expanded.
+Pass `icon` to render a custom icon, or `hideIcon` to omit it.
 
 ```tsx
 <Collapsible.Trigger icon={<AddIcon />}>Order details</Collapsible.Trigger>
@@ -81,9 +81,10 @@ The trigger ends with a chevron that turns when the content opens. Pass
 
 ### Findable content
 
-With `hiddenUntilFound`, closed content stays in the page as
-`hidden="until-found"`. When the browser's find-in-page matches text inside
-it, the Collapsible opens. Cancel the `beforematch` event to keep it closed.
+Pass `hiddenUntilFound` to keep closed content in the DOM with
+`hidden="until-found"`. When the browser's find-in-page matches text inside the
+panel, the Collapsible opens automatically. Call `preventDefault()` on the
+`beforematch` event to prevent it from opening.
 
 ```tsx
 <Collapsible hiddenUntilFound>
@@ -96,18 +97,20 @@ it, the Collapsible opens. Cancel the `beforematch` event to keep it closed.
 
 ### Collapsible
 
-Holds the open state. Renders only its children.
+Manages the open state for the trigger and content. Renders no DOM element of
+its own.
 
 <Reference name="CollapsibleProps" headingLevel={4} />
 
 ### Collapsible.Trigger
 
-The button that toggles the content. Takes `button` props and style props.
+Toggles the collapsible content. Renders a `button` and accepts standard
+`button` props and style props.
 
 <Reference name="CollapsibleTriggerProps" headingLevel={4} />
 
-Only a primary-button click toggles. Calling `preventDefault()` in your
-`onClick` stops the toggle.
+Only primary clicks toggle the state. Calling `preventDefault()` in `onClick`
+cancels the toggle.
 
 | Data attribute | Values |
 | --- | --- |
@@ -116,8 +119,8 @@ Only a primary-button click toggles. Calling `preventDefault()` in your
 
 ### Collapsible.Content
 
-The region that opens and closes. Takes `div` props and style props.
-Outside a `Collapsible` it renders nothing.
+The collapsible content container. Renders a `div` and accepts standard `div`
+props and style props. Renders nothing if used outside `Collapsible`.
 
 <Reference name="CollapsibleContentProps" headingLevel={4} />
 
@@ -131,15 +134,15 @@ Outside a `Collapsible` it renders nothing.
 | `--reference-collapsible-content-height` | Height of the open content. |
 | `--reference-collapsible-content-width` | Width of the open content. |
 
-Content animates its height open and closed over 320ms, and skips the
-animation when the user prefers reduced motion. It stays mounted until the
-close animation ends, then unmounts, unless `forceMount` or
-`hiddenUntilFound` keeps it.
+Content animates its height over 320ms when opening and closing, and disables
+the transition when `prefers-reduced-motion` is enabled. It stays mounted until
+the exit animation completes, then unmounts unless `forceMount` or
+`hiddenUntilFound` is set.
 
 ## Accessibility
 
-If focus is inside the content when it closes, focus moves to the
-trigger.
+If focus is inside `Collapsible.Content` when it closes, focus returns to
+`Collapsible.Trigger`.
 
 ### Keyboard interactions
 

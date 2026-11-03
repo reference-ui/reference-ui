@@ -9,14 +9,13 @@ description: The ref commands and their options.
 
 # CLI
 
-The `ref` command comes with `@reference-ui/core`. It creates your config,
-syncs your system and removes what sync generated.
+The `ref` CLI is provided by `@reference-ui/core`.
 
-| Command | What it does |
+| Command | Description |
 | --- | --- |
 | `ref init` | Writes a default `ui.config.ts`. |
 | `ref sync` | Compiles your stylesheet and types into `.reference-ui/`. |
-| `ref clean` | Removes `.reference-ui/` and the links sync made. |
+| `ref clean` | Removes `.reference-ui/` and the `node_modules/@reference-ui/` symlinks. |
 
 Every command takes an optional project directory, `[dir]`, which defaults to
 the current directory.
@@ -27,12 +26,12 @@ the current directory.
 npx ref init [dir]
 ```
 
-Writes `ui.config.ts` into the project directory. The config takes its `name`
-from `package.json`, falling back to `my-app`, includes `src/**/*.{ts,tsx}`,
-and extends the `@reference-ui/lib` base system.
+Creates a `ui.config.ts` file in the project directory. It sets `name` from
+`package.json` (defaulting to `'my-app'`), sets `include` to
+`['src/**/*.{ts,tsx}']`, and extends `@reference-ui/lib/baseSystem`.
 
-If the directory already has a `ui.config.ts`, `ui.config.js` or
-`ui.config.mjs`, init writes nothing and exits with code 1.
+If `ui.config.ts`, `ui.config.js`, or `ui.config.mjs` already exists,
+`ref init` exits with code 1 without modifying the file.
 
 ## sync
 
@@ -41,26 +40,26 @@ npx ref sync [dir]
 npx ref sync --watch [dir]
 ```
 
-Reads the config and your source, then writes the generated packages to
-`.reference-ui/` and links them into `node_modules/@reference-ui/`. See
+Compiles your config and source files, writes the generated packages to
+`.reference-ui/`, and links them into `node_modules/@reference-ui/`. See
 [Sync](/sync).
 
 | Option | Description |
 | --- | --- |
-| `--watch` | Stay running and resync when a matched file or the config changes. |
+| `--watch` | Watch matched files and the config for changes and resync automatically. |
 | `--verbose` | List every warning with its location and a fix hint. |
-| `--quiet` | Print nothing on success. Errors still print. |
-| `--json` | Print diagnostics as a JSON array on stdout. Other output moves to stderr. |
-| `--break-lock` | Take the sync lock from another process unconditionally. |
-| `--debug` | Trace the file events watch mode receives. |
+| `--quiet` | Suppress output on success; only print errors. |
+| `--json` | Write diagnostics as a JSON array to stdout and send all other output to stderr. |
+| `--break-lock` | Force-acquire the sync lock from another process. |
+| `--debug` | Log file-watcher events in watch mode. |
 
-Only one sync runs per project at a time. A one-off sync that finds a watch
-session already running asks it to resync, then exits with code 0. A second
-`ref sync --watch` attaches to the running session and stays open until it
-stops.
+Only one sync runs per project at a time. If a watch session is already
+running, a one-off `ref sync` triggers a resync in that session and exits with
+code 0, while a second `ref sync --watch` attaches to the active session until
+it stops.
 
-With `--watch --json`, each sync prints its own diagnostics array on stdout,
-failed ones included.
+With `--watch --json`, each resync writes a JSON diagnostics array to stdout,
+including failed runs.
 
 ## clean
 
@@ -68,6 +67,6 @@ failed ones included.
 npx ref clean [dir]
 ```
 
-Removes `.reference-ui/` and the `node_modules/@reference-ui/` links sync
-created. A sync that is still running, watch mode included, is stopped first.
-Run `ref sync` afterwards to generate them again.
+Stops any running `ref sync` process for the project, then removes
+`.reference-ui/` and the symlinks in `node_modules/@reference-ui/`. Run
+`ref sync` to regenerate them.

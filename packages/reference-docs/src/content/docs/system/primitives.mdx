@@ -11,8 +11,9 @@ import { PrimitiveCard } from './primitives-sections'
 
 # Primitives
 
-A primitive renders one HTML element and takes [style props](/style-props):
-`Div` renders a `div`, `Button` a `button`, `H2` an `h2`.
+Each primitive component renders a corresponding HTML element and accepts
+[style props](/style-props): `Div` renders a `<div>`, `Button` renders a
+`<button>`, and `H2` renders an `<h2>`.
 
 <Preview>
   <PrimitiveCard />
@@ -32,8 +33,8 @@ export function Card() {
 }
 ```
 
-`ref sync` generates the primitives into `@reference-ui/react`, typed against
-your tokens.
+`ref sync` generates primitives in `@reference-ui/react` with TypeScript types
+for your configured tokens.
 
 ## One component per element
 
@@ -45,15 +46,15 @@ or `HTMLInputElement`.
 
 | Prop | Description |
 | --- | --- |
-| Element props | Everything the element accepts: `id`, `className`, `aria-*`, `data-*`, event handlers, `children`, `ref`. They reach the DOM unchanged. |
-| Style props | CSS properties and conditions such as `_hover` as props. See [Style props](/style-props). They never reach the DOM. |
-| `css` | A style object, or an array of them, applied like [`css()`](/css). It wins over a style prop for the same property. |
-| `colorMode` | `'light'` or `'dark'`. Sets `data-color-mode` on the element and the primitives inside it. |
-| `variant` | Sets `data-variant` on the element, for `globalCss()` rules that select on it. |
+| Element props | Standard HTML attributes for the underlying tag (`id`, `className`, `aria-*`, `data-*`, event handlers, `children`, `ref`), forwarded to the DOM element. |
+| Style props | CSS properties and conditions such as `_hover`. Compiled to class names and stripped before rendering to the DOM. See [Style props](/style-props). |
+| `css` | A style object or array of style objects, compiled like [`css()`](/css). Overrides style props on the same element. |
+| `colorMode` | `'light'` or `'dark'`. Sets `data-color-mode` on the element and scopes colour mode tokens for its descendants. |
+| `variant` | Sets `data-variant` on the element for targeting in `globalCss()`. |
 
-Your `className` is added to the classes the primitive generates. Every
-primitive also carries a class named after its tag, such as `ref-div` or
-`ref-button`, which `globalCss()` rules can select.
+Any `className` you pass is appended to the generated utility classes. Every
+primitive also includes a tag class such as `ref-div` or `ref-button` that can
+be targeted in `globalCss()`.
 
 ```tsx
 <Div
@@ -67,10 +68,10 @@ primitive also carries a class named after its tag, such as `ref-div` or
 
 ## Colour mode
 
-`colorMode` sets the mode for an element and everything inside it, whatever
-the page uses. Modes nest. Tokens with [light and dark values](/tokens#light-and-dark-values)
-resolve in the nearest mode. [Light and dark](/light-and-dark) shows how to
-toggle it.
+`colorMode` sets the active mode for an element and its subtree, overriding the
+page mode. Modes can be nested, and tokens with
+[light and dark values](/tokens#light-and-dark-values) resolve against the
+nearest ancestor mode. See [Light and dark](/light-and-dark).
 
 Read the current mode with `useColorMode()`. It returns the nearest
 primitive's mode, or the `data-color-mode` of `html` or `body`:
@@ -86,27 +87,28 @@ function ModeLabel() {
 
 ## `data-layer`
 
-A primitive sets `data-layer` to your system's [`name`](/config#name).
-Inside a colour mode, a primitive skips it when its nearest primitive
-ancestor is from the same system. A primitive with `colorMode`, or one from
-another system, always sets it. The stylesheet uses this attribute to scope
-colour mode tokens per system. See [Cascade layers](/cascade-layers).
+Primitives set `data-layer` to your system's [`name`](/config#name) so the
+stylesheet can scope colour mode tokens per system. Inside a colour mode
+boundary, descendants from the same system omit `data-layer` to avoid redundant
+DOM attributes, while primitives that set `colorMode` or belong to another
+system always include it. See [Cascade layers](/cascade-layers).
 
 ## Your own components
 
-A component that passes style props on to a primitive takes style props
-too. `<Card padding="4r" />` compiles when `Card` spreads its props onto a
-`Div`. The compiler follows props through spreads, other components,
-higher-order components, re-exports and barrel files, so there is nothing to
-register. Class components are not followed: `ref sync` warns for one that
-takes style props.
+When a custom component forwards its props to a primitive, the compiler traces
+style props passed from parent to child automatically. For example,
+`<Card padding="4r" />` is extracted at build time when `Card` spreads its props
+onto a `<Div {...props} />`. The compiler traces props across component
+boundaries, spreads, higher-order components, re-exports, and barrel files
+without manual registration. Class components are not traced and trigger a
+warning during `ref sync` if passed style props.
 
-A prop the component keeps for itself, such as a `size` it turns into
-`data-size`, stays the component's own prop.
+Props consumed by the component itself (such as a `size` prop mapped to
+`data-size`) are treated as regular component props rather than style props.
 
-Components from a package, such as those in `@reference-ui/lib`, take style
-props when that package's system is in `extends` or `layers`. Otherwise
-`ref sync` warns and names the package.
+Components imported from an external package (such as `@reference-ui/lib`)
+accept style props when that package is listed in `extends` or `layers` in
+`ui.config.ts`. Otherwise, `ref sync` logs a warning naming the package.
 
 ## Types
 

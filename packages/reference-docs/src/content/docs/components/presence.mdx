@@ -13,8 +13,8 @@ import { PresenceDemo } from './presence-demo'
 
 # Presence
 
-Presence keeps an element mounted until its exit animation or transition
-finishes, then unmounts it when `present` turns `false`.
+Presence delays unmounting its child when `present` becomes `false` until any
+exit CSS animation, transition, or GSAP tween completes.
 
 <Preview>
   <PresenceDemo />
@@ -36,9 +36,10 @@ const fade = css({
 </Presence>
 ```
 
-Presence does not set `data-state`; the example sets it so the CSS can match
-the closed state. [Overlay](/overlay), [Popover](/popover) and
-[Collapsible](/collapsible) already use Presence, so don't wrap them in it.
+Presence does not set `data-state` itself; set a state attribute or class on
+the child to trigger your exit styles when `present` is `false`.
+[Overlay](/overlay), [Popover](/popover), and [Collapsible](/collapsible)
+already include Presence internally, so do not wrap them in another Presence.
 
 ## Import
 
@@ -52,17 +53,21 @@ import { Presence } from '@reference-ui/lib'
 
 ## Behaviour
 
-- Presence waits for CSS animations, CSS transitions and finite GSAP tweens
-  on the child element itself. Effects on its descendants don't count.
-- A keyframe animation delays unmount only if `animation-name` changes when
-  the element closes; infinite animations are ignored.
-- If no animation or transition runs, the child unmounts immediately. That
-  includes `prefers-reduced-motion` styles that remove the effect,
-  `display: none`, and a hidden browser tab.
-- Setting `present` back to `true` during an exit cancels it. The child
-  stays, and `onExitComplete` does not fire.
-- A Presence inside another one finishes its exit before the outer one
-  unmounts.
-- Presence only handles the exit. Write enter animations in CSS.
-- Presence renders no element of its own. It throws if the child is not a
-  single element, and on close if no DOM node received its `ref`.
+- Presence observes CSS animations, CSS transitions, and finite GSAP tweens on
+  the direct child element only; animations on nested descendants are not
+  tracked.
+- A CSS keyframe animation delays unmounting only when `animation-name`
+  changes as `present` becomes `false`. Infinite animations are ignored.
+- If no exit animation or transition is detected (including when
+  `prefers-reduced-motion` disables transitions, the element has
+  `display: none`, or the browser tab is hidden), the child unmounts
+  immediately.
+- Setting `present` back to `true` while an exit animation is running cancels
+  the exit: the child remains mounted and `onExitComplete` is not called.
+- Nested `Presence` components coordinate automatically so inner exit
+  animations complete before the outer `Presence` unmounts.
+- Presence manages exit unmounting only; define enter animations directly in
+  CSS.
+- Presence renders no wrapper element. It throws an error if `children` is not
+  a single React element, or if the child does not forward its `ref` to a DOM
+  node when closing.

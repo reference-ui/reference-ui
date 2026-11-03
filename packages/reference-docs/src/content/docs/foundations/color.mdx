@@ -3,7 +3,7 @@ title: Color
 section: Foundations
 order: 20
 slug: color
-description: Lib's colour palette, tones, semantic tokens and light and dark mode.
+description: Color palette, opacity tones, semantic tokens, and light and dark mode in @reference-ui/lib.
 ---
 
 import { IntensityGrid, RoleSpecimens, ShadesAndTones } from './color-sections'
@@ -12,17 +12,15 @@ import { PaletteDemo } from './palette-demo'
 
 # Color
 
-Lib ships a colour palette, four tones and a set of semantic tokens for light
-and dark mode.
-
-All three work in any colour prop: `bg="blue.500"`, `bg="blue.500/medium"`,
-`color="design.text.base"`.
+`@reference-ui/lib` provides a color palette, four opacity tones, and semantic
+tokens for light and dark mode. All three work in any color prop, such as
+`bg="blue.500"`, `bg="blue.500/medium"`, or `color="design.text.base"`.
 
 ## Palette
 
-The palette has 19 families. Each is a ramp of 11 shades: `50`, `100`, every
-hundred to `900`, then `950`. `50` is the lightest and `950` the darkest. Every
-shade is an `oklch()` colour, and it is the same in light and dark mode.
+The palette contains 19 color families, each with 11 shades from `50`
+(lightest) through `950` (darkest) in `oklch()`. Palette shades have fixed
+values across light and dark mode.
 
 ```tsx
 import { Div, P } from '@reference-ui/react'
@@ -34,8 +32,8 @@ import { Div, P } from '@reference-ui/react'
 
 ### Neutrals
 
-`slate` and `gray` are the neutrals. Most of lib's surfaces, borders and text
-use `gray`.
+`slate` and `gray` provide neutral scales. Most default surfaces, borders, and
+text tokens use `gray`.
 
 <PaletteDemo group="neutrals" />
 
@@ -49,8 +47,8 @@ use `gray`.
 
 ## Tones
 
-A tone is a shade at a named strength, written `shade/tone`. The tone mixes
-the shade with transparency, so it blends with the background in both light
+A tone applies a named opacity preset to a palette shade using `shade/tone`
+syntax, allowing the color to blend with the underlying surface in both light
 and dark mode.
 
 <ShadesAndTones />
@@ -65,8 +63,8 @@ import { Div } from '@reference-ui/react'
 <Div bg="blue.500/medium" />
 ```
 
-Each tone defines two opacity levels: a lighter surface amount for backgrounds
-and fills, and a stronger line amount so borders and text stay legible.
+Each tone defines two opacity levels: a lower surface opacity for backgrounds
+and fills, and a higher line opacity so borders and text remain legible.
 
 | Tone | Surface | Line |
 | --- | --- | --- |
@@ -77,20 +75,22 @@ and fills, and a stronger line amount so borders and text stay legible.
 
 <IntensityGrid />
 
-The prop determines which amount a tone uses. `border*` and `outline*` props,
-`color`, text decoration, strokes and shadows use the line amount; every other
-colour prop, including `bg` and `fill`, uses the surface amount.
+The CSS property determines which opacity level is used. `border*` and
+`outline*` props, `color`, text decoration, strokes, and shadows use the line
+opacity; all other color props, including `bg` and `fill`, use the surface
+opacity.
 
 <RoleSpecimens />
 
-Start with `medium`. Use `firm` or `strong` for emphasis, and `ghost` for
-subtle fills. For body text, use a shade such as `blue.700`, not a tone.
+Use `medium` as a default, `firm` or `strong` for stronger contrast, and `ghost`
+for subtle fills. For body text, use a solid shade such as `blue.700` rather
+than a translucent tone.
 
 ## Semantic tokens
 
-Semantic tokens describe where a colour is used rather than its hue, with
-separate values for light and dark mode. Lib's components use these tokens, and
-so can your styles.
+Semantic tokens map UI roles such as backgrounds, text, borders, and accents to
+palette shades with dedicated light and dark mode values. Both library
+components and your own styles can reference them.
 
 | Token | Light | Dark |
 | --- | --- | --- |
@@ -119,21 +119,20 @@ import { Div, P } from '@reference-ui/react'
 </Div>
 ```
 
-Lib also defines `ui.*`, one group per element, such as `ui.link.default`,
-`ui.button.hover` and `ui.focus.ring`. Lib's primitives and components style
-themselves with these. Prefer `design.*` in your own code.
-
-`text.*` (`text.primary`, `text.secondary` and others) is also defined, though
-lib's components do not use it. Prefer `design.text.*`.
+`@reference-ui/lib` also defines component-scoped `ui.*` tokens (such as
+`ui.link.default`, `ui.button.hover`, and `ui.focus.ring`) for styling built-in
+primitives and components, as well as legacy `text.*` aliases (`text.primary`,
+`text.secondary`). Prefer `design.*` and `design.text.*` in application styles.
 
 ## Light and dark mode
 
-Light mode is the default. Dark mode applies inside an element that carries
-`data-color-mode="dark"`. Lib's tokens don't read the operating system's
-`prefers-color-scheme` setting: your app picks the mode.
+Light mode is active by default, and dark mode applies inside any element with
+`data-color-mode="dark"`. Token values are controlled by `data-color-mode`
+rather than a `prefers-color-scheme` media query, so your application controls
+when dark mode is active.
 
-Set the mode for a subtree with the `colorMode` prop on any primitive. The
-token names stay the same and only their values change.
+Pass the `colorMode` prop to any primitive to scope a color mode to that
+subtree:
 
 <ColorModeDemo />
 
@@ -149,10 +148,10 @@ To switch the whole page, set `colorMode` on your root primitive.
 [Light and dark](/light-and-dark) covers following the system setting and adding a
 toggle, and [Server-side rendering](/ssr) covers setting the mode from the request.
 
-Only semantic tokens change between modes. Shades stay fixed, while tones
-blend with the surface behind them.
+Only semantic tokens switch values between light and dark mode; palette shades
+remain fixed, and tones blend with the background behind them.
 
 ## Related
 
 - [Tokens](/tokens): define colours, tones and light and dark values.
-- [Theming](/theming): replace lib's colours with your own.
+- [Theming](/theming): replace `@reference-ui/lib`'s colours with your own.

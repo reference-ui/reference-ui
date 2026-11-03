@@ -4,7 +4,7 @@ section: Components
 group: Collections
 order: 150
 slug: listbox
-description: A list of options on the page that the user can pick one or more of.
+description: An inline list of options supporting single or multiple selection.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -13,8 +13,8 @@ import { ListboxDemo, ListboxMultipleDemo } from './listbox-demo'
 
 # Listbox
 
-Listbox shows a list of options on the page for single or multiple selection.
-The arrow keys move between options, and typing jumps to the next match.
+Listbox renders an inline list of options for single or multiple selection,
+with arrow-key navigation and typeahead search.
 
 <Preview>
   <ListboxDemo />
@@ -38,9 +38,9 @@ export function FrameworkList() {
 }
 ```
 
-Listbox is controlled: pass `value` and update it in `onChange`. It is
-always visible. For a list in a popup, use [Combobox](/combobox), which
-uses Listbox for its options.
+Listbox is always controlled and rendered inline. Pass `value` and update it in
+`onChange`. For a popup option list anchored to an input or button, use
+[Combobox](/combobox).
 
 ## Import
 
@@ -49,6 +49,9 @@ import { Listbox } from '@reference-ui/lib'
 ```
 
 ## Anatomy
+
+Compose Listbox from options, optional section groups, a header, and an
+empty-state message:
 
 ```tsx
 <Listbox>
@@ -64,8 +67,9 @@ import { Listbox } from '@reference-ui/lib'
 
 ### Multiple selection
 
-Set `selection="multiple"`. `value` is then an array, and activating an
-option adds or removes it.
+Set `selection="multiple"` to allow selecting more than one option. `value`
+becomes an array of selected values, and activating an option toggles its
+membership.
 
 <Preview>
   <ListboxMultipleDemo />
@@ -119,8 +123,8 @@ Render `Listbox.Empty` when there are no options. Its text defaults to
 
 ### Horizontal
 
-Set `orientation="horizontal"` to lay options out in a row and move with
-Left and Right.
+Set `orientation="horizontal"` to lay options out in a row and navigate with
+the Left and Right arrow keys.
 
 ```tsx
 <Listbox aria-label="Size" orientation="horizontal" value={size} onChange={setSize}>
@@ -132,10 +136,10 @@ Left and Right.
 
 ### Virtualized lists
 
-For long lists, render only the visible rows with your own virtualizer and
-pass `virtual`. `items` describes every option, mounted or not, and
-`scrollToIndex` brings a row into view. Give each mounted option its
-`index` in `items`.
+For large datasets, render only the visible rows with a virtualizer and pass
+the `virtual` prop. `items` provides the full option metadata for both mounted
+and unmounted rows, and `scrollToIndex` scrolls a target index into view. Pass
+each mounted option its corresponding `index` in `items`.
 
 ```tsx
 <Listbox
@@ -152,9 +156,10 @@ pass `virtual`. `items` describes every option, mounted or not, and
 </Listbox>
 ```
 
-Each item is `{ value, textValue, disabled? }`. A mounted option's `value`
-and `disabled` must match its item, or Listbox throws. Keyboard navigation
-and typeahead run over all items.
+Each entry in `items` has the shape `{ value, textValue, disabled? }`. A
+mounted option's `value` and `disabled` props must match its entry in `items`,
+or Listbox throws an error. Keyboard navigation and typeahead operate across
+the full `items` array.
 
 ## API reference
 
@@ -164,12 +169,13 @@ Renders a `div` with `role="listbox"`. Takes `div` props and style props.
 
 <Reference name="ListboxProps" headingLevel={4} />
 
-`selection` picks the mode. With `selection="multiple"`, `value` is an array
-and `onChange` receives the next array; with the default `'single'`, both use
-one value or `null`.
+`selection` sets the selection mode. When set to `"multiple"`, `value` and
+`onChange` use an array of values; with the default `"single"`, they use a
+single value or `null`.
 
-Option values narrow to their literal types, so `onChange` is typed by the
-values you pass. A `value` that matches no option selects nothing.
+Option values narrow to their string literal types, so `onChange` is inferred
+from the `value` prop. A `value` that does not match any option leaves all
+options unselected.
 
 ### Listbox.Option
 
@@ -214,8 +220,8 @@ selected option, or on the first enabled option when none is selected.
 | Letters | Focus the next option whose text starts with the typed characters. |
 
 - Moving focus never changes the selection.
-- In single mode, activating the selected option does nothing; the user
-  cannot clear the selection.
+- In single-selection mode, activating an already selected option is a no-op
+  and does not clear the selection.
 - Space typed during a typeahead search is part of the search and does not
   select.
 

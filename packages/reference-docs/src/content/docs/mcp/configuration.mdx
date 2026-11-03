@@ -3,13 +3,14 @@ title: Configuration
 section: MCP
 order: 30
 slug: mcp-configuration
-description: Choose what the MCP server shows your agent, and how it runs.
+description: Configure the Reference UI MCP server in ui.config.ts and via CLI flags.
 ---
 
 # Configuration
 
-Set what the server shows in `ui.config.ts`, and how it runs with
-command-line options.
+Configure which components and icons the MCP server exposes in `ui.config.ts`,
+and control its transport and project path with command-line flags or
+environment variables.
 
 ## Config options
 
@@ -35,8 +36,8 @@ export default defineConfig({
 | `mcp.include` | None | Packages and files to scan alongside your own source. |
 | `mcp.exclude` | None | Components and files to leave out. |
 
-`use_reference_library` and `use_reference_icons` are accepted as the same
-flags.
+Snake-case aliases (`use_reference_library` and `use_reference_icons`) are also
+accepted.
 
 The server reads these options when it builds its model. Restart the server
 after changing them.
@@ -59,7 +60,7 @@ scans only your own source files.
 | Option | Default | Description |
 | --- | --- | --- |
 | `[project]` | None | The project to serve, as a path. |
-| `--project <path>` | None | The same, as an option. Wins over the positional path. |
+| `--project <path>` | None | Project directory to serve. Takes precedence over the positional `[project]` argument. |
 | `--transport <stdio\|http>` | `stdio` | Transport protocol (`stdio` or `http`). |
 | `--http` | None | Shorthand for `--transport http`. |
 | `--host <host>` | `127.0.0.1` | The HTTP host. |
@@ -77,19 +78,19 @@ Over HTTP the server answers `POST` requests at `/mcp`.
 | `REF_REGISTRY_PATH` | Where the project registry lives. Defaults to `~/.reference-ui/registry.json`. |
 | `REF_DEBUG` | Print debug logs to stderr. `DEBUG` works too. |
 
-## Choosing a project
+## Project resolution
 
-Each session works on one active project. A project you pass with
-`--project` or `REF_PROJECT` is used even when it isn't synced, so your agent
-gets the sync message. Otherwise the server picks the first synced project it
-finds, in this order:
+Each MCP session operates on one active project. If you explicitly specify a
+project via `--project` or `REF_PROJECT`, the server selects it even if it has
+not been synced yet (returning a notice to run `ref sync`). Otherwise, the
+server selects the first synced project it finds in this order:
 
-1. The folder it was started in.
-2. A parent folder with a `ui.config.ts`.
-3. A workspace package with a `ui.config.ts`, from `pnpm-workspace.yaml` or
-   the `workspaces` field in `package.json`, first by path.
-4. A project from the registry. The most recently used wins.
+1. The current working directory.
+2. An ancestor directory containing `ui.config.ts`.
+3. A workspace package containing `ui.config.ts` (discovered from
+   `pnpm-workspace.yaml` or `package.json#workspaces`, ordered by path).
+4. The most recently used project recorded in `~/.reference-ui/registry.json`.
 
-A project selected with `select_project` is added to the registry, so other
-sessions can find it. Your agent can switch projects with `select_project`, or
-pass `project` to a single tool call. See [Tools](/mcp-tools).
+Selecting a project with `select_project` records it in the registry for future
+sessions. Agents can switch the active project with `select_project` or pass a
+`project` path to an individual tool call (see [Tools](/mcp-tools)).

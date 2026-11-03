@@ -4,7 +4,7 @@ section: Components
 group: Building blocks
 order: 250
 slug: roving-focus
-description: Make a group of controls one Tab stop and move between them with the arrow keys.
+description: Manages a roving tabIndex across a group of controls for arrow-key navigation.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -13,9 +13,9 @@ import { RovingFocusDemo } from './roving-focus-demo'
 
 # RovingFocus
 
-RovingFocus makes a group of controls one Tab stop and moves focus between
-them with the arrow keys. Use it for toolbars, toggle groups and grids you
-build yourself.
+RovingFocus makes a group of controls a single Tab stop and moves focus between
+items with the arrow keys. Use it when building custom composite widgets such
+as toolbars, toggle groups, and grids.
 
 <Preview>
   <RovingFocusDemo />
@@ -37,7 +37,8 @@ import { RovingFocus } from '@reference-ui/lib'
 </RovingFocus.Root>
 ```
 
-[Menu](/menu), [Menubar](/menubar) and [Tabs](/tabs) are built on it.
+[Menu](/menu), [Menubar](/menubar), and [Tabs](/tabs) use `RovingFocus`
+internally.
 
 ## Import
 
@@ -57,32 +58,38 @@ import { RovingFocus } from '@reference-ui/lib'
 </RovingFocus.Root>
 ```
 
-Root and Item each take one element child and add their behaviour to it.
-Neither renders a wrapper. Other props, such as event handlers, ARIA
-attributes and style props, pass through to the child, and a `ref` reaches it.
+`RovingFocus.Root` and `RovingFocus.Item` each require a single React element
+child and merge their props and refs directly onto it without rendering an
+extra wrapper DOM element.
 
 ## Props
 
 ### RovingFocus.Root
 
+Wraps the composite container element and configures orientation, looping, and
+typeahead behavior.
+
 <Reference name="RovingFocusRootProps" headingLevel={4} />
 
 ### RovingFocus.Item
+
+Wraps each focusable control in the group and manages its `tabIndex` and
+keyboard handlers.
 
 <Reference name="RovingFocusItemProps" headingLevel={4} />
 
 ## Behaviour
 
-- The first enabled item is the Tab stop until another item takes focus.
-  Tab back into the group lands on the last focused item.
+- The first enabled item holds the Tab stop until another item receives focus.
+  Tabbing back into the group restores focus to the most recently focused item.
 - Clicking an item makes it the Tab stop without moving focus.
-- Items that are natively disabled, `aria-disabled`, hidden or
-  `display: none` are skipped as well as those with `disabled`.
-- Horizontal arrows reverse when the item's text direction is right to left.
-- With `orientation="both"`, items group into rows by position on screen.
-  Up and Down move to the nearest item in the next row.
-- Typeahead ignores keys typed into inputs, text areas and editable
-  content.
+- Items with `disabled`, `aria-disabled`, `hidden`, or `display: none` are
+  skipped during keyboard navigation.
+- Horizontal arrow keys reverse automatically in right-to-left layouts.
+- With `orientation="both"`, items are grouped into rows by their screen
+  coordinates, and Up and Down arrow keys move to the nearest item in the
+  adjacent row.
+- Typeahead ignores keys typed into inputs, text areas, and editable content.
 
 ## Accessibility
 

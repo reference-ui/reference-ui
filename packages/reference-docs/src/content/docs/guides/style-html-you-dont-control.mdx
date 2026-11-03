@@ -9,9 +9,9 @@ description: Style Markdown, CMS and other injected HTML with global rules and y
 
 # Style HTML you don't control
 
-Rendered Markdown, CMS content and `dangerouslySetInnerHTML` output arrive as
-plain elements you can't put props or classes on. Style them with
-`globalCss()` rules scoped under one wrapper element.
+Rendered Markdown, CMS content, and `dangerouslySetInnerHTML` output produce
+raw HTML elements without style props or generated classes. You can style them
+by scoping `globalCss()` rules under a wrapper element.
 
 <Step n={1}>Wrap the content</Step>
 
@@ -31,8 +31,8 @@ export function Post({ html }: { html: string }) {
 }
 ```
 
-The children need no classes. With a data attribute such as `data-prose`,
-key the rules on `'[data-prose]'` instead of `'.prose'`.
+The inner elements do not need class names. You can also target a data attribute
+such as `'[data-prose]'` instead of `'.prose'`.
 
 <Step n={2}>Scope rules under the wrapper</Step>
 
@@ -65,15 +65,17 @@ globalCss({
 })
 ```
 
-`'& h2'` compiles to `.prose h2`, scoping the rule to content inside the
-wrapper. Values work as in `css()`: token names, `{…}` references inside a
-longer value, and rhythm units such as `4r`. The colours here are lib's
-[semantic tokens](/color#semantic-tokens) and follow light and dark mode.
+`'& h2'` compiles to `.prose h2`, scoping the rule to elements inside the
+wrapper. Property values support the same syntax as `css()`: token names, `{…}`
+token references in compound values, and rhythm units such as `4r`. The
+[semantic tokens](/color#semantic-tokens) used above automatically adapt to
+light and dark mode.
 
-<Step n={3}>Set the density</Step>
+<Step n={3}>Adjust scale and density</Step>
 
-Every `r` value is a multiple of `--spacing-root`. Set it on the wrapper to
-scale the whole article's type and spacing together:
+Because every `r` value is a multiple of `--spacing-root`, overriding
+`--spacing-root` on the wrapper proportionally scales all rhythm-based font
+sizes and spacing inside it:
 
 ```ts
 globalCss({
@@ -83,8 +85,8 @@ globalCss({
 
 ## Respond to the container
 
-An `@container` key inside a rule follows the width of the nearest container,
-as style props do:
+Use a nested `@container` rule to adjust styles based on the nearest container's
+width:
 
 ```ts
 globalCss({
@@ -100,16 +102,17 @@ globalCss({
 Breakpoint keys such as `md` also work in `globalCss()`, where they compile to
 viewport `@media` queries. See [Global CSS](/global-css#breakpoints).
 
-## Where the rules sit
+## Cascade layer precedence
 
-These rules go in the `global` layer, below recipes and utilities. A style
-prop on the wrapper, such as `maxWidth="70ch"` above,
-wins over the global rules with no `!important`. See
+`globalCss()` rules are placed in the `global` layer, below recipes and
+utilities. Style props on the wrapper (such as `maxWidth="70ch"` above) take
+precedence over `globalCss()` rules without `!important`. See
 [Cascade layers](/cascade-layers).
 
-Lib's [element styles](/element-styles) target the `ref-` classes its primitives render, so
-injected HTML takes only your rules and the [reset](/global-css#the-reset).
-Inline `code` is the exception: lib styles every `code` element.
+Because `@reference-ui/lib`'s [element styles](/element-styles) target `ref-*`
+primitive classes rather than bare HTML tags, injected HTML only inherits the
+[CSS reset](/global-css#the-reset) and your scoped rules (with the exception of
+inline `code`, which targets all `<code>` elements).
 
 ## Further reading
 

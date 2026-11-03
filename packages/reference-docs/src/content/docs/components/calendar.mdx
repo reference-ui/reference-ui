@@ -13,8 +13,8 @@ import { CalendarDemo, CalendarRangeDemo } from './calendar-demo'
 
 # Calendar
 
-Calendar is a month grid for picking a date, a date range, a month or a
-year. Values are ISO strings, never `Date` objects.
+Calendar renders a month grid for selecting a single date, date range, month,
+or year. Values use ISO strings rather than `Date` objects.
 
 <Preview>
   <CalendarDemo />
@@ -71,17 +71,18 @@ import {
 Without children, Calendar renders this default layout. Pass any part as a
 child to customize it; omitted parts use their defaults.
 
-The grid, the months and the years are three views of one calendar, and one
-shows at a time. Pressing `Calendar.Month` or `Calendar.Year` in the header
-switches to that view. Picking a month or year there moves the grid and
-switches back.
+The day grid, month picker, and year picker are three views within a single
+calendar, with one visible at a time. Clicking `Calendar.Month` or
+`Calendar.Year` in the header switches to that view; selecting a month or year
+updates the visible month and returns to the day grid.
 
 ## Examples
 
 ### Range
 
-Set `mode="range"`. The first click sets the start, and the second sets the
-end. Clicking a date before the start swaps the two.
+Set `mode="range"` to select a date range. The first click sets the start
+date and the second sets the end date. Selecting a date earlier than the
+start date swaps the two.
 
 <Preview>
   <CalendarRangeDemo />
@@ -93,14 +94,14 @@ const [stay, setStay] = useState<DateRangeValue | null>(null)
 <Calendar mode="range" value={stay} onChange={setStay} locale="en-GB" />
 ```
 
-After the first click the value is `{ start, end: null }`. While the end is
-open, hovering or focusing a day previews the range. Selecting a range across
-an unavailable date is ignored, keeping the current start date.
+After the first click, the value is `{ start, end: null }`. Before the end
+date is selected, hovering or focusing a day previews the range. Selecting a
+range across an unavailable date is ignored, keeping the current start date.
 
 ### Month or year
 
-`mode="month"` picks a `'YYYY-MM'` month and `mode="year"` a `'YYYY'` year.
-Calendar opens on the months or years view.
+Set `mode="month"` to select a `'YYYY-MM'` month or `mode="year"` to select a
+`'YYYY'` year. Calendar opens directly in the corresponding view.
 
 ```tsx
 const [month, setMonth] = useState<ISOMonth | null>(null)
@@ -110,8 +111,8 @@ const [month, setMonth] = useState<ISOMonth | null>(null)
 
 ### Limits
 
-`min` and `max` disable the dates outside them. `isDateUnavailable` blocks
-single dates.
+Use `min` and `max` to disable dates outside a range, and `isDateUnavailable`
+to mark specific dates as unavailable.
 
 ```tsx
 const isWeekend = (date: ISODate) => [0, 6].includes(new Date(date).getUTCDay())
@@ -126,14 +127,15 @@ const isWeekend = (date: ISODate) => [0, 6].includes(new Date(date).getUTCDay())
 />
 ```
 
-A date outside `min` and `max` is disabled and skipped by the arrow keys. An
-unavailable date can still be focused, but it can't be selected.
+Dates outside `min` and `max` are disabled and skipped during arrow-key
+navigation. Unavailable dates remain focusable so keyboard users can navigate
+past them, but cannot be selected.
 
 ### Custom days
 
-`Calendar.Days` takes a function that is called for each date with its
-state. It must return one `Calendar.Day` with the same `date`. Selection,
-focus and ARIA stay with Calendar.
+Pass a render function to `Calendar.Days` to customize each cell based on its
+state. The function must return a `Calendar.Day` with the matching `date`
+prop; Calendar continues to manage selection, focus, and ARIA attributes.
 
 ```tsx
 <Calendar value={date} onChange={setDate} locale="en-GB">
@@ -150,14 +152,15 @@ focus and ARIA stay with Calendar.
 </Calendar>
 ```
 
-To change only the content of each day, pass the `Day` prop instead:
-`Day={(date, state) => node}`. Return `null` to keep the day number.
+To customize only the inner content of each day button, pass the `Day` prop
+on Calendar instead: `Day={(date, state) => node}`. Return `null` to fall
+back to the default day number.
 
 ### Server rendering
 
-Calendar marks today with the browser's date after it mounts, so the server
-renders no marker. Pass `today` to render the same month and marker
-everywhere:
+By default, Calendar determines today's date in the browser after mounting, so
+no today marker is rendered on the server. Pass `today` to render a consistent
+initial month and today marker across server and client:
 
 ```tsx
 <Calendar value={date} onChange={setDate} locale="en-GB" today="2026-10-17" />
@@ -167,11 +170,12 @@ everywhere:
 
 ### Calendar
 
-Contains the parts. Renders a `div` and takes its props and style props.
+The root container. Renders a `div` and accepts standard `div` props and style
+props.
 
 <Reference name="CalendarProps" headingLevel={4} />
 
-`value` and `onChange` follow `mode`:
+The types of `value` and `onChange` depend on `mode`:
 
 | Mode | `value` type | Format |
 | --- | --- | --- |
@@ -180,13 +184,15 @@ Contains the parts. Renders a `div` and takes its props and style props.
 | `month` | `ISOMonth \| null` | `'2026-10'` |
 | `year` | `ISOYear \| null` | `'2026'` |
 
-`onChange` is never called with `null`, and picking the current value again
-does not call it. Without `month`, the visible month follows `value`, then
-`today`, then the current month. With `month`, Calendar only calls
-`onMonthChange` and you move the month.
+`onChange` is never called with `null`, and re-selecting the current value
+does not trigger it. When `month` is uncontrolled, the initial visible month
+defaults to `value`, then `today`, then the current system month. When `month`
+is controlled, Calendar calls `onMonthChange` instead of updating the visible
+month internally.
 
-An invalid prop, such as a malformed date, a missing `locale` or `min`
-after `max`, renders nothing and logs one warning in development.
+If props are invalid (such as a malformed date string, a missing `locale`, or
+`min` after `max`), Calendar renders nothing and logs a warning in
+development.
 
 | Data attribute | Values |
 | --- | --- |
@@ -197,30 +203,30 @@ after `max`, renders nothing and logs one warning in development.
 
 | Part | Renders | Description |
 | --- | --- | --- |
-| `Calendar.Header` | `div` | The row above the grid. |
-| `Calendar.PrevButton` | `button` | Moves to the previous month. Its label names that month. Defaults to `‹`. |
-| `Calendar.NextButton` | `button` | Moves to the next month. Defaults to `›`. |
-| `Calendar.Heading` | `div` | The visible month and year. Children replace the text. |
-| `Calendar.Month` | `button` | Shows the months view. Pressed while it is open. |
-| `Calendar.Year` | `button` | Shows the years view. Pressed while it is open. |
+| `Calendar.Header` | `div` | Header container above the grid. |
+| `Calendar.PrevButton` | `button` | Navigates to the previous month, with an accessible label naming that month. Defaults to `‹`. |
+| `Calendar.NextButton` | `button` | Navigates to the next month, with an accessible label naming that month. Defaults to `›`. |
+| `Calendar.Heading` | `div` | Displays the visible month and year. Passing children replaces the default text. |
+| `Calendar.Month` | `button` | Toggles the months view. Sets `aria-pressed` while that view is active. |
+| `Calendar.Year` | `button` | Toggles the years view. Sets `aria-pressed` while that view is active. |
 
-The previous and next buttons are disabled outside the days view, and when
-the month they lead to has no selectable date.
+The previous and next buttons are disabled outside the days view, or when the
+adjacent month contains no selectable dates.
 
 ### Calendar.Grid
 
-The day table. Renders a `table` with `role="grid"`, labelled by the
-heading unless you pass `aria-label` or `aria-labelledby`. Its children can
-only be `Calendar.Weekdays` and `Calendar.Days`.
+Renders the day grid as a `table` with `role="grid"`, labelled by the
+heading unless you provide `aria-label` or `aria-labelledby`. Only
+`Calendar.Weekdays` and `Calendar.Days` are valid children.
 
 ### Calendar.Weekdays
 
-The weekday names, ordered by the locale. Renders a `thead` and takes no
-children.
+Renders a `thead` containing the locale-ordered weekday headers. Does not
+accept children.
 
 ### Calendar.Days
 
-The day rows. Renders a `tbody`.
+Renders the `tbody` containing the week rows.
 
 <Reference name="CalendarDaysProps" headingLevel={4} />
 
@@ -230,12 +236,12 @@ The day rows. Renders a `tbody`.
 
 ### Calendar.Day
 
-One day. Renders a `button`.
+Renders an individual day cell as a `button`.
 
 <Reference name="CalendarDayProps" headingLevel={4} />
 
-Your styles, event handlers and ref apply. Calendar keeps `id`,
-`tabIndex`, `disabled` and the ARIA attributes.
+Custom styles, event handlers, and refs are merged onto the button, while
+Calendar controls `id`, `tabIndex`, `disabled`, and ARIA attributes.
 
 | Data attribute | Present when |
 | --- | --- |
@@ -247,27 +253,29 @@ Your styles, event handlers and ref apply. Calendar keeps `id`,
 | `[data-outside-month]` | The date belongs to the previous or next month. |
 | `[data-today]` | The date is today. |
 | `[data-disabled]` | Outside `min` and `max`. |
-| `[data-unavailable]` | Refused by `isDateUnavailable`. |
-| `[data-focused]` | The day that takes focus in the grid. |
+| `[data-unavailable]` | Marked unavailable by `isDateUnavailable`. |
+| `[data-focused]` | The day that receives focus when tabbing into the grid. |
 
 ### Calendar.Months
 
-Twelve month buttons in three columns. Renders a `div`. In `day` and `range`
-mode a month moves the grid; in `month` mode it is the value.
+Renders a three-column `div` of twelve month buttons. Selecting a month
+navigates the day grid in `day` and `range` modes, or commits the value in
+`month` mode.
 
 ### Calendar.Years
 
-Year buttons in three columns. Renders a `div`. It lists ten years on each
-side of the visible year, or the years from `min` to `max` when both are
-set.
+Renders a three-column `div` of year buttons. Displays a 21-year window
+centered on the visible year, or the full range between `min` and `max` when
+both are set.
 
 ## Accessibility
 
 The grid is labelled by the heading, and screen readers announce the new
 month after navigation. Each day button is labelled with its full date.
 
-Only one day is in the tab order. Moving with the keyboard changes focus and,
-when needed, the month. It never changes the value.
+Only one day is in the tab order at a time. Arrow-key navigation moves focus
+and switches months when crossing a month boundary, without changing the
+selected value.
 
 ### Keyboard interactions
 

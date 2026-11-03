@@ -4,18 +4,20 @@ section: Guides
 group: Styling
 order: 40
 slug: responsive-layouts
-description: Lay out a page that adapts to the space it has.
+description: Build responsive layouts using container queries and breakpoint objects.
 ---
 
 # Responsive layouts
 
-Responsive styles in Reference UI follow the width of the nearest container.
-A layout built this way adapts the same in a full page, a sidebar or a dialog.
+Responsive styles in Reference UI use CSS container queries, adapting to the
+width of the nearest container rather than the viewport. Components respond to
+their available width whether rendered in a full page, a sidebar, or a dialog.
 
-<Step n={1}>Check the page is a container</Step>
+<Step n={1}>Ensure the root container is defined</Step>
 
-The library makes `body` a container, so with `@reference-ui/lib` in
-`extends` there is nothing to do. Without it, add one rule:
+`@reference-ui/lib` sets `container-type: inline-size` on `body` by default. If
+your config does not extend `@reference-ui/lib`, define a root container in your
+global CSS:
 
 ```ts
 // src/theme/global.ts
@@ -26,8 +28,8 @@ globalCss({
 })
 ```
 
-Without a container, responsive styles never match. `ref sync` warns when
-your global CSS defines none.
+Container queries require an ancestor container to match; `ref sync` emits a
+warning if no container is defined in your global CSS.
 
 <Step n={2}>Change values at breakpoints</Step>
 
@@ -47,12 +49,12 @@ and each breakpoint applies from its width up:
 </Div>
 ```
 
-One column in narrow space, two from `md` (768px), four from `xl`
-(1280px). The full scale is on [Responsive](/responsive).
+This renders a single column by default, two columns from `md` (768px), and four
+columns from `xl` (1280px). See [Responsive](/responsive) for the full
+breakpoint scale.
 
-Write the narrow layout as `base` first, then add the breakpoints where it
-needs to change. `sm` means 640px and up, so it never targets the narrowest
-space.
+Define the narrowest layout under `base` and override it at larger breakpoints.
+Because `sm` starts at 640px, containers narrower than 640px only match `base`.
 
 <Step n={3}>Show and hide by width</Step>
 
@@ -63,13 +65,13 @@ Switch `display` between `none` and a layout value at a breakpoint:
 <Button display={{ md: 'none' }}>Menu</Button>
 ```
 
-To limit a style to one band of widths, use a range key such as `mdOnly` or
-`smToLg`. [Responsive](/responsive#target-a-range) lists them.
+To restrict a style to a specific width range, use a range key such as `mdOnly`
+or `smToLg` (see [Responsive](/responsive#target-a-range)).
 
-## Respond to a panel
+## Nested containers
 
-Mark any element with `container`, and responsive styles inside it follow
-that element's width instead of the page:
+Add the `container` prop to any primitive so responsive styles inside it
+measure that element's width instead of `body`:
 
 ```tsx
 <Div display="grid" gridTemplateColumns="16rem 1fr">
@@ -82,10 +84,11 @@ that element's width instead of the page:
 </Div>
 ```
 
-`ProfileCard` takes its narrow layout in the sidebar and its wide layout in
-the main column, from the same code.
+The same `ProfileCard` component renders its compact layout in the `16rem`
+sidebar and its expanded layout in the main column.
 
-To skip past nearer containers, name one and target it in `r`:
+To query a specific ancestor container instead of the nearest one, pass a
+container name to `container` and reference it in the `r` prop:
 
 ```tsx
 <Main container="content">

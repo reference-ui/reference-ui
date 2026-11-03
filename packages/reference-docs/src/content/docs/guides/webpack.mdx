@@ -4,21 +4,22 @@ section: Guides
 group: Integration
 order: 61
 slug: webpack
-description: Run Reference UI in a webpack app.
+description: Configure Reference UI in a webpack project.
 ---
 
 # webpack
 
-`ref sync` writes your stylesheet and packages to `.reference-ui/` before
-webpack runs. webpack reads them like any other package.
+`ref sync` generates the stylesheet and runtime packages in `.reference-ui/`
+before webpack starts, so webpack resolves them as standard packages without a
+custom webpack plugin.
 
 These steps start from a project where you have installed Reference UI and run
 `ref init`, as in [Getting started](/initialize).
 
 <Step n={1}>Add the scripts</Step>
 
-The dev script runs two commands side by side with `concurrently`, and
-`webpack serve` comes from `webpack-dev-server`. Install both:
+Use `concurrently` (or any process runner) to run `ref sync --watch` alongside
+`webpack-dev-server`:
 
 <Install packages="concurrently webpack-dev-server" dev />
 
@@ -33,13 +34,13 @@ Then add the scripts:
 }
 ```
 
-The first `ref sync` makes sure the generated packages exist before webpack
-starts. Any tool that runs two commands side by side can replace
-`concurrently`.
+Running `ref sync` first ensures the generated packages exist on disk before
+webpack starts.
 
-<Step n={2}>Handle CSS files</Step>
+<Step n={2}>Configure CSS loaders</Step>
 
-webpack needs a rule for `.css` imports. Install the two loaders:
+Ensure webpack is configured to handle `.css` imports with `style-loader` and
+`css-loader`:
 
 <Install packages="style-loader css-loader" dev />
 
@@ -60,7 +61,8 @@ module.exports = {
 }
 ```
 
-Keep your existing rules for TypeScript and HTML. Reference UI adds none.
+Keep your existing rules for TypeScript and HTML. No additional Reference UI
+loaders or plugins are needed.
 
 <Step n={3}>Import the stylesheet</Step>
 
@@ -73,10 +75,10 @@ import '@reference-ui/react/styles.css'
 
 ## Verify the setup
 
-1. Run `npm run dev`. The terminal shows the sync summary, then the webpack
-   dev server.
-2. Render a `Div` from `@reference-ui/react` and give it `padding="6r"`. A
-   resync line appears and the page picks up the padding.
-3. Run `npm run build`. Sync runs first, then webpack.
+1. Run `npm run dev`. `ref sync` outputs the initial build summary, and webpack
+   starts the dev server.
+2. Render `<Div padding="6r">` from `@reference-ui/react`. `ref sync --watch`
+   recompiles the stylesheet and webpack reloads the change.
+3. Run `npm run build` to run `ref sync` followed by `webpack`.
 
 [Sync](/sync) covers watch mode and its output in more detail.

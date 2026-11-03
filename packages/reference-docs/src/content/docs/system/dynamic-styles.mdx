@@ -11,21 +11,21 @@ description: Style from a value chosen at runtime, such as state, a prop or user
 
 # Dynamic styles
 
-`ref sync` extracts styles from your source files at build time without running
-your components. Values that only exist at runtime don't generate CSS on their
-own: instead, switch between static values in your source, or pass the runtime
-value through a CSS variable or `style`.
+`ref sync` extracts styles statically from your source files at build time
+without executing your components. Because arbitrary runtime values cannot be
+known ahead of time, you should either branch between static values in your
+source or pass dynamic values through a CSS custom property or inline `style`.
 
 <Info title="Coming from runtime CSS-in-JS">
-Libraries like Emotion turn style objects into CSS on every render. Reference
-UI generates the stylesheet once at build time, and your components switch
-between existing classes at runtime.
+Runtime CSS-in-JS libraries like Emotion serialize style objects into CSS during
+rendering. Reference UI compiles the stylesheet ahead of time, so components
+only toggle pre-compiled class names at runtime.
 </Info>
 
 ## Style from state
 
-Use a ternary or logical expression between static values. The compiler
-extracts both branches and state picks one at runtime:
+Use a ternary or logical expression with static values. The compiler extracts
+both branches at build time, and the active value is selected at runtime:
 
 ```tsx
 const [color, setColor] = useState('brand')
@@ -172,13 +172,13 @@ export default defineConfig({
 
 Keys are properties with an optional condition prefix, such as `'_hover:bg'`.
 Values are token names, or `'*'` for every token in that category. Unknown token
-names fail sync, and `'*'` on an untokenized property warns. See
-[Config](/config#staticcss).
+names cause `ref sync` to fail, and using `'*'` on a property without a token
+category logs a warning. See [Config](/config#staticcss).
 
 ## Keys and spreads
 
-Write property names out explicitly and only spread constant style objects in
-`css()`:
+Use static property names and only spread constant style objects defined in
+module scope:
 
 ```tsx
 // ❌ dynamic key or runtime spread
@@ -192,7 +192,8 @@ css({ ...card, borderRadius: 'md' })
 
 ## Missing styles at runtime
 
-In development, `css()` logs a console warning once when a property and value
-has no compiled class. The style still applies if another file or `staticCss`
-already compiled the same pair. See [Compiler](/compiler#supported-expressions)
-for all supported static expressions.
+In development, `css()` logs a one-time console warning when a property-value
+pair has no corresponding compiled class. If another file or `staticCss` already
+generated that class, it still applies. See
+[Compiler](/compiler#supported-expressions) for all supported static
+expressions.

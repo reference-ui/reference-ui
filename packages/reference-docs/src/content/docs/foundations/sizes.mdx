@@ -3,19 +3,17 @@ title: Sizes
 section: Foundations
 order: 70
 slug: sizes
-description: Lib's control height and icon sizes.
+description: Control height and icon size constants in @reference-ui/lib.
 ---
 
 # Sizes
 
-Lib ships one control height and three icon sizes. Lib's controls and menus
-share the control height, so a button, an input and a menu item line up in a
-row.
+`@reference-ui/lib` exports a shared control height and three icon sizes so
+buttons, inputs, and menu triggers align consistently when placed side by side.
 
-Sizes are written in `r`, the [spacing unit](/spacing): a multiplier of
-`--spacing-root`, which is `0.25rem` (4px at the browser's default font size).
-So `8.5r` is 8.5 × 4px = 34px. Sync turns it into
-`calc(8.5 * var(--spacing-root))`, and the browser computes the pixels.
+Sizes are expressed in `r`, the [rhythm unit](/spacing) (`1r` = `--spacing-root`,
+which defaults to `0.25rem` or 4px). `8.5r` compiles to
+`calc(8.5 * var(--spacing-root))` (34px at the default root size).
 
 ## Import
 
@@ -53,7 +51,8 @@ import { Div } from '@reference-ui/react'
 <Div height="8.5r" paddingBlock="0.75r" />
 ```
 
-`controlHeightPx` is the same height in pixels, for an inline `style`:
+Use `controlHeightPx` when an inline `style` or third-party prop requires a
+pixel string:
 
 ```tsx
 import { controlHeightPx } from '@reference-ui/lib'
@@ -69,14 +68,13 @@ import { controlHeightPx } from '@reference-ui/lib'
 | `base`, `md` | `'5r'` | 20px |
 | `large`, `lg` | `'6r'` | 24px |
 
-`iconSizes` holds these values under both spellings. `defaultIconSize` is
-`'5r'` (20px).
-
-The keys match the `size` prop on [icons](/icons), and `md` is the icons'
-default. A `5r` icon fits inside a `controlHeight` control.
+`iconSizes` includes both the short (`sm`, `md`, `lg`) and full (`small`,
+`base`, `large`) keys, matching the `size` prop on [icons](/icons).
+`defaultIconSize` is `'5r'` (20px, `md`), which fits inside a `controlHeight`
+control.
 
 ## Related
 
-- [Element styles](/element-styles): the base look of lib's form elements.
+- [Element styles](/element-styles): default styles for form primitives.
 - [Icons](/icons): the `size` prop.
 - [Spacing](/spacing): the `r` unit.

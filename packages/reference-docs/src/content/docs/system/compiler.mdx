@@ -4,7 +4,7 @@ section: System
 group: Build and output
 order: 215
 slug: compiler
-description: How sync reads your source, and which style values it can compile.
+description: How the compiler extracts styles at build time, and which expressions are supported.
 ---
 
 {/* Shape follows panda:styling/extraction-rules, tamagui:docs/core/compiler-tiers and stylex:learn/styling-ui/defining-styles#constraints. Facts from ATM-SITE-31, -44, -49, -51, -109, -110, CORE-SITE-07 and CORE-STATIC-01. */}
@@ -13,8 +13,8 @@ description: How sync reads your source, and which style values it can compile.
 
 `ref sync` statically analyzes your source files without running them and
 generates CSS for every style value it extracts. Values known only at runtime
-get no CSS on their own, unless another call site or `staticCss` already
-compiled the same property and value.
+are not compiled unless another call site or `staticCss` already generates the
+same property and value.
 
 ## How extraction works
 
@@ -154,11 +154,11 @@ css({ ...props.styles, padding: '4r' })
 An unresolved spread logs a warning, while static siblings like `padding`
 above still compile.
 
-### What happens then
+### Unextracted values
 
-- **Style props and `css()`:** the dynamic value gets no CSS. Set
-  `logs: ['compiler']` in `ui.config.ts` to list every unextracted expression
-  during sync.
+- **Style props and `css()`:** no CSS rule is generated for the dynamic value.
+  Set `logs: ['compiler']` in `ui.config.ts` to list every unextracted
+  expression during sync.
 - **In development:** the browser console warns once per missing `css()` value
   (`[reference-ui] css(): no compiled class for ...`) with its call site.
 - **Shared classes:** the style still applies if another file or `staticCss`

@@ -9,9 +9,9 @@ description: Apply styles on hover, in dark mode, at a breakpoint or under any s
 
 # Conditions
 
-A condition applies styles only when it matches: a state such as hover, an
-attribute, a colour mode or a media query. Named conditions start with `_`.
-The compiler wraps each one in the selector or at-rule listed on this page.
+Conditions apply styles under a specific state, attribute, colour mode, or
+media query. Named conditions start with `_` and compile to the selectors or
+at-rules listed on this page.
 
 ```tsx
 <Button
@@ -24,9 +24,9 @@ The compiler wraps each one in the selector or at-rule listed on this page.
 
 ## Use a condition
 
-On a [primitive](/primitives), a condition is a prop that takes a style
-object. The same key works in any style object: [`css()`](/css), the `css`
-prop, [recipes](/recipes) and [`globalCss()`](/global-css).
+On a [primitive](/primitives), pass a condition as a prop with a style
+object. The same condition keys work in [`css()`](/css), the `css`
+prop, [recipes](/recipes), and [`globalCss()`](/global-css).
 
 ```tsx
 import { css, recipe } from '@reference-ui/react'
@@ -63,20 +63,20 @@ globalCss({
 
 ## Conditions on one value
 
-To change a single property, key its value by condition. `base` is the value
-with no condition:
+To vary a single property across conditions, pass an object keyed by condition.
+Use `base` for the default unconditional value:
 
 ```tsx
 <Button color={{ base: 'ink', _hover: 'brand', _disabled: 'ink/40' }} />
 ```
 
-The keys are any named condition or breakpoint name. Each key takes a plain
-value, one level deep. To combine conditions, nest condition props instead.
+Keys can be any named condition or breakpoint. Values are one level deep; to
+combine multiple conditions, nest condition objects instead.
 
 ## Combine conditions
 
-Conditions nest. A nested style applies only when every condition around it
-matches:
+Conditions can be nested. A nested style applies only when all enclosing
+conditions match:
 
 ```tsx
 <Div
@@ -95,15 +95,16 @@ Breakpoint keys such as `md` nest the same way. See
 <Div p="2r" md={{ p: '4r', _hover: { p: '5r' } }} />
 ```
 
-Inside a pseudo-element condition, a state condition still applies to the
-element, and the pseudo-element stays last in the selector:
-`_before={{ _hover: { … } }}` writes `:is(:hover, [data-hover])::before`.
+When a state condition is nested inside a pseudo-element condition, the state
+applies to the element and the pseudo-element remains at the end of the
+selector: `_before={{ _hover: { … } }}` compiles to
+`&:is(:hover, [data-hover])::before`.
 
 ## Named conditions
 
-In each selector, `&` is the element's class. Most state conditions also
-match a `data-` or `aria-` attribute, so a script or a headless component can
-set the state.
+In the tables below, `&` represents the element's generated class. Most state
+conditions also match a corresponding `data-` or `aria-` attribute so headless
+components and custom scripts can trigger them.
 
 ### Interaction
 
@@ -185,8 +186,8 @@ set the state.
 
 ### Group and peer
 
-Group conditions style an element by the state of an ancestor. Mark the
-ancestor with the class `group` or the attribute `data-group`:
+Group conditions style an element based on the state of an ancestor marked with
+the `group` class or `data-group` attribute:
 
 ```tsx
 <Div className="group" p="4r">
@@ -196,15 +197,15 @@ ancestor with the class `group` or the attribute `data-group`:
 </Div>
 ```
 
-Peer conditions style an element by the state of a preceding sibling. Mark
-the sibling with the class `peer` or the attribute `data-peer`:
+Peer conditions style an element based on the state of a preceding sibling
+marked with the `peer` class or `data-peer` attribute:
 
 ```tsx
 <input className="peer" type="checkbox" />
 <Span _peerChecked={{ fontWeight: '600' }}>Remember me</Span>
 ```
 
-Each one wraps the matching state selector from the tables above:
+Each condition wraps the corresponding state selector from the tables above:
 
 | State | Group | Peer |
 | --- | --- | --- |
@@ -217,7 +218,7 @@ Each one wraps the matching state selector from the tables above:
 | expanded | `_groupExpanded` | `_peerExpanded` |
 | invalid | `_groupInvalid` | `_peerInvalid` |
 
-For example, `_groupHover` and `_peerHover` write:
+For example, `_groupHover` and `_peerHover` compile to:
 
 ```css
 &:is(:where(.group, [data-group]):is(:hover, [data-hover]) *)
@@ -233,10 +234,10 @@ For example, `_groupHover` and `_peerHover` write:
 | `_osLight` | `@media (prefers-color-scheme: light)` |
 | `_osDark` | `@media (prefers-color-scheme: dark)` |
 
-`_light` and `_dark` match when an ancestor's `colorMode` is in that mode, so
-they don't apply on the element that sets `colorMode`. `_osLight` and
-`_osDark` follow the operating system setting. See
-[Light and dark](/light-and-dark).
+`_light` and `_dark` match against an ancestor's `[data-color-mode]` attribute,
+so they do not match on the element that sets `colorMode` itself. `_osLight`
+and `_osDark` query the operating system preference via `prefers-color-scheme`.
+See [Light and dark](/light-and-dark).
 
 ### Media
 
@@ -264,9 +265,10 @@ Both match an ancestor's `dir` attribute.
 
 ## Other selectors and at-rules
 
-For a selector with no named condition, write it as a key in `css()`, the
-`css` prop, a recipe or `globalCss()`. A key that starts with `&` is relative
-to the element, and `&` can also sit later in the key to match an ancestor:
+For selectors without a named condition, write the selector string as a key in
+`css()`, the `css` prop, a recipe, or `globalCss()`. Use `&` to reference the
+current element, either at the start of the selector or after an ancestor
+selector:
 
 ```ts
 css({
@@ -287,10 +289,11 @@ css({
 })
 ```
 
-An at-rule key with no query, such as a bare `@supports`, adds no CSS.
+An at-rule key without a query (such as a bare `@supports`) is ignored and
+emits no CSS.
 
 ## Unknown conditions
 
-An unknown `_` key, such as a misspelt `_hovr`, adds no CSS, and `ref sync`
-warns. The `StyleConditionKey` type lists every named condition. See
-[Types](/types).
+An unknown `_` key (such as a typo like `_hovr`) is ignored and triggers a
+warning during `ref sync`. The `StyleConditionKey` type includes all valid
+named conditions. See [Types](/types).

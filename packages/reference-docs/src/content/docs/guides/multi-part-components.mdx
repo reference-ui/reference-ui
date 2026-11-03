@@ -4,7 +4,7 @@ section: Guides
 group: Styling
 order: 30
 slug: multi-part-components
-description: Style a component made of several parts, your own or another library's.
+description: Style multi-part components with slot recipes, data-slot selectors, and css().
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -12,12 +12,12 @@ import { CardPartsDemo } from './multi-part-components-demo'
 
 # Multi-part components
 
-Some components are more than one element. A card has a root, a title and a
-body, and one `size` prop should style every part.
+Many components render multiple elements, such as a card with a root, title,
+and body that all respond to a single `size` prop.
 
-A recipe with `slots` styles every part from one call: it returns one class
-per part. A `data-slot` attribute names a part, so a rule on another element
-can reach it.
+Slot recipes define styles for every part in one place and return an object
+mapping each slot name to its class name. Adding a `data-slot` attribute to
+each element also lets parent or global selectors target individual parts.
 
 ## Your own component
 
@@ -47,12 +47,12 @@ const card = recipe({
 })
 ```
 
-A part that a variant does not name, like `body` here, keeps its base styles.
+Slots omitted from a variant, such as `body` above, retain their base styles.
 
-<Step n={2}>Give each part its class</Step>
+<Step n={2}>Apply the slot classes</Step>
 
-Call the recipe once and pass each part its class. A `data-slot` on each part
-names it for the next step:
+Call the recipe once and pass the returned class names to each element, along
+with a `data-slot` attribute:
 
 ```tsx
 // src/components/Card.tsx
@@ -73,9 +73,8 @@ export function Card({ size = 'sm', heading, children, ...props }: CardProps) {
 
 <Step n={3}>Style a part from the root</Step>
 
-Some styles depend on another part's state. An `&` selector in the root's
-styles reaches a part by its `data-slot`. Here the title underlines while the
-card is hovered:
+To style a child part based on the root element's state, use a nested `&`
+selector targeting `data-slot`. Here, hovering the card underlines the title:
 
 ```tsx
 base: {
@@ -89,7 +88,7 @@ base: {
 },
 ```
 
-`Tree.Item` uses the same selector to draw its focus ring on its row:
+`Tree.Item` uses the same pattern to render its focus ring on the inner row:
 `'&:focus-visible > [data-slot="row"]'`.
 
 ### Usage
@@ -103,11 +102,11 @@ base: {
   <CardPartsDemo />
 </Preview>
 
-## A library component's parts
+## Styling library component parts
 
-A `data-slot` attribute is a stable selector, so `globalCss()` can restyle a
-part of a library component everywhere. A `Tree.Item` branch wraps its content
-in a `[data-slot="row"]` element:
+Because `data-slot` attributes provide stable selectors, you can use
+`globalCss()` to customize inner parts of library components across your app.
+For example, `Tree.Item` wraps its row content in `[data-slot="row"]`:
 
 ```ts
 // src/theme/global.ts
@@ -120,14 +119,14 @@ globalCss({
 })
 ```
 
-Your global CSS sits in a later [cascade layer](/cascade-layers) than the
-library's, so it wins. Inside your own system, a global rule sits below
-recipes and `css()` classes, so it does not override your own parts' styles.
+Your application's global CSS is placed in a later [cascade layer](/cascade-layers)
+than the library's, so your overrides take precedence over library defaults
+while still yielding to your own recipes and `css()` classes.
 
-## A headless library's parts
+## Styling headless components
 
-Each part of a headless component, such as Radix's, accepts `className`.
-Give each part a `css()` class:
+Headless component libraries such as Radix expose a sub-component for each part
+that accepts a `className` prop. Style each part with `css()`:
 
 ```tsx
 import { Accordion } from 'radix-ui'
@@ -162,15 +161,15 @@ export function Faq() {
 }
 ```
 
-Headless parts expose their state as data attributes, and named conditions
-such as `_open`, `_closed` and `_disabled` match them. See
+Named conditions such as `_open`, `_closed`, and `_disabled` match the
+`data-state` and `data-disabled` attributes rendered by headless libraries. See
 [Conditions](/conditions#disclosure-and-selection) for the full list.
 
 ## Further reading
 
 <LinkCards>
-  <LinkCard href="/recipes#slots" title="Slots">Every option of a recipe with slots.</LinkCard>
-  <LinkCard href="/build-a-component" title="Build a component">One element, one recipe.</LinkCard>
-  <LinkCard href="/global-css" title="Global CSS">Selectors, nesting and layers.</LinkCard>
-  <LinkCard href="/conditions" title="Conditions">Every named condition.</LinkCard>
+  <LinkCard href="/recipes#slots" title="Slots">Slot recipe configuration and compound variants.</LinkCard>
+  <LinkCard href="/build-a-component" title="Build a component">Build a single-element component with a recipe.</LinkCard>
+  <LinkCard href="/global-css" title="Global CSS">Selectors, nesting, and cascade layers.</LinkCard>
+  <LinkCard href="/conditions" title="Conditions">Built-in pseudo-class and data-attribute conditions.</LinkCard>
 </LinkCards>

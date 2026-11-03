@@ -4,7 +4,7 @@ section: Components
 group: Collections
 order: 180
 slug: tabs
-description: Shows one panel at a time, chosen from a list of tabs.
+description: Organizes content into multiple panels where one panel is visible at a time.
 ---
 
 import { Preview } from '../../../mdx/Preview'
@@ -13,7 +13,8 @@ import { TabsDemo, TabsPillDemo, TabsVerticalDemo } from './tabs-demo'
 
 # Tabs
 
-Tabs show one panel at a time, chosen from a list of tabs.
+Tabs organize content into separate views where only one panel is visible at a
+time.
 
 <Preview>
   <TabsDemo />
@@ -49,14 +50,14 @@ import { Tabs } from '@reference-ui/lib'
 </Tabs>
 ```
 
-`Tabs` renders no element of its own. Render one `Tabs.List`, and one
-`Tabs.Panel` for each `Tabs.Tab`, matched by `value`.
+`Tabs` renders no DOM element of its own. Pair each `Tabs.Tab` inside
+`Tabs.List` with a corresponding `Tabs.Panel` sharing the same `value`.
 
 ## Examples
 
 ### Controlled
 
-Pass `value` and `onChange` to control the selection.
+For controlled state, pass `value` and `onChange`.
 
 ```tsx
 const [tab, setTab] = React.useState('billing')
@@ -64,7 +65,7 @@ const [tab, setTab] = React.useState('billing')
 <Tabs value={tab} onChange={setTab}>…</Tabs>
 ```
 
-Without `value`, the first enabled tab starts selected.
+In uncontrolled mode, the first enabled tab is selected by default.
 
 ### Pill variant
 
@@ -80,8 +81,9 @@ Set `variant="pill"` for rounded pill tabs instead of an underline:
 
 ### Vertical
 
-Set `orientation="vertical"` to move between tabs with the Up and Down
-arrows. Lay the list and panels out side by side yourself.
+Set `orientation="vertical"` to stack tabs vertically and navigate between them
+with the Up and Down arrow keys. Wrap `Tabs` in a flex or grid container to
+arrange the tab list and panels side by side.
 
 <Preview>
   <TabsVerticalDemo />
@@ -104,9 +106,9 @@ arrows. Lay the list and panels out side by side yourself.
 
 ### Manual activation
 
-By default a tab is selected as soon as it gets focus. With
-`activation="manual"`, arrow keys only move focus, and `Enter` or `Space`
-selects.
+By default, moving focus to a tab with the arrow keys selects it immediately.
+Set `activation="manual"` so arrow keys only move focus and `Enter` or `Space`
+selects the focused tab.
 
 ```tsx
 <Tabs activation="manual">…</Tabs>
@@ -114,9 +116,9 @@ selects.
 
 ### Keeping panels mounted
 
-Inactive panels unmount their children. Set `keepMounted` on `Tabs`, or on
-one `Tabs.Panel`, to keep them mounted and hidden, so their state survives
-switching tabs.
+By default, inactive panels unmount their children. Set `keepMounted` on `Tabs`
+or on an individual `Tabs.Panel` to keep inactive panels mounted in the DOM
+(with `hidden`), preserving their local state across tab switches.
 
 ```tsx
 <Tabs.Panel value="billing" keepMounted>
@@ -124,13 +126,13 @@ switching tabs.
 </Tabs.Panel>
 ```
 
-### Your own variant
+### Custom variants
 
-`variant` also takes a name of your own. A name other than `line` or `pill`
-keeps the base styles, such as the focus ring and the disabled look, but
-none of the variant styles, so you style the list and tabs with
-`className`. The built-in recipes are exported
-as `tabsListRecipe` and `tabsTabRecipe`.
+Pass a custom string to `variant` (any value other than `"line"` or `"pill"`)
+to retain base structural and accessibility styles, such as focus rings and
+disabled states, without applying built-in indicator styles. You can then style
+the list and tabs via `className`. The built-in recipes are exported as
+`tabsListRecipe` and `tabsTabRecipe`.
 
 ```tsx
 <Tabs variant="underline">
@@ -145,13 +147,15 @@ as `tabsListRecipe` and `tabsTabRecipe`.
 
 ### Tabs
 
-Holds the selected value. Renders only its children.
+Manages the active tab selection and configuration. Renders no DOM element of
+its own.
 
 <Reference name="TabsProps" headingLevel={4} />
 
 ### Tabs.List
 
-The row of tabs. Renders a `div` and takes its props and style props.
+The tab list container (`role="tablist"`). Renders a `div` and accepts standard
+`div` props and style props.
 
 <Reference name="TabsListProps" headingLevel={4} />
 
@@ -162,7 +166,8 @@ The row of tabs. Renders a `div` and takes its props and style props.
 
 ### Tabs.Tab
 
-One tab. Renders a `button` and takes its props and style props.
+An individual tab trigger (`role="tab"`). Renders a `button` and accepts
+standard `button` props and style props.
 
 <Reference name="TabProps" headingLevel={4} />
 
@@ -175,8 +180,8 @@ One tab. Renders a `button` and takes its props and style props.
 
 ### Tabs.Panel
 
-The content for one tab. Renders a `div` and takes its props and style
-props.
+The content panel associated with a tab (`role="tabpanel"`). Renders a `div`
+and accepts standard `div` props and style props.
 
 <Reference name="TabPanelProps" headingLevel={4} />
 
@@ -187,15 +192,15 @@ props.
 
 ## Behaviour
 
-- Selecting the tab that is already selected does not call `onChange`.
-- Two tabs, or two panels, with the same `value` throw.
+- Clicking or activating the already active tab does not fire `onChange`.
+- Duplicate `value` props across tabs or panels throw an error.
 
 ## Accessibility
 
 - Give `Tabs.List` an `aria-label`. Each panel is labelled by its tab.
 - Inactive panels have the `hidden` attribute.
-- If focus is inside a panel when the value changes and hides it, focus
-  moves to the newly selected tab.
+- If focus is inside a panel when another tab becomes active, focus moves to
+  the newly selected tab.
 
 ### Keyboard interactions
 
@@ -212,4 +217,5 @@ props.
 | `Space` | Selects the focused tab in manual activation. |
 
 Arrow keys skip disabled tabs. In automatic activation, moving focus also
-selects the tab. In right-to-left text, `ArrowLeft` and `ArrowRight` swap.
+selects the tab. In right-to-left layouts, `ArrowLeft` and `ArrowRight` are
+reversed.

@@ -3,7 +3,7 @@ title: Troubleshooting
 section: Guides
 order: 6
 slug: troubleshooting
-description: Find out why a style is missing, and fix it.
+description: Diagnose and fix missing styles, uncompiled recipes, and cascade conflicts.
 ---
 
 # Troubleshooting
@@ -78,7 +78,7 @@ Check the browser console warning:
 - **`no compiled table found`**: the recipe was added after the last sync. Run
   `ref sync`.
 
-## A recipe that nothing calls emits no CSS
+## Unused recipes emit no CSS
 
 Sync only emits CSS for recipes that are called in your `include` files. An
 uncalled recipe (or one only called indirectly through a map, prop or `.raw()`)
@@ -91,7 +91,7 @@ Components from an external package only accept style props when that package's
 `baseSystem` is listed in `extends` or `layers`. Add the `baseSystem` named in
 the sync warning. See [Primitives](/primitives#your-own-components).
 
-## Another rule wins
+## Conflicting CSS rules
 
 Every Reference UI rule lives in a `@layer`. Standard unlayered CSS always
 overrides layered rules regardless of specificity. Remove the competing

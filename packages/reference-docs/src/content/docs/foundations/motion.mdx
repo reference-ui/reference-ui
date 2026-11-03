@@ -3,15 +3,15 @@ title: Motion
 section: Foundations
 order: 50
 slug: motion
-description: Lib's animation presets and keyframes.
+description: Built-in animation presets and keyframes in @reference-ui/lib.
 ---
 
 import { EntrancePresets, LoopingPresets } from './motion-demo'
 
 # Motion
 
-Lib ships animation presets and the keyframes behind them. Run a preset by
-name with the `animation` prop.
+`@reference-ui/lib` provides built-in animation presets and `@keyframes`
+definitions. Pass a preset name to the `animation` prop:
 
 ```tsx
 import { Div } from '@reference-ui/react'
@@ -21,12 +21,12 @@ import { Div } from '@reference-ui/react'
 
 ## Presets
 
-A preset is an `animations` token: keyframes with a duration, an easing and,
-for loops, `infinite`.
+Each preset is an `animations` token that combines a keyframe name, duration,
+easing curve, and iteration count.
 
 ### Entrances and exits
 
-These run once, when the element renders.
+Entrance and exit presets play once when the element mounts:
 
 <EntrancePresets />
 
@@ -46,7 +46,7 @@ These run once, when the element renders.
 
 ### Loops
 
-These repeat continuously while the element is mounted.
+Looping presets repeat continuously while the element is mounted:
 
 <LoopingPresets />
 
@@ -65,7 +65,8 @@ These repeat continuously while the element is mounted.
 
 ## Keyframes
 
-Lib also ships keyframes with no preset. Use one in an `animation` shorthand:
+`@reference-ui/lib` also registers standalone `@keyframes` that can be used in a
+custom `animation` shorthand:
 
 ```tsx
 <Div animation="shake 0.5s ease-in-out" />
@@ -82,8 +83,9 @@ Lib also ships keyframes with no preset. Use one in an `animation` shorthand:
 
 ## Reduced motion
 
-Lib's presets don't stop for reduced motion on their own. Turn a loop off with
-the `_motionReduce` condition:
+Animation presets do not automatically disable themselves when
+`prefers-reduced-motion: reduce` is active. Use the `_motionReduce` condition to
+disable or replace animations:
 
 ```tsx
 <Div animation="spin.slow" _motionReduce={{ animation: 'none' }} />

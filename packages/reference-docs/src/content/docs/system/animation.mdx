@@ -12,8 +12,8 @@ import { AnimationDemo } from './animation-demo'
 
 # Animation
 
-`keyframes()` defines the steps of an animation. An `animations` token gives
-it a duration and an easing, so an element runs it with one prop.
+`keyframes()` defines CSS `@keyframes` rules, and `animations` tokens pair them
+with a duration and easing so you can apply them with a single prop.
 
 <Preview>
   <AnimationDemo />
@@ -40,14 +40,14 @@ keyframes({
 })
 ```
 
-Each entry becomes one `@keyframes` rule in the `global`
-[cascade layer](/cascade-layers). Values in the steps resolve tokens and
+Each entry compiles to a `@keyframes` rule in the `global`
+[cascade layer](/cascade-layers). Step values resolve tokens and
 rhythm units the same way style props do.
 
 ## Name an animation
 
-Add an `animations` token whose value is a CSS `animation` shorthand. Its
-first word is the keyframes name:
+Define an `animations` token using the CSS `animation` shorthand, starting with
+the keyframes name:
 
 ```ts
 import { tokens } from '@reference-ui/system'
@@ -64,7 +64,7 @@ tokens({
 })
 ```
 
-Lib already ships [presets](/motion) such as `fadeIn.quick` and `spin.slow`.
+`@reference-ui/lib` includes [presets](/motion) such as `fadeIn.quick` and `spin.slow`.
 
 ## Run an animation
 
@@ -78,11 +78,11 @@ import { Div, css } from '@reference-ui/react'
 const loading = css({ animation: 'breathe.slow' })
 ```
 
-The class uses the token's variable, so changing the token's duration or
-easing changes every element that uses it.
+The generated class references the token's CSS variable, so updating the
+token's duration or easing updates every element that uses it.
 
-`animation` also takes a raw shorthand, and `animationName` takes a keyframes
-name for use with the longhands:
+`animation` also accepts a raw CSS shorthand, and `animationName` accepts a
+keyframes name when using individual animation properties:
 
 ```tsx
 <Div animation="rise 0.2s ease-out" />
@@ -92,15 +92,16 @@ name for use with the longhands:
 
 ## Reduced motion
 
-`_motionReduce` applies when the user asks for less motion, and
-`_motionSafe` when they do not:
+`_motionReduce` applies when `prefers-reduced-motion: reduce` is active, and
+`_motionSafe` applies when it is not:
 
 ```tsx
 <Div animation="breathe.slow" _motionReduce={{ animation: 'none' }} />
 ```
 
-The [reset](/global-css#the-reset) is on by default. For these users it cuts
-animation and transition durations to `0.01ms` and runs each animation once.
+The default [CSS reset](/global-css#the-reset) already reduces animation and
+transition durations to `0.01ms` and limits animations to a single iteration
+when reduced motion is enabled.
 
 ## Reference
 

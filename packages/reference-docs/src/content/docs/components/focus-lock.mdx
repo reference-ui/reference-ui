@@ -13,8 +13,9 @@ import { FocusLockDemo } from './focus-lock-demo'
 
 # FocusLock
 
-FocusLock keeps keyboard focus inside one element. Tab cycles within it, and
-focus returns to where it was when the lock ends.
+FocusLock traps keyboard focus inside a container element. Pressing Tab cycles
+through tabbable elements inside the lock, and focus returns to the previously
+focused element when the lock is deactivated.
 
 <Preview>
   <FocusLockDemo />
@@ -31,8 +32,8 @@ import { FocusLock } from '@reference-ui/lib'
 </FocusLock>
 ```
 
-[Overlay](/overlay) locks focus for you when it isolates a dialog. Use
-FocusLock directly for containers you build yourself.
+[Overlay](/overlay) already includes FocusLock when modal isolation is
+enabled. Use FocusLock directly when building custom modal containers.
 
 ## Import
 
@@ -42,8 +43,8 @@ import { FocusLock } from '@reference-ui/lib'
 
 ## Props
 
-FocusLock takes one element child and adds no wrapper. A `ref` passes through
-to that child.
+FocusLock accepts a single React element child and renders no wrapper element.
+Any `ref` passed to FocusLock is forwarded to that child.
 
 <Reference name="FocusLockProps" headingLevel={3} />
 
@@ -51,17 +52,22 @@ A `FocusTarget` is an element, a ref to one, or a function that returns one.
 
 ## Behaviour
 
-- On start, focus moves to `initialFocus` if it is inside the lock. If focus
-  is already inside, it stays. Otherwise the first tabbable element gets it,
-  or the child itself when nothing inside is tabbable.
-- Only Tab and Shift+Tab without modifier keys loop. Focus moved outside by
-  script is pulled back.
-- The lock ends when it unmounts or `disabled` turns on. Focus then returns to the element that had it before. If that element is
-  gone, focus goes to its nearest remaining neighbour.
-- When locks nest, the most recent one wins. The one below pauses until it
-  ends.
-- FocusLock does not handle Escape, outside clicks, inert backgrounds or
-  scroll locking. [Overlay](/overlay) does.
+- When the lock activates, focus moves to `initialFocus` if specified and
+  contained within the lock. If focus is already inside the container, it
+  remains on the current element; otherwise it moves to the first tabbable
+  element, or to the container itself if no tabbable descendants exist.
+- Unmodified `Tab` and `Shift+Tab` presses wrap at the start and end of the
+  container. If focus moves outside the container programmatically, FocusLock
+  restores it inside.
+- When FocusLock unmounts or `disabled` becomes `true`, focus returns to the
+  element that held focus before the lock activated (or to `returnFocus` if
+  provided). If that element has been removed from the DOM, focus moves to the
+  nearest remaining focusable sibling or ancestor.
+- When multiple FocusLocks are mounted, only the most recently activated lock
+  is active; outer locks pause until the inner lock deactivates.
+- FocusLock manages focus only. For `Escape` dismissal, outside pointer
+  clicks, background `inert` handling, and scroll locking, use
+  [Overlay](/overlay).
 
 ## Accessibility
 

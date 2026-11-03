@@ -4,27 +4,27 @@ section: Guides
 group: Integration
 order: 62
 slug: ssr
-description: Render Reference UI on the server, with no style setup.
+description: Use Reference UI with server-side rendering and static site generation.
 ---
 
 # Server-side rendering
 
-Reference UI renders on the server with no extra setup, because its CSS is
-built ahead of time. Static rendering, which renders pages to HTML at build
-time, works the same way.
+Reference UI works with server-side rendering (SSR) and static site generation
+(SSG) without any framework-specific style plugins, because all CSS is compiled
+ahead of time.
 
 ## How it works
 
-`ref sync` writes one stylesheet. At runtime, primitives and `css()` only
-produce class names. Nothing generates or injects CSS in the browser, so
-there is:
+`ref sync` compiles a static stylesheet at build time, while primitives and
+`css()` only return class name strings at runtime. Because no CSS is generated
+or injected in the browser, SSR requires:
 
-- no style registry to collect on the server,
-- no style tags to stream or hydrate,
-- no flash of unstyled content.
+- no server-side style registry or extraction pass,
+- no streamed `<style>` tags during hydration, and
+- no flash of unstyled content (FOUC).
 
-The server and the browser produce the same class names against the same
-stylesheet, so the HTML hydrates as it is.
+The server and client produce identical class names against the same stylesheet,
+so the HTML hydrates without mismatches.
 
 ## Load the stylesheet
 
@@ -47,20 +47,22 @@ your root primitive:
 </Div>
 ```
 
-The server and the browser then render the same mode, and the page doesn't
-flash when it hydrates. See [Light and dark](/light-and-dark) for the toggle.
+Both server and client then render the same mode without a theme flash during
+hydration. See [Light and dark](/light-and-dark) for persisting and toggling the
+mode.
 
-Don't set `data-color-mode` on `<html>` or `<body>` yourself. In the browser,
-primitives with no `colorMode` above them read that attribute. The server has
-no document to read, so the first render won't match.
+Avoid setting `data-color-mode` directly on `<html>` or `<body>`. In the
+browser, primitives without an ancestor `colorMode` prop fall back to reading
+that attribute from `document`, which is unavailable on the server and causes a
+hydration mismatch.
 
 ## Library components
 
-- Content that exists only while open, such as Tooltip and Popover content,
-  renders nothing on the server. It mounts in the browser when it opens.
-  Triggers and the rest of the page are in the server HTML.
-- A [Portal](/portal) renders its children in the browser, after hydration.
-- [ReferenceLibrary](/reference-library) renders only its children on the
-  server. The toast host and the live region mount in the browser.
+- Overlay content that mounts only when open (such as Tooltip and Popover
+  content) is omitted from the server HTML and mounts in the browser when
+  opened, while triggers render normally on the server.
+- [Portal](/portal) renders its children in the browser after hydration.
+- [ReferenceLibrary](/reference-library) renders its children on the server and
+  mounts the toast viewport and live region in the browser after hydration.
 - Components create their ids with React's `useId`, so the ids in `aria-*`
   attributes match between the server and the browser.

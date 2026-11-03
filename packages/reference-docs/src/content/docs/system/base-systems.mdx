@@ -4,16 +4,16 @@ section: System
 group: Theme
 order: 210
 slug: base-systems
-description: What a base system carries, what extends and layers take from it, and extendSystem().
+description: What a base system contains, how extends and layers consume it, and extendSystem().
 ---
 
 # Base systems
 
-A base system is everything one system publishes: its tokens, fonts,
-keyframes, compiled styles and component names. `ref sync` writes it as the
-`baseSystem` export of `.reference-ui/system/baseSystem.mjs`. Another
-project lists it in `extends` or `layers`, or passes it to `extendSystem()`
-to change its token values.
+A base system packages a system's tokens, fonts, keyframes, compiled styles,
+and component metadata for downstream projects. `ref sync` writes it as the
+`baseSystem` export of `.reference-ui/system/baseSystem.mjs`. Consuming
+projects pass it to `extends` or `layers`, or to `extendSystem()` to override
+its token values.
 
 To publish one, see [Export a base system](/export-base-system). To
 brand a shared system, see [Customization](/customization).
@@ -40,25 +40,27 @@ Your own base system is also exported from `@reference-ui/system`.
 
 | | `extends` | `layers` |
 | --- | --- | --- |
-| Tokens, fonts and keyframes, usable by name in your styles and types | yes | no |
-| Their CSS: token variables, `@font-face` and `@keyframes` rules | yes | yes |
-| Global CSS, recipe classes and style prop classes the system compiled | yes | yes |
+| Tokens, fonts, and keyframes, usable by name in your styles and types | yes | no |
+| Generated CSS: token variables, `@font-face`, and `@keyframes` rules | yes | yes |
+| Global CSS, recipe classes, and style prop classes compiled by the system | yes | yes |
 | `recipe()` definitions | no | no |
-| Its `jsxElements` names, joined with yours | yes | no |
-| The props each component keeps for itself | yes | yes |
-| Your token values inside its components | yes | no |
+| Its `jsxElements` names, merged with yours | yes | no |
+| Component prop schemas for style tracing | yes | yes |
+| Your token overrides apply to its components | yes | no |
 
-A recipe stays as the system's sync built it: your sync receives its
-classes, not its config. A `_private` token stays private: it applies inside
-the system's components without appearing in your token types.
+Recipes are precompiled by the upstream package: your sync receives their
+compiled CSS classes, not their `recipe()` configurations. Tokens marked
+`_private` still apply inside the upstream system's components, but are
+excluded from your generated token types.
 
-Under `layers`, a style that names one of the system's tokens warns at the
-call.
+When a system is listed in `layers`, referencing its tokens in your own styles
+logs a warning.
 
 ## Order
 
-Each system gets its own [cascade layer](/cascade-layers). Sync orders them:
-`extends` systems in config order, then `layers` systems, then yours.
+Each system is placed in its own [cascade layer](/cascade-layers), ordered
+with `extends` systems first (in config order), then `layers` systems, then
+your own.
 
 Under `extends`, token definitions merge by leaf path:
 
@@ -70,8 +72,8 @@ Under `extends`, token definitions merge by leaf path:
 ## Styling its components
 
 Whether a package is in `extends` or `layers`, your app can pass style props
-and its own tokens to the package's components. Component-specific props (like
-`tone`) stay with the component.
+and its own tokens to the package's components. Component-specific props (such
+as `tone`) are passed through to the component unchanged.
 
 If style props on an external component don't apply, check that its package's
 `baseSystem` is listed in `extends` or `layers`. See
@@ -79,27 +81,27 @@ If style props on an external component don't apply, check that its package's
 
 ## Config errors
 
-`ref sync` checks `extends` and `layers` when it loads the config, and
-stops with `Config field 'extends' is invalid.` or
-`Config field 'layers' is invalid.` and one reason:
+If `extends` or `layers` is invalid, `ref sync` fails while loading the config
+with `Config field 'extends' is invalid.` or
+`Config field 'layers' is invalid.`:
 
 | Cause | Fix |
 | --- | --- |
 | The field is not an array, or an entry is not an object or has no `name` | Pass a package's `baseSystem` export. |
 | An entry has no synced data | Run `ref sync` in that package first. |
 | A `layers` entry has no compiled styles | Run `ref sync` in that package, or list it under `extends`. |
-| An entry is your own `name`, or reaches it through its own `extends` or `layers` | Remove the entry, or the path back to your system. |
-| An entry repeats in one field | List each system once. |
-| A system is in both fields | Remove it from `layers`. |
-| A name holds a double quote, a backslash or a line break | Rename the system. |
+| An entry matches your own `name`, or introduces a cycle through `extends` or `layers` | Remove the self-reference or cycle. |
+| The same system appears more than once in a field | List each system once. |
+| The same system appears in both `extends` and `layers` | Remove it from `layers`. |
+| A system `name` contains a double quote, backslash, or newline | Rename the system. |
 
-An installed package whose base system was never synced fails to load, and
-the message tells you to sync it.
+Importing a `baseSystem` from a package that has not run `ref sync` also fails
+at load time.
 
 ## extendSystem()
 
-`extendSystem()` returns a copy of a base system with some token values
-changed. Use the copy in place of the base, in `extends` or `layers`.
+`extendSystem()` returns a copy of a base system with overridden token values.
+Pass the returned system to `extends` or `layers` in place of the original.
 
 ```ts
 // ui.config.ts
@@ -133,17 +135,16 @@ function extendSystem(
 | `base` | `BaseSystem` | A published base system, or the result of an earlier `extendSystem()` call. |
 | `overrides.tokens` | `TokenConfig` | A token tree shaped like the `tokens()` input. Every leaf must be a token the base declares. |
 
-The copy keeps the base's name, components and compiled styles, and changes
-only token values. The new values apply inside the base's components in both
-light and dark mode.
+The returned system preserves the base system's name, components, and compiled
+styles, overriding only its token values in light and dark mode.
 
-List the copy instead of the base. Don't list both a base system and its
-extended copy in your config.
+Pass only the extended copy to your config; do not list both the original base
+system and its extended copy.
 
 ### Token values
 
-Each leaf takes `value`, `light` or `dark`, as a string. Write numbers in
-quotes.
+Each token leaf accepts `value`, `light`, or `dark` as a string (numeric
+values must be quoted).
 
 | You write | Light | Dark |
 | --- | --- | --- |
@@ -153,16 +154,18 @@ quotes.
 | `{ value: 'a', dark: 'b' }` | `a` | `b` |
 | `{ value: 'a', light: 'b' }` | `b` | `a` |
 
-A leaf with one slot replaces the base's dark value too.
+Providing a single value (`value`, `light`, or `dark`) overrides both the
+light and dark values from the base system.
 
-A value can reference another token the base declares, as
-`{colors.brand}`, and use [rhythm units](/spacing): `2r` prints
-`calc(2 * var(--spacing-root))`. `spacing.root` takes a plain length, since
-it defines `r`.
+A value can reference another token declared in the base system (such as
+`{colors.brand}`) and use [rhythm units](/spacing): `2r` compiles to
+`calc(2 * var(--spacing-root))`. `spacing.root` requires a plain CSS length,
+since it defines `r`.
 
 ### Chained calls
 
-Pass an extended system back in to add more overrides:
+You can pass an already-extended system to `extendSystem()` to apply
+additional overrides:
 
 ```ts
 const branded = extendSystem(baseSystem, {
@@ -174,21 +177,19 @@ const final = extendSystem(branded, {
 })
 ```
 
-The calls merge by leaf path, and a later call wins on the same path. The
-result is built once from the original base, with the merged overrides.
+Overrides merge by leaf path, with later calls taking precedence.
 
 ### Errors
 
-`extendSystem()` throws an `ExtendSystemError` while the config loads, so
-`ref sync` stops and prints its message:
+Invalid arguments throw an `ExtendSystemError` when the config loads:
 
 | Message | Cause |
 | --- | --- |
 | `the first argument must be a published base system` | `base` is not a base system. |
 | ``overrides need a `tokens` object`` | `overrides.tokens` is missing or not an object. |
 | `unknown token <path> in <base>` | The base does not declare that token. |
-| `token <path> needs a value, a light value or a dark value` | The leaf sets no slot. |
-| `token <path> must be a string` | A slot is a number or another non-string. |
+| `token <path> needs a value, a light value or a dark value` | The token leaf has no `value`, `light`, or `dark` property. |
+| `token <path> must be a string` | A token value is not a string. |
 | `token <path> references itself` | A value references its own token. |
 | `token <path> refers to unknown token` | A `{path}` reference names a token the base does not declare. |
 | `token <path> has a brace that is not a {token.path} reference` | A value has a stray or empty brace. |

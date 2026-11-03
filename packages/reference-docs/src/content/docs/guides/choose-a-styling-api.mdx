@@ -4,31 +4,29 @@ section: Guides
 group: Styling
 order: 10
 slug: choose-a-styling-api
-description: Which styling API to reach for, from one element to the whole system.
+description: Choose between style props, css(), recipe(), globalCss(), and tokens.
 ---
 
 # Choose a styling API
 
-Reference UI has five ways to write styles: style props, `css()`,
-`recipe()`, `globalCss()` and tokens. They take the same keys and values, so
-a style can move from one to the next as more of your app uses it.
-
-Start with the smallest one that fits. Move a style up when a second place
-needs it.
+Reference UI provides five styling APIs: style props, `css()`, `recipe()`,
+`globalCss()`, and tokens. Because they all accept the same properties and
+values, you can start with inline style props and extract shared styles into
+classes, recipes, or tokens as your components grow.
 
 | You are styling | Use |
 | --- | --- |
 | One element | [Style props](#style-props) |
-| A class for several elements, or for an element that is not a primitive | [`css()`](#css) |
+| Multiple elements with shared styles, or a non-primitive element | [`css()`](#css) |
 | A component with variants | [`recipe()`](#recipe) |
-| A component with several parts | [`recipe()` with `slots`](/recipes#slots) |
-| Elements you don't render yourself | [`globalCss()`](#globalcss) |
-| A value many styles share | [Tokens](#tokens) |
+| A component with multiple parts | [`recipe()` with `slots`](/recipes#slots) |
+| Document-level elements or third-party HTML | [`globalCss()`](#globalcss) |
+| Shared design values across styles | [Tokens](#tokens) |
 
 ## Style props
 
-Write styles straight on a [primitive](/primitives). Conditions such as
-`_hover` sit beside the rest:
+Pass style props directly to a [primitive](/primitives), alongside condition
+props such as `_hover`:
 
 ```tsx
 import { Div, H3 } from '@reference-ui/react'
@@ -84,9 +82,9 @@ See [Build a component](/build-a-component) and [Recipes](/recipes).
 
 ## globalCss()
 
-Use `globalCss()` for elements you don't render yourself: `body`, `:root`,
-HTML from Markdown or a CMS, or every primitive of one kind through its
-`ref-*` class:
+Use `globalCss()` to style elements outside your component tree, such as `body`,
+`:root`, rendered Markdown or CMS HTML, or all primitives of a given type via
+their `ref-*` class:
 
 ```ts
 // src/theme/global.ts
@@ -102,9 +100,9 @@ See [Global CSS](/global-css) for selectors, nesting and the reset.
 
 ## Tokens
 
-When the same value turns up in several styles, name it as a token. Every
-style prop, `css()` call, recipe and global rule can use the name, and a new
-value reaches all of them:
+Define repeated values as design tokens so they can be referenced by name across
+style props, `css()`, recipes, and global rules. Updating a token updates every
+style that references it:
 
 ```ts
 // src/theme/tokens.ts
@@ -120,12 +118,13 @@ tokens({
 See [Theming](/theming) for fonts, animations and dark mode, and
 [Tokens](/tokens) for the full reference.
 
-## Which style wins
+## Style precedence
 
-Each API writes its rules to its own [cascade layer](/cascade-layers).
-Global rules sit below recipes, and recipes sit below utilities, where style
-props and `css()` classes live. On one element, the more local style wins,
-with no `!important`. Here the style prop replaces the recipe's `4r`:
+Each API outputs CSS to a dedicated [cascade layer](/cascade-layers). Global
+rules have the lowest precedence, followed by recipes, and then utilities (style
+props and `css()`). When multiple APIs target the same element, more specific
+layers override broader ones without `!important`. Here, the `padding` prop
+overrides the recipe's `4r` padding:
 
 ```tsx
 <Div className={card()} padding="6r">…</Div>
@@ -134,7 +133,7 @@ with no `!important`. Here the style prop replaces the recipe's `4r`:
 ## Further reading
 
 <LinkCards>
-  <LinkCard href="/build-a-component" title="Build a component">Make your own component from a primitive and a recipe.</LinkCard>
-  <LinkCard href="/customization" title="Customization">Change primitives, library components and other libraries.</LinkCard>
-  <LinkCard href="/cascade-layers" title="Cascade layers">The layer order and how systems stack.</LinkCard>
+  <LinkCard href="/build-a-component" title="Build a component">Build a reusable component with a primitive and a recipe.</LinkCard>
+  <LinkCard href="/customization" title="Customization">Customize primitives, library components, and third-party components.</LinkCard>
+  <LinkCard href="/cascade-layers" title="Cascade layers">How cascade layers order styles across systems.</LinkCard>
 </LinkCards>

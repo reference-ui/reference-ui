@@ -12,9 +12,9 @@ import { RhythmRamp } from './spacing-demo'
 
 # Spacing
 
-Spacing is measured in rhythm units: `4r` is four units, `0.5r` is half a
-unit. Every unit is a multiple of one CSS variable, so changing it rescales
-the whole interface.
+Spacing uses rhythm units (`r`), where `4r` is four units and `0.5r` is half a
+unit. Every rhythm value multiplies the `--spacing-root` CSS variable, so
+changing the root unit scales spacing proportionally across the interface.
 
 <Preview>
   <RhythmRamp />
@@ -38,11 +38,11 @@ import { Div } from '@reference-ui/react'
 | `1/2r` | `calc(var(--spacing-root) / 2)` |
 | `-4r` | `calc(-4 * var(--spacing-root))` |
 
-The multiplier can be any number. Rhythm units work in any length,
-including `width`, `fontSize` and multi-part values such as
-`border: '0.25r solid'`. They also work inside `calc()`, as in
-`width: 'calc(100% - 4r)'`. Inside `var()`, `url()` and `env()` they stay as
-written.
+Rhythm units can use any integer, decimal, or fraction multiplier. They work in
+any length property (including `width` and `fontSize`), compound values such as
+`border: '0.25r solid'`, and `calc()` expressions such as
+`width: 'calc(100% - 4r)'`. Text inside `var()`, `url()`, and `env()` is left
+untouched.
 
 ## Set the root
 
@@ -60,10 +60,10 @@ globalCss({
 })
 ```
 
-The default sits in the lowest [cascade layer](/cascade-layers), so your
-value always wins. When a system you extend sets the root, its value applies
-until you set your own. Set the variable on any element to change the density
-of that part of the page.
+The default `--spacing-root` declaration is placed in the lowest
+[cascade layer](/cascade-layers), so a `:root` override in `globalCss()` takes
+precedence. You can also set `--spacing-root` on a specific element to adjust
+spacing density for that subtree.
 
 ## Named spacing
 
@@ -92,9 +92,10 @@ as `--spacing-gutter`, for use in your own CSS.
 
 ## Numbers
 
-A bare number on a length property resolves to pixels: `width={42}` outputs
-`42px`. Properties without a unit, such as `opacity` and `zIndex`, keep the
-number. Use rhythm units for spacing so it scales with `--spacing-root`.
+Numeric values on length properties resolve to pixels (`width={42}` compiles to
+`42px`), while unitless properties such as `opacity` and `zIndex` remain
+unitless. Prefer rhythm units for layout spacing so values scale with
+`--spacing-root`.
 
 ## `getRhythm()`
 
