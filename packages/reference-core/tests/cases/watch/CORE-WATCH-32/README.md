@@ -9,7 +9,8 @@ bundle, fragment scripts run as `vm` scripts that leave no module record, and Ta
 The spec syncs the big upstream (four thousand generated tokens, so the config module is large), extends it from the
 world, writes a 300 KB literal token fragment into the world (`specs/literal-fragment.ts`, gitignored, so the fragment
 script is large too), and spawns a real `ref sync --watch` under `--expose-gc` with `specs/heap-probe.cjs` preloaded. The probe
-samples post-GC `heapUsed` after each sync line. Five SIGUSR2 pokes warm up, then forty more resync the unchanged
+samples post-GC `heapUsed` once the watch is idle, so a queued resync (an FSEvents dropped-events replay)
+never counts a pass's working set. Five SIGUSR2 pokes warm up, then forty more resync the unchanged
 project; growth between the last warm-up sample and the last poke must stay under 3 MB. Reverting
 either the config fix or the fragment fix overruns it; the Tasty manifest here is too small for the case to guard
 that fix, which its own vitest companion does. POSIX-only, like every

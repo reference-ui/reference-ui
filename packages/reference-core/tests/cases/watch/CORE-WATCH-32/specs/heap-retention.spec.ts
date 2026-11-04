@@ -59,11 +59,13 @@ function readSamples(probeOut: string): Sample[] {
     .map((line) => JSON.parse(line) as Sample)
 }
 
-// Waits for the probe's sample of sync n; a resync is one native compile, so the budget is generous.
+// Waits for the probe's first sample at or after sync n. The probe samples only once the watch is idle, so an
+// extra resync (an FSEvents dropped-events replay) can skip a number. A resync is one native compile, so the
+// budget is generous.
 async function sampleOf(probeOut: string, n: number, child: ChildProcess, log: () => string): Promise<Sample> {
   const deadline = Date.now() + 60000
   for (;;) {
-    const found = readSamples(probeOut).find((s) => s.sync === n)
+    const found = readSamples(probeOut).find((s) => s.sync >= n)
     if (found) return found
     assert.equal(child.exitCode, null, `watch exited before sync ${n}:\n${log()}`)
     assert.ok(Date.now() < deadline, `timed out waiting for sync ${n}:\n${log()}`)
@@ -95,12 +97,12 @@ async function measureRetention(c: CoreCase): Promise<{ warm: Sample; last: Samp
   const log = (): string => output.slice(-4000)
   try {
     // The baseline sync is sample 1; warm-up pokes settle module caches and JIT before the measure.
-    await sampleOf(probeOut, 1, child, log)
-    let n = 1
+    let n = (await sampleOf(probeOut, 1, child, log)).sync
     const poke = async (): Promise<Sample> => {
-      n += 1
       child.kill('SIGUSR2')
-      return sampleOf(probeOut, n, child, log)
+      const sample = await sampleOf(probeOut, n + 1, child, log)
+      n = sample.sync
+      return sample
     }
     let warm = await poke()
     for (let i = 1; i < WARMUP; i += 1) warm = await poke()

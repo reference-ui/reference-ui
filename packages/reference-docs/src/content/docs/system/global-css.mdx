@@ -119,23 +119,14 @@ an element override global rules without needing `!important`. See
 ## The reset
 
 By default (`normalizeCss: true`), the stylesheet includes a minimal CSS reset
-in the `reset` layer:
+in the `reset` layer. It covers box sizing, default margins, media, form fonts
+and reduced motion.
 
-- sets `box-sizing: border-box` on every element and pseudo-element;
-- removes the default margin from `body`, `h1` to `h4`, `p`, `figure`,
-  `blockquote`, `dl` and `dd`;
-- removes list markers from `ul` and `ol` with `role="list"`;
-- gives `body` a `min-height` of `100vh`, a `line-height` of `1.5` and
-  `text-rendering: optimizeSpeed`;
-- sets `text-decoration-skip-ink: auto` on links without a class;
-- makes `img` and `picture` block elements with `max-width: 100%`;
-- makes `input`, `button`, `textarea` and `select` inherit the font;
-- enables smooth scrolling when focus is within the document;
-- reduces animation and transition durations to `0.01ms` and disables smooth
-  scrolling when `prefers-reduced-motion: reduce` matches.
+The reset does not make the page a container, so responsive styles need a
+container type on `body`. `@reference-ui/lib` sets it. Without the lib, set it
+yourself with `globalCss()`. See [Responsive](/responsive#mark-a-container).
 
-The reduced-motion rules use `!important` so they override component
-animations. To disable the reset, set `normalizeCss: false` in `ui.config.ts`:
+To disable the reset, set `normalizeCss: false` in `ui.config.ts`:
 
 ```ts
 // ui.config.ts
